@@ -86,8 +86,8 @@ func ReadParquet(fname string) {
 func main() {
 	stus := CreateStudents()
 	schemaHandler := parquet_go.NewSchemaHandlerFromStruct(new(Student))
-	file, _ := os.Create("t1.parquet")
+	file, _ := os.Create("nested.parquet")
 	defer file.Close()
 	parquet_go.WriteTo(file, stus, schemaHandler)
-	ReadParquet("./t1.parquet")
+	ReadParquet("./nested.parquet")
 }
