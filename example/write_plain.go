@@ -50,6 +50,7 @@ func CreateStudents() []Student {
 		stus[i].Age = (int32(i) % 30 + 30)
 		stus[i].Id = id
 		stus[i].Weight = 50.0 + float32(stus[i].Age)*0.1
+		stus[i].Sex = (i%2==0)
 		stuName = nextName(stuName)
 		id++
 	}
