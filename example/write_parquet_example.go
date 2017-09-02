@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"parquet_go"
@@ -46,7 +45,7 @@ func nextName(nameStr string) string {
 	return string(name)
 }
 
-func JsonStudents() []Student {
+func CreateStudents() []Student {
 	stus := make([]Student, 10)
 	stuName := "aaaaa_STU"
 	className := "AAAAA_CLASS"
@@ -64,21 +63,6 @@ func JsonStudents() []Student {
 		stuName = nextName(stuName)
 	}
 	return stus
-}
-
-func JsonClasses() {
-	className := "AAAAA_CLASS"
-	classes := make([]Class, 10)
-	var score float32 = 0.1
-	for j := 0; j < len(classes); j++ {
-		classes[j].Name = className
-		classes[j].Number = int64(j)
-		classes[j].Score = score
-		className = nextName(className)
-		score += 0.1
-	}
-	jsonBuf, _ := json.Marshal(classes)
-	fmt.Println(string(jsonBuf))
 }
 
 func ReadParquet(fname string) {
@@ -100,7 +84,7 @@ func ReadParquet(fname string) {
 }
 
 func main() {
-	stus := JsonStudents()
+	stus := CreateStudents()
 	schemaHandler := parquet_go.NewSchemaHandlerFromStruct(new(Student))
 	file, _ := os.Create("t1.parquet")
 	defer file.Close()
