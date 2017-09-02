@@ -16,9 +16,9 @@ type Page struct {
 	RawData   []byte
 	CompressType parquet.CompressionCodec
 	DataType parquet.Type
-
+	MaxVal interface{}
+	MinVal interface{}
 }
-
 
 func NewPage(pageType parquet.PageType, numValues int32) *Page {
 	page := new(Page)
@@ -37,15 +37,20 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 	i := 0
 	dataType := GoTypeToParquetType(reflect.TypeOf(table.Values[0]))
 	for i < totalLn {
-
 		j := i+1
 		var size int32 = 0
 		var numValues int32 = 0
+
+		var maxVal interface{} = table.Values[i]
+		var minVal interface{} = table.Values[i]
+
 		for j < totalLn && size < pageSize {
 			size += int32(SizeOf(reflect.ValueOf(table.Values[j])))
 			if table.DefinitionLevels[j]==table.MaxDefinitionLevel {
 				numValues++
 			}
+			maxVal = Max(maxVal, table.Values[j])
+			minVal = Min(minVal, table.Values[j])
 			j++
 		}
 
@@ -60,6 +65,9 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 		page.DataTable.Values = table.Values[i:j]
 		page.DataTable.DefinitionLevels = table.DefinitionLevels[i:j]
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
+		page.MaxVal = maxVal
+		page.MinVal = minVal
+
 		page.ToRawDataPage(compressType)
 		page.CompressType = compressType
 		page.DataType = dataType
@@ -163,6 +171,9 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 	page.Header.DataPageHeader.DefinitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN
+	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
+	page.Header.DataPageHeader.Statistics.Max = WritePlain([]Interface{page.MaxVal})
+	page.Header.DataPageHeader.Statistics.Min = WritePlain([]Interface{page.MinVal})
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)

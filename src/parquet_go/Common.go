@@ -7,6 +7,82 @@ import (
 	"strings"
 )
 
+func Max(a interface{}, b interface{}) interface{} {
+	tk := reflect.TypeOf(a).Kind()
+	if tk == reflect.Int || tk == reflect.Int8 || tk == reflect.Int16 || tk == reflect.Int32 || tk == reflect.Int64 {
+		av := reflect.ValueOf(a).Int()
+		bv := reflect.ValueOf(a).Int()
+		if av > bv {
+			return a
+		}else{
+			return b
+		}
+	}else if tk == reflect.Float32 || tk == reflect.Float64 {
+		av := reflect.ValueOf(a).Float()
+		bv := reflect.ValueOf(b).Float()
+		if av > bv {
+			return a
+		}else{
+			return b
+		}
+	}else if tk == reflect.String {
+		av := a.(string)
+		bv := b.(string)
+		if av > bv {
+			return a
+		}else{
+			return b
+		}
+	}else if tk == reflect.Bool {
+		av := a.(bool)
+		if av == true{
+			return a
+		}else{
+			return b
+		}
+	}else{
+		return a
+	}
+}
+
+func Min(a interface{}, b interface{}) interface{} {
+	tk := reflect.TypeOf(a).Kind()
+	if tk == reflect.Int || tk == reflect.Int8 || tk == reflect.Int16 || tk == reflect.Int32 || tk == reflect.Int64 {
+		av := reflect.ValueOf(a).Int()
+		bv := reflect.ValueOf(a).Int()
+		if av > bv {
+			return b
+		}else{
+			return a
+		}
+	}else if tk == reflect.Float32 || tk == reflect.Float64 {
+		av := reflect.ValueOf(a).Float()
+		bv := reflect.ValueOf(b).Float()
+		if av > bv {
+			return b
+		}else{
+			return a
+		}
+	}else if tk == reflect.String {
+		av := a.(string)
+		bv := b.(string)
+		if av > bv {
+			return b
+		}else{
+			return a
+		}
+	}else if tk == reflect.Bool{
+		av := a.(bool)
+		if av == true {
+			return b
+		}else{
+			return a
+		}
+	}else{
+		return a
+	}	
+}
+
 func SizeOf(val reflect.Value) int64{
 	switch val.Type().Kind() {
 	case reflect.Int16:

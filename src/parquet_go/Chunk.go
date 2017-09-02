@@ -17,11 +17,16 @@ func PagesToChunk (pages []*Page) *Chunk {
 	var numValues int64= 0
 	var totalUncompressedSize int64 = 0
 	var totalCompressedSize int64 = 0
+
+	var maxVal interface{} = pages[0].MaxVal
+	var minVal interface{} = pages[0].MinVal
 	
 	for i:=0; i<ln; i++ {
 		numValues += int64(pages[i].Header.DataPageHeader.NumValues)
 		totalUncompressedSize += int64(pages[i].Header.UncompressedPageSize) + int64(len(pages[i].RawData)) - int64(pages[i].Header.CompressedPageSize)
 		totalCompressedSize += int64(len(pages[i].RawData))
+		maxVal = Max(maxVal, pages[i].MaxVal)
+		minVal = Min(minVal, pages[i].MinVal)
 	}
 	
 	chunk := new(Chunk)
@@ -37,6 +42,9 @@ func PagesToChunk (pages []*Page) *Chunk {
 	metaData.TotalCompressedSize = totalCompressedSize
 	metaData.TotalUncompressedSize = totalUncompressedSize
 	metaData.PathInSchema = pages[0].DataTable.Path[1:]
+	metaData.Statistics = parquet.NewStatistics()
+	metaData.Statistics.Max = WritePlain([]Interface{maxVal})
+	metaData.Statistics.Min = WritePlain([]Interface{minVal})
 	
 	chunk.ChunkHeader.MetaData = metaData
 

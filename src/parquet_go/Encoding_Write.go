@@ -39,6 +39,7 @@ func WritePlain(src []Interface) []byte {
 	if ln <= 0 {
 		return []byte{}
 	}
+
 	dataType := reflect.TypeOf(src[0]).Kind()
 
 	if dataType == reflect.Bool { //parquet.Type_BOOLEAN
