@@ -43,7 +43,13 @@ func WritePlain(src []Interface) []byte {
 	dataType := reflect.TypeOf(src[0]).Kind()
 
 	if dataType == reflect.Bool { //parquet.Type_BOOLEAN
-		return WriteBitPacked(src, 1)
+		//		return WriteBitPacked(src, 1)
+		srcTmp := make([]bool, ln)
+		for i:=0; i<ln; i++ {
+			srcTmp[i] = src[i].(bool)
+		}
+		return WriteBoolean(srcTmp)
+		
 	} else if dataType == reflect.Int32 { //parquet.Type_INT32
 		srcTmp := make([]int32, ln)
 		for i := 0; i < ln; i++ {
@@ -82,6 +88,18 @@ func WritePlain(src []Interface) []byte {
 	} else {
 		return nil
 	}
+}
+
+func WriteBoolean(nums []bool) []byte {
+	ln := len(nums)
+	byteNum := (ln + 7)/8
+	res := make([]byte, byteNum)
+	for i:=0; i<ln; i++{
+		if nums[i] {
+			res[i/8] = res[i/8] | (1 << uint32(i%8))
+		}
+	}
+	return res
 }
 
 func WritePlainInt32(nums []int32) []byte {

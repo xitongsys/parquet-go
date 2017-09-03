@@ -92,6 +92,19 @@ func Test_WriteBitPacked( t *testing.T){
 	if string(resBuf) != string(testRes){
 		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes )
 	}
+
+	testBuf = make([]Interface, 8)
+	for i:=0; i<len(testBuf); i++{
+		testBuf[i] = ((i%2)==0)
+	}
+	resBuf = make([]byte,0)
+	resBuf = append(resBuf, byte(0x3), byte(0x55))
+
+	testRes = WriteBitPacked(testBuf,1)
+
+	if string(testRes) != string(resBuf) {
+		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes)
+	}
 }
 
 
