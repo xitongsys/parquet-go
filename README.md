@@ -9,7 +9,7 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 
 ## Example
 
-# Read Parquet File
+### Read Parquet File
 ```
 func ReadParquet(fname string) {
 	file, _ := os.Open(fname)
@@ -30,7 +30,7 @@ func ReadParquet(fname string) {
 }
 ```
 
-# Write Parquet File
+### Write Parquet File
 ```
 type Student struct{
 ......
