@@ -59,7 +59,7 @@ func ReadChunk(file *os.File, schemaHandler *SchemaHandler, colMetaData *parquet
 		pageHeader := GetPageHeader(thriftReader)
 		pageType := pageHeader.GetType()
 
-		log.Println(pageHeader)
+		//log.Println(pageHeader)
 
 		if pageType == parquet.PageType_DATA_PAGE {
 			tableCur := ReadDataPage(thriftReader, schemaHandler, colMetaData, pageHeader, dictData)

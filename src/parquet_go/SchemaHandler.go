@@ -82,7 +82,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 		schemaList = append(schemaList, schema)
 	}
 
-	log.Println(schemaList)
+	//log.Println(schemaList)
 
 	return NewSchemaHandlerFromSchema(schemaList)
 }
