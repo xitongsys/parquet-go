@@ -3,26 +3,26 @@ package parquet_go
 import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"log"
+	//"log"
 	"os"
 	"parquet"
 	"reflect"
 )
 
-func WriteTo(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandler){
-	var pageSize int64 = 8*1024 //8K
-	var rowGroupSize int64 = 256*1024*1024 //256MB
-	
+func WriteTo(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandler) {
+	var pageSize int64 = 8 * 1024              //8K
+	var rowGroupSize int64 = 256 * 1024 * 1024 //256MB
+
 	src := reflect.ValueOf(srcInterface)
 	ln := src.Len()
 
 	//create rowGroups
 	rowGroups := make([]*RowGroup, 0)
-	i:=0
+	i := 0
 	for i < ln {
-		j:=i
+		j := i
 		var size int64 = 0
-		for j<ln && size < rowGroupSize {
+		for j < ln && size < rowGroupSize {
 			size += SizeOf(src.Index(j))
 			j++
 		}
@@ -58,18 +58,18 @@ func WriteTo(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandl
 	footer := parquet.NewFileMetaData()
 	footer.Version = 1
 	footer.Schema = append(footer.Schema, schemaHandler.SchemaList...)
-	
+
 	file.Write([]byte("PAR1"))
 	var offset int64 = 4
 
-	for i:=0; i<len(rowGroups);i++ {
+	for i := 0; i < len(rowGroups); i++ {
 		footer.RowGroups = append(footer.RowGroups, rowGroups[i].RowGroupHeader)
 		footer.NumRows += rowGroups[i].RowGroupHeader.NumRows
-		for j:= 0; j<len(rowGroups[i].Chunks); j++ {
-			rowGroups[i].Chunks[j].ChunkHeader.MetaData.DataPageOffset = offset 
+		for j := 0; j < len(rowGroups[i].Chunks); j++ {
+			rowGroups[i].Chunks[j].ChunkHeader.MetaData.DataPageOffset = offset
 			rowGroups[i].Chunks[j].ChunkHeader.FileOffset = offset
-			
-			for k:=0; k<len(rowGroups[i].Chunks[j].Pages); k++ {
+
+			for k := 0; k < len(rowGroups[i].Chunks[j].Pages); k++ {
 				data := rowGroups[i].Chunks[j].Pages[k].RawData
 				file.Write(data)
 				offset += int64(len(data))
@@ -83,9 +83,9 @@ func WriteTo(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandl
 	footerBuf, _ := ts.Write(footer)
 
 	file.Write(footerBuf)
-	footerSizeBuf := make([]byte,4)
+	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
 	file.Write(footerSizeBuf)
 	file.Write([]byte("PAR1"))
-	
+
 }

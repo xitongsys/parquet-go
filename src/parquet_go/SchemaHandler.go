@@ -2,7 +2,7 @@ package parquet_go
 
 import (
 	"errors"
-	"log"
+	//	"log"
 	"parquet"
 	"reflect"
 )
@@ -10,11 +10,10 @@ import (
 //////in schema, the path is the full path (including the root)////////
 
 type SchemaHandler struct {
-	SchemaMap map[string]*parquet.SchemaElement
+	SchemaMap  map[string]*parquet.SchemaElement
 	SchemaList []*parquet.SchemaElement
-	RootName  string
+	RootName   string
 }
-
 
 type SchemaItem struct {
 	GoType         reflect.Type
@@ -75,7 +74,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schema.Type = &parquetType
 			if parquetType == parquet.Type_BYTE_ARRAY {
 				convertedType := parquet.ConvertedType_UTF8
-				schema.ConvertedType = & convertedType
+				schema.ConvertedType = &convertedType
 			}
 		}
 
