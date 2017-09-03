@@ -1,5 +1,4 @@
 # parquet-go
-## Introduction
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Very simple to use
@@ -48,3 +47,8 @@ parquet_go.WriteTo(file, stus, schemaHandler)
 ## Note
 * Have tested the parquet file written by parquet-go on many big data platform (Spark/Hive/Presto), everything is ok :)
 * Not all the features of the parquet are provided now, so read some parquet file written by other programs may cause some failures.
+
+## To do
+* Add more features
+* Parallel
+* Optimize performance
