@@ -5,6 +5,7 @@ import (
 	"os"
 	"parquet_go"
 	"reflect"
+	"log"
 )
 
 type Student struct {
@@ -80,7 +81,17 @@ func main() {
 	stus := CreateStudents()
 	schemaHandler := parquet_go.NewSchemaHandlerFromStruct(new(Student))
 	file, _ := os.Create("flat.parquet")
+	filetxt, _ := os.Create("flat.txt")
 	defer file.Close()
+	defer filetxt.Close()
+
+	log.Println("Start Write Txt")
+	for i:=0; i<len(stus); i++ {
+		filetxt.WriteString(fmt.Sprintf("%v %v %v %v %v\n", stus[i].Name, stus[i].Age, stus[i].Id, stus[i].Weight, stus[i].Sex))
+	}
+	log.Println("Finish Write Txt")
+
+	log.Println("Start Write Parquet")
 	parquet_go.WriteTo(file, stus, schemaHandler)
-	//ReadParquet("./plain.parquet")
+	log.Println("Finish Write Parquet")
 }
