@@ -47,12 +47,13 @@ func CreateStudents() []Student {
 	var id int64 = 1
 	for i := 0; i < len(stus); i++ {
 		stus[i].Name = stuName
-		stus[i].Age = (int32(i) % 30 + 30)
+		stus[i].Age = (int32(i)%30 + 30)
 		stus[i].Id = id
 		stus[i].Weight = 50.0 + float32(stus[i].Age)*0.1
-		stus[i].Sex = (i%2==0)
+		stus[i].Sex = (i%2 == 0)
 		stuName = nextName(stuName)
 		id++
+		fmt.Println(i)
 	}
 	return stus
 }
@@ -78,8 +79,8 @@ func ReadParquet(fname string) {
 func main() {
 	stus := CreateStudents()
 	schemaHandler := parquet_go.NewSchemaHandlerFromStruct(new(Student))
-	file, _ := os.Create("plain.parquet")
+	file, _ := os.Create("flat.parquet")
 	defer file.Close()
 	parquet_go.WriteTo(file, stus, schemaHandler)
-	ReadParquet("./plain.parquet")
+	//ReadParquet("./plain.parquet")
 }
