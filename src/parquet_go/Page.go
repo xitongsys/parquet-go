@@ -1,7 +1,7 @@
 package parquet_go
 
 import (
-//	"bytes"
+	//	"bytes"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"log"
 	"parquet"
@@ -11,13 +11,13 @@ import (
 //functions in this file: assumed the page is dataPage; dictPage will add soon
 
 type Page struct {
-	Header    *parquet.PageHeader
-	DataTable *Table
-	RawData   []byte
+	Header       *parquet.PageHeader
+	DataTable    *Table
+	RawData      []byte
 	CompressType parquet.CompressionCodec
-	DataType parquet.Type
-	MaxVal interface{}
-	MinVal interface{}
+	DataType     parquet.Type
+	MaxVal       interface{}
+	MinVal       interface{}
 }
 
 func NewPage(pageType parquet.PageType, numValues int32) *Page {
@@ -37,7 +37,7 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 	i := 0
 	dataType := GoTypeToParquetType(reflect.TypeOf(table.Values[0]))
 	for i < totalLn {
-		j := i+1
+		j := i + 1
 		var size int32 = 0
 		var numValues int32 = 0
 
@@ -46,7 +46,7 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 
 		for j < totalLn && size < pageSize {
 			size += int32(SizeOf(reflect.ValueOf(table.Values[j])))
-			if table.DefinitionLevels[j]==table.MaxDefinitionLevel {
+			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
 			}
 			maxVal = Max(maxVal, table.Values[j])
@@ -56,7 +56,7 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 
 		//page := NewPage(parquet.PageType_DATA_PAGE, numValues)
 		page := NewPage(parquet.PageType_DATA_PAGE, numValues)
-		
+
 		page.DataTable = new(Table)
 		page.DataTable.Repetition_Type = table.Repetition_Type
 		page.DataTable.Path = table.Path
@@ -71,7 +71,7 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 		page.ToRawDataPage(compressType)
 		page.CompressType = compressType
 		page.DataType = dataType
-		
+
 		totSize += int64(len(page.RawData))
 		res = append(res, page)
 
@@ -79,7 +79,7 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 	}
 
 	log.Println("TableToPages Finished")
-	return res,totSize
+	return res, totSize
 }
 
 func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
@@ -93,7 +93,6 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 		}
 	}
 	valuesRawBuf := WritePlain(valuesBuf)
-	
 
 	//definitionLevel//////////////////////////////////
 	definitionLevelBuf := make([]byte, 0)
@@ -102,7 +101,7 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 		rleBuf := make([]byte, 0)
 		for i < ln {
 			j := i + 1
-			for j < ln && page.DataTable.DefinitionLevels[j]==page.DataTable.DefinitionLevels[i]{
+			for j < ln && page.DataTable.DefinitionLevels[j] == page.DataTable.DefinitionLevels[i] {
 				j++
 			}
 			num := j - i
@@ -111,7 +110,6 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 
 			i = j
 		}
-
 
 		tmpBuf := make([]int32, 1)
 		tmpBuf[0] = int32(len(rleBuf))
@@ -128,14 +126,14 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 		rleBuf := make([]byte, 0)
 		for i < ln {
 			j := i + 1
-			for j < ln && page.DataTable.RepetitionLevels[j] == page.DataTable.RepetitionLevels[i]{
+			for j < ln && page.DataTable.RepetitionLevels[j] == page.DataTable.RepetitionLevels[i] {
 				j++
 			}
 
 			num := j - i
 			rleBufCur := WriteRLE(int32(page.DataTable.RepetitionLevels[i]), int32(num), WidthFromMaxInt(page.DataTable.MaxRepetitionLevel))
 			rleBuf = append(rleBuf, rleBufCur...)
-			
+
 			i = j
 		}
 		tmpBuf := make([]int32, 1)
@@ -149,8 +147,8 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 
 	//dataBuf = definitionBuf + repetitionBuf + valuesRawBuf
 	dataBuf := make([]byte, 0)
-	dataBuf = append(dataBuf, definitionLevelBuf...)
 	dataBuf = append(dataBuf, repetitionLevelBuf...)
+	dataBuf = append(dataBuf, definitionLevelBuf...)
 	dataBuf = append(dataBuf, valuesRawBuf...)
 	dataEncodeBuf := make([]byte, 0)
 	if compressType == parquet.CompressionCodec_GZIP {
