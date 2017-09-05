@@ -40,51 +40,58 @@ func WritePlain(src []Interface) []byte {
 		return []byte{}
 	}
 
-	dataType := reflect.TypeOf(src[0]).Kind()
+	dataType := reflect.TypeOf(src[0])
 
-	if dataType == reflect.Bool { //parquet.Type_BOOLEAN
+	if dataType.Kind() == reflect.Bool { //parquet.Type_BOOLEAN
 		//		return WriteBitPacked(src, 1)
 		srcTmp := make([]bool, ln)
-		for i:=0; i<ln; i++ {
+		for i := 0; i < ln; i++ {
 			srcTmp[i] = src[i].(bool)
 		}
 		return WriteBoolean(srcTmp)
-		
-	} else if dataType == reflect.Int32 { //parquet.Type_INT32
+
+	} else if dataType.Kind() == reflect.Int32 { //parquet.Type_INT32
 		srcTmp := make([]int32, ln)
 		for i := 0; i < ln; i++ {
 			srcTmp[i] = src[i].(int32)
 		}
 		return WritePlainInt32(srcTmp)
 
-	} else if dataType == reflect.Int64 { //parquet.Type_INT64
+	} else if dataType.Kind() == reflect.Int64 { //parquet.Type_INT64
 		srcTmp := make([]int64, ln)
 		for i := 0; i < ln; i++ {
 			srcTmp[i] = src[i].(int64)
 		}
 		return WritePlainInt64(srcTmp)
 
-	} else if dataType == reflect.Float32 { // parquet.Type_FLOAT
+	} else if dataType.Kind() == reflect.Float32 { // parquet.Type_FLOAT
 		srcTmp := make([]float32, ln)
 		for i := 0; i < ln; i++ {
 			srcTmp[i] = src[i].(float32)
 		}
 		return WritePlainFloat32(srcTmp)
 
-	} else if dataType == reflect.Float64 { // parquet.Type_DOUBLE
+	} else if dataType.Kind() == reflect.Float64 { // parquet.Type_DOUBLE
 		srcTmp := make([]float64, ln)
 		for i := 0; i < ln; i++ {
 			srcTmp[i] = src[i].(float64)
 		}
 		return WritePlainFloat64(srcTmp)
 
-	} else if dataType == reflect.String { // parquet.Type_BYTE_ARRAY
+	} else if dataType.Kind() == reflect.String { // parquet.Type_BYTE_ARRAY
 		srcTmp := make([][]byte, ln)
 		for i := 0; i < ln; i++ {
 			srcTmp[i] = []byte(src[i].(string))
 		}
 		return WritePlainByteArray(srcTmp)
 
+	} else if dataType.Kind() == reflect.Slice && dataType.Name()=="INT96" { //parquet.INT96
+		srcTmp := make([]INT96, ln)
+		for i:=0; i<ln; i++ {
+			srcTmp[i] = src[i].(INT96)
+		}
+		return WritePlainInt96(srcTmp)
+		
 	} else {
 		return nil
 	}
@@ -92,9 +99,9 @@ func WritePlain(src []Interface) []byte {
 
 func WriteBoolean(nums []bool) []byte {
 	ln := len(nums)
-	byteNum := (ln + 7)/8
+	byteNum := (ln + 7) / 8
 	res := make([]byte, byteNum)
-	for i:=0; i<ln; i++{
+	for i := 0; i < ln; i++ {
 		if nums[i] {
 			res[i/8] = res[i/8] | (1 << uint32(i%8))
 		}
@@ -122,6 +129,20 @@ func WritePlainInt64(nums []int64) []byte {
 	}
 	bufWriter.Flush()
 	res := make([]byte, len(nums)*8)
+	b.Read(res)
+	return res
+}
+
+func WritePlainInt96(nums []INT96) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		for j := 0; j < len(nums[i]); j++ {
+			binary.Write(bufWriter, binary.LittleEndian, &nums[i][j])
+		}
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*12)
 	b.Read(res)
 	return res
 }
@@ -171,7 +192,7 @@ func WritePlainByteArray(arrays [][]byte) []byte {
 func WriteUnsignedVarInt(num uint32) []byte {
 	byteNum := (BitNum(uint64(num)) + 6) / 7
 	if byteNum == 0 {
-		return make([]byte,1)
+		return make([]byte, 1)
 	}
 	res := make([]byte, byteNum)
 
@@ -221,7 +242,7 @@ func WriteBitPacked(vals []Interface, bitWidth int64) []byte {
 	val := int64(valsInt[i])
 	for i < ln {
 		if left >= resCurNeedBits {
-			resCur |= ((val >> uint64(used)) & ((1 << uint64(resCurNeedBits)) - 1)) << uint64(8 - resCurNeedBits)
+			resCur |= ((val >> uint64(used)) & ((1 << uint64(resCurNeedBits)) - 1)) << uint64(8-resCurNeedBits)
 			valBuf = append(valBuf, byte(resCur))
 			left -= resCurNeedBits
 			used += resCurNeedBits
@@ -237,7 +258,7 @@ func WriteBitPacked(vals []Interface, bitWidth int64) []byte {
 			}
 
 		} else {
-			resCur |= (val >> uint64(used)) << uint64(8 - resCurNeedBits)
+			resCur |= (val >> uint64(used)) << uint64(8-resCurNeedBits)
 			i += 1
 
 			if i < ln {

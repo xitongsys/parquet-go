@@ -59,7 +59,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					stack = append(stack, newNode)
 				}
 
-			} else if node.Val.Type().Kind() == reflect.Slice {
+			} else if node.Val.Type().Kind() == reflect.Slice && node.Val.Type().Name()!="INT96"{
 				ln := node.Val.Len()
 				name := node.Path[len(node.Path)-1] + "_item"
 				if ln <= 0 {

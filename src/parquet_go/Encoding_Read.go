@@ -32,6 +32,14 @@ func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt int32) []In
 			res[i] = resTmp[i]
 		}
 		return res
+	} else if dataType == parquet.Type_INT96 {
+		resTmp := ReadPlainInt96(bytesReader, cnt)
+		res := make([]Interface, len(resTmp))
+		for i := 0; i < len(resTmp); i++ {
+			res[i] = resTmp[i]
+		}
+		return res
+
 	} else if dataType == parquet.Type_FLOAT {
 		resTmp := ReadPlainFloat32(bytesReader, cnt)
 		res := make([]Interface, len(resTmp))
@@ -75,6 +83,14 @@ func ReadPlainInt32(bytesReader *bytes.Reader, cnt int32) []int32 {
 
 func ReadPlainInt64(bytesReader *bytes.Reader, cnt int32) []int64 {
 	res := make([]int64, cnt)
+	for i := 0; i < int(cnt); i++ {
+		binary.Read(bytesReader, binary.LittleEndian, &res[i])
+	}
+	return res
+}
+
+func ReadPlainInt96(bytesReader *bytes.Reader, cnt int32) []INT96 {
+	res := make([]INT96, cnt)
 	for i := 0; i < int(cnt); i++ {
 		binary.Read(bytesReader, binary.LittleEndian, &res[i])
 	}
@@ -132,7 +148,6 @@ func ReadUnsignedVarInt(bytesReader *bytes.Reader) int32 {
 	return res
 }
 
-
 //RLE return res is []int64
 func ReadRLE(bytesReader *bytes.Reader, header int32, bitWidth int32) []Interface {
 	cnt := header >> 1
@@ -174,7 +189,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header int32, bitWidth int32) []In
 	b := bytesBuf[i]
 	for i < len(bytesBuf) {
 		if left >= resCurNeedBits {
-			resCur |= int32(((int(b) >> uint32(used)) & ((1 << uint32(resCurNeedBits)) - 1)) << uint32(bitWidth - resCurNeedBits))
+			resCur |= int32(((int(b) >> uint32(used)) & ((1 << uint32(resCurNeedBits)) - 1)) << uint32(bitWidth-resCurNeedBits))
 			res = append(res, int64(resCur))
 			left -= resCurNeedBits
 			used += resCurNeedBits
@@ -190,7 +205,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header int32, bitWidth int32) []In
 			}
 
 		} else {
-			resCur |= int32((int(b) >> uint32(used)) << uint32(bitWidth - resCurNeedBits))
+			resCur |= int32((int(b) >> uint32(used)) << uint32(bitWidth-resCurNeedBits))
 			i += 1
 			if i < len(bytesBuf) {
 				b = bytesBuf[i]
