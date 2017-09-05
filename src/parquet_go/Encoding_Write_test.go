@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func Test_BitNum(t *testing.T) {
+func TestBitNum(t *testing.T) {
 	testNum := make([]uint64, 4)
 	resNum := make([]uint64, 4)
 	
@@ -24,7 +24,7 @@ func Test_BitNum(t *testing.T) {
 	}
 }
 
-func Test_WriteUnsignedVarInt(t *testing.T) {
+func TestWriteUnsignedVarInt(t *testing.T) {
 	resBuf := make([]byte, 0)
 	resBuf = append(resBuf, byte(0x00))
 	resBuf = append(resBuf, byte(0x7F))
@@ -60,7 +60,7 @@ func Test_WriteUnsignedVarInt(t *testing.T) {
 	}
 }
 
-func Test_WriteRLE(t *testing.T) {
+func TestWriteRLE(t *testing.T) {
 	resBuf := make([]byte,0)
 	resBuf = append(resBuf, byte(0x2<<1))
 
@@ -78,7 +78,7 @@ func Test_WriteRLE(t *testing.T) {
 	}
 }
 
-func Test_WriteBitPacked( t *testing.T){
+func TestWriteBitPacked( t *testing.T){
 	testBuf := make([]Interface, 8)
 	for i:=0; i<len(testBuf); i++ {
 		testBuf[i] = int32(i)
@@ -107,5 +107,32 @@ func Test_WriteBitPacked( t *testing.T){
 	}
 }
 
+
+func TestWritePlainInt96(t *testing.T) {
+	res := make([]byte, 0)
+	res = append(res,
+		byte(0xFA), byte(0xFA), byte(0xFA), byte(0x7A),
+		byte(0xFA), byte(0xFA), byte(0xFA), byte(0x7A),
+		byte(0xFA), byte(0xFA), byte(0xFA), byte(0x7A),
+
+		byte(0xFB), byte(0xFB), byte(0xFB), byte(0x8B),
+		byte(0xFB), byte(0xFB), byte(0xFB), byte(0x8B),
+		byte(0xFB), byte(0xFB), byte(0xFB), byte(0x8B))
+
+	testBuf := make([]INT96, 2)
+	testBuf[0][0] = 0x7AFAFAFA
+	testBuf[0][1] = 0x7AFAFAFA
+	testBuf[0][2] = 0x7AFAFAFA
+
+	testBuf[1][0] = 0x8BFBFBFB
+	testBuf[1][1] = 0x8BFBFBFB
+	testBuf[1][2] = 0x8BFBFBFB
+
+	testRes := WritePlainInt96(testBuf)
+	if string(testRes) != string(res) {
+		t.Errorf("TestWritePlainInt96 Error")
+	}
+	
+}
 
 

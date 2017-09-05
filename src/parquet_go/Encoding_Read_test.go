@@ -118,18 +118,18 @@ func Test_ReadPlainInt96(t *testing.T) {
 	reader := bytes.NewReader(testBuf)
 	testRes := ReadPlainInt96(reader, 2)
 
-	res := make([][3]int32, 2)
+	res := make([][3]uint32, 2)
 	res[0][0] = 0x7AFAFAFA
 	res[0][1] = 0x7AFAFAFA
 	res[0][2] = 0x7AFAFAFA
 
-	res[1][0] = 0x7BFBFBFB
-	res[1][1] = 0x7BFBFBFB
-	res[1][2] = 0x7BFBFBFB
+	res[1][0] = 0x8BFBFBFB
+	res[1][1] = 0x8BFBFBFB
+	res[1][2] = 0x8BFBFBFB
 
 	for i:=0; i<2; i++ {
 		for j:=0; j<3; j++ {
-			if res[i][j] != testRes[i][j] {
+			if (res[i][j]) != testRes[i][j] {
 				t.Errorf("ReadPlainInt96 Error")
 				return
 			}
