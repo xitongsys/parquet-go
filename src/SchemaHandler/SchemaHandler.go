@@ -15,6 +15,7 @@ import (
 type SchemaHandler struct {
 	SchemaElements []*parquet.SchemaElement
 	MapIndex       map[string]int32
+	IndexMap       map[int32]string
 }
 
 func (self *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepetitionType, error) {
@@ -178,7 +179,12 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			newItem := NewItem()
 			newItem.Info["Name"] = "element"
 			newItem.GoType = item.GoType.Elem()
-			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
+			if newItem.GoType.Kind() == reflect.Ptr {
+				newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_OPTIONAL
+				newItem.GoType = item.GoType.Elem().Elem()
+			} else {
+				newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
+			}
 			newItem.Info["Tag"] = item.Info["Tag"]
 			stack = append(stack, newItem)
 
@@ -214,7 +220,12 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			newItem = NewItem()
 			newItem.Info["Name"] = "value"
 			newItem.GoType = item.GoType.Elem()
-			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
+			if newItem.GoType.Kind() == reflect.Ptr {
+				newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_OPTIONAL
+				newItem.GoType = item.GoType.Elem().Elem()
+			} else {
+				newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
+			}
 			stack = append(stack, newItem)
 		} else {
 			schema := parquet.NewSchemaElement()
@@ -284,6 +295,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHandler {
 	schemaHandler := new(SchemaHandler)
 	schemaHandler.MapIndex = make(map[string]int32)
+	schemaHandler.IndexMap = make(map[int32]string)
 	schemaHandler.SchemaElements = schemas
 
 	//use DFS get path of schema
@@ -305,6 +317,7 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 					path = append(path, schemas[stack[i][0]].GetName())
 				}
 				schemaHandler.MapIndex[Common.PathToStr(path)] = top[0]
+				schemaHandler.IndexMap[top[0]] = Common.PathToStr(path)
 				stack = stack[:len(stack)-1]
 			} else {
 				top[1]--
