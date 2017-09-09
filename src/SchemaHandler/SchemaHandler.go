@@ -157,21 +157,22 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 		} else if item.GoType.Kind() == reflect.Slice {
 			schema := parquet.NewSchemaElement()
 			schema.Name = item.Info["Name"].(string)
-			rt := item.Info["RepetitionType"].(parquet.FieldRepetitionType)
-			schema.RepetitionType = &rt
-			var numField int32 = 1
-			schema.NumChildren = &numField
+			rt1 := item.Info["RepetitionType"].(parquet.FieldRepetitionType)
+			schema.RepetitionType = &rt1
+			var numField1 int32 = 1
+			schema.NumChildren = &numField1
 			schema.Type = nil
-			ct := parquet.ConvertedType_LIST
-			schema.ConvertedType = &ct
+			ct1 := parquet.ConvertedType_LIST
+			schema.ConvertedType = &ct1
 			schemaElements = append(schemaElements, schema)
 
 			schema = parquet.NewSchemaElement()
 			schema.Name = "list"
-			rt = parquet.FieldRepetitionType_REPEATED
-			schema.RepetitionType = &rt
+			rt2 := parquet.FieldRepetitionType_REPEATED
+			schema.RepetitionType = &rt2
 			schema.Type = nil
-			schema.NumChildren = &numField
+			var numField2 int32 = 1
+			schema.NumChildren = &numField2
 			schemaElements = append(schemaElements, schema)
 
 			newItem := NewItem()
@@ -184,24 +185,24 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 		} else if item.GoType.Kind() == reflect.Map {
 			schema := parquet.NewSchemaElement()
 			schema.Name = item.Info["Name"].(string)
-			rt := item.Info["RepetitionType"].(parquet.FieldRepetitionType)
-			schema.RepetitionType = &rt
-			var numField int32 = 1
-			schema.NumChildren = &numField
+			rt1 := item.Info["RepetitionType"].(parquet.FieldRepetitionType)
+			schema.RepetitionType = &rt1
+			var numField1 int32 = 1
+			schema.NumChildren = &numField1
 			schema.Type = nil
-			ct := parquet.ConvertedType_MAP
-			schema.ConvertedType = &ct
+			ct1 := parquet.ConvertedType_MAP
+			schema.ConvertedType = &ct1
 			schemaElements = append(schemaElements, schema)
 
 			schema = parquet.NewSchemaElement()
 			schema.Name = "key_value"
-			rt = parquet.FieldRepetitionType_REPEATED
-			schema.RepetitionType = &rt
-			numField = 2
-			schema.NumChildren = &numField
+			rt2 := parquet.FieldRepetitionType_REPEATED
+			schema.RepetitionType = &rt2
+			var numField2 int32 = 2
+			schema.NumChildren = &numField2
 			schema.Type = nil
-			ct = parquet.ConvertedType_MAP_KEY_VALUE
-			schema.ConvertedType = &ct
+			ct2 := parquet.ConvertedType_MAP_KEY_VALUE
+			schema.ConvertedType = &ct2
 			schemaElements = append(schemaElements, schema)
 
 			newItem := NewItem()
@@ -277,8 +278,6 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schemaElements = append(schemaElements, schema)
 		}
 	}
-
-	log.Println(schemaElements)
 	return NewSchemaHandlerFromSchemaList(schemaElements)
 }
 
@@ -317,5 +316,6 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 			}
 		}
 	}
+	log.Println("NewSchemaHandlerFromSchemaList Finished")
 	return schemaHandler
 }

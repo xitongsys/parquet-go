@@ -1,20 +1,22 @@
 package SchemaHandler
 
 import (
+	"ParquetType"
 	"fmt"
 	"testing"
 )
 
 type Class struct {
-	Name   string
-	Number int32
-	Score  float32
+	Name   ParquetType.UTF8
+	Number ParquetType.INT32
+	Score  ParquetType.DECIMAL `Scale:"3" Precision:"10" "BaseType":INT32`
 }
 
 type Student struct {
-	Name    string
-	Age     int32
-	Classes Class
+	Name    ParquetType.UTF8
+	Age     ParquetType.INT64
+	Classes []Class
+	Info    map[ParquetType.UTF8]ParquetType.UTF8
 }
 
 func TestNewSchemaHandlerFromStruct(t *testing.T) {
