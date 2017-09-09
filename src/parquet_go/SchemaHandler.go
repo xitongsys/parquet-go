@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+//path is full path
+
 type SchemaHandler struct {
 	SchemaElements []*parquet.SchemaElements
 	MapIndex       map[string]int
@@ -122,16 +124,45 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			numField := item.GoType.NumField
 			schema.NumChildren = &numField
 			schema.Type = nil
+			schemaElements = append(schemaElements, schema)
+
 			for i := 0; int32(i) < numField; i++ {
 				f := item.GoType.Field(i)
 				newItem := new(Item)
-				newItem.GoType = f.Type
 				newItem.Info["Name"] = f.Name
-
+				newItem.Info["Tag"] = f.Tag
+				if f.Type.Kind() == reflect.Ptr {
+					newItem.GoType = f.Type.Elem()
+					newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_OPTIONAL
+				} else {
+					newItem.GoType = f.Type
+					newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
+				}
+				stack = append(stack, newItem)
 			}
 
 		} else if item.GoType.Kind() == reflect.Slice {
+			var numField int32 = 1
+			schema.NumChildren = &numField
+			schema.Type = nil
+			schema.ConvertedType = parquet.ConvertedType_LIST
+			schemaElements = append(schemaElements, schema)
+
+			schema = parquet.NewSchemaElement()
+			schema.Name = "list"
+			schema.RepetitionType = parquet.FieldRepetitionType_REPEATED
+			schema.Type = nil
+			schema.NumChildren = &numField
+			schemaElements = append(schemaElements, schema)
+
+			newItem := new(Item)
+			newItem.Info["Name"] = "element"
+			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
+			newItem.Info["Tag"] = f.Tag
+			stack = append(stack, newItem)
+
 		} else if item.GoType.Kind() == reflect.Map {
+
 		} else {
 		}
 
