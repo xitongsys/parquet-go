@@ -1,4 +1,4 @@
-package parquet_go
+package Common
 
 import (
 	"testing"

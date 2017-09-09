@@ -1,4 +1,4 @@
-package parquet_go
+package SchemaHandler
 
 import (
 	"fmt"

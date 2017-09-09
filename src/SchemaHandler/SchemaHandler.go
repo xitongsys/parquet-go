@@ -1,4 +1,4 @@
-package parquet_go
+package SchemaHandler
 
 import (
 	"errors"
@@ -93,6 +93,13 @@ func (self *SchemaHandler) IndexFromDefinitionLevel(path []string, dl int32) (in
 		}
 	}
 	return int32(i), nil
+}
+
+func (self *SchemaHandler) GetRootName() string {
+	if len(self.SchemaElements) <= 0 {
+		return ""
+	}
+	return self.SchemaElements[0].GetName()
 }
 
 type Item struct {
