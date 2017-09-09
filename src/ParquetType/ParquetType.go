@@ -1,4 +1,4 @@
-package parquet_go
+package ParquetType
 
 import (
 	"parquet"
@@ -93,7 +93,7 @@ func NameToConvertedType(name string) parquet.ConvertedType {
 
 }
 
-func IsBaseType(name string) boolean {
+func IsBaseType(name string) bool {
 	if name == "BOOLEAN" ||
 		name == "INT32" || name == "INT64" || name == "INT96" ||
 		name == "FLOAT" || name == "DOUBLE" ||

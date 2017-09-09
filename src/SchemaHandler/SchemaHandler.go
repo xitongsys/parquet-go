@@ -1,6 +1,8 @@
 package SchemaHandler
 
 import (
+	"Common"
+	"ParquetType"
 	"errors"
 	"parquet"
 	"reflect"
@@ -10,12 +12,12 @@ import (
 //path is full path
 
 type SchemaHandler struct {
-	SchemaElements []*parquet.SchemaElements
-	MapIndex       map[string]int
+	SchemaElements []*parquet.SchemaElement
+	MapIndex       map[string]int32
 }
 
 func (self *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepetitionType, error) {
-	pathStr := PathToStr(path)
+	pathStr := Common.PathToStr(path)
 	if index, ok := self.MapIndex[pathStr]; ok {
 		return self.SchemaElements[index].GetRepetitionType(), nil
 	} else {
@@ -27,8 +29,7 @@ func (self *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
 	for i := 2; i <= ln; i++ {
-		pathStr := PathToStr(path[:i])
-		rt, err := self.GetRepetitionType(pathStr)
+		rt, err := self.GetRepetitionType(path[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -43,8 +44,7 @@ func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
 	for i := 2; i <= ln; i++ {
-		pathStr := PathToStr(path[:i])
-		rt, err := self.GetRepetitionType(pathStr)
+		rt, err := self.GetRepetitionType(path[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -77,12 +77,12 @@ func (self *SchemaHandler) IndexFromRepetitionLevel(path []string, rl int32) (in
 
 func (self *SchemaHandler) IndexFromDefinitionLevel(path []string, dl int32) (int32, error) {
 	if dl <= 0 {
-		return 0, error
+		return 0, nil
 	}
 	ln := len(path)
 	i := 0
 	var cur int32 = 0
-	for cur < rl && i+1 < ln {
+	for cur < dl && i+1 < ln {
 		i++
 		t, err := self.GetRepetitionType(path[:i+1])
 		if err != nil {
@@ -126,8 +126,9 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 		if item.GoType.Kind() == reflect.Struct {
 			schema := parquet.NewSchemaElement()
 			schema.Name = item.Info["Name"].(string)
-			schema.RepetitionType = &(item.Info["RepetitionType"].(parquet.FieldRepetitionType))
-			numField := item.GoType.NumField
+			rt := item.Info["RepetitionType"].(parquet.FieldRepetitionType)
+			schema.RepetitionType = &rt
+			numField := int32(item.GoType.NumField())
 			schema.NumChildren = &numField
 			schema.Type = nil
 			schemaElements = append(schemaElements, schema)
@@ -170,7 +171,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			newItem.Info["Name"] = "element"
 			rt = parquet.FieldRepetitionType_REQUIRED
 			newItem.Info["RepetitionType"] = &rt
-			newItem.Info["Tag"] = f.Tag
+			newItem.Info["Tag"] = item.Info["Tag"]
 			stack = append(stack, newItem)
 
 		} else if item.GoType.Kind() == reflect.Map {
@@ -181,17 +182,18 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			var numField int32 = 1
 			schema.NumChildren = &numField
 			schema.Type = nil
-			schema.ConvertedType = parquet.ConvertedType_MAP
+			ct := parquet.ConvertedType_MAP
+			schema.ConvertedType = &ct
 			schemaElements = append(schemaElements, schema)
 
-			schema := parquet.NewSchemaElement()
+			schema = parquet.NewSchemaElement()
 			schema.Name = "key_value"
 			rt = parquet.FieldRepetitionType_REPEATED
 			schema.RepetitionType = &rt
-			var numField int32 = 2
+			numField = 2
 			schema.NumChildren = &numField
 			schema.Type = nil
-			ct := parquet.ConvertedType_MAP_KEY_VALUE
+			ct = parquet.ConvertedType_MAP_KEY_VALUE
 			schema.ConvertedType = &ct
 			schemaElements = append(schemaElements, schema)
 
@@ -208,57 +210,60 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			stack = append(stack, newItem)
 		} else {
 			schema := parquet.NewSchemaElement()
-			schema.Name = item.Info["Name"]
+			schema.Name = item.Info["Name"].(string)
 			rt := item.Info["RepetitionType"].(parquet.FieldRepetitionType)
 			schema.RepetitionType = &rt
 			schema.NumChildren = nil
 
 			name := item.GoType.Name()
-			if IsBaseType(name) {
-				t := NameToBaseType(name)
+			if ParquetType.IsBaseType(name) {
+				t := ParquetType.NameToBaseType(name)
 				schema.Type = &t
 			} else {
 				if name == "INT_8" || name == "INT_16" || name == "INT_32" ||
 					name == "UINT_8" || name == "UINT_16" || name == "UINT_32" ||
 					name == "DATE" || name == "TIME_MILLIS" {
 					t := parquet.Type_INT32
-					ct := NameToConvertedType(name)
+					ct := ParquetType.NameToConvertedType(name)
 					schema.Type = &t
 					schema.ConvertedType = &ct
 				} else if name == "INT_64" || name == "UINT_64" ||
 					name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" {
 					t := parquet.Type_INT64
-					ct := NameToConvertedType(name)
+					ct := ParquetType.NameToConvertedType(name)
 					schema.Type = &t
 					schema.ConvertedType = &ct
 				} else if name == "UTF8" {
 					t := parquet.Type_BYTE_ARRAY
-					ct := NameToConvertedType(name)
+					ct := ParquetType.NameToConvertedType(name)
 					schema.Type = &t
 					schema.ConvertedType = &ct
 				} else if name == "INTERVAL" {
 					t := parquet.Type_FIXED_LEN_BYTE_ARRAY
-					ct := NameToConvertedType(name)
-					ln := 12
+					ct := ParquetType.NameToConvertedType(name)
+					var ln int32 = 12
 					schema.Type = &t
 					schema.ConvertedType = &ct
 					schema.TypeLength = &ln
 				} else if name == "DECIMAL" {
 					tag := item.Info["Tag"].(reflect.StructTag)
-					ct := NameToBaseType(name)
+					ct := ParquetType.NameToConvertedType(name)
 					bT := tag.Get("BaseType")
-					t := NameToBaseType(bT)
-					scale := int32(Atoi(tag.Get("Scale")))
-					precision := int32(Atoi(tag.Get("Precision")))
+					t := ParquetType.NameToBaseType(bT)
+					scaleTmp, _ := strconv.Atoi(tag.Get("Scale"))
+					precisionTmp, _ := strconv.Atoi(tag.Get("Precision"))
+					scale := int32(scaleTmp)
+					precision := int32(precisionTmp)
 
 					schema.Type = &t
 					schema.ConvertedType = &ct
 					schema.Scale = &scale
 					schema.Precision = &precision
 
-					if bt == "FIX_LEN_BYTE_ARRAY" {
-						ln := int32(Atoi(tag.Get("Length")))
-						schema.Length = &ln
+					if bT == "FIX_LEN_BYTE_ARRAY" {
+						lnTmp, _ := strconv.Atoi(tag.Get("Length"))
+						ln := int32(lnTmp)
+						schema.TypeLength = &ln
 					}
 					schemaElements = append(schemaElements, schema)
 				}
@@ -290,7 +295,7 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 				for i := 0; i < len(stack); i++ {
 					path = append(path, schemas[stack[i][0]].GetName())
 				}
-				schemaHandler.SchemaMap[PathToStr(path)] = top[0]
+				schemaHandler.MapIndex[Common.PathToStr(path)] = top[0]
 				stack = stack[:len(stack)-1]
 			} else {
 				top[1]--
