@@ -222,6 +222,35 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 					ct := NameToConvertedType(name)
 					schema.Type = &t
 					schema.ConvertedType = &ct
+				} else if name == "UTF8" {
+					t := parquet.Type_BYTE_ARRAY
+					ct := NameToConvertedType(name)
+					schema.Type = &t
+					schema.ConvertedType = &ct
+				} else if name == "INTERVAL" {
+					t := parquet.Type_FIXED_LEN_BYTE_ARRAY
+					ct := NameToConvertedType(name)
+					ln := 12
+					schema.Type = &t
+					schema.ConvertedType = &ct
+					schema.TypeLength = &ln
+				} else if name == "DECIMAL" {
+					tag := item.Info["Tag"].(reflect.StructTag)
+					ct := NameToBaseType(name)
+					bT := tag.Get("BaseType")
+					t := NameToBaseType(bT)
+					scale := int32(Atoi(tag.Get("Scale")))
+					precision := int32(Atoi(tag.Get("Precision")))
+
+					schema.Type = &t
+					schema.ConvertedType = &ct
+					schema.Scale = &scale
+					schema.Precision = &precision
+
+					if bt == "FIX_LEN_BYTE_ARRAY" {
+						ln := int32(Atoi(tag.Get("Length")))
+						schema.Length = &ln
+					}
 				}
 			}
 
