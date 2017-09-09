@@ -16,7 +16,8 @@ type Student struct {
 	Name    ParquetType.UTF8
 	Age     ParquetType.INT64
 	Classes []Class
-	Info    map[ParquetType.UTF8]ParquetType.UTF8
+	Info    *map[ParquetType.UTF8]ParquetType.UTF8
+	Sex     *ParquetType.BOOLEAN
 }
 
 func TestNewSchemaHandlerFromStruct(t *testing.T) {
