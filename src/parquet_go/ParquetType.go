@@ -3,7 +3,7 @@ package parquet_go
 type BOOLEAN bool
 type INT32 int64
 type INT64 int64
-type INT96 [3]uint32
+type INT96 string // length=96
 type FLOAT float32
 type DOUBLE float64
 type BYTE_ARRAY string
@@ -18,3 +18,11 @@ type UINT_8 byte
 type UINT_16 uint32
 type UINT_32 uint32
 type UINT_64 uint64
+
+type DATE int32
+type TIME_MILLIS int32
+type TIME_MICROS int64
+type TIMESTAMP_MILLIS int64
+type INTERVAL string // length=12
+
+type DECIMAL string
