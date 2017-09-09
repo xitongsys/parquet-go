@@ -14,7 +14,7 @@ type Class struct {
 type Student struct {
 	Name    string
 	Age     int32
-	Classes []Class
+	Classes Class
 }
 
 func TestNewSchemaHandlerFromStruct(t *testing.T) {

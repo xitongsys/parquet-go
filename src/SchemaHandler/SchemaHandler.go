@@ -4,6 +4,7 @@ import (
 	"Common"
 	"ParquetType"
 	"errors"
+	"log"
 	"parquet"
 	"reflect"
 	"strconv"
@@ -107,9 +108,15 @@ type Item struct {
 	Info   map[string]interface{}
 }
 
+func NewItem() *Item {
+	item := new(Item)
+	item.Info = make(map[string]interface{})
+	return item
+}
+
 func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 	ot := reflect.TypeOf(obj).Elem()
-	item := new(Item)
+	item := NewItem()
 	item.GoType = ot
 	item.Info["Name"] = "parquet_go_root"
 	item.Info["RepetitionType"] = parquet.FieldRepetitionType(-1)
@@ -135,7 +142,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 
 			for i := 0; int32(i) < numField; i++ {
 				f := item.GoType.Field(i)
-				newItem := new(Item)
+				newItem := NewItem()
 				newItem.Info["Name"] = f.Name
 				newItem.Info["Tag"] = f.Tag
 				if f.Type.Kind() == reflect.Ptr {
@@ -167,10 +174,10 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schema.NumChildren = &numField
 			schemaElements = append(schemaElements, schema)
 
-			newItem := new(Item)
+			newItem := NewItem()
 			newItem.Info["Name"] = "element"
-			rt = parquet.FieldRepetitionType_REQUIRED
-			newItem.Info["RepetitionType"] = &rt
+			newItem.GoType = item.GoType.Elem()
+			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
 			newItem.Info["Tag"] = item.Info["Tag"]
 			stack = append(stack, newItem)
 
@@ -197,13 +204,13 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schema.ConvertedType = &ct
 			schemaElements = append(schemaElements, schema)
 
-			newItem := new(Item)
+			newItem := NewItem()
 			newItem.Info["Name"] = "key"
 			newItem.GoType = item.GoType.Key()
 			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
 			stack = append(stack, newItem)
 
-			newItem = new(Item)
+			newItem = NewItem()
 			newItem.Info["Name"] = "value"
 			newItem.GoType = item.GoType.Elem()
 			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
@@ -265,16 +272,19 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 						ln := int32(lnTmp)
 						schema.TypeLength = &ln
 					}
-					schemaElements = append(schemaElements, schema)
 				}
 			}
+			schemaElements = append(schemaElements, schema)
 		}
 	}
+
+	log.Println(schemaElements)
 	return NewSchemaHandlerFromSchemaList(schemaElements)
 }
 
 func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHandler {
 	schemaHandler := new(SchemaHandler)
+	schemaHandler.MapIndex = make(map[string]int32)
 	schemaHandler.SchemaElements = schemas
 
 	//use DFS get path of schema
