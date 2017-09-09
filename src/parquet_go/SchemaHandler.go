@@ -198,6 +198,33 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
 			stack = append(stack, newItem)
 		} else {
+			schema := parquet.NewSchemaElement()
+			schema.Name = item.Info["Name"]
+			rt := item.Info["RepetitionType"].(parquet.FieldRepetitionType)
+			schema.RepetitionType = &rt
+			schema.NumChildren = nil
+
+			name := item.GoType.Name()
+			if IsBaseType(name) {
+				t := NameToBaseType(name)
+				schema.Type = &t
+			} else {
+				if name == "INT_8" || name == "INT_16" || name == "INT_32" ||
+					name == "UINT_8" || name == "UINT_16" || name == "UINT_32" ||
+					name == "DATE" || name == "TIME_MILLIS" {
+					t := parquet.Type_INT32
+					ct := NameToConvertedType(name)
+					schema.Type = &t
+					schema.ConvertedType = &ct
+				} else if name == "INT_64" || name == "UINT_64" ||
+					name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" {
+					t := parquet.Type_INT64
+					ct := NameToConvertedType(name)
+					schema.Type = &t
+					schema.ConvertedType = &ct
+				}
+			}
+
 		}
 
 	}
