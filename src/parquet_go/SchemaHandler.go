@@ -147,7 +147,8 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			var numField int32 = 1
 			schema.NumChildren = &numField
 			schema.Type = nil
-			schema.ConvertedType = parquet.ConvertedType_LIST
+			ct := parquet.ConvertedType_LIST
+			schema.ConvertedType = &ct
 			schemaElements = append(schemaElements, schema)
 
 			schema = parquet.NewSchemaElement()
@@ -183,7 +184,8 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			var numField int32 = 2
 			schema.NumChildren = &numField
 			schema.Type = nil
-			schema.ConvertedType = parquet.ConvertedType_MAP_KEY_VALUE
+			ct := parquet.ConvertedType_MAP_KEY_VALUE
+			schema.ConvertedType = &ct
 			schemaElements = append(schemaElements, schema)
 
 			newItem := new(Item)
@@ -251,10 +253,9 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 						ln := int32(Atoi(tag.Get("Length")))
 						schema.Length = &ln
 					}
+					schemaElements = append(schemaElements, schema)
 				}
 			}
-
 		}
-
 	}
 }
