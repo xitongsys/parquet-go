@@ -258,4 +258,42 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			}
 		}
 	}
+	return NewSchemaHandlerFromSchemaList(schemaElements)
+}
+
+func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHandler {
+	schemaHandler := new(SchemaHandler)
+	schemaHandler.SchemaElements = schemas
+
+	//use DFS get path of schema
+	ln := int32(len(schemas))
+	var pos int32 = 0
+	stack := make([][]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	for pos < ln || len(stack) > 0 {
+		if len(stack) == 0 {
+			item := make([]int32, 2)
+			item[0] = pos
+			item[1] = int32(*schemas[pos].NumChildren)
+			stack = append(stack, item)
+			pos++
+		} else {
+			top := stack[len(stack)-1]
+			if top[1] == 0 {
+				path := make([]string, 0)
+				for i := 0; i < len(stack); i++ {
+					path = append(path, schemas[stack[i][0]].GetName())
+				}
+				schemaHandler.SchemaMap[PathToStr(path)] = top[0]
+				stack = stack[:len(stack)-1]
+			} else {
+				top[1]--
+				item := make([]int32, 2)
+				item[0] = pos
+				item[1] = schemas[pos].GetNumChildren()
+				stack = append(stack, item)
+				pos++
+			}
+		}
+	}
+	return schemaHandler
 }
