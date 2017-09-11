@@ -16,11 +16,11 @@ type FIXED_LEN_BYTE_ARRAY string
 
 //logical type
 type UTF8 string
-type INT_8 byte
+type INT_8 int32
 type INT_16 int32
 type INT_32 int32
 type INT_64 int64
-type UINT_8 byte
+type UINT_8 uint32
 type UINT_16 uint32
 type UINT_32 uint32
 type UINT_64 uint64

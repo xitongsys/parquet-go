@@ -205,6 +205,35 @@ func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []FIXED_LEN_BYTE_ARRAY) []byte {
 	return res
 }
 
+func WriteUTF8(arrays []UTF8) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	var size uint32 = 0
+	cnt := len(arrays)
+	for i := 0; i < int(cnt); i++ {
+		ln := uint32(len(arrays[i]))
+		binary.Write(bufWriter, binary.LittleEndian, &ln)
+		bufWriter.Write([]byte(arrays[i]))
+		size += 4 + ln
+	}
+	bufWriter.Flush()
+	res := make([]byte, size)
+	b.Read(res)
+	return res
+}
+
+func WriteINT_8(arrays []INT_8) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*4)
+	b.Read(res)
+	return res
+}
+
 func WriteUnsignedVarInt(num uint32) []byte {
 	byteNum := (BitNum(uint64(num)) + 6) / 7
 	if byteNum == 0 {
