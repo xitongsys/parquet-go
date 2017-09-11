@@ -1,9 +1,23 @@
-package parquet_go
+package Marshal
 
 import (
+	. "ParquetType"
+	. "SchemaHandler"
 	"fmt"
 	"testing"
 )
+
+type Student struct {
+	Name    UTF8
+	Age     INT32
+	Classes []Class
+}
+
+type Class struct {
+	Name   UTF8
+	Number INT32
+	Score  FLOAT
+}
 
 func TestMarshal(t *testing.T) {
 	schemaHandler := NewSchemaHandlerFromStruct(new(Student))

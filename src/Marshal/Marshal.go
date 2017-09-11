@@ -1,7 +1,8 @@
-package parquet_go
+package Marshal
 
 import (
 	//"log"
+	. "Common"
 	. "SchemaHandler"
 	"reflect"
 )
@@ -18,7 +19,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 	res := make(map[string]*Table)
 	for i := 0; i < len(schemaHandler.SchemaElements); i++ {
 		schema := schemaHandler.SchemaElements[i]
-		pathStr := schemaHandler.IndexMap[i]
+		pathStr := schemaHandler.IndexMap[int32(i)]
 		numChildren := schema.GetNumChildren()
 		if numChildren == 0 {
 			res[pathStr] = new(Table)
@@ -59,7 +60,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 				}
 			} else if node.Val.Type().Kind() == reflect.Struct {
 				numField := node.Val.Type().NumField()
-				for j := 0; int32(j) < numField; j++ {
+				for j := 0; j < numField; j++ {
 					tf := node.Val.Type().Field(j)
 					name := tf.Name
 					newNode := new(Node)
@@ -97,7 +98,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 						newNode.RL = node.RL + 1
 					}
 					newNode.DL = node.DL + 1 //list is repeated
-					stack := append(stack, newNode)
+					stack = append(stack, newNode)
 				}
 			} else if node.Val.Type().Kind() == reflect.Map {
 				path := make([]string, 0)
@@ -119,7 +120,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					key := keys[j]
 					value := node.Val.MapIndex(key)
 					newNode := new(Node)
-					newNode.Path = append(newNode.Path, node.Path)
+					newNode.Path = append(newNode.Path, node.Path...)
 					newNode.Path = append(newNode.Path, "key_value", "key")
 					newNode.Val = key
 					newNode.DL = node.DL + 1
@@ -131,7 +132,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					stack = append(stack, newNode)
 
 					newNode = new(Node)
-					newNode.Path = append(newNode.Path, node.Path)
+					newNode.Path = append(newNode.Path, node.Path...)
 					newNode.Path = append(newNode.Path, "key_value", "value")
 					newNode.Val = value
 					newNode.DL = node.DL + 1
@@ -146,10 +147,10 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 				pathStr := PathToStr(node.Path)
 				table := res[pathStr]
 				table.Values = append(table.Values, node.Val.Interface())
-				table.DefinitionLevels = node.DL
-				table.RepetitionLevels = node.RL
+				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+				table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
 			}
 		}
 	}
-	return res
+	return &res
 }
