@@ -97,7 +97,7 @@ func WritePlain(src []Interface) []byte {
 	}
 }
 
-func WriteBOOLEAN(nums []BOOLEAN) []byte {
+func WritePlainBOOLEAN(nums []BOOLEAN) []byte {
 	ln := len(nums)
 	byteNum := (ln + 7) / 8
 	res := make([]byte, byteNum)
@@ -147,6 +147,102 @@ func WritePlainINT96(nums []INT96) []byte {
 	return res
 }
 
+func WritePlainINT_8(nums []INT_8) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*4)
+	b.Read(res)
+	return res
+}
+
+func WritePlainINT_16(nums []INT_16) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*4)
+	b.Read(res)
+	return res
+}
+
+func WritePlainINT_32(nums []INT_32) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*4)
+	b.Read(res)
+	return res
+}
+
+func WritePlainINT_64(nums []INT_64) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*8)
+	b.Read(res)
+	return res
+}
+
+func WritePlainUINT_8(nums []UINT_8) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*4)
+	b.Read(res)
+	return res
+}
+
+func WritePlainUINT_16(nums []UINT_16) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*4)
+	b.Read(res)
+	return res
+}
+
+func WritePlainUINT_32(nums []UINT_32) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*4)
+	b.Read(res)
+	return res
+}
+
+func WritePlainUINT_64(nums []UINT_64) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(nums)*8)
+	b.Read(res)
+	return res
+}
+
 func WritePlainFLOAT(nums []FLOAT) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
@@ -171,10 +267,119 @@ func WritePlainDOUBLE(nums []DOUBLE) []byte {
 	return res
 }
 
+func WritePlainUTF8(utf8s []UTF8) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	var size uint32 = 0
+	cnt := len(arrays)
+	for i := 0; i < int(cnt); i++ {
+		ln := uint32(len(utf8s[i]))
+		binary.Write(bufWriter, binary.LittleEndian, &ln)
+		bufWriter.Write([]byte(utf8s[i]))
+		size += 4 + ln
+	}
+	bufWriter.Flush()
+	res := make([]byte, size)
+	b.Read(res)
+	return res
+}
+
+func WritePlainDATE(dates []DATE) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &dates[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(dates)*4)
+	b.Read(res)
+	return res
+}
+
+func WritePlainTIME_MILLIS(times []TIME_MILLIS) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &times[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(times)*4)
+	b.Read(res)
+	return res
+}
+
+func WritePlainTIME_MICROS(times []TIME_MICROS) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &times[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(times)*8)
+	b.Read(res)
+	return res
+}
+
+func WritePlainTIMESTAMP_MILLIS(times []TIMESTAMP_MILLIS) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &times[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(times)*8)
+	b.Read(res)
+	return res
+}
+
+func WritePlainTIMESTAMP_MICROS(times []TIMESTAMP_MICROS) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	for i := 0; i < len(nums); i++ {
+		binary.Write(bufWriter, binary.LittleEndian, &times[i])
+	}
+	bufWriter.Flush()
+	res := make([]byte, len(times)*8)
+	b.Read(res)
+	return res
+}
+
+func WritePlainINTERVAL(intervals []INTERVAL) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	var size uint32 = 0
+	cnt := len(arrays)
+	for i := 0; i < int(cnt); i++ {
+		ln := uint32(len(intervals[i]))
+		bufWriter.Write([]byte(intervals[i]))
+		size += ln
+	}
+	bufWriter.Flush()
+	res := make([]byte, size)
+	b.Read(res)
+	return res
+}
+
+func WritePlainDECIMAL(decimals []DECIMAL) []byte {
+	var b bytes.Buffer
+	bufWriter := bufio.NewWriter(&b)
+	var size uint32 = 0
+	cnt := len(arrays)
+	for i := 0; i < int(cnt); i++ {
+		ln := uint32(len(arrays[i]))
+		binary.Write(bufWriter, binary.LittleEndian, &ln)
+		bufWriter.Write([]byte(decimals[i]))
+		size += 4 + ln
+	}
+	bufWriter.Flush()
+	res := make([]byte, size)
+	b.Read(res)
+	return res
+}
+
 func WritePlainBYTE_ARRAY(arrays []BYTE_ARRAY) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
-
 	var size uint32 = 0
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
@@ -201,35 +406,6 @@ func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []FIXED_LEN_BYTE_ARRAY) []byte {
 	}
 	bufWriter.Flush()
 	res := make([]byte, size)
-	b.Read(res)
-	return res
-}
-
-func WriteUTF8(arrays []UTF8) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
-	var size uint32 = 0
-	cnt := len(arrays)
-	for i := 0; i < int(cnt); i++ {
-		ln := uint32(len(arrays[i]))
-		binary.Write(bufWriter, binary.LittleEndian, &ln)
-		bufWriter.Write([]byte(arrays[i]))
-		size += 4 + ln
-	}
-	bufWriter.Flush()
-	res := make([]byte, size)
-	b.Read(res)
-	return res
-}
-
-func WriteINT_8(arrays []INT_8) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
-	for i := 0; i < len(nums); i++ {
-		binary.Write(bufWriter, binary.LittleEndian, &nums[i])
-	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
 	b.Read(res)
 	return res
 }
