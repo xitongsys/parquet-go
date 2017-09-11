@@ -41,47 +41,149 @@ func WritePlain(src []Interface) []byte {
 	}
 
 	dataType := reflect.TypeOf(src[0])
-
-	if dataType.Kind() == reflect.Bool { //parquet.Type_BOOLEAN
-		//		return WriteBitPacked(src, 1)
-		srcTmp := make([]bool, ln)
+	if dataType.Name() == "BOOLEAN" {
+		srcTmp := make([]BOOLEAN, ln)
 		for i := 0; i < ln; i++ {
-			srcTmp[i] = src[i].(bool)
+			srcTmp[i] = src[i].(BOOLEAN)
 		}
-		return WriteBoolean(srcTmp)
+		return WritePlainBOOLEAN(srcTmp)
 
-	} else if dataType.Kind() == reflect.Int32 { //parquet.Type_INT32
-		srcTmp := make([]int32, ln)
+	} else if dataType.Name() == "INT32" {
+		srcTmp := make([]INT32, ln)
 		for i := 0; i < ln; i++ {
-			srcTmp[i] = src[i].(int32)
+			srcTmp[i] = src[i].(INT32)
 		}
-		return WritePlainInt32(srcTmp)
+		return WritePlainINT32(srcTmp)
 
-	} else if dataType.Kind() == reflect.Int64 { //parquet.Type_INT64
-		srcTmp := make([]int64, ln)
+	} else if dataType.Name() == "INT64" {
+		srcTmp := make([]INT64, ln)
 		for i := 0; i < ln; i++ {
-			srcTmp[i] = src[i].(int64)
+			srcTmp[i] = src[i].(INT64)
 		}
-		return WritePlainInt64(srcTmp)
-
-	} else if dataType.Kind() == reflect.Float32 { // parquet.Type_FLOAT
-		srcTmp := make([]float32, ln)
+		return WritePlainINT64(srcTmp)
+	} else if dataType.Name() == "INT_8" {
+		srcTmp := make([]INT_8, ln)
 		for i := 0; i < ln; i++ {
-			srcTmp[i] = src[i].(float32)
+			srcTmp[i] = src[i].(INT_8)
 		}
-		return WritePlainFloat32(srcTmp)
+		return WritePlainINT_8(srcTmp)
 
-	} else if dataType.Kind() == reflect.Float64 { // parquet.Type_DOUBLE
-		srcTmp := make([]float64, ln)
+	} else if dataType.Name() == "INT_16" {
+		srcTmp := make([]INT_16, ln)
 		for i := 0; i < ln; i++ {
-			srcTmp[i] = src[i].(float64)
+			srcTmp[i] = src[i].(INT_16)
 		}
-		return WritePlainFloat64(srcTmp)
+		return WritePlainINT_16(srcTmp)
 
-	} else if dataType.Kind() == reflect.String { // parquet.Type_BYTE_ARRAY
+	} else if dataType.Name() == "INT_32" {
+		srcTmp := make([]INT_32, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(INT_32)
+		}
+		return WritePlainINT_32(srcTmp)
+
+	} else if dataType.Name() == "INT_64" {
+		srcTmp := make([]INT_64, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(INT_64)
+		}
+		return WritePlainINT_64(srcTmp)
+
+	} else if dataType.Name() == "UINT_8" {
+		srcTmp := make([]UINT_8, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(UINT_8)
+		}
+		return WritePlainUINT_8(srcTmp)
+
+	} else if dataType.Name() == "UINT_16" {
+		srcTmp := make([]UINT_16, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(UINT_16)
+		}
+		return WritePlainUINT_16(srcTmp)
+
+	} else if dataType.Name() == "UINT_32" {
+		srcTmp := make([]UINT_32, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(UINT_32)
+		}
+		return WritePlainUINT_32(srcTmp)
+
+	} else if dataType.Name() == "UINT_64" {
+		srcTmp := make([]UINT_64, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(UINT_64)
+		}
+		return WritePlainUINT_64(srcTmp)
+
+	} else if dataType.Name() == "DATE" {
+		srcTmp := make([]DATE, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(DATE)
+		}
+		return WritePlainDATE(srcTmp)
+
+	} else if dataType.Name() == "TIME_MILLIS" {
+		srcTmp := make([]TIME_MILLIS, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(TIME_MILLIS)
+		}
+		return WritePlainTIME_MILLIS(srcTmp)
+
+	} else if dataType.Name() == "TIME_MICROS" {
+		srcTmp := make([]TIME_MICROS, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(TIME_MICROS)
+		}
+		return WritePlainTIME_MICROS(srcTmp)
+
+	} else if dataType.Name() == "TIMESTAMP_MILLIS" {
+		srcTmp := make([]TIMESTAMP_MILLIS, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(TIMESTAMP_MILLIS)
+		}
+		return WritePlainTIMESTAMP_MILLIS(srcTmp)
+
+	} else if dataType.Name() == "TIMESTAMP_MICROS" {
+		srcTmp := make([]TIMESTAMP_MICROS, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(TIMESTAMP_MICROS)
+		}
+		return WritePlainTIMESTAMP_MICROS(srcTmp)
+
+	} else if dataType.Name() == "INTERVAL" {
+		srcTmp := make([]INTERVAL, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(INTERVAL)
+		}
+		return WritePlainINTERVAL(srcTmp)
+
+	} else if dataType.Name() == "DECIMAL" {
+		srcTmp := make([]DECIMAL, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(DECIMAL)
+		}
+		return WritePlainDECIMAL(srcTmp)
+
+	} else if dataType.Name() == "FLOAT" {
+		srcTmp := make([]FLOAT, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(FLOAT)
+		}
+		return WritePlainFLOAT(srcTmp)
+
+	} else if dataType.Name() == "DOUBLE" {
+		srcTmp := make([]DOUBLE, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(DOUBLE)
+		}
+		return WritePlainFLOAT64(srcTmp)
+
+	} else if dataType.Name() == "BYTE_ARRAY" {
 		srcTmp := make([][]byte, ln)
 		for i := 0; i < ln; i++ {
-			srcTmp[i] = []byte(src[i].(string))
+			srcTmp[i] = []byte(src[i].(BYTE_ARRAY))
 		}
 		return WritePlainByteArray(srcTmp)
 
