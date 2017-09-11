@@ -104,11 +104,54 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 				path := make([]string, 0)
 				path = append(path, node.Path...)
 				path = append(path, "key_value")
+				keys := node.Val.MapKeys()
+				if len(keys) <= 0 {
+					pathStr := PathToStr(node.Path)
+					for key, table := range res {
+						if len(key) >= len(pathStr) && key[:len(pathStr)] == pathStr {
+							table.Values = append(table.Values, nil)
+							table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+							table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+						}
+					}
 
+				}
+
+				for j := 0; j < len(keys); j++ {
+					key := keys[j]
+					value := node.Val.MapIndex(key)
+					newNode := new(Node)
+					newNode.Path = append(newNode.Path, node.Path)
+					newNode.Path = append(newNode.Path, "key_value", "key")
+					newNode.Val = key
+					newNode.DL = node.DL + 1
+					if j == 0 {
+						newNode.RL = node.RL
+					} else {
+						newNode.RL = node.RL + 1
+					}
+					stack = append(stack, newNode)
+
+					newNode = new(Node)
+					newNode.Path = append(newNode.Path, node.Path)
+					newNode.Path = append(newNode.Path, "key_value", "value")
+					newNode.Val = value
+					newNode.DL = node.DL + 1
+					if j == 0 {
+						newNode.RL = node.RL
+					} else {
+						newNode.RL = node.RL + 1
+					}
+					stack = append(stack, newNode)
+				}
 			} else {
+				pathStr := PathToStr(node.Path)
+				table := res[pathStr]
+				table.Values = append(table.Values, node.Val.Interface())
+				table.DefinitionLevels = node.DL
+				table.RepetitionLevels = node.RL
 			}
-
 		}
 	}
-
+	return res
 }
