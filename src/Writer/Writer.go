@@ -1,9 +1,12 @@
-package parquet_go
+package Writer
 
 import (
+	. "Common"
+	. "Layout"
+	. "Marshal"
+	. "SchemaHandler"
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	//"log"
 	"os"
 	"parquet"
 	"reflect"

@@ -1,7 +1,7 @@
-package parquet_go
+package Layout
 
 import (
-	//	"bytes"
+	. "Common"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"log"
 	"parquet"

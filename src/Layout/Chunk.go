@@ -1,34 +1,34 @@
-package parquet_go
+package Layout
 
 import (
-//	"bytes"
-//	"git.apache.org/thrift.git/lib/go/thrift"
+	. "Common"
+	. "Encoding"
 	"log"
 	"parquet"
 )
 
 type Chunk struct {
-	Pages []*Page
+	Pages       []*Page
 	ChunkHeader *parquet.ColumnChunk
 }
 
-func PagesToChunk (pages []*Page) *Chunk {
+func PagesToChunk(pages []*Page) *Chunk {
 	ln := len(pages)
-	var numValues int64= 0
+	var numValues int64 = 0
 	var totalUncompressedSize int64 = 0
 	var totalCompressedSize int64 = 0
 
 	var maxVal interface{} = pages[0].MaxVal
 	var minVal interface{} = pages[0].MinVal
-	
-	for i:=0; i<ln; i++ {
+
+	for i := 0; i < ln; i++ {
 		numValues += int64(pages[i].Header.DataPageHeader.NumValues)
 		totalUncompressedSize += int64(pages[i].Header.UncompressedPageSize) + int64(len(pages[i].RawData)) - int64(pages[i].Header.CompressedPageSize)
 		totalCompressedSize += int64(len(pages[i].RawData))
 		maxVal = Max(maxVal, pages[i].MaxVal)
 		minVal = Min(minVal, pages[i].MinVal)
 	}
-	
+
 	chunk := new(Chunk)
 	chunk.Pages = pages
 	chunk.ChunkHeader = parquet.NewColumnChunk()
@@ -45,11 +45,9 @@ func PagesToChunk (pages []*Page) *Chunk {
 	metaData.Statistics = parquet.NewStatistics()
 	metaData.Statistics.Max = WritePlain([]Interface{maxVal})
 	metaData.Statistics.Min = WritePlain([]Interface{minVal})
-	
+
 	chunk.ChunkHeader.MetaData = metaData
 
 	log.Println("PagesToChunk Finished")
 	return chunk
 }
-
-

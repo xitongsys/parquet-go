@@ -1,17 +1,16 @@
-package parquet_go
+package Layout
 
 import (
 	"parquet"
 )
 
 type RowGroup struct {
-	Chunks []*Chunk
+	Chunks         []*Chunk
 	RowGroupHeader *parquet.RowGroup
 }
 
-func NewRowGroup() *RowGroup{
+func NewRowGroup() *RowGroup {
 	rowGroup := new(RowGroup)
 	rowGroup.RowGroupHeader = parquet.NewRowGroup()
 	return rowGroup
 }
-
