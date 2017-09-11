@@ -1,13 +1,14 @@
-package parquet_go
+package Encoding
 
 import (
+	. "Common"
 	"testing"
 )
 
 func TestBitNum(t *testing.T) {
 	testNum := make([]uint64, 4)
 	resNum := make([]uint64, 4)
-	
+
 	testNum[0] = 0
 	resNum[0] = 0
 	testNum[1] = 1
@@ -17,7 +18,7 @@ func TestBitNum(t *testing.T) {
 	testNum[3] = 1023
 	resNum[3] = 10
 
-	for i:=0; i<len(testNum); i++ {
+	for i := 0; i < len(testNum); i++ {
 		if resNum[i] != BitNum(testNum[i]) {
 			t.Error("WidthFromMaxInt Error Case Num=", testNum[i])
 		}
@@ -37,7 +38,7 @@ func TestWriteUnsignedVarInt(t *testing.T) {
 	resBuf = append(resBuf, byte(0x80), byte(0x80), byte(0x80), byte(0x40))
 	resBuf = append(resBuf, byte(0xFF), byte(0xFF), byte(0xFF), byte(0x7F))
 
-	testNum := make([]uint32,10)
+	testNum := make([]uint32, 10)
 	testNum[0] = 0x0
 	testNum[1] = 0x7F
 	testNum[2] = 0x80
@@ -50,7 +51,7 @@ func TestWriteUnsignedVarInt(t *testing.T) {
 	testNum[9] = 0xFFFFFFF
 
 	testRes := make([]byte, 0)
-	for i:=0; i<len(testNum); i++{
+	for i := 0; i < len(testNum); i++ {
 		tmpBuf := WriteUnsignedVarInt(testNum[i])
 		testRes = append(testRes, tmpBuf...)
 	}
@@ -61,26 +62,25 @@ func TestWriteUnsignedVarInt(t *testing.T) {
 }
 
 func TestWriteRLE(t *testing.T) {
-	resBuf := make([]byte,0)
+	resBuf := make([]byte, 0)
 	resBuf = append(resBuf, byte(0x2<<1))
 
 	testRes := WriteRLE(0, 2, 0)
-	if string(resBuf) != string(testRes){
-		t.Errorf("WriteRLE Error: Expect %v Get %v", resBuf, testRes )
+	if string(resBuf) != string(testRes) {
+		t.Errorf("WriteRLE Error: Expect %v Get %v", resBuf, testRes)
 	}
 
-
-	resBuf = make([]byte,0)
+	resBuf = make([]byte, 0)
 	resBuf = append(resBuf, byte(0x2<<1), byte(0x2))
 	testRes = WriteRLE(2, 2, WidthFromMaxInt(2))
-	if string(resBuf) != string(testRes){
-		t.Errorf("WriteRLE Error: Expect %v Get %v", resBuf, testRes )
+	if string(resBuf) != string(testRes) {
+		t.Errorf("WriteRLE Error: Expect %v Get %v", resBuf, testRes)
 	}
 }
 
-func TestWriteBitPacked( t *testing.T){
-	testBuf := make([]Interface, 8)
-	for i:=0; i<len(testBuf); i++ {
+func TestWriteBitPacked(t *testing.T) {
+	testBuf := make([]interface{}, 8)
+	for i := 0; i < len(testBuf); i++ {
 		testBuf[i] = int32(i)
 	}
 
@@ -89,50 +89,24 @@ func TestWriteBitPacked( t *testing.T){
 
 	testRes := WriteBitPacked(testBuf, int64(WidthFromMaxInt(7)))
 
-	if string(resBuf) != string(testRes){
-		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes )
+	if string(resBuf) != string(testRes) {
+		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes)
 	}
 
-	testBuf = make([]Interface, 8)
-	for i:=0; i<len(testBuf); i++{
-		testBuf[i] = ((i%2)==0)
+	testBuf = make([]interface{}, 8)
+	for i := 0; i < len(testBuf); i++ {
+		testBuf[i] = ((i % 2) == 0)
 	}
-	resBuf = make([]byte,0)
+	resBuf = make([]byte, 0)
 	resBuf = append(resBuf, byte(0x3), byte(0x55))
 
-	testRes = WriteBitPacked(testBuf,1)
+	testRes = WriteBitPacked(testBuf, 1)
 
 	if string(testRes) != string(resBuf) {
 		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes)
 	}
 }
 
+func TestWritePlainINT96(t *testing.T) {
 
-func TestWritePlainInt96(t *testing.T) {
-	res := make([]byte, 0)
-	res = append(res,
-		byte(0xFA), byte(0xFA), byte(0xFA), byte(0x7A),
-		byte(0xFA), byte(0xFA), byte(0xFA), byte(0x7A),
-		byte(0xFA), byte(0xFA), byte(0xFA), byte(0x7A),
-
-		byte(0xFB), byte(0xFB), byte(0xFB), byte(0x8B),
-		byte(0xFB), byte(0xFB), byte(0xFB), byte(0x8B),
-		byte(0xFB), byte(0xFB), byte(0xFB), byte(0x8B))
-
-	testBuf := make([]INT96, 2)
-	testBuf[0][0] = 0x7AFAFAFA
-	testBuf[0][1] = 0x7AFAFAFA
-	testBuf[0][2] = 0x7AFAFAFA
-
-	testBuf[1][0] = 0x8BFBFBFB
-	testBuf[1][1] = 0x8BFBFBFB
-	testBuf[1][2] = 0x8BFBFBFB
-
-	testRes := WritePlainInt96(testBuf)
-	if string(testRes) != string(res) {
-		t.Errorf("TestWritePlainInt96 Error")
-	}
-	
 }
-
-

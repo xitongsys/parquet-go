@@ -1,11 +1,16 @@
 package Common
 
 import (
-//	"log"
+	//	"log"
+	"math"
 	"parquet"
 	"reflect"
 	"strings"
 )
+
+func WidthFromMaxInt(val int32) int32 {
+	return int32(math.Ceil(math.Log2(float64(val + 1))))
+}
 
 func Max(a interface{}, b interface{}) interface{} {
 	tk := reflect.TypeOf(a).Kind()
@@ -14,33 +19,33 @@ func Max(a interface{}, b interface{}) interface{} {
 		bv := reflect.ValueOf(a).Int()
 		if av > bv {
 			return a
-		}else{
+		} else {
 			return b
 		}
-	}else if tk == reflect.Float32 || tk == reflect.Float64 {
+	} else if tk == reflect.Float32 || tk == reflect.Float64 {
 		av := reflect.ValueOf(a).Float()
 		bv := reflect.ValueOf(b).Float()
 		if av > bv {
 			return a
-		}else{
+		} else {
 			return b
 		}
-	}else if tk == reflect.String {
+	} else if tk == reflect.String {
 		av := a.(string)
 		bv := b.(string)
 		if av > bv {
 			return a
-		}else{
+		} else {
 			return b
 		}
-	}else if tk == reflect.Bool {
+	} else if tk == reflect.Bool {
 		av := a.(bool)
-		if av == true{
+		if av == true {
 			return a
-		}else{
+		} else {
 			return b
 		}
-	}else{
+	} else {
 		return a
 	}
 }
@@ -52,38 +57,38 @@ func Min(a interface{}, b interface{}) interface{} {
 		bv := reflect.ValueOf(a).Int()
 		if av > bv {
 			return b
-		}else{
+		} else {
 			return a
 		}
-	}else if tk == reflect.Float32 || tk == reflect.Float64 {
+	} else if tk == reflect.Float32 || tk == reflect.Float64 {
 		av := reflect.ValueOf(a).Float()
 		bv := reflect.ValueOf(b).Float()
 		if av > bv {
 			return b
-		}else{
+		} else {
 			return a
 		}
-	}else if tk == reflect.String {
+	} else if tk == reflect.String {
 		av := a.(string)
 		bv := b.(string)
 		if av > bv {
 			return b
-		}else{
+		} else {
 			return a
 		}
-	}else if tk == reflect.Bool{
+	} else if tk == reflect.Bool {
 		av := a.(bool)
 		if av == true {
 			return b
-		}else{
+		} else {
 			return a
 		}
-	}else{
+	} else {
 		return a
-	}	
+	}
 }
 
-func SizeOf(val reflect.Value) int64{
+func SizeOf(val reflect.Value) int64 {
 	switch val.Type().Kind() {
 	case reflect.Int16:
 		return 2
@@ -101,14 +106,14 @@ func SizeOf(val reflect.Value) int64{
 		return int64(val.Len())
 	case reflect.Slice:
 		var size int64 = 0
-		for i:=0; i<val.Len(); i++{
+		for i := 0; i < val.Len(); i++ {
 			size += SizeOf(val.Index(i))
 		}
 		return size
 	case reflect.Struct:
 		var size int64 = 0
 		numField := TypeNumberField(val.Type())
-		for i:=0; int32(i)<numField; i++{
+		for i := 0; int32(i) < numField; i++ {
 			size += SizeOf(val.Field(i))
 		}
 		return size
@@ -155,4 +160,3 @@ func GoTypeToParquetType(goT reflect.Type) parquet.Type {
 		return parquet.Type_FIXED_LEN_BYTE_ARRAY
 	}
 }
-

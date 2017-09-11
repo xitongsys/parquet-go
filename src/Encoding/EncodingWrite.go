@@ -1,6 +1,7 @@
-package parquet_go
+package Encoding
 
 import (
+	. "ParquetType"
 	"bufio"
 	"bytes"
 	"encoding/binary"
@@ -15,7 +16,7 @@ func BitNum(num uint64) uint64 { //the number of bits needed by the num; 0 needs
 	return uint64(bitn + 1)
 }
 
-func ToInt64(nums []Interface) []int64 { //convert bool/int values to int64 values
+func ToInt64(nums []interface{}) []int64 { //convert bool/int values to int64 values
 	ln := len(nums)
 	res := make([]int64, ln)
 	tk := reflect.TypeOf(nums[0]).Kind()
@@ -29,12 +30,11 @@ func ToInt64(nums []Interface) []int64 { //convert bool/int values to int64 valu
 		} else {
 			res[i] = int64(reflect.ValueOf(nums[i]).Int())
 		}
-
 	}
 	return res
 }
 
-func WritePlain(src []Interface) []byte {
+func WritePlain(src []interface{}) []byte {
 	ln := len(src)
 	if ln <= 0 {
 		return []byte{}
@@ -185,14 +185,21 @@ func WritePlain(src []Interface) []byte {
 		for i := 0; i < ln; i++ {
 			srcTmp[i] = src[i].(DOUBLE)
 		}
-		return WritePlainFLOAT64(srcTmp)
+		return WritePlainDOUBLE(srcTmp)
 
 	} else if dataType.Name() == "BYTE_ARRAY" {
-		srcTmp := make([][]byte, ln)
+		srcTmp := make([]BYTE_ARRAY, ln)
 		for i := 0; i < ln; i++ {
-			srcTmp[i] = []byte(src[i].(BYTE_ARRAY))
+			srcTmp[i] = src[i].(BYTE_ARRAY)
 		}
-		return WritePlainByteArray(srcTmp)
+		return WritePlainBYTE_ARRAY(srcTmp)
+
+	} else if dataType.Name() == "FIXED_LEN_BYTE_ARRAY" {
+		srcTmp := make([]FIXED_LEN_BYTE_ARRAY, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(FIXED_LEN_BYTE_ARRAY)
+		}
+		return WritePlainFIXED_LEN_BYTE_ARRAY(srcTmp)
 
 	} else {
 		return nil
@@ -240,7 +247,8 @@ func WritePlainINT96(nums []INT96) []byte {
 	bufWriter := bufio.NewWriter(&b)
 	for i := 0; i < len(nums); i++ {
 		for j := 0; j < len(nums[i]); j++ {
-			binary.Write(bufWriter, binary.LittleEndian, &nums[i][j])
+			b := nums[i][j]
+			binary.Write(bufWriter, binary.LittleEndian, &b)
 		}
 	}
 	bufWriter.Flush()
@@ -373,7 +381,7 @@ func WritePlainUTF8(utf8s []UTF8) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
 	var size uint32 = 0
-	cnt := len(arrays)
+	cnt := len(utf8s)
 	for i := 0; i < int(cnt); i++ {
 		ln := uint32(len(utf8s[i]))
 		binary.Write(bufWriter, binary.LittleEndian, &ln)
@@ -389,7 +397,7 @@ func WritePlainUTF8(utf8s []UTF8) []byte {
 func WritePlainDATE(dates []DATE) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
-	for i := 0; i < len(nums); i++ {
+	for i := 0; i < len(dates); i++ {
 		binary.Write(bufWriter, binary.LittleEndian, &dates[i])
 	}
 	bufWriter.Flush()
@@ -401,7 +409,7 @@ func WritePlainDATE(dates []DATE) []byte {
 func WritePlainTIME_MILLIS(times []TIME_MILLIS) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
-	for i := 0; i < len(nums); i++ {
+	for i := 0; i < len(times); i++ {
 		binary.Write(bufWriter, binary.LittleEndian, &times[i])
 	}
 	bufWriter.Flush()
@@ -413,7 +421,7 @@ func WritePlainTIME_MILLIS(times []TIME_MILLIS) []byte {
 func WritePlainTIME_MICROS(times []TIME_MICROS) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
-	for i := 0; i < len(nums); i++ {
+	for i := 0; i < len(times); i++ {
 		binary.Write(bufWriter, binary.LittleEndian, &times[i])
 	}
 	bufWriter.Flush()
@@ -425,7 +433,7 @@ func WritePlainTIME_MICROS(times []TIME_MICROS) []byte {
 func WritePlainTIMESTAMP_MILLIS(times []TIMESTAMP_MILLIS) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
-	for i := 0; i < len(nums); i++ {
+	for i := 0; i < len(times); i++ {
 		binary.Write(bufWriter, binary.LittleEndian, &times[i])
 	}
 	bufWriter.Flush()
@@ -437,7 +445,7 @@ func WritePlainTIMESTAMP_MILLIS(times []TIMESTAMP_MILLIS) []byte {
 func WritePlainTIMESTAMP_MICROS(times []TIMESTAMP_MICROS) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
-	for i := 0; i < len(nums); i++ {
+	for i := 0; i < len(times); i++ {
 		binary.Write(bufWriter, binary.LittleEndian, &times[i])
 	}
 	bufWriter.Flush()
@@ -450,7 +458,7 @@ func WritePlainINTERVAL(intervals []INTERVAL) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
 	var size uint32 = 0
-	cnt := len(arrays)
+	cnt := len(intervals)
 	for i := 0; i < int(cnt); i++ {
 		ln := uint32(len(intervals[i]))
 		bufWriter.Write([]byte(intervals[i]))
@@ -466,9 +474,9 @@ func WritePlainDECIMAL(decimals []DECIMAL) []byte {
 	var b bytes.Buffer
 	bufWriter := bufio.NewWriter(&b)
 	var size uint32 = 0
-	cnt := len(arrays)
+	cnt := len(decimals)
 	for i := 0; i < int(cnt); i++ {
-		ln := uint32(len(arrays[i]))
+		ln := uint32(len(decimals[i]))
 		binary.Write(bufWriter, binary.LittleEndian, &ln)
 		bufWriter.Write([]byte(decimals[i]))
 		size += 4 + ln
@@ -534,9 +542,9 @@ func WriteRLE(val int32, cnt int32, bitWidth int32) []byte {
 	byteNum := (bitWidth + 7) / 8
 
 	headerBuf := WriteUnsignedVarInt(uint32(header))
-	bufTmp := make([]int32, 1)
-	bufTmp[0] = val
-	valBuf := WritePlainInt32(bufTmp)
+	bufTmp := make([]INT32, 1)
+	bufTmp[0] = INT32(val)
+	valBuf := WritePlainINT32(bufTmp)
 
 	res := make([]byte, int64(len(headerBuf))+int64(byteNum))
 	copy(res[0:], headerBuf)
@@ -545,7 +553,7 @@ func WriteRLE(val int32, cnt int32, bitWidth int32) []byte {
 	return res
 }
 
-func WriteBitPacked(vals []Interface, bitWidth int64) []byte {
+func WriteBitPacked(vals []interface{}, bitWidth int64) []byte {
 	ln := len(vals)
 	if ln <= 0 {
 		return nil
