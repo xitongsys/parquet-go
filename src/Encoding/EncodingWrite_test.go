@@ -5,26 +5,6 @@ import (
 	"testing"
 )
 
-func TestBitNum(t *testing.T) {
-	testNum := make([]uint64, 4)
-	resNum := make([]uint64, 4)
-
-	testNum[0] = 0
-	resNum[0] = 0
-	testNum[1] = 1
-	resNum[1] = 1
-	testNum[2] = 5
-	resNum[2] = 3
-	testNum[3] = 1023
-	resNum[3] = 10
-
-	for i := 0; i < len(testNum); i++ {
-		if resNum[i] != BitNum(testNum[i]) {
-			t.Error("WidthFromMaxInt Error Case Num=", testNum[i])
-		}
-	}
-}
-
 func TestWriteUnsignedVarInt(t *testing.T) {
 	resBuf := make([]byte, 0)
 	resBuf = append(resBuf, byte(0x00))
@@ -72,7 +52,7 @@ func TestWriteRLE(t *testing.T) {
 
 	resBuf = make([]byte, 0)
 	resBuf = append(resBuf, byte(0x2<<1), byte(0x2))
-	testRes = WriteRLE(2, 2, WidthFromMaxInt(2))
+	testRes = WriteRLE(2, 2, int32(BitNum(2)))
 	if string(resBuf) != string(testRes) {
 		t.Errorf("WriteRLE Error: Expect %v Get %v", resBuf, testRes)
 	}
@@ -87,7 +67,7 @@ func TestWriteBitPacked(t *testing.T) {
 	resBuf := make([]byte, 0)
 	resBuf = append(resBuf, byte(0x3), byte(0x88), byte(0xC6), byte(0xFA))
 
-	testRes := WriteBitPacked(testBuf, int64(WidthFromMaxInt(7)))
+	testRes := WriteBitPacked(testBuf, int64(BitNum(7)))
 
 	if string(resBuf) != string(testRes) {
 		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes)
