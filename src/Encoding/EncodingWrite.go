@@ -61,6 +61,13 @@ func WritePlain(src []Interface) []byte {
 			srcTmp[i] = src[i].(INT64)
 		}
 		return WritePlainINT64(srcTmp)
+	} else if dataType.Name() == "INT96" {
+		srcTmp := make([]INT96, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(INT96)
+		}
+		return WritePlainINT96(srcTmp)
+
 	} else if dataType.Name() == "INT_8" {
 		srcTmp := make([]INT_8, ln)
 		for i := 0; i < ln; i++ {
@@ -186,13 +193,6 @@ func WritePlain(src []Interface) []byte {
 			srcTmp[i] = []byte(src[i].(BYTE_ARRAY))
 		}
 		return WritePlainByteArray(srcTmp)
-
-	} else if dataType.Kind() == reflect.Slice && dataType.Name() == "INT96" { //parquet.INT96
-		srcTmp := make([]INT96, ln)
-		for i := 0; i < ln; i++ {
-			srcTmp[i] = src[i].(INT96)
-		}
-		return WritePlainInt96(srcTmp)
 
 	} else {
 		return nil
