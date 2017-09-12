@@ -2,7 +2,7 @@ package Layout
 
 import (
 	. "Common"
-	. "Encoding"
+	. "PEncoding"
 	"log"
 	"parquet"
 )
@@ -43,8 +43,8 @@ func PagesToChunk(pages []*Page) *Chunk {
 	metaData.TotalUncompressedSize = totalUncompressedSize
 	metaData.PathInSchema = pages[0].DataTable.Path[1:]
 	metaData.Statistics = parquet.NewStatistics()
-	metaData.Statistics.Max = WritePlain([]Interface{maxVal})
-	metaData.Statistics.Min = WritePlain([]Interface{minVal})
+	metaData.Statistics.Max = WritePlain([]interface{}{maxVal})
+	metaData.Statistics.Min = WritePlain([]interface{}{minVal})
 
 	chunk.ChunkHeader.MetaData = metaData
 

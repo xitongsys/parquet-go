@@ -3,9 +3,7 @@ package main
 import (
 	. "SchemaHandler"
 	. "Writer"
-	"fmt"
 	"os"
-	"reflect"
 )
 
 type Class struct {
@@ -68,9 +66,8 @@ func CreateStudents() []Student {
 
 func main() {
 	stus := CreateStudents()
-	schemaHandler := parquet_go.NewSchemaHandlerFromStruct(new(Student))
+	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
 	file, _ := os.Create("nested.parquet")
 	defer file.Close()
-	parquet_go.WriteTo(file, stus, schemaHandler)
-	ReadParquet("./nested.parquet")
+	WriteTo(file, stus, schemaHandler)
 }

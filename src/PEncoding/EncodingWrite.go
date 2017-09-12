@@ -1,4 +1,4 @@
-package Encoding
+package PEncoding
 
 import (
 	. "Common"

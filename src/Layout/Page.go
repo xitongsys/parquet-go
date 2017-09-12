@@ -2,6 +2,9 @@ package Layout
 
 import (
 	. "Common"
+	. "Compress"
+	. "PEncoding"
+	. "ParquetType"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"log"
 	"parquet"
@@ -86,7 +89,7 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 	ln := len(page.DataTable.DefinitionLevels)
 
 	//values////////////////////////////////////////////
-	valuesBuf := make([]Interface, 0)
+	valuesBuf := make([]interface{}, 0)
 	for i := 0; i < ln; i++ {
 		if page.DataTable.DefinitionLevels[i] == page.DataTable.MaxDefinitionLevel {
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
@@ -105,15 +108,17 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 				j++
 			}
 			num := j - i
-			rleBufCur := WriteRLE(int32(page.DataTable.DefinitionLevels[i]), int32(num), WidthFromMaxInt(page.DataTable.MaxDefinitionLevel))
+			rleBufCur := WriteRLE(int32(page.DataTable.DefinitionLevels[i]), int32(num),
+				int32(BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
+
 			rleBuf = append(rleBuf, rleBufCur...)
 
 			i = j
 		}
 
-		tmpBuf := make([]int32, 1)
-		tmpBuf[0] = int32(len(rleBuf))
-		lengthBuf := WritePlainInt32(tmpBuf)
+		tmpBuf := make([]INT32, 1)
+		tmpBuf[0] = INT32(len(rleBuf))
+		lengthBuf := WritePlainINT32(tmpBuf)
 
 		definitionLevelBuf = append(definitionLevelBuf, lengthBuf...)
 		definitionLevelBuf = append(definitionLevelBuf, rleBuf...)
@@ -131,14 +136,16 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 			}
 
 			num := j - i
-			rleBufCur := WriteRLE(int32(page.DataTable.RepetitionLevels[i]), int32(num), WidthFromMaxInt(page.DataTable.MaxRepetitionLevel))
+			rleBufCur := WriteRLE(int32(page.DataTable.RepetitionLevels[i]), int32(num),
+				int32(BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
+
 			rleBuf = append(rleBuf, rleBufCur...)
 
 			i = j
 		}
-		tmpBuf := make([]int32, 1)
-		tmpBuf[0] = int32(len(rleBuf))
-		lengthBuf := WritePlainInt32(tmpBuf)
+		tmpBuf := make([]INT32, 1)
+		tmpBuf[0] = INT32(len(rleBuf))
+		lengthBuf := WritePlainINT32(tmpBuf)
 
 		repetitionLevelBuf = append(repetitionLevelBuf, lengthBuf...)
 		repetitionLevelBuf = append(repetitionLevelBuf, rleBuf...)
@@ -170,8 +177,8 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
-	page.Header.DataPageHeader.Statistics.Max = WritePlain([]Interface{page.MaxVal})
-	page.Header.DataPageHeader.Statistics.Min = WritePlain([]Interface{page.MinVal})
+	page.Header.DataPageHeader.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
+	page.Header.DataPageHeader.Statistics.Min = WritePlain([]interface{}{page.MinVal})
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)

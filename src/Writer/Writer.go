@@ -60,7 +60,7 @@ func WriteTo(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandl
 
 	footer := parquet.NewFileMetaData()
 	footer.Version = 1
-	footer.Schema = append(footer.Schema, schemaHandler.SchemaList...)
+	footer.Schema = append(footer.Schema, schemaHandler.SchemaElements...)
 
 	file.Write([]byte("PAR1"))
 	var offset int64 = 4
