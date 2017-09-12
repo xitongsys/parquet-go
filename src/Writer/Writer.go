@@ -7,6 +7,7 @@ import (
 	. "SchemaHandler"
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
+	"log"
 	"os"
 	"parquet"
 	"reflect"
@@ -90,5 +91,7 @@ func WriteTo(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandl
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
 	file.Write(footerSizeBuf)
 	file.Write([]byte("PAR1"))
+
+	log.Println(footer)
 
 }
