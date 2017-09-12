@@ -57,7 +57,6 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 			j++
 		}
 
-		//page := NewPage(parquet.PageType_DATA_PAGE, numValues)
 		page := NewPage(parquet.PageType_DATA_PAGE, numValues)
 
 		page.DataTable = new(Table)

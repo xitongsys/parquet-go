@@ -3,7 +3,6 @@ package Common
 import (
 	//	"log"
 	. "ParquetType"
-	"parquet"
 	"reflect"
 	"strings"
 )
@@ -25,7 +24,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 1
 	}
 
-	name := reflect.TypeOf(a).Name()
+	name := reflect.TypeOf(ai).Name()
 	switch name {
 	case "BOOLEAN":
 		a, b := 0, 0
@@ -47,7 +46,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT64":
-		a, b := ai.(INT32), bi.(INT32)
+		a, b := ai.(INT64), bi.(INT64)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -57,7 +56,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 
 	case "INT96":
 		a, b := []byte(ai.(INT96)), []byte(bi.(INT96))
-		fa, fb = (a[11] >> 7), (b[11] >> 7)
+		fa, fb := (a[11] >> 7), (b[11] >> 7)
 		if fa > fb {
 			return -1
 		} else if fa < fb {
@@ -110,7 +109,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "FIXED_LEN_BYTE_ARRAY":
-		a, b := ai.(FIXED_LEN_BYTE_ARRA), bi.(FIXED_LEN_BYTE_ARRA)
+		a, b := ai.(FIXED_LEN_BYTE_ARRAY), bi.(FIXED_LEN_BYTE_ARRAY)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -226,8 +225,8 @@ func Cmp(ai interface{}, bi interface{}) int {
 		}
 		return 0
 
-	case "TIMESTAMP_MILLS":
-		a, b := ai.(TIMESTAMP_MILLS), bi.(TIMESTAMP_MILLS)
+	case "TIMESTAMP_MILLIS":
+		a, b := ai.(TIMESTAMP_MILLIS), bi.(TIMESTAMP_MILLIS)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -292,7 +291,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 			return 0
 		}
 	}
-
+	return 0
 }
 
 func Max(a interface{}, b interface{}) interface{} {
@@ -329,7 +328,7 @@ func SizeOf(val reflect.Value) int64 {
 		keys := val.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			size += SizeOf(keys[i])
-			size += SizeOf(val.MapIndex(key))
+			size += SizeOf(val.MapIndex(keys[i]))
 		}
 		return size
 	}
