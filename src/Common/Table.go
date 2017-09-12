@@ -6,6 +6,7 @@ import (
 
 type Table struct {
 	Repetition_Type    parquet.FieldRepetitionType
+	Type               parquet.Type
 	Path               []string
 	MaxDefinitionLevel int32
 	MaxRepetitionLevel int32

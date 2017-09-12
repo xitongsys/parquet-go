@@ -16,6 +16,12 @@ func BitNum(num uint64) uint64 { //the number of bits needed by the num; 0 needs
 }
 
 func Max(a interface{}, b interface{}) interface{} {
+	if a == nil {
+		return b
+	} else if b == nil {
+		return a
+	}
+
 	tk := reflect.TypeOf(a).Kind()
 	if tk == reflect.Int || tk == reflect.Int8 || tk == reflect.Int16 || tk == reflect.Int32 || tk == reflect.Int64 {
 		av := reflect.ValueOf(a).Int()
@@ -54,6 +60,12 @@ func Max(a interface{}, b interface{}) interface{} {
 }
 
 func Min(a interface{}, b interface{}) interface{} {
+	if a == nil {
+		return b
+	} else if b == nil {
+		return a
+	}
+
 	tk := reflect.TypeOf(a).Kind()
 	if tk == reflect.Int || tk == reflect.Int8 || tk == reflect.Int16 || tk == reflect.Int32 || tk == reflect.Int64 {
 		av := reflect.ValueOf(a).Int()

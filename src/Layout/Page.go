@@ -38,7 +38,7 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
-	dataType := GoTypeToParquetType(reflect.TypeOf(table.Values[0]))
+	dataType := table.Type
 	for i < totalLn {
 		j := i + 1
 		var size int32 = 0
@@ -48,12 +48,12 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 		var minVal interface{} = table.Values[i]
 
 		for j < totalLn && size < pageSize {
-			size += int32(SizeOf(reflect.ValueOf(table.Values[j])))
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
+				size += int32(SizeOf(reflect.ValueOf(table.Values[j])))
+				maxVal = Max(maxVal, table.Values[j])
+				minVal = Min(minVal, table.Values[j])
 			}
-			maxVal = Max(maxVal, table.Values[j])
-			minVal = Min(minVal, table.Values[j])
 			j++
 		}
 
