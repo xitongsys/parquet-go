@@ -56,6 +56,32 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT96":
+		a, b := []byte(ai.(INT96)), []byte(bi.(INT96))
+		fa, fb = (a[11] >> 7), (b[11] >> 7)
+		if fa > fb {
+			return -1
+		} else if fa < fb {
+			return 1
+		} else if fa == 1 {
+			for i := 11; i >= 0; i-- {
+				if a[i] > b[i] {
+					return -1
+				} else if a[i] < b[i] {
+					return 1
+				}
+			}
+			return 0
+		} else {
+			for i := 11; i >= 0; i-- {
+				if a[i] > b[i] {
+					return 1
+				} else if a[i] < b[i] {
+					return -1
+				}
+			}
+			return 0
+		}
+
 	case "FLOAT":
 		a, b := ai.(FLOAT), bi.(FLOAT)
 		if a > b {
@@ -219,54 +245,147 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INTERVAL":
+		a, b := []byte(ai.(INTERVAL)), []byte(bi.(INTERVAL))
+		for i := 11; i >= 0; i-- {
+			if a[i] > b[i] {
+				return 1
+			} else if a[i] < b[i] {
+				return -1
+			}
+		}
+		return 0
 
 	case "DCEIMAL":
-
+		a, b := []byte(ai.(DECIMAL)), []byte(bi.(DECIMAL))
+		fa, fb := (a[0] >> 7), (b[0] >> 7)
+		la, lb := len(a), len(b)
+		if fa > fb {
+			return -1
+		} else if fa < fb {
+			return 1
+		} else {
+			i, j := 0, 0
+			for i < la || j < lb {
+				ba, bb := byte(0x0), byte(0x0)
+				if i < la {
+					ba = a[i]
+					i++
+				}
+				if j < lb {
+					bb = b[j]
+					j++
+				}
+				if ba > bb {
+					if fa == 1 {
+						return -1
+					} else {
+						return 1
+					}
+				} else if ba < bb {
+					if fa == 1 {
+						return 1
+					} else {
+						return -1
+					}
+				}
+			}
+			return 0
+		}
 	}
 
+}
+
+func Max(a interface{}, b interface{}) interface{} {
+	if Cmp(a, b) > 0 {
+		return a
+	}
+	return b
 }
 
 func Min(a interface{}, b interface{}) interface{} {
-	if a == nil {
+	if Cmp(a, b) > 0 {
 		return b
-	} else if b == nil {
-		return a
 	}
-
+	return a
 }
 
 func SizeOf(val reflect.Value) int64 {
-	switch val.Type().Kind() {
-	case reflect.Int16:
-		return 2
-	case reflect.Int32:
-		return 4
-	case reflect.Int64:
-		return 8
-	case reflect.Float32:
-		return 4
-	case reflect.Float64:
-		return 8
-	case reflect.Bool:
-		return 1
-	case reflect.String:
-		return int64(val.Len())
-	case reflect.Slice:
+	tk := val.Type().Kind()
+	if tk == reflect.Slice {
 		var size int64 = 0
 		for i := 0; i < val.Len(); i++ {
 			size += SizeOf(val.Index(i))
 		}
 		return size
-	case reflect.Struct:
+	} else if tk == reflect.Struct {
 		var size int64 = 0
-		numField := TypeNumberField(val.Type())
-		for i := 0; int32(i) < numField; i++ {
+		for i := 0; i < val.Type().NumField(); i++ {
 			size += SizeOf(val.Field(i))
 		}
 		return size
-	default:
-		return 4
+
+	} else if tk == reflect.Map {
+		var size int64 = 0
+		keys := val.MapKeys()
+		for i := 0; i < len(keys); i++ {
+			size += SizeOf(keys[i])
+			size += SizeOf(val.MapIndex(key))
+		}
+		return size
 	}
+
+	switch val.Type().Name() {
+	case "BOOLEAN":
+		return 1
+	case "INT32":
+		return 4
+	case "INT64":
+		return 8
+	case "INT96":
+		return 12
+	case "FLOAT":
+		return 4
+	case "DOUBLE":
+		return 8
+	case "BYTE_ARRAY":
+		return int64(val.Len())
+	case "FIXED_LEN_BYTE_ARRAY":
+		return int64(val.Len())
+	case "UTF8":
+		return int64(val.Len())
+	case "INT_8":
+		return 4
+	case "INT_16":
+		return 4
+	case "INT_32":
+		return 4
+	case "INT_64":
+		return 8
+	case "UINT_8":
+		return 4
+	case "UINT_16":
+		return 4
+	case "UINT_32":
+		return 4
+	case "UINT_64":
+		return 8
+	case "DATE":
+		return 4
+	case "TIME_MILLIS":
+		return 4
+	case "TIME_MICROS":
+		return 8
+	case "TIMESTAMP_MILLIS":
+		return 8
+	case "TIMESTAMP_MICROS":
+		return 8
+	case "INTERVAL":
+		return 12
+	case "DECIMAL":
+		return int64(val.Len())
+	}
+
+	return 4
 }
 
 func PathToStr(path []string) string {
@@ -275,35 +394,4 @@ func PathToStr(path []string) string {
 
 func StrToPath(str string) []string {
 	return strings.Split(str, ".")
-}
-
-func TypeNumberField(t reflect.Type) int32 {
-	if t.Kind() == reflect.Struct {
-		return int32(t.NumField())
-	} else if t.Kind() == reflect.Slice {
-		return 1
-	} else {
-		return 0
-	}
-}
-
-func GoTypeToParquetType(goT reflect.Type) parquet.Type {
-	switch goT.Kind() {
-	case reflect.Bool:
-		return parquet.Type_BOOLEAN
-	case reflect.Int:
-		return parquet.Type_INT64
-	case reflect.Int32:
-		return parquet.Type_INT32
-	case reflect.Int64:
-		return parquet.Type_INT64
-	case reflect.Float32:
-		return parquet.Type_FLOAT
-	case reflect.Float64:
-		return parquet.Type_DOUBLE
-	case reflect.String:
-		return parquet.Type_BYTE_ARRAY
-	default:
-		return parquet.Type_FIXED_LEN_BYTE_ARRAY
-	}
 }
