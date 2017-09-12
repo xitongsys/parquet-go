@@ -151,7 +151,7 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 
 	}
 
-	//dataBuf = definitionBuf + repetitionBuf + valuesRawBuf
+	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
 	dataBuf := make([]byte, 0)
 	dataBuf = append(dataBuf, repetitionLevelBuf...)
 	dataBuf = append(dataBuf, definitionLevelBuf...)
