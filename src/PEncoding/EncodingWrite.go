@@ -34,6 +34,10 @@ func WritePlain(src []interface{}) []byte {
 	}
 
 	dataType := reflect.TypeOf(src[0])
+	if dataType == nil {
+		return []byte{}
+	}
+
 	if dataType.Name() == "BOOLEAN" {
 		srcTmp := make([]BOOLEAN, ln)
 		for i := 0; i < ln; i++ {
