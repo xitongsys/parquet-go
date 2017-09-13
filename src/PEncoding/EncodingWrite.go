@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"log"
 	"reflect"
 )
 
