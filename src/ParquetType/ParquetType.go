@@ -6,7 +6,7 @@ import (
 
 //base type
 type BOOLEAN bool
-type INT32 int64
+type INT32 int32
 type INT64 int64
 type INT96 string // length=96
 type FLOAT float32
