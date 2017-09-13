@@ -1,7 +1,6 @@
 package Marshal
 
 import (
-	//"log"
 	. "Common"
 	. "SchemaHandler"
 	"reflect"
@@ -150,6 +149,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 				table.Values = append(table.Values, node.Val.Interface())
 				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 				table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+
 			}
 		}
 	}

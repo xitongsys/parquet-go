@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"log"
 	"reflect"
 )
 
@@ -34,6 +35,7 @@ func WritePlain(src []interface{}) []byte {
 	}
 
 	dataType := reflect.TypeOf(src[0])
+
 	if dataType == nil {
 		return []byte{}
 	}

@@ -1,20 +1,21 @@
 package main
 
 import (
+	. "ParquetType"
 	. "SchemaHandler"
 	. "Writer"
 	"os"
 )
 
 type Class struct {
-	Name   string
-	Number int64
-	Score  float32
+	Name   UTF8
+	Number INT64
+	Score  FLOAT
 }
 
 type Student struct {
-	Name    string
-	Age     int32
+	Name    UTF8
+	Age     INT32
 	Classes []Class
 }
 
@@ -49,13 +50,13 @@ func CreateStudents() []Student {
 	stuName := "aaaaa_STU"
 	className := "AAAAA_CLASS"
 	for i := 0; i < len(stus); i++ {
-		stus[i].Name = stuName
-		stus[i].Age = (int32(i) % 30)
+		stus[i].Name = UTF8(stuName)
+		stus[i].Age = INT32(int32(i) % 30)
 		classNum := i % 5
 		stus[i].Classes = make([]Class, classNum)
 		for j := 0; j < classNum; j++ {
-			stus[i].Classes[j].Name = className
-			stus[i].Classes[j].Number = int64(j)
+			stus[i].Classes[j].Name = UTF8(className)
+			stus[i].Classes[j].Number = INT64(j)
 			stus[i].Classes[j].Score = 0.1
 			className = nextName(className)
 		}

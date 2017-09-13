@@ -295,6 +295,12 @@ func Cmp(ai interface{}, bi interface{}) int {
 }
 
 func Max(a interface{}, b interface{}) interface{} {
+	if a == nil {
+		return b
+	}
+	if b == nil {
+		return a
+	}
 	if Cmp(a, b) > 0 {
 		return a
 	}
@@ -302,6 +308,12 @@ func Max(a interface{}, b interface{}) interface{} {
 }
 
 func Min(a interface{}, b interface{}) interface{} {
+	if a == nil {
+		return b
+	}
+	if b == nil {
+		return a
+	}
 	if Cmp(a, b) > 0 {
 		return b
 	}
