@@ -198,6 +198,13 @@ func WritePlain(src []interface{}) []byte {
 		}
 		return WritePlainFIXED_LEN_BYTE_ARRAY(srcTmp)
 
+	} else if dataType.Name() == "UTF8" {
+		srcTmp := make([]UTF8, ln)
+		for i := 0; i < ln; i++ {
+			srcTmp[i] = src[i].(UTF8)
+		}
+		return WritePlainUTF8(srcTmp)
+
 	} else {
 		return nil
 	}
