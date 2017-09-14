@@ -16,6 +16,30 @@ func ReadPageHeader(thriftReader *thrift.TBufferedTransport) *parquet.PageHeader
 	return pageHeader
 }
 
+func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, cnt int32, bitWidth int32) []interface{} {
+	if encoding == parquet.Encoding_PLAIN {
+		return ReadPlain(bytesReader, dataType, cnt)
+
+	} else if encoding == parquet.Encoding_PLAIN_DICTIONARY {
+		b, _ := bytesReader.ReadByte()
+		bitWidth = int32(b)
+		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
+
+	} else if encoding == parquet.Encoding_RLE {
+		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
+
+	} else if encoding == parquet.Encoding_BIT_PACKED {
+	} else if encoding == parquet.Encoding_DELTA_BINARY_PACKED {
+	} else if encoding == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
+	} else if encoding == parquet.Encoding_DELTA_BYTE_ARRAY {
+	} else if encoding == parquet.Encoding_RLE_DICTIONARY {
+	} else {
+		log.Println("Error Encoding method")
+	}
+	log.Println("Encoding Not Supported Yet")
+	return make([]interface{}, 0)
+}
+
 func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.ColumnMetaData, schemaHandler *SchemaHandler) *Page {
 	pageHeader := ReadPageHeader(thriftReader)
 	var page *Page
@@ -46,7 +70,13 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 		var repetitionLevels []interface{}
 		if maxRepetitionLevel > 0 {
 			bitWidth := BitNum(maxRepetitionLevel)
-			repetitionLevels = ReadValues()
+
+			repetitionLevels = ReadDataPageValues(bytesReader,
+				pageHeader.DataPageHeader.GetRepetitionLevelEncoding(),
+				parquet.Type_INT64,
+				int32(pageHeader.DataPageHeader.GetNumValues()),
+				bitWidth)
+
 		} else {
 			repetitionLevels = make([]Interface, pageHeader.DataPageHeader.GetNumValues())
 			for i := 0; i < len(repetitionLevels); i++ {
@@ -57,7 +87,12 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 		var definitionLevels []interface{}
 		if maxDefinitionLevel > 0 {
 			bitWidth := BitNum(maxDefinitionLevel)
-			definitionLevels = ReadValues()
+
+			definitionLevels = ReadDataPageValues(bytesReader,
+				pageHeader.DataPageHeader.GetDefinitionLevelEncoding(),
+				parquet.Type_INT64, int32(pageHeader.DataPageHeader.GetNumValues()),
+				bitWidth)
+
 		} else {
 			definitionLevels = make([]interface{}, pageHeader.DataPageHeader.GetNumValues())
 			for i := 0; i < len(definitionLevels); i++ {
@@ -65,8 +100,18 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 			}
 		}
 
+		var numNulls int64 = 0
+		for i := 0; i < len(definitionLevels); i++ {
+			if int32(definitionLevels[i].(INT64)) != maxDefinitionLevel {
+				numNULLs++
+			}
+		}
+
 		var values []interface{}
-		values = ReadValues()
+		values = ReadDataPageValues(bytesReader,
+			pageHeader.DataPageHeader.GetEncoding(),
+			colMetaData.GetType(),
+			int64(len(definitionLevels))-numNulls)
 
 		table := new(Table)
 		table.Path = path
@@ -89,12 +134,28 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 				j++
 			}
 		}
-
 		page.DataTable = table
+		return page
 
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		page = NewDictPage()
 		page.PageHeader = pageHeader
+		table := new(Table)
+		table.Path = path
+		table.Values = ReadPlain(bytesReader,
+			colMetaData.GetType(),
+			pageHeader.DictionaryPageHeader().GetNumValues())
+
+		return page
+
+	} else if pageHeader.GetType() == parquet.PageType_INDEX_PAGE {
+	} else if pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
+	} else {
+		log.Println("Error page type")
 	}
+
+	log.Println("Page Type Not Supported Yet")
+
+	return nil
 
 }
