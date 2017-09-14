@@ -23,17 +23,26 @@ type Page struct {
 	MinVal       interface{}
 }
 
-func NewPage(pageType parquet.PageType, numValues int32) *Page {
+func NewPage() *Page {
 	page := new(Page)
 	page.DataTable = nil
 	page.Header = parquet.NewPageHeader()
-	page.Header.DataPageHeader = parquet.NewDataPageHeader()
-	page.Header.DataPageHeader.NumValues = numValues
-	page.Header.Type = pageType
 	return page
 }
 
-func TableToPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func NewDictPage() *Page {
+	page := NewPage()
+	page.Header.DictionaryPageHeader = parquet.NewDictionaryPageHeader()
+	return page
+}
+
+func NewDataPage() *Page {
+	page := NewPage()
+	page.Header.DataPageHeader = parquet.NewDataPageHeader()
+	return page
+}
+
+func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
@@ -57,7 +66,9 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 			j++
 		}
 
-		page := NewPage(parquet.PageType_DATA_PAGE, numValues)
+		page := NewDataPage()
+		page.Header.DataPageHeader.NumValues = numValues
+		page.Header.Type = parquet.PageType_DATA_PAGE
 
 		page.DataTable = new(Table)
 		page.DataTable.Repetition_Type = table.Repetition_Type
@@ -70,7 +81,7 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 		page.MaxVal = maxVal
 		page.MinVal = minVal
 
-		page.ToRawDataPage(compressType)
+		page.DataPageCompress(compressType)
 		page.CompressType = compressType
 		page.DataType = dataType
 
@@ -84,7 +95,7 @@ func TableToPages(table *Table, pageSize int32, compressType parquet.Compression
 	return res, totSize
 }
 
-func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
+func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte {
 	ln := len(page.DataTable.DefinitionLevels)
 
 	//values////////////////////////////////////////////
@@ -190,5 +201,14 @@ func (page *Page) ToRawDataPage(compressType parquet.CompressionCodec) []byte {
 	page.RawData = res
 
 	return res
+}
 
+//ToDo
+func TableToDictDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+	return []*Page{}, 0
+}
+
+//ToDo
+func (page *Page) DictPageCompress(compressType parquet.CompressionCodec) []byte {
+	return []byte{}
 }

@@ -1,18 +1,13 @@
-package parquet_go
+package PEncoding
 
 import (
+	. "Common"
 	"bytes"
 	"encoding/binary"
 	"log"
 	"math"
 	"parquet"
 )
-
-func WidthFromMaxInt(val int32) int32 {
-	return int32(math.Ceil(math.Log2(float64(val + 1))))
-}
-
-type Interface interface{}
 
 func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt int32) []Interface {
 	if dataType == parquet.Type_BOOLEAN {
@@ -73,23 +68,23 @@ func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt int32) []In
 	}
 }
 
-func ReadPlainInt32(bytesReader *bytes.Reader, cnt int32) []int32 {
-	res := make([]int32, cnt)
+func ReadPlainINT32(bytesReader *bytes.Reader, cnt int32) []INT32 {
+	res := make([]INT32, cnt)
 	for i := 0; i < int(cnt); i++ {
 		binary.Read(bytesReader, binary.LittleEndian, &res[i])
 	}
 	return res
 }
 
-func ReadPlainInt64(bytesReader *bytes.Reader, cnt int32) []int64 {
-	res := make([]int64, cnt)
+func ReadPlainINT64(bytesReader *bytes.Reader, cnt int32) []INT64 {
+	res := make([]INT64, cnt)
 	for i := 0; i < int(cnt); i++ {
 		binary.Read(bytesReader, binary.LittleEndian, &res[i])
 	}
 	return res
 }
 
-func ReadPlainInt96(bytesReader *bytes.Reader, cnt int32) []INT96 {
+func ReadPlainINT96(bytesReader *bytes.Reader, cnt int32) []INT96 {
 	res := make([]INT96, cnt)
 	for i := 0; i < int(cnt); i++ {
 		binary.Read(bytesReader, binary.LittleEndian, &res[i])
@@ -97,37 +92,42 @@ func ReadPlainInt96(bytesReader *bytes.Reader, cnt int32) []INT96 {
 	return res
 }
 
-func ReadPlainFloat32(bytesReader *bytes.Reader, cnt int32) []float32 {
-	res := make([]float32, cnt)
+func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt int32) []FLOAT {
+	res := make([]FLOAT, cnt)
 	for i := 0; i < int(cnt); i++ {
 		binary.Read(bytesReader, binary.LittleEndian, &res[i])
 	}
 	return res
 }
 
-func ReadPlainFloat64(bytesReader *bytes.Reader, cnt int32) []float64 {
-	res := make([]float64, cnt)
+func ReadPlainDOUBLE(bytesReader *bytes.Reader, cnt int32) []DOUBLE {
+	res := make([]DOUBLE, cnt)
 	for i := 0; i < int(cnt); i++ {
 		binary.Read(bytesReader, binary.LittleEndian, &res[i])
 	}
 	return res
 }
 
-func ReadPlainByteArray(bytesReader *bytes.Reader, cnt int32) [][]byte {
-	res := make([][]byte, cnt)
+func ReadPlainBYTE_ARRAY(bytesReader *bytes.Reader, cnt int32) []BYTE_ARRAY {
+	res := make([]BYTE_ARRAY, cnt)
 	for i := 0; i < int(cnt); i++ {
 		buf := make([]byte, 4)
 		bytesReader.Read(buf)
 		ln := binary.LittleEndian.Uint32(buf)
-		res[i] = make([]byte, ln)
-		bytesReader.Read(res[i])
+		cur := make([]byte, ln)
+		bytesReader.Read(cur)
+		buf[i] = string(cur)
 	}
 	return res
 }
 
-func ReadPlainByteArrayFixed(bytesReader *bytes.Reader, fixedLength int32) []byte {
-	res := make([]byte, fixedLength)
-	bytesReader.Read(res)
+func ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader *bytes.Reader, fixedLength int32, cnt int32) []FIXED_LEN_BYTE_ARRAY {
+	res := make([]FIXED_LEN_BYTE_ARRAY, cnt)
+	for i := 0; i < int(cnt); i++ {
+		cur := make([]byte, fixedLength)
+		bytesReader.Read(cur)
+		res[i] = string(bytesReader)
+	}
 	return res
 }
 

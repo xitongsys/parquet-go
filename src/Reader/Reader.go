@@ -1,4 +1,4 @@
-package parquet_go
+package Reader
 
 import (
 	"encoding/binary"
@@ -85,9 +85,9 @@ func ReadChunk(file *os.File, schemaHandler *SchemaHandler, colMetaData *parquet
 func Reader(file *os.File) map[string]*Table {
 	tableMap := make(map[string]*Table)
 	footer := GetFooter(file, GetFooterSize(file))
-	
+
 	log.Println(footer)
-	
+
 	schemaHandler := NewSchemaHandlerFromSchema(footer.GetSchema())
 
 	for _, rowGroup := range footer.GetRowGroups() {

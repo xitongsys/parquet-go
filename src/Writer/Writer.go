@@ -36,7 +36,7 @@ func WriteTo(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandl
 		pagesMap := make(map[string][]*Page)
 		for name, table := range *tableMap {
 			//log.Println(name,table)
-			pagesMap[name], _ = TableToPages(table, int32(pageSize), parquet.CompressionCodec_SNAPPY)
+			pagesMap[name], _ = TableToDataPages(table, int32(pageSize), parquet.CompressionCodec_SNAPPY)
 		}
 
 		//pages -> chunk
