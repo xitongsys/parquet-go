@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-func BitNum(num uint64) uint64 { //the number of bits needed by the num; 0 needs 0, 1 need 1, 2 need 2, 3 need 2 ....
+func BitNum(num uint64) int32 { //the number of bits needed by the num; 0 needs 0, 1 need 1, 2 need 2, 3 need 2 ....
 	var bitn int32 = 63
 	for (bitn >= 0) && (((uint64(1) << uint32(bitn)) & num) == 0) {
 		bitn--
 	}
-	return uint64(bitn + 1)
+	return (bitn + 1)
 }
 
 func Cmp(ai interface{}, bi interface{}) int {

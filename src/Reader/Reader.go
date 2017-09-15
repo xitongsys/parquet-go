@@ -2,12 +2,12 @@ package Reader
 
 import (
 	. "Layout"
+	. "SchemaHandler"
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"log"
 	"os"
 	"parquet"
-	"strings"
 )
 
 func ConvertToThriftReader(file *os.File, offset int64) *thrift.TBufferedTransport {
@@ -39,12 +39,12 @@ func GetFooter(file *os.File, size uint32) *parquet.FileMetaData {
 }
 
 func Reader(file *os.File) []*RowGroup {
-	rowGroups = make([]*RowGroup, 0)
+	rowGroups := make([]*RowGroup, 0)
 
 	footer := GetFooter(file, GetFooterSize(file))
 	log.Println(footer)
 
-	schemaHandler := NewSchemaHandlerFromSchema(footer.GetSchema())
+	schemaHandler := NewSchemaHandlerFromSchemaList(footer.GetSchema())
 	for _, rowGroupHeader := range footer.GetRowGroups() {
 		rowGroup := ReadRowGroup(file, schemaHandler, rowGroupHeader)
 		rowGroups = append(rowGroups, rowGroup)

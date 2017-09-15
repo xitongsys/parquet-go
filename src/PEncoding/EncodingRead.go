@@ -1,64 +1,63 @@
 package PEncoding
 
 import (
-	. "Common"
+	. "ParquetType"
 	"bytes"
 	"encoding/binary"
 	"log"
-	"math"
 	"parquet"
 )
 
-func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt int64) []Interface {
+func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt int64, bitWidth int32) []interface{} {
 	if dataType == parquet.Type_BOOLEAN {
-		res := ReadBitPacked(bytesReader, cnt<<1, 1)
+		res := ReadBitPacked(bytesReader, int32(cnt<<1), 1)
 		return res
 	} else if dataType == parquet.Type_INT32 {
-		resTmp := ReadPlainInt32(bytesReader, cnt)
-		res := make([]Interface, len(resTmp))
+		resTmp := ReadPlainINT32(bytesReader, cnt)
+		res := make([]interface{}, len(resTmp))
 		for i := 0; i < len(resTmp); i++ {
 			res[i] = resTmp[i]
 		}
 		return res
 	} else if dataType == parquet.Type_INT64 {
-		resTmp := ReadPlainInt64(bytesReader, cnt)
-		res := make([]Interface, len(resTmp))
+		resTmp := ReadPlainINT64(bytesReader, cnt)
+		res := make([]interface{}, len(resTmp))
 		for i := 0; i < len(resTmp); i++ {
 			res[i] = resTmp[i]
 		}
 		return res
 	} else if dataType == parquet.Type_INT96 {
-		resTmp := ReadPlainInt96(bytesReader, cnt)
-		res := make([]Interface, len(resTmp))
+		resTmp := ReadPlainINT96(bytesReader, cnt)
+		res := make([]interface{}, len(resTmp))
 		for i := 0; i < len(resTmp); i++ {
 			res[i] = resTmp[i]
 		}
 		return res
 
 	} else if dataType == parquet.Type_FLOAT {
-		resTmp := ReadPlainFloat32(bytesReader, cnt)
-		res := make([]Interface, len(resTmp))
+		resTmp := ReadPlainFLOAT(bytesReader, cnt)
+		res := make([]interface{}, len(resTmp))
 		for i := 0; i < len(resTmp); i++ {
 			res[i] = resTmp[i]
 		}
 		return res
 	} else if dataType == parquet.Type_DOUBLE {
-		resTmp := ReadPlainFloat64(bytesReader, cnt)
-		res := make([]Interface, len(resTmp))
+		resTmp := ReadPlainDOUBLE(bytesReader, cnt)
+		res := make([]interface{}, len(resTmp))
 		for i := 0; i < len(resTmp); i++ {
 			res[i] = resTmp[i]
 		}
 		return res
 	} else if dataType == parquet.Type_BYTE_ARRAY {
-		resTmp := ReadPlainByteArray(bytesReader, cnt)
-		res := make([]Interface, len(resTmp))
+		resTmp := ReadPlainBYTE_ARRAY(bytesReader, cnt)
+		res := make([]interface{}, len(resTmp))
 		for i := 0; i < len(resTmp); i++ {
 			res[i] = resTmp[i]
 		}
 		return res
 	} else if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-		resTmp := ReadPlainByteArrayFixed(bytesReader, cnt)
-		res := make([]Interface, len(resTmp))
+		resTmp := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, cnt, bitWidth)
+		res := make([]interface{}, len(resTmp))
 		for i := 0; i < len(resTmp); i++ {
 			res[i] = resTmp[i]
 		}
@@ -116,17 +115,17 @@ func ReadPlainBYTE_ARRAY(bytesReader *bytes.Reader, cnt int64) []BYTE_ARRAY {
 		ln := binary.LittleEndian.Uint32(buf)
 		cur := make([]byte, ln)
 		bytesReader.Read(cur)
-		buf[i] = string(cur)
+		res[i] = BYTE_ARRAY(cur)
 	}
 	return res
 }
 
-func ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader *bytes.Reader, fixedLength int32, cnt int32) []FIXED_LEN_BYTE_ARRAY {
+func ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader *bytes.Reader, cnt int64, fixedLength int32) []FIXED_LEN_BYTE_ARRAY {
 	res := make([]FIXED_LEN_BYTE_ARRAY, cnt)
 	for i := 0; i < int(cnt); i++ {
 		cur := make([]byte, fixedLength)
 		bytesReader.Read(cur)
-		res[i] = string(bytesReader)
+		res[i] = FIXED_LEN_BYTE_ARRAY(cur)
 	}
 	return res
 }
@@ -236,26 +235,6 @@ func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth int32, length in
 		} else {
 			res = append(res, ReadBitPacked(newReader, header, bitWidth)...)
 		}
-	}
-	return res
-}
-
-func ReadData(bytesReader *bytes.Reader, encoding parquet.Encoding, cnt int64, bitWidth int32) []Interface {
-	res := make([]Interface, 0)
-	if encoding == parquet.Encoding_RLE {
-		for int32(len(res)) < cnt {
-			resCur := ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
-			if resCur == nil || len(resCur) <= 0 {
-				break
-			}
-			res = append(res, resCur...)
-		}
-	} else if encoding == parquet.Encoding_BIT_PACKED {
-		log.Panicln("Encoding method not yet supported: ", encoding)
-	} else if encoding == parquet.Encoding_PLAIN_DICTIONARY {
-		log.Panicln("Encoding method not yet supported: ", encoding)
-	} else {
-		log.Panicln("Encoding method not yet supported: ", encoding)
 	}
 	return res
 }

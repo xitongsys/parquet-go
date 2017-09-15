@@ -4,9 +4,14 @@ import (
 	. "Common"
 	. "Compress"
 	. "Layout"
+	. "PEncoding"
 	. "ParquetType"
+	. "SchemaHandler"
 	"bytes"
 	"git.apache.org/thrift.git/lib/go/thrift"
+	"log"
+	"parquet"
+	"strings"
 )
 
 func ReadPageHeader(thriftReader *thrift.TBufferedTransport) *parquet.PageHeader {
@@ -16,9 +21,9 @@ func ReadPageHeader(thriftReader *thrift.TBufferedTransport) *parquet.PageHeader
 	return pageHeader
 }
 
-func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, cnt int32, bitWidth int32) []interface{} {
+func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, cnt int64, bitWidth int32) []interface{} {
 	if encoding == parquet.Encoding_PLAIN {
-		return ReadPlain(bytesReader, dataType, cnt)
+		return ReadPlain(bytesReader, dataType, cnt, bitWidth)
 
 	} else if encoding == parquet.Encoding_PLAIN_DICTIONARY {
 		b, _ := bytesReader.ReadByte()
@@ -40,7 +45,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 	return make([]interface{}, 0)
 }
 
-func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.ColumnMetaData, schemaHandler *SchemaHandler) (*Page, int64) {
+func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64) {
 	pageHeader := ReadPageHeader(thriftReader)
 	var page *Page
 	compressedPageSize := pageHeader.GetCompressedPageSize()
@@ -60,25 +65,26 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 	path := make([]string, 0)
 	path = append(path, schemaHandler.GetRootName())
 	path = append(path, colMetaData.GetPathInSchema()...)
+	name := strings.Join(path, ".")
 
 	if pageHeader.GetType() == parquet.PageType_DATA_PAGE {
 		page = NewDataPage()
-		page.PageHeader = pageHeader
+		page.Header = pageHeader
 		maxDefinitionLevel, _ := schemaHandler.MaxDefinitionLevel(path)
 		maxRepetitionLevel, _ := schemaHandler.MaxRepetitionLevel(path)
 
 		var repetitionLevels []interface{}
 		if maxRepetitionLevel > 0 {
-			bitWidth := BitNum(maxRepetitionLevel)
+			bitWidth := BitNum(uint64(maxRepetitionLevel))
 
 			repetitionLevels = ReadDataPageValues(bytesReader,
 				pageHeader.DataPageHeader.GetRepetitionLevelEncoding(),
 				parquet.Type_INT64,
-				int32(pageHeader.DataPageHeader.GetNumValues()),
+				int64(pageHeader.DataPageHeader.GetNumValues()),
 				bitWidth)
 
 		} else {
-			repetitionLevels = make([]Interface, pageHeader.DataPageHeader.GetNumValues())
+			repetitionLevels = make([]interface{}, pageHeader.DataPageHeader.GetNumValues())
 			for i := 0; i < len(repetitionLevels); i++ {
 				repetitionLevels[i] = int32(0)
 			}
@@ -86,11 +92,12 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 
 		var definitionLevels []interface{}
 		if maxDefinitionLevel > 0 {
-			bitWidth := BitNum(maxDefinitionLevel)
+			bitWidth := BitNum(uint64(maxDefinitionLevel))
 
 			definitionLevels = ReadDataPageValues(bytesReader,
 				pageHeader.DataPageHeader.GetDefinitionLevelEncoding(),
-				parquet.Type_INT64, int32(pageHeader.DataPageHeader.GetNumValues()),
+				parquet.Type_INT64,
+				int64(pageHeader.DataPageHeader.GetNumValues()),
 				bitWidth)
 
 		} else {
@@ -103,7 +110,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 		var numNulls int64 = 0
 		for i := 0; i < len(definitionLevels); i++ {
 			if int32(definitionLevels[i].(INT64)) != maxDefinitionLevel {
-				numNULLs++
+				numNulls++
 			}
 		}
 
@@ -111,12 +118,12 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 		values = ReadDataPageValues(bytesReader,
 			pageHeader.DataPageHeader.GetEncoding(),
 			colMetaData.GetType(),
-			int64(len(definitionLevels))-numNulls)
+			int64(len(definitionLevels))-numNulls,
+			*schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].TypeLength)
 
 		table := new(Table)
 		table.Path = path
-		name := strings.Join(path, ".")
-		table.Repetition_Type = schemaHandler.SchemaElements[name].GetRepetitionType()
+		table.Repetition_Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
 		table.MaxRepetitionLevel = maxRepetitionLevel
 		table.MaxDefinitionLevel = maxDefinitionLevel
 		table.Values = make([]interface{}, len(definitionLevels))
@@ -127,24 +134,25 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 		for i := 0; i < len(definitionLevels); i++ {
 			dl, _ := definitionLevels[i].(int32)
 			rl, _ := repetitionLevels[i].(int32)
-			res.RepetitionLevels[i] = rl
-			res.DefinitionLevels[i] = dl
-			if res.DefinitionLevels[i] == maxDefinitionLevel {
-				res.Values[i] = values[j]
+			table.RepetitionLevels[i] = rl
+			table.DefinitionLevels[i] = dl
+			if table.DefinitionLevels[i] == maxDefinitionLevel {
+				table.Values[i] = values[j]
 				j++
 			}
 		}
 		page.DataTable = table
-		return page, len(definitionLevels)
+		return page, int64(len(definitionLevels))
 
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		page = NewDictPage()
-		page.PageHeader = pageHeader
+		page.Header = pageHeader
 		table := new(Table)
 		table.Path = path
 		table.Values = ReadPlain(bytesReader,
 			colMetaData.GetType(),
-			pageHeader.DictionaryPageHeader().GetNumValues())
+			int64(pageHeader.DictionaryPageHeader.GetNumValues()),
+			0)
 
 		return page, 0
 
