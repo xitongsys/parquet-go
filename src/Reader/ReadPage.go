@@ -40,7 +40,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 	return make([]interface{}, 0)
 }
 
-func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.ColumnMetaData, schemaHandler *SchemaHandler) *Page {
+func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.ColumnMetaData, schemaHandler *SchemaHandler) (*Page, int64) {
 	pageHeader := ReadPageHeader(thriftReader)
 	var page *Page
 	compressedPageSize := pageHeader.GetCompressedPageSize()
@@ -135,7 +135,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 			}
 		}
 		page.DataTable = table
-		return page
+		return page, len(definitionLevels)
 
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		page = NewDictPage()
@@ -146,7 +146,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 			colMetaData.GetType(),
 			pageHeader.DictionaryPageHeader().GetNumValues())
 
-		return page
+		return page, 0
 
 	} else if pageHeader.GetType() == parquet.PageType_INDEX_PAGE {
 	} else if pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
@@ -156,6 +156,6 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, colMetaData *parquet.Colu
 
 	log.Println("Page Type Not Supported Yet")
 
-	return nil
+	return nil, 0
 
 }
