@@ -1,6 +1,7 @@
 package Reader
 
 import (
+	. "Layout"
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"log"
@@ -37,74 +38,16 @@ func GetFooter(file *os.File, size uint32) *parquet.FileMetaData {
 	return footer
 }
 
-func GetPageHeader(thriftReader *thrift.TBufferedTransport) *parquet.PageHeader {
-	protocol := thrift.NewTCompactProtocol(thriftReader)
-	pageHeader := parquet.NewPageHeader()
-	pageHeader.Read(protocol)
-	return pageHeader
-}
+func Reader(file *os.File) []*RowGroup {
+	rowGroups = make([]*RowGroup, 0)
 
-func ReadChunk(file *os.File, schemaHandler *SchemaHandler, colMetaData *parquet.ColumnMetaData, numRows int64) map[string]*Table {
-	chunkTableMap := make(map[string]*Table)
-	//get page offset
-	dataPageOffset := colMetaData.GetDataPageOffset()
-	//dictionaryPageOffset := colMetaData.GetDictionaryPageOffset()
-
-	var dictData []Interface
-
-	thriftReader := ConvertToThriftReader(file, dataPageOffset)
-
-	var valueCnt int64 = 0
-	for valueCnt < numRows {
-		pageHeader := GetPageHeader(thriftReader)
-		pageType := pageHeader.GetType()
-
-		//log.Println(pageHeader)
-
-		if pageType == parquet.PageType_DATA_PAGE {
-			tableCur := ReadDataPage(thriftReader, schemaHandler, colMetaData, pageHeader, dictData)
-			pathStr := strings.Join(tableCur.Path, ".")
-
-			if _, ok := chunkTableMap[pathStr]; ok {
-				MergeTable(chunkTableMap[pathStr], tableCur)
-			} else {
-				chunkTableMap[pathStr] = tableCur
-			}
-			valueCnt += int64(pageHeader.GetDataPageHeader().GetNumValues())
-
-		} else if pageType == parquet.PageType_DICTIONARY_PAGE {
-			dictData = ReadDictPage(thriftReader, schemaHandler, colMetaData, pageHeader)
-		} else {
-			log.Println("Skipping unknown page type =", pageType)
-		}
-	}
-
-	return chunkTableMap
-}
-
-func Reader(file *os.File) map[string]*Table {
-	tableMap := make(map[string]*Table)
 	footer := GetFooter(file, GetFooterSize(file))
-
 	log.Println(footer)
 
 	schemaHandler := NewSchemaHandlerFromSchema(footer.GetSchema())
-
-	for _, rowGroup := range footer.GetRowGroups() {
-		numRows := rowGroup.GetNumRows()
-		log.Println("RowGroup.num_rows=", numRows, "RowGroup.ColumnChunkNum=", len(rowGroup.GetColumns()))
-
-		for _, columnChunk := range rowGroup.GetColumns() {
-			colMetaData := columnChunk.GetMetaData()
-			chunkTableMap := ReadChunk(file, schemaHandler, colMetaData, colMetaData.NumValues)
-			for key, value := range chunkTableMap {
-				if _, ok := tableMap[key]; ok {
-					MergeTable(tableMap[key], value)
-				} else {
-					tableMap[key] = value
-				}
-			}
-		}
+	for _, rowGroupHeader := range footer.GetRowGroups() {
+		rowGroup := ReadRowGroup(file, schemaHandler, rowGroupHeader)
+		rowGroups = append(rowGroups, rowGroup)
 	}
-	return tableMap
+	return rowGroups
 }

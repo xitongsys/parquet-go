@@ -17,6 +17,5 @@ func ReadRowGroup(file *os.file, schemaHandler *SchemaHandler, rowGroupHeader *p
 		chunk = ReadChunk(thriftReader, schemaHandler, columnChunk)
 		rowGroup.Chunks = append(rowGroup.Chunks, chunk)
 	}
-
 	return rowGroup
 }
