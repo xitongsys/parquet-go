@@ -5,6 +5,7 @@ import (
 	"os"
 	//	"reflect"
 	. "Reader"
+	"parquet"
 )
 
 func ReadParquet(fname string) {
@@ -31,7 +32,11 @@ func ReadParquet(fname string) {
 			for _, page := range chunk.Pages {
 				fmt.Println(page.DataTable.Path)
 				for i := 0; i < len(page.DataTable.Values); i++ {
-					fmt.Println(page.DataTable.Values[i], page.DataTable.RepetitionLevels[i], page.DataTable.DefinitionLevels[i])
+					if page.Header.GetType() == parquet.PageType_DATA_PAGE {
+						fmt.Println(page.DataTable.Values[i],
+							page.DataTable.RepetitionLevels[i],
+							page.DataTable.DefinitionLevels[i])
+					}
 				}
 			}
 		}
@@ -39,5 +44,6 @@ func ReadParquet(fname string) {
 }
 
 func main() {
-	ReadParquet("./class.snappy.parquet")
+	//ReadParquet("./class.snappy.parquet")
+	ReadParquet("./nation.dict.parquet")
 }

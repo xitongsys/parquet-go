@@ -28,7 +28,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 	} else if encoding == parquet.Encoding_PLAIN_DICTIONARY {
 		b, _ := bytesReader.ReadByte()
 		bitWidth = int32(b)
-		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
+		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, int32(bytesReader.Len()))
 
 	} else if encoding == parquet.Encoding_RLE {
 		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
@@ -47,6 +47,9 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 
 func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64) {
 	pageHeader := ReadPageHeader(thriftReader)
+
+	log.Println(pageHeader)
+
 	var page *Page
 	compressedPageSize := pageHeader.GetCompressedPageSize()
 	buf := make([]byte, compressedPageSize)
@@ -142,6 +145,8 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			}
 		}
 		page.DataTable = table
+
+		log.Println("====", table.Values)
 		return page, int64(len(definitionLevels))
 
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
@@ -153,7 +158,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			colMetaData.GetType(),
 			int64(pageHeader.DictionaryPageHeader.GetNumValues()),
 			0)
-
+		page.DataTable = table
 		return page, 0
 
 	} else if pageHeader.GetType() == parquet.PageType_INDEX_PAGE {
