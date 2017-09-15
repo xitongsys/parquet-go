@@ -119,7 +119,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			pageHeader.DataPageHeader.GetEncoding(),
 			colMetaData.GetType(),
 			int64(len(definitionLevels))-numNulls,
-			*schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].TypeLength)
+			schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength())
 
 		table := new(Table)
 		table.Path = path

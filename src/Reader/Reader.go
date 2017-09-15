@@ -45,6 +45,7 @@ func Reader(file *os.File) []*RowGroup {
 	log.Println(footer)
 
 	schemaHandler := NewSchemaHandlerFromSchemaList(footer.GetSchema())
+
 	for _, rowGroupHeader := range footer.GetRowGroups() {
 		rowGroup := ReadRowGroup(file, schemaHandler, rowGroupHeader)
 		rowGroups = append(rowGroups, rowGroup)
