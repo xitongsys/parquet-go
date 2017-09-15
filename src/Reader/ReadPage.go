@@ -86,7 +86,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		} else {
 			repetitionLevels = make([]interface{}, pageHeader.DataPageHeader.GetNumValues())
 			for i := 0; i < len(repetitionLevels); i++ {
-				repetitionLevels[i] = int32(0)
+				repetitionLevels[i] = INT64(0)
 			}
 		}
 
@@ -103,7 +103,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		} else {
 			definitionLevels = make([]interface{}, pageHeader.DataPageHeader.GetNumValues())
 			for i := 0; i < len(definitionLevels); i++ {
-				definitionLevels[i] = int32(0)
+				definitionLevels[i] = INT64(0)
 			}
 		}
 
