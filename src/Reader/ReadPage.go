@@ -132,10 +132,10 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 
 		j := 0
 		for i := 0; i < len(definitionLevels); i++ {
-			dl, _ := definitionLevels[i].(int32)
-			rl, _ := repetitionLevels[i].(int32)
-			table.RepetitionLevels[i] = rl
-			table.DefinitionLevels[i] = dl
+			dl, _ := definitionLevels[i].(INT64)
+			rl, _ := repetitionLevels[i].(INT64)
+			table.RepetitionLevels[i] = int32(rl)
+			table.DefinitionLevels[i] = int32(dl)
 			if table.DefinitionLevels[i] == maxDefinitionLevel {
 				table.Values[i] = values[j]
 				j++
