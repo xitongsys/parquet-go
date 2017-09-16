@@ -118,7 +118,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 				j++
 			}
 			num := j - i
-			rleBufCur := WriteRLE(int32(page.DataTable.DefinitionLevels[i]), int32(num),
+			rleBufCur := WriteRLE(uint64(page.DataTable.DefinitionLevels[i]), int32(num),
 				int32(BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
 
 			rleBuf = append(rleBuf, rleBufCur...)
@@ -126,7 +126,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			i = j
 		}
 
-		tmpBuf := make([]INT32, 1)
+		tmpBuf := make([]interface{}, 1)
 		tmpBuf[0] = INT32(len(rleBuf))
 		lengthBuf := WritePlainINT32(tmpBuf)
 
@@ -146,14 +146,14 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			}
 
 			num := j - i
-			rleBufCur := WriteRLE(int32(page.DataTable.RepetitionLevels[i]), int32(num),
+			rleBufCur := WriteRLE(uint64(page.DataTable.RepetitionLevels[i]), int32(num),
 				int32(BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
 
 			rleBuf = append(rleBuf, rleBufCur...)
 
 			i = j
 		}
-		tmpBuf := make([]INT32, 1)
+		tmpBuf := make([]interface{}, 1)
 		tmpBuf[0] = INT32(len(rleBuf))
 		lengthBuf := WritePlainINT32(tmpBuf)
 
