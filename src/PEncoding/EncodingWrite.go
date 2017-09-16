@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"log"
 	"reflect"
 )
 
@@ -453,7 +454,7 @@ func WriteRLE(val uint64, cnt int32, bitWidth int32) []byte {
 	return res
 }
 
-func WriteBitPacked(vals []interface{}, bitWidth int64) []byte {
+func WriteBitPacked(vals []interface{}, bitWidth int64, ifHeader bool) []byte {
 	ln := len(vals)
 	if ln <= 0 {
 		return nil
@@ -487,7 +488,6 @@ func WriteBitPacked(vals []interface{}, bitWidth int64) []byte {
 				left = bitWidth
 				used = 0
 			}
-
 		} else {
 			resCur |= (val >> uint64(used)) << uint64(8-resCurNeedBits)
 			i += 1
@@ -503,7 +503,9 @@ func WriteBitPacked(vals []interface{}, bitWidth int64) []byte {
 	}
 
 	res := make([]byte, 0)
-	res = append(res, headerBuf...)
+	if ifHeader {
+		res = append(res, headerBuf...)
+	}
 	res = append(res, valBuf...)
 	return res
 }
@@ -518,10 +520,10 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 	num := int32(nums[0].(INT32))
 	var firstValue uint64 = uint64((num >> 31) ^ (num << 1))
 
-	res = append(res, WriteRLE(blockSize, 1, BitNum(blockSize))...)
-	res = append(res, WriteRLE(numMiniBlocksInBlock, 1, BitNum(numMiniBlocksInBlock))...)
-	res = append(res, WriteRLE(totalNumValues, 1, BitNum(totalNumValues))...)
-	res = append(res, WriteRLE(firstValue, 1, BitNum(firstValue))...)
+	res = append(res, WriteUnsignedVarInt(blockSize)...)
+	res = append(res, WriteUnsignedVarInt(numMiniBlocksInBlock)...)
+	res = append(res, WriteUnsignedVarInt(totalNumValues)...)
+	res = append(res, WriteUnsignedVarInt(firstValue)...)
 
 	i := 1
 	for i < len(nums) {
@@ -552,14 +554,78 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 				}
 			}
 			bitWidths[j] = byte(BitNum(uint64(maxValue)))
+			log.Println("=======", maxValue, bitWidths[j])
 		}
 
 		var minDeltaZigZag uint64 = uint64((minDelta >> 31) ^ (minDelta << 1))
-		res = append(res, WriteRLE(minDeltaZigZag, 1, BitNum(minDeltaZigZag))...)
+		res = append(res, WriteUnsignedVarInt(minDeltaZigZag)...)
 		res = append(res, bitWidths...)
+
 		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
-			WriteBitPacked((blockBuf[uint64(j)*numMiniBlocksInBlock : uint64(j+1)*numMiniBlocksInBlock]), int64(bitWidths[j]))
+			log.Println(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false))
+			res = append(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false)...)
 		}
+
+	}
+	return res
+}
+
+func WriteDeltaINT64(nums []interface{}) []byte {
+	res := make([]byte, 0)
+	var blockSize uint64 = 128
+	var numMiniBlocksInBlock uint64 = 4
+	var numValuesInMiniBlock uint64 = 32
+	var totalNumValues uint64 = uint64(len(nums))
+
+	num := int64(nums[0].(INT64))
+	var firstValue uint64 = uint64((num << 1) ^ (num >> 63))
+
+	res = append(res, WriteUnsignedVarInt(blockSize)...)
+	res = append(res, WriteUnsignedVarInt(numMiniBlocksInBlock)...)
+	res = append(res, WriteUnsignedVarInt(totalNumValues)...)
+	res = append(res, WriteUnsignedVarInt(firstValue)...)
+
+	i := 1
+	for i < len(nums) {
+		blockBuf := make([]interface{}, 0)
+		var minDelta INT64 = 0x7FFFFFFFFFFFFFFF
+
+		for i < len(nums) && uint64(len(blockBuf)) < blockSize {
+			delta := INT64(nums[i].(INT64) - nums[i-1].(INT64))
+			blockBuf = append(blockBuf, delta)
+			if delta < minDelta {
+				minDelta = delta
+			}
+			i++
+		}
+
+		for uint64(len(blockBuf)) < blockSize {
+			blockBuf = append(blockBuf, minDelta)
+		}
+
+		bitWidths := make([]byte, numMiniBlocksInBlock)
+
+		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
+			var maxValue INT64 = 0
+			for k := uint64(j) * numValuesInMiniBlock; k < uint64(j+1)*numValuesInMiniBlock; k++ {
+				blockBuf[k] = blockBuf[k].(INT64) - minDelta
+				if blockBuf[k].(INT64) > maxValue {
+					maxValue = blockBuf[k].(INT64)
+				}
+			}
+			bitWidths[j] = byte(BitNum(uint64(maxValue)))
+			//log.Println("=======", maxValue, bitWidths[j])
+		}
+
+		var minDeltaZigZag uint64 = uint64((minDelta << 1) ^ (minDelta >> 1)) //zigzag encoding
+		res = append(res, WriteUnsignedVarInt(minDeltaZigZag)...)
+		res = append(res, bitWidths...)
+
+		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
+			//log.Println(res, blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock])
+			res = append(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false)...)
+		}
+
 	}
 	return res
 }

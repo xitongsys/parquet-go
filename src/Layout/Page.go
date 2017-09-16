@@ -80,10 +80,10 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
 		page.MaxVal = maxVal
 		page.MinVal = minVal
+		page.DataType = dataType
+		page.CompressType = compressType
 
 		page.DataPageCompress(compressType)
-		page.CompressType = compressType
-		page.DataType = dataType
 
 		totSize += int64(len(page.RawData))
 		res = append(res, page)
@@ -105,7 +105,16 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
 		}
 	}
-	valuesRawBuf := WritePlain(valuesBuf)
+
+	////////test DeltaINT64///////////////////
+	var valuesRawBuf []byte
+	if page.DataType == parquet.Type_INT64 {
+		valuesRawBuf = WriteDeltaINT64(valuesBuf)
+	} else {
+		valuesRawBuf = WritePlain(valuesBuf)
+	}
+
+	//	valuesRawBuf := WritePlain(valuesBuf)
 
 	//definitionLevel//////////////////////////////////
 	definitionLevelBuf := make([]byte, 0)
@@ -186,6 +195,13 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.DataPageHeader.DefinitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN
+
+	/////////test DeltaINT64////////////////
+	if page.DataType == parquet.Type_INT64 {
+		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
+	}
+	//////////////////////////////////////
+
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	page.Header.DataPageHeader.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
 	page.Header.DataPageHeader.Statistics.Min = WritePlain([]interface{}{page.MinVal})
