@@ -54,7 +54,6 @@ func CreateStudents() []Student {
 		stus[i].Sex = BOOLEAN(i%2 == 0)
 		stuName = nextName(stuName)
 		id++
-		fmt.Println(i)
 	}
 	return stus
 }

@@ -507,3 +507,59 @@ func WriteBitPacked(vals []interface{}, bitWidth int64) []byte {
 	res = append(res, valBuf...)
 	return res
 }
+
+func WriteDeltaINT32(nums []interface{}) []byte {
+	res := make([]byte, 0)
+	var blockSize uint64 = 128
+	var numMiniBlocksInBlock uint64 = 4
+	var numValuesInMiniBlock uint64 = 32
+	var totalNumValues uint64 = uint64(len(nums))
+
+	num := int32(nums[0].(INT32))
+	var firstValue uint64 = uint64((num >> 31) ^ (num << 1))
+
+	res = append(res, WriteRLE(blockSize, 1, BitNum(blockSize))...)
+	res = append(res, WriteRLE(numMiniBlocksInBlock, 1, BitNum(numMiniBlocksInBlock))...)
+	res = append(res, WriteRLE(totalNumValues, 1, BitNum(totalNumValues))...)
+	res = append(res, WriteRLE(firstValue, 1, BitNum(firstValue))...)
+
+	i := 1
+	for i < len(nums) {
+		blockBuf := make([]interface{}, 0)
+		var minDelta INT32 = 0x7FFFFFFF
+
+		for i < len(nums) && uint64(len(blockBuf)) < blockSize {
+			delta := INT32(nums[i].(INT32) - nums[i-1].(INT32))
+			blockBuf = append(blockBuf, delta)
+			if delta < minDelta {
+				minDelta = delta
+			}
+			i++
+		}
+
+		for uint64(len(blockBuf)) < blockSize {
+			blockBuf = append(blockBuf, minDelta)
+		}
+
+		bitWidths := make([]byte, numMiniBlocksInBlock)
+
+		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
+			var maxValue INT32 = 0
+			for k := uint64(j) * numValuesInMiniBlock; k < uint64(j+1)*numValuesInMiniBlock; k++ {
+				blockBuf[k] = blockBuf[k].(INT32) - minDelta
+				if blockBuf[k].(INT32) > maxValue {
+					maxValue = blockBuf[k].(INT32)
+				}
+			}
+			bitWidths[j] = byte(BitNum(uint64(maxValue)))
+		}
+
+		var minDeltaZigZag uint64 = uint64((minDelta >> 31) ^ (minDelta << 1))
+		res = append(res, WriteRLE(minDeltaZigZag, 1, BitNum(minDeltaZigZag))...)
+		res = append(res, bitWidths...)
+		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
+			WriteBitPacked((blockBuf[uint64(j)*numMiniBlocksInBlock : uint64(j+1)*numMiniBlocksInBlock]), int64(bitWidths[j]))
+		}
+	}
+	return res
+}
