@@ -6,7 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"log"
+	//"log"
 	"reflect"
 )
 
@@ -554,7 +554,7 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 				}
 			}
 			bitWidths[j] = byte(BitNum(uint64(maxValue)))
-			log.Println("=======", maxValue, bitWidths[j])
+			//			log.Println("=======", maxValue, bitWidths[j])
 		}
 
 		var minDeltaZigZag uint64 = uint64((minDelta >> 31) ^ (minDelta << 1))
@@ -562,7 +562,7 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 		res = append(res, bitWidths...)
 
 		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
-			log.Println(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false))
+			//	log.Println(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false))
 			res = append(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false)...)
 		}
 
@@ -578,7 +578,7 @@ func WriteDeltaINT64(nums []interface{}) []byte {
 	var totalNumValues uint64 = uint64(len(nums))
 
 	num := int64(nums[0].(INT64))
-	var firstValue uint64 = uint64((num << 1) ^ (num >> 63))
+	var firstValue uint64 = uint64((num >> 63) ^ (num << 1))
 
 	res = append(res, WriteUnsignedVarInt(blockSize)...)
 	res = append(res, WriteUnsignedVarInt(numMiniBlocksInBlock)...)
@@ -614,18 +614,38 @@ func WriteDeltaINT64(nums []interface{}) []byte {
 				}
 			}
 			bitWidths[j] = byte(BitNum(uint64(maxValue)))
-			//log.Println("=======", maxValue, bitWidths[j])
 		}
 
-		var minDeltaZigZag uint64 = uint64((minDelta << 1) ^ (minDelta >> 1)) //zigzag encoding
+		var minDeltaZigZag uint64 = uint64((minDelta >> 63) ^ (minDelta << 1))
 		res = append(res, WriteUnsignedVarInt(minDeltaZigZag)...)
 		res = append(res, bitWidths...)
 
 		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
-			//log.Println(res, blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock])
 			res = append(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false)...)
 		}
 
 	}
 	return res
+}
+
+func WriteDeltaLengthByteArray(arrays []interface{}) []byte {
+	ln := len(arrays)
+	res := make([]byte, 0)
+	lengthArray := make([]interface{}, ln)
+	for i := 0; i < ln; i++ {
+		array := reflect.ValueOf(arrays[i]).String()
+		lengthArray[i] = INT32(len(array))
+	}
+
+	lengthBuf := WriteDeltaINT32(lengthArray)
+	res = append(res, lengthBuf...)
+
+	for i := 0; i < ln; i++ {
+		array := reflect.ValueOf(arrays[i]).String()
+		res = append(res, []byte(array)...)
+	}
+	return res
+}
+
+func WriteBitPackedDeprecated() {
 }

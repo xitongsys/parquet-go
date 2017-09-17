@@ -48,6 +48,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
+
 	for i < totalLn {
 		j := i + 1
 		var size int32 = 0
@@ -105,16 +106,22 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
 		}
 	}
+	valuesRawBuf := WritePlain(valuesBuf)
 
 	////////test DeltaINT64///////////////////
-	var valuesRawBuf []byte
 	if page.DataType == parquet.Type_INT64 {
 		valuesRawBuf = WriteDeltaINT64(valuesBuf)
-	} else {
-		valuesRawBuf = WritePlain(valuesBuf)
+		//log.Println(valuesRawBuf)
 	}
-
-	//	valuesRawBuf := WritePlain(valuesBuf)
+	if page.DataType == parquet.Type_INT32 {
+		valuesRawBuf = WriteDeltaINT32(valuesBuf)
+		//log.Println(valuesRawBuf)
+	}
+	if page.DataType == parquet.Type_BYTE_ARRAY {
+		log.Println("=======heh")
+		valuesRawBuf = WriteDeltaLengthByteArray(valuesBuf)
+	}
+	////////////////////////////////////////////
 
 	//definitionLevel//////////////////////////////////
 	definitionLevelBuf := make([]byte, 0)
@@ -199,6 +206,12 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	/////////test DeltaINT64////////////////
 	if page.DataType == parquet.Type_INT64 {
 		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
+	}
+	if page.DataType == parquet.Type_INT32 {
+		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
+	}
+	if page.DataType == parquet.Type_BYTE_ARRAY {
+		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
 	}
 	//////////////////////////////////////
 
