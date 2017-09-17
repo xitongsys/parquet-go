@@ -691,3 +691,38 @@ func WriteBitPackedDeprecated(vals []interface{}, bitWidth int64) []byte {
 	}
 	return res
 }
+
+func WriteDeltaByteArray(arrays []interface{}) []byte {
+	ln := len(arrays)
+	if ln <= 0 {
+		return []byte{}
+	}
+
+	prefixLengths := make([]interface{}, ln)
+	suffixes := make([]interface{}, ln)
+	prefixLengths[0] = INT32(0)
+	suffixes[0] = arrays[0]
+
+	for i := 1; i < ln; i++ {
+		s1 := reflect.ValueOf(arrays[i-1]).String()
+		s2 := reflect.ValueOf(arrays[i]).String()
+		l1 := len(s1)
+		l2 := len(s2)
+		j := 0
+		for j < l1 && j < l2 {
+			if s1[j] != s2[j] {
+				break
+			}
+		}
+		prefixLengths[i] = INT32(j)
+		suffixes[i] = BYTE_ARRAY(s2[j:])
+	}
+
+	prefixBuf := WriteDeltaINT32(prefixLengths)
+	suffixBuf := WriteDeltaLengthByteArray(suffixes)
+
+	res := make([]byte, 0)
+	res = append(res, prefixBuf...)
+	res = append(res, suffixBuf...)
+	return res
+}

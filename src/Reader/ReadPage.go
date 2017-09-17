@@ -40,6 +40,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 		return values
 
 	} else if encoding == parquet.Encoding_BIT_PACKED {
+		//deprecated
 	} else if encoding == parquet.Encoding_DELTA_BINARY_PACKED {
 		values := ReadDeltaBinaryPackedINT(bytesReader)
 		if dataType == parquet.Type_INT32 {
