@@ -204,7 +204,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 	/////////test DeltaINT64////////////////
 	if page.DataType == parquet.Type_INT64 {
-		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
+		//page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
 	}
 	if page.DataType == parquet.Type_INT32 {
 		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED

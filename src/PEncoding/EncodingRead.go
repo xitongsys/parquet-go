@@ -173,7 +173,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []
 	res := make([]interface{}, 0)
 	if bitWidth == 0 {
 		for i := 0; i < int(cnt); i++ {
-			res = append(res, 0)
+			res = append(res, INT64(0))
 		}
 		return res
 	}
@@ -246,6 +246,8 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 	numValues := ReadUnsignedVarInt(bytesReader)
 	firstValueZigZag := ReadUnsignedVarInt(bytesReader)
 	var firstValue int64 = int64(firstValueZigZag>>1) ^ (-int64(firstValueZigZag & 1))
+
+	log.Println("====", blockSize, numMiniblocksInBlock, numValues, firstValue)
 	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
 
 	res := make([]interface{}, 0)
@@ -260,8 +262,8 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 		}
 		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
 			cur := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
-			for j := 0; j < len(cur); j++ {
-				res = append(res, INT64(firstValue+int64(cur[j].(INT64))+minDelta))
+			for j := 1; j < len(cur); j++ {
+				res = append(res, INT64(int64(res[len(res)-1].(INT64))+int64(cur[j].(INT64))+minDelta))
 			}
 		}
 	}

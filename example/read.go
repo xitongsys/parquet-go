@@ -44,8 +44,8 @@ func ReadParquet(fname string) {
 }
 
 func main() {
-	ReadParquet("./class.snappy.parquet")
+	//ReadParquet("./class.snappy.parquet")
 	//ReadParquet("./nation.dict.parquet")
 	//ReadParquet("./nested.parquet")
-	//ReadParquet("./flat.parquet")
+	ReadParquet("./flat.parquet")
 }

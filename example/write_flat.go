@@ -48,7 +48,7 @@ func CreateStudents() []Student {
 	var id int64 = 1
 	for i := 0; i < len(stus); i++ {
 		stus[i].Name = UTF8(stuName)
-		stus[i].Age = INT32(i)
+		stus[i].Age = INT32(-i)
 		stus[i].Id = INT64(i)
 		stus[i].Weight = FLOAT(50.0 + float32(stus[i].Age)*0.1)
 		stus[i].Sex = BOOLEAN(i%2 == 0)
