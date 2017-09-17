@@ -21,14 +21,14 @@ func ReadPageHeader(thriftReader *thrift.TBufferedTransport) *parquet.PageHeader
 	return pageHeader
 }
 
-func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, cnt int64, bitWidth int32) []interface{} {
+func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, cnt uint64, bitWidth uint64) []interface{} {
 	if encoding == parquet.Encoding_PLAIN {
 		return ReadPlain(bytesReader, dataType, cnt, bitWidth)
 
 	} else if encoding == parquet.Encoding_PLAIN_DICTIONARY {
 		b, _ := bytesReader.ReadByte()
-		bitWidth = int32(b)
-		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, int32(bytesReader.Len()))
+		bitWidth = uint64(b)
+		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, uint64(bytesReader.Len()))
 
 	} else if encoding == parquet.Encoding_RLE {
 		values := ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
@@ -89,7 +89,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			repetitionLevels = ReadDataPageValues(bytesReader,
 				pageHeader.DataPageHeader.GetRepetitionLevelEncoding(),
 				parquet.Type_INT64,
-				int64(pageHeader.DataPageHeader.GetNumValues()),
+				uint64(pageHeader.DataPageHeader.GetNumValues()),
 				bitWidth)
 
 		} else {
@@ -106,7 +106,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			definitionLevels = ReadDataPageValues(bytesReader,
 				pageHeader.DataPageHeader.GetDefinitionLevelEncoding(),
 				parquet.Type_INT64,
-				int64(pageHeader.DataPageHeader.GetNumValues()),
+				uint64(pageHeader.DataPageHeader.GetNumValues()),
 				bitWidth)
 
 		} else {
@@ -116,7 +116,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			}
 		}
 
-		var numNulls int64 = 0
+		var numNulls uint64 = 0
 		for i := 0; i < len(definitionLevels); i++ {
 			if int32(definitionLevels[i].(INT64)) != maxDefinitionLevel {
 				numNulls++
@@ -127,8 +127,8 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		values = ReadDataPageValues(bytesReader,
 			pageHeader.DataPageHeader.GetEncoding(),
 			colMetaData.GetType(),
-			int64(len(definitionLevels))-numNulls,
-			schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength())
+			uint64(len(definitionLevels))-numNulls,
+			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
 
 		table := new(Table)
 		table.Path = path
@@ -162,7 +162,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		table.Path = path
 		table.Values = ReadPlain(bytesReader,
 			colMetaData.GetType(),
-			int64(pageHeader.DictionaryPageHeader.GetNumValues()),
+			uint64(pageHeader.DictionaryPageHeader.GetNumValues()),
 			0)
 		page.DataTable = table
 		return page, 0
