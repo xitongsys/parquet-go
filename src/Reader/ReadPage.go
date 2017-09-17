@@ -41,6 +41,14 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 
 	} else if encoding == parquet.Encoding_BIT_PACKED {
 	} else if encoding == parquet.Encoding_DELTA_BINARY_PACKED {
+		values := ReadDeltaBinaryPackedINT(bytesReader)
+		if dataType == parquet.Type_INT32 {
+			for i := 0; i < len(values); i++ {
+				values[i] = INT32(values[i].(INT64))
+			}
+		}
+		return values
+
 	} else if encoding == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
 	} else if encoding == parquet.Encoding_DELTA_BYTE_ARRAY {
 	} else if encoding == parquet.Encoding_RLE_DICTIONARY {

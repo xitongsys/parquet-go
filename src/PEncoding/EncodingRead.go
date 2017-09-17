@@ -240,23 +240,30 @@ func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length u
 }
 
 //res is INT64
-func ReadDeltaINT(bytesReader *bytes.Reader) []interface{} {
+func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 	blockSize := ReadUnsignedVarInt(bytesReader)
 	numMiniblocksInBlock := ReadUnsignedVarInt(bytesReader)
 	numValues := ReadUnsignedVarInt(bytesReader)
 	firstValueZigZag := ReadUnsignedVarInt(bytesReader)
-	var firstValue int64 = int64(firstValueZigZag>>1) ^ (-int64(firstValueZig & 1))
+	var firstValue int64 = int64(firstValueZigZag>>1) ^ (-int64(firstValueZigZag & 1))
+	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
 
 	res := make([]interface{}, 0)
-	for len(res) < numValues {
+	res = append(res, INT64(firstValue))
+	for uint64(len(res)) < numValues {
 		minDeltaZigZag := ReadUnsignedVarInt(bytesReader)
 		var minDelta int64 = int64(minDeltaZigZag>>1) ^ (-int64(minDeltaZigZag & 1))
 		var bitWidths = make([]uint64, numMiniblocksInBlock)
-		for i := 0; i < numMiniblocksInBlock; i++ {
-			bitWidths[i] = uint64(bytesReader.ReadByte())
+		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
+			b, _ := bytesReader.ReadByte()
+			bitWidths[i] = uint64(b)
 		}
-
+		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
+			cur := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
+			for j := 0; j < len(cur); j++ {
+				res = append(res, INT64(firstValue+int64(cur[j].(INT64))+minDelta))
+			}
+		}
 	}
-
-	return nil
+	return res
 }
