@@ -60,6 +60,14 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 		return values
 
 	} else if encoding == parquet.Encoding_DELTA_BYTE_ARRAY {
+		values := ReadDeltaByteArray(bytesReader)
+		if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			for i := 0; i < len(values); i++ {
+				values[i] = FIXED_LEN_BYTE_ARRAY(values[i].(BYTE_ARRAY))
+			}
+		}
+		return values
+
 	} else if encoding == parquet.Encoding_RLE_DICTIONARY {
 	} else {
 		log.Println("Error Encoding method")
@@ -169,7 +177,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		}
 		page.DataTable = table
 
-		log.Println("====", table.Values)
+		//log.Println("====", table.Values)
 		return page, int64(len(definitionLevels))
 
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {

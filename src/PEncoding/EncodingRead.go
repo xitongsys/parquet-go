@@ -247,7 +247,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 	firstValueZigZag := ReadUnsignedVarInt(bytesReader)
 	var firstValue int64 = int64(firstValueZigZag>>1) ^ (-int64(firstValueZigZag & 1))
 
-	log.Println("====", blockSize, numMiniblocksInBlock, numValues, firstValue)
+	//log.Println("====", blockSize, numMiniblocksInBlock, numValues, firstValue)
 	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
 
 	res := make([]interface{}, 0)
@@ -276,6 +276,21 @@ func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) []interface{} {
 	for i := 0; i < len(lengths); i++ {
 		cur := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(INT64)))
 		res[i] = BYTE_ARRAY(cur[0])
+	}
+	return res
+}
+
+func ReadDeltaByteArray(bytesReader *bytes.Reader) []interface{} {
+	prefixLengths := ReadDeltaBinaryPackedINT(bytesReader)
+	suffixes := ReadDeltaLengthByteArray(bytesReader)
+	res := make([]interface{}, len(prefixLengths))
+
+	res[0] = suffixes[0]
+	for i := 1; i < len(prefixLengths); i++ {
+		prefixLength := prefixLengths[i].(INT64)
+		prefix := res[i-1].(BYTE_ARRAY)[:prefixLength]
+		suffix := suffixes[i].(BYTE_ARRAY)
+		res[i] = prefix + suffix
 	}
 	return res
 }
