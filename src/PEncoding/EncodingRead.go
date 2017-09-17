@@ -255,6 +255,7 @@ func ReadDeltaINT(bytesReader *bytes.Reader) []interface{} {
 		for i := 0; i < numMiniblocksInBlock; i++ {
 			bitWidths[i] = uint64(bytesReader.ReadByte())
 		}
+
 	}
 
 	return nil
