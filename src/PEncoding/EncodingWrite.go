@@ -647,5 +647,50 @@ func WriteDeltaLengthByteArray(arrays []interface{}) []byte {
 	return res
 }
 
-func WriteBitPackedDeprecated() {
+func WriteBitPackedDeprecated(vals []interface{}, bitWidth int64) []byte {
+	ln := len(vals)
+	if ln <= 0 {
+		return []byte{}
+	}
+	valsInt := make([]uint64, ln)
+	for i := 0; i < ln; i++ {
+		valsInt[i] = uint64(reflect.ValueOf(vals[i]).Int())
+	}
+
+	res := make([]byte, 0)
+	i := 0
+	curByte := byte(0)
+	var curNeed uint64 = 8
+	var valBitLeft uint64 = uint64(bitWidth)
+	var val uint64 = valsInt[0] << uint64(64-bitWidth)
+	for i < ln {
+
+		if valBitLeft > curNeed {
+			var mask uint64 = ((1 << curNeed) - 1) << (64 - curNeed)
+
+			curByte |= byte((val & mask) >> (64 - curNeed))
+			val = val << curNeed
+
+			valBitLeft -= curNeed
+			res = append(res, curByte)
+			curByte = byte(0)
+			curNeed = 8
+
+		} else {
+			curByte |= byte(val >> (64 - curNeed))
+			curNeed -= valBitLeft
+			if curNeed == 0 {
+				res = append(res, curByte)
+				curByte = byte(0)
+				curNeed = 8
+			}
+
+			valBitLeft = uint64(bitWidth)
+			i++
+			if i < ln {
+				val = valsInt[i] << uint64(64-bitWidth)
+			}
+		}
+	}
+	return res
 }

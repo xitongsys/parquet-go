@@ -53,45 +53,6 @@ func NameToBaseType(name string) parquet.Type {
 	}
 }
 
-func ConvertedTypeToBaseType(ct parquet.ConvertedType) parquet.Type {
-	switch ct {
-	case parquet.ConvertedType_INT_8:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_INT_16:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_INT_32:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_INT_64:
-		return parquet.Type_INT64
-	case parquet.ConvertedType_UINT_8:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_UINT_16:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_UINT_32:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_UINT_64:
-		return parquet.Type_INT64
-	case parquet.ConvertedType_DATE:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_TIME_MILLIS:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_TIME_MICROS:
-		return parquet.Type_INT64
-	case parquet.ConvertedType_TIMESTAMP_MILLIS:
-		return parquet.Type_INT32
-	case parquet.ConvertedType_TIMESTAMP_MICROS:
-		return parquet.Type_INT64
-	case parquet.ConvertedType_INTERVAL:
-		return parquet.Type_FIXED_LEN_BYTE_ARRAY
-	case parquet.ConvertedType_DECIMAL:
-		return parquet.Type_BYTE_ARRAY
-	case parquet.ConvertedType_UTF8:
-		return parquet.Type_BYTE_ARRAY
-	default:
-		return parquet.Type_BYTE_ARRAY
-	}
-}
-
 func NameToConvertedType(name string) parquet.ConvertedType {
 	switch name {
 	case "UTF8":

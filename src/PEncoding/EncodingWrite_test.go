@@ -1,9 +1,11 @@
 package PEncoding
 
 import (
-	. "Common"
+	"fmt"
 	"testing"
 )
+
+/*
 
 func TestWriteUnsignedVarInt(t *testing.T) {
 	resBuf := make([]byte, 0)
@@ -86,7 +88,10 @@ func TestWriteBitPacked(t *testing.T) {
 		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes)
 	}
 }
-
-func TestWritePlainINT96(t *testing.T) {
+*/
+func TestWriteBitPackedDeprecated(t *testing.T) {
+	vals := make([]interface{}, 0)
+	vals = append(vals, 0, 1, 2, 3, 4, 5, 6, 7)
+	fmt.Println(WriteBitPackedDeprecated(vals, 3))
 
 }
