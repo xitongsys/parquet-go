@@ -241,5 +241,21 @@ func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length u
 
 //res is INT64
 func ReadDeltaINT(bytesReader *bytes.Reader) []interface{} {
+	blockSize := ReadUnsignedVarInt(bytesReader)
+	numMiniblocksInBlock := ReadUnsignedVarInt(bytesReader)
+	numValues := ReadUnsignedVarInt(bytesReader)
+	firstValueZigZag := ReadUnsignedVarInt(bytesReader)
+	var firstValue int64 = int64(firstValueZigZag>>1) ^ (-int64(firstValueZig & 1))
+
+	res := make([]interface{}, 0)
+	for len(res) < numValues {
+		minDeltaZigZag := ReadUnsignedVarInt(bytesReader)
+		var minDelta int64 = int64(minDeltaZigZag>>1) ^ (-int64(minDeltaZigZag & 1))
+		var bitWidths = make([]uint64, numMiniblocksInBlock)
+		for i := 0; i < numMiniblocksInBlock; i++ {
+			bitWidths[i] = uint64(bytesReader.ReadByte())
+		}
+	}
+
 	return nil
 }
