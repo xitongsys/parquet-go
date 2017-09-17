@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	//"log"
 	"reflect"
 )
 
@@ -554,7 +553,6 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 				}
 			}
 			bitWidths[j] = byte(BitNum(uint64(maxValue)))
-			//			log.Println("=======", maxValue, bitWidths[j])
 		}
 
 		var minDeltaZigZag uint64 = uint64((minDelta >> 31) ^ (minDelta << 1))
@@ -562,7 +560,6 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 		res = append(res, bitWidths...)
 
 		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
-			//	log.Println(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false))
 			res = append(res, WriteBitPacked((blockBuf[uint64(j)*numValuesInMiniBlock:uint64(j+1)*numValuesInMiniBlock]), int64(bitWidths[j]), false)...)
 		}
 
