@@ -1,0 +1,10 @@
+aaaaa_STU 0 0 50 true
+baaaa_STU 1 1 50.1 false
+caaaa_STU 2 2 50.2 true
+daaaa_STU 3 3 50.3 false
+eaaaa_STU 4 4 50.4 true
+faaaa_STU 5 5 50.5 false
+gaaaa_STU 6 6 50.6 true
+haaaa_STU 7 7 50.7 false
+iaaaa_STU 8 8 50.8 true
+jaaaa_STU 9 9 50.9 false

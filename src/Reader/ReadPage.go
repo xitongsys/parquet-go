@@ -31,7 +31,13 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, int32(bytesReader.Len()))
 
 	} else if encoding == parquet.Encoding_RLE {
-		return ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
+		values := ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
+		if dataType == parquet.Type_INT32 {
+			for i := 0; i < len(values); i++ {
+				values[i] = INT32(values[i].(INT64))
+			}
+		}
+		return values
 
 	} else if encoding == parquet.Encoding_BIT_PACKED {
 	} else if encoding == parquet.Encoding_DELTA_BINARY_PACKED {
