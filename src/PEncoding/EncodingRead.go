@@ -269,3 +269,13 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 	}
 	return res
 }
+
+func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) []interface{} {
+	lengths := ReadDeltaBinaryPackedINT(bytesReader)
+	res := make([]interface{}, len(lengths))
+	for i := 0; i < len(lengths); i++ {
+		cur := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(INT64)))
+		res[i] = BYTE_ARRAY(cur[0])
+	}
+	return res
+}

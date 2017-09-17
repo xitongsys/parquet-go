@@ -50,6 +50,14 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 		return values
 
 	} else if encoding == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
+		values := ReadDeltaLengthByteArray(bytesReader)
+		if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			for i := 0; i < len(values); i++ {
+				values[i] = FIXED_LEN_BYTE_ARRAY(values[i].(BYTE_ARRAY))
+			}
+		}
+		return values
+
 	} else if encoding == parquet.Encoding_DELTA_BYTE_ARRAY {
 	} else if encoding == parquet.Encoding_RLE_DICTIONARY {
 	} else {

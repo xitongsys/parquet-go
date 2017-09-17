@@ -118,7 +118,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 		//log.Println(valuesRawBuf)
 	}
 	if page.DataType == parquet.Type_BYTE_ARRAY {
-		//valuesRawBuf = WriteDeltaLengthByteArray(valuesBuf)
+		valuesRawBuf = WriteDeltaLengthByteArray(valuesBuf)
 	}
 	////////////////////////////////////////////
 
@@ -210,7 +210,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
 	}
 	if page.DataType == parquet.Type_BYTE_ARRAY {
-		//page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
+		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
 	}
 	//////////////////////////////////////
 
