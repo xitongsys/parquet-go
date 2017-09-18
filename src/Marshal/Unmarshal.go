@@ -10,16 +10,27 @@ import (
 func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHandler *SchemaHandler) {
 	ot := reflect.TypeOf(desInterface).Elem()
 
-	bgns := make(map[string]int)
-	names := make([]string, 0)
+	valIndex := make(map[string]int)
 	for name, _ := range tableMap {
 		bgns[name] = 0
-		names = append(names, name)
 	}
 
-	for {
+	flag := true
+	for flag {
+		flag = false
 		val := reflect.New(ot)
-		var dl, rl int32 = 0, 0
+		for name, table := range tableMap {
+			for i := valIndex[name]; i < len(table.Values); i++ {
+				var dl, rl int32 = 0, 0
+
+				if i+1 < len(table.Values) && table.Values.DefinitionLevels[i+1] == 0 {
+					valIndex[name] = i + 1
+					flag = true
+					break
+				}
+			}
+		}
+
 	}
 
 	return nil
