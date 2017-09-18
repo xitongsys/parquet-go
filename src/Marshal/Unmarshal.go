@@ -14,6 +14,6 @@ type Node struct {
 }
 
 //desInterface is a slice
-func Marshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHandler *SchemaHandler) {
+func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHandler *SchemaHandler) {
 	return nil
 }
