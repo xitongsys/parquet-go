@@ -13,6 +13,7 @@ type Node struct {
 	DL   int32
 }
 
+//srcInterface is a slice
 func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler) *map[string]*Table {
 	src := reflect.ValueOf(srcInterface)
 	res := make(map[string]*Table)
