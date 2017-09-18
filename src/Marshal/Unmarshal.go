@@ -6,14 +6,21 @@ import (
 	"reflect"
 )
 
-type Node struct {
-	Val  reflect.Value
-	Path []string
-	RL   int32
-	DL   int32
-}
-
 //desInterface is a slice
 func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHandler *SchemaHandler) {
+	ot := reflect.TypeOf(desInterface).Elem()
+
+	bgns := make(map[string]int)
+	names := make([]string, 0)
+	for name, _ := range tableMap {
+		bgns[name] = 0
+		names = append(names, name)
+	}
+
+	for {
+		val := reflect.New(ot)
+		var dl, rl int32 = 0, 0
+	}
+
 	return nil
 }
