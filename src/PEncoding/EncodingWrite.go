@@ -713,6 +713,7 @@ func WriteDeltaByteArray(arrays []interface{}) []byte {
 			if s1[j] != s2[j] {
 				break
 			}
+			j++
 		}
 		prefixLengths[i] = INT32(j)
 		suffixes[i] = BYTE_ARRAY(s2[j:])
