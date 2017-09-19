@@ -212,12 +212,6 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schemaElements = append(schemaElements, schema)
 
 			newItem := NewItem()
-			newItem.Info["Name"] = "key"
-			newItem.GoType = item.GoType.Key()
-			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
-			stack = append(stack, newItem)
-
-			newItem = NewItem()
 			newItem.Info["Name"] = "value"
 			newItem.GoType = item.GoType.Elem()
 			if newItem.GoType.Kind() == reflect.Ptr {
@@ -227,6 +221,13 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 				newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
 			}
 			stack = append(stack, newItem)
+
+			newItem = NewItem()
+			newItem.Info["Name"] = "key"
+			newItem.GoType = item.GoType.Key()
+			newItem.Info["RepetitionType"] = parquet.FieldRepetitionType_REQUIRED
+			stack = append(stack, newItem)
+
 		} else {
 			schema := parquet.NewSchemaElement()
 			schema.Name = item.Info["Name"].(string)
