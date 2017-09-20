@@ -3,6 +3,7 @@ package Marshal
 import (
 	. "Common"
 	. "SchemaHandler"
+	"log"
 	"reflect"
 )
 
@@ -17,9 +18,13 @@ type MapRecord struct {
 }
 
 //desInterface is a slice
-func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHandler *SchemaHandler) {
-	ot := reflect.TypeOf(desInterface).Elem()
+func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHandler *SchemaHandler) {
+	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	tableIndex := make(map[string]int)
+
+	for name, _ := range *tableMap {
+		tableIndex[name] = 0
+	}
 
 	flag := true
 	for flag {
@@ -45,7 +50,10 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 				pathIndex := 0
 				for pathIndex < len(path) {
 					if po.Type().Kind() == reflect.Struct {
-						if table.DefinitionLevels[tableIndex[name]] > int32(dl) {
+						if (table.DefinitionLevels[tableIndex[name]] < table.MaxDefinitionLevel &&
+							table.DefinitionLevels[tableIndex[name]] > int32(dl)) ||
+							table.DefinitionLevels[tableIndex[name]] == table.MaxDefinitionLevel {
+
 							pathIndex++
 							po = po.FieldByName(path[pathIndex])
 							if po.Type().Kind() == reflect.Ptr {
@@ -158,6 +166,12 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 			}
 		}
 
-		desInterface = append(desInterface, obj.Interface())
+		tmp := reflect.Append(
+			reflect.ValueOf(dstInterface).Elem(),
+			obj)
+		reflect.ValueOf(dstInterface).Elem().Set(tmp)
 	}
+
+	log.Println("Umarshal Finished")
+
 }
