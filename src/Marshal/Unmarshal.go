@@ -7,8 +7,8 @@ import (
 )
 
 type KeyValue struct {
-	Key   interface{}
-	Value interface{}
+	Key   reflect.Value
+	Value reflect.Value
 }
 
 type MapRecord struct {
@@ -56,6 +56,9 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 						}
 
 					} else if po.Type().Kind() == reflect.Slice {
+						if po.IsNil() {
+							po.Set(reflect.New(po.Type()).Elem())
+						}
 						if _, ok := sliceRecord[po]; !ok {
 							sliceRecord[po] = 0
 						}
@@ -80,6 +83,10 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 						}
 
 					} else if po.Type().Kind() == reflect.Map {
+						if po.IsNil() {
+							po.Set(reflect.New(po.Type()).Elem())
+						}
+
 						if _, ok := mapRecord[po]; !ok {
 							mapRecord[po] = MapRecord{KeyValues: make([]KeyValue, 0), Index: 0}
 						}
@@ -110,7 +117,7 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 										KeyValue{Key: nil, Value: nil})
 								}
 								mapRecord[po].Index++
-								mapRecord[po].KeyValues[mapRecord[po].Index-1].Key = table.Values[tableIndex[name]]
+								mapRecord[po].KeyValues[mapRecord[po].Index-1].Key = reflect.ValueOf(table.Values[tableIndex[name]])
 								break
 							}
 						} else {
@@ -118,18 +125,21 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 						}
 
 					} else if po.Type().Kind() == reflect.Ptr {
-						if po.IsNil() {
+						dl += 1
+						if dl > table.DefinitionLevels[tableIndex[name]] {
 							break
-						} else {
-							dl += 1
-							po = po.Elem()
 						}
+						if po.IsNil() {
+							po.Set(reflect.New(po.Type().Elem()))
+						}
+						po = po.Elem()
 
 					} else {
 						po.Set(reflect.ValueOf(table.Values[tableIndex[name]]))
 						break
 					}
-				}
+				} //for pathIndex < len(path) {
+
 				tableIndex[name]++
 				if (tableIndex[name] < ln && table.DefinitionLevels[tableIndex[name]] == 0) ||
 					(tableIndex[name] >= ln) {
@@ -139,7 +149,17 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 			if tableIndex[name] < ln {
 				flag = true
 			}
+
+		} //for name, table := range tableMap
+
+		for m, record := range mapRecord {
+			for key, value := range record.KeyValues {
+				m.SetMapIndex(key, value)
+			}
 		}
+
+		desInterface = append(desInterface, obj.Interface())
+
 	}
 
 	return nil
