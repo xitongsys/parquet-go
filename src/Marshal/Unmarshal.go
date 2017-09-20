@@ -25,10 +25,10 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 	for flag {
 		flag = false
 		obj := reflect.New(ot).Elem()
-		mapRecord := make([reflect.Value]MapRecord)
-		sliceRecord := make([reflect.Value]int)
+		mapRecord := make(map[reflect.Value]*MapRecord)
+		sliceRecord := make(map[reflect.Value]int)
 
-		for name, table := range tableMap {
+		for name, table := range *tableMap {
 			ln := len(table.Values)
 			path := table.Path
 
@@ -45,7 +45,7 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 				pathIndex := 0
 				for pathIndex < len(path) {
 					if po.Type().Kind() == reflect.Struct {
-						if table.DefinitionLevels[tableIndex[name]] > dl {
+						if table.DefinitionLevels[tableIndex[name]] > int32(dl) {
 							pathIndex++
 							po = po.FieldByName(path[pathIndex])
 							if po.Type().Kind() == reflect.Ptr {
@@ -63,12 +63,12 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 							sliceRecord[po] = 0
 						}
 
-						if table.DefinitionLevels[tableIndex[name]] > dl {
+						if table.DefinitionLevels[tableIndex[name]] > int32(dl) {
 							pathIndex += 1
 							dl += 1
 							rl += 1
 
-							if rl >= table.RepetitionLevels[tableIndex[name]] {
+							if int32(rl) >= table.RepetitionLevels[tableIndex[name]] {
 								if sliceRecord[po] >= po.Len() {
 									po = reflect.Append(po, reflect.New(po.Type().Elem()).Elem())
 								}
@@ -88,19 +88,19 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 						}
 
 						if _, ok := mapRecord[po]; !ok {
-							mapRecord[po] = MapRecord{KeyValues: make([]KeyValue, 0), Index: 0}
+							mapRecord[po] = &MapRecord{KeyValues: make([]KeyValue, 0), Index: 0}
 						}
 
-						if table.DefinitionLevels[tableIndex[name]] > dl {
+						if table.DefinitionLevels[tableIndex[name]] > int32(dl) {
 							if path[pathIndex+2] == "value" {
 								pathIndex += 1
 								dl += 1
 								rl += 1
 
-								if rl >= table.RepetitionLevels[tableIndex[name]] {
+								if int32(rl) >= table.RepetitionLevels[tableIndex[name]] {
 									if mapRecord[po].Index > len(mapRecord[po].KeyValues) {
 										mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
-											KeyValue{Key: nil, Value: nil})
+											KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
 									}
 									mapRecord[po].Index++
 									value := reflect.New(po.Type().Elem()).Elem()
@@ -108,13 +108,13 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 									po = value
 
 								} else {
-									po = mapRecord[po].KeyValues[mapRecord[po].Index]
+									po = mapRecord[po].KeyValues[mapRecord[po].Index].Value
 								}
 
 							} else if path[pathIndex+2] == "key" {
 								if mapRecord[po].Index > len(mapRecord[po].KeyValues) {
 									mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
-										KeyValue{Key: nil, Value: nil})
+										KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
 								}
 								mapRecord[po].Index++
 								mapRecord[po].KeyValues[mapRecord[po].Index-1].Key = reflect.ValueOf(table.Values[tableIndex[name]])
@@ -126,7 +126,7 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 
 					} else if po.Type().Kind() == reflect.Ptr {
 						dl += 1
-						if dl > table.DefinitionLevels[tableIndex[name]] {
+						if int32(dl) > table.DefinitionLevels[tableIndex[name]] {
 							break
 						}
 						if po.IsNil() {
@@ -153,14 +153,11 @@ func Unmarshal(tableMap *map[string]*Table, desInterface []interface{}, schemaHa
 		} //for name, table := range tableMap
 
 		for m, record := range mapRecord {
-			for key, value := range record.KeyValues {
-				m.SetMapIndex(key, value)
+			for _, kv := range record.KeyValues {
+				m.SetMapIndex(kv.Key, kv.Value)
 			}
 		}
 
 		desInterface = append(desInterface, obj.Interface())
-
 	}
-
-	return nil
 }
