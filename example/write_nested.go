@@ -4,6 +4,7 @@ import (
 	. "ParquetType"
 	. "SchemaHandler"
 	. "Writer"
+	"log"
 	"os"
 )
 
@@ -17,6 +18,7 @@ type Student struct {
 	Name    UTF8
 	Age     INT32
 	Classes []Class
+	MapTest map[UTF8]Class
 }
 
 func nextName(nameStr string) string {
@@ -56,10 +58,12 @@ func CreateStudents() []Student {
 		stus[i].Classes = make([]Class, classNum)
 		for j := 0; j < classNum; j++ {
 			stus[i].Classes[j].Name = UTF8(className)
-			stus[i].Classes[j].Number = INT64(j)
+			stus[i].Classes[j].Number = INT64(i + 10)
 			stus[i].Classes[j].Score = 0.1
 			className = nextName(className)
 		}
+		stus[i].MapTest = make(map[UTF8]Class)
+		stus[i].MapTest[UTF8(stuName)] = Class{Name: UTF8("Name"), Number: INT64(1), Score: FLOAT(99.9)}
 		stuName = nextName(stuName)
 	}
 	return stus
@@ -69,6 +73,7 @@ func main() {
 	stus := CreateStudents()
 	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
 	file, _ := os.Create("nested.parquet")
+	log.Println("create file done")
 	defer file.Close()
 	WriteTo(file, stus, schemaHandler)
 }

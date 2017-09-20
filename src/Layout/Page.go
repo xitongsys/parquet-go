@@ -88,7 +88,6 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 
 		totSize += int64(len(page.RawData))
 		res = append(res, page)
-
 		i = j
 	}
 
@@ -108,20 +107,21 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	}
 	valuesRawBuf := WritePlain(valuesBuf)
 
-	////////test DeltaINT64///////////////////
-	if page.DataType == parquet.Type_INT64 {
-		//valuesRawBuf = WriteDeltaINT64(valuesBuf)
-		//log.Println(valuesRawBuf)
-	}
-	if page.DataType == parquet.Type_INT32 {
-		valuesRawBuf = WriteDeltaINT32(valuesBuf)
-		//log.Println(valuesRawBuf)
-	}
-	if page.DataType == parquet.Type_BYTE_ARRAY {
-		valuesRawBuf = WriteDeltaByteArray(valuesBuf)
-	}
-	////////////////////////////////////////////
-
+	/*
+		////////test DeltaINT64///////////////////
+		if page.DataType == parquet.Type_INT64 {
+			//valuesRawBuf = WriteDeltaINT64(valuesBuf)
+			//log.Println(valuesRawBuf)
+		}
+		if page.DataType == parquet.Type_INT32 {
+			//valuesRawBuf = WriteDeltaINT32(valuesBuf)
+			//log.Println("++++++", valuesRawBuf)
+		}
+		if page.DataType == parquet.Type_BYTE_ARRAY {
+			valuesRawBuf = WriteDeltaByteArray(valuesBuf)
+		}
+		////////////////////////////////////////////
+	*/
 	//definitionLevel//////////////////////////////////
 	definitionLevelBuf := make([]byte, 0)
 	if page.DataTable.MaxDefinitionLevel > 0 {
@@ -202,18 +202,19 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN
 
-	/////////test DeltaINT64////////////////
-	if page.DataType == parquet.Type_INT64 {
-		//page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
-	}
-	if page.DataType == parquet.Type_INT32 {
-		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
-	}
-	if page.DataType == parquet.Type_BYTE_ARRAY {
-		page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BYTE_ARRAY
-	}
-	//////////////////////////////////////
-
+	/*
+		/////////test DeltaINT64////////////////
+		if page.DataType == parquet.Type_INT64 {
+			//page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
+		}
+		if page.DataType == parquet.Type_INT32 {
+			page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
+		}
+		if page.DataType == parquet.Type_BYTE_ARRAY {
+			page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BYTE_ARRAY
+		}
+		//////////////////////////////////////
+	*/
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	page.Header.DataPageHeader.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
 	page.Header.DataPageHeader.Statistics.Min = WritePlain([]interface{}{page.MinVal})
