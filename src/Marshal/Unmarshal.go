@@ -37,6 +37,10 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 			ln := len(table.Values)
 			path := table.Path
 
+			if tableIndex[name] >= ln {
+				continue
+			}
+
 			for key, _ := range mapRecord {
 				mapRecord[key].Index = 0
 			}
@@ -78,14 +82,17 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 
 							if int32(rl) >= table.RepetitionLevels[tableIndex[name]] {
 								if sliceRecord[po] >= po.Len() {
-									po = reflect.Append(po, reflect.New(po.Type().Elem()).Elem())
+									potmp := reflect.Append(po, reflect.New(po.Type().Elem()).Elem())
+									po.Set(potmp)
 								}
 								sliceRecord[po]++
 								po = po.Index(sliceRecord[po] - 1)
 							} else {
-								po = po.Index(sliceRecord[po])
+								sliceRecord[po]++
+								po = po.Index(sliceRecord[po] - 1)
 							}
 							pathIndex += 1
+
 						} else {
 							break
 						}
@@ -149,7 +156,7 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 				} //for pathIndex < len(path) {
 
 				tableIndex[name]++
-				if (tableIndex[name] < ln && table.DefinitionLevels[tableIndex[name]] == 0) ||
+				if (tableIndex[name] < ln && table.RepetitionLevels[tableIndex[name]] == 0) ||
 					(tableIndex[name] >= ln) {
 					break
 				}

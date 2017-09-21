@@ -37,15 +37,15 @@ func TestUnmarshal(t *testing.T) {
 	stus := make([]Student, 3)
 	stus[0].Name = "tong"
 	stus[0].Age = 28
-	//stus[0].Classes = append(stus[0].Classes, clas[0])
+	stus[0].Classes = append(stus[0].Classes, clas[0])
 
 	stus[1].Name = "xitong"
 	stus[1].Age = 27
-	//	stus[1].Classes = append(stus[1].Classes, clas[:2]...)
+	stus[1].Classes = append(stus[1].Classes, clas[:2]...)
 
 	stus[2].Name = "ZhangXitong"
 	stus[2].Age = 26
-	//	stus[2].Classes = append(stus[2].Classes, clas...)
+	stus[2].Classes = append(stus[2].Classes, clas...)
 
 	src := Marshal(stus, 0, len(stus), schemaHandler)
 
