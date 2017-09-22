@@ -7,11 +7,12 @@ import (
 	"testing"
 )
 
-/*
 type Student struct {
 	Name    UTF8
 	Age     INT32
 	Classes []Class
+	Info    map[UTF8]UTF8
+	Weight  *INT32
 }
 
 type Class struct {
@@ -19,7 +20,6 @@ type Class struct {
 	Number INT32
 	Score  FLOAT
 }
-*/
 
 func TestUnmarshal(t *testing.T) {
 	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
