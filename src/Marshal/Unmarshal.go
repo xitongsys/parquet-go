@@ -17,7 +17,7 @@ type MapRecord struct {
 	Index     int
 }
 
-//desInterface is a slice
+//desInterface is a slice ptr
 func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHandler *SchemaHandler) {
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	tableIndex := make(map[string]int)
@@ -68,7 +68,6 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 					} else if po.Type().Kind() == reflect.Slice {
 						if po.IsNil() {
 							po.Set(reflect.MakeSlice(po.Type(), 0, 0))
-							//po.Set(reflect.New(po.Type()).Elem())
 						}
 						if _, ok := sliceRecord[po]; !ok {
 							sliceRecord[po] = 0
@@ -107,7 +106,7 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 
 						if table.DefinitionLevels[tableIndex[name]] > int32(dl) {
 							if path[pathIndex+2] == "value" {
-								pathIndex += 1
+								pathIndex += 2
 								dl += 1
 								rl += 1
 

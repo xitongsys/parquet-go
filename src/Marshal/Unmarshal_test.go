@@ -10,56 +10,68 @@ import (
 type Student struct {
 	Name    UTF8
 	Age     INT32
-	Classes []Class
-	Info    map[UTF8]UTF8
 	Weight  *INT32
+	Classes *map[UTF8][]*Class
 }
 
 type Class struct {
-	Name   UTF8
-	Number INT32
-	Score  FLOAT
+	Name     UTF8
+	ID       *INT64
+	Required []UTF8
 }
 
-func TestUnmarshal(t *testing.T) {
+func TestMarshalUnmarshal(t *testing.T) {
 	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
+	fmt.Println("SchemaHandler Finished")
 
-	clas := make([]Class, 3)
-	clas[0].Name = "Math"
-	clas[0].Number = 1
-	clas[0].Score = 99.0
-	clas[1].Name = "Physics"
-	clas[1].Number = 2
-	clas[1].Score = 98.0
-	clas[2].Name = "Computer"
-	clas[2].Number = 3
-	clas[2].Score = 97.0
+	math01ID := INT64(1)
+	math01 := Class{
+		Name:     "Math1",
+		ID:       &math01ID,
+		Required: make([]UTF8, 0),
+	}
 
-	stus := make([]Student, 3)
-	stus[0].Name = "tong"
-	stus[0].Age = 28
-	stus[0].Classes = append(stus[0].Classes, clas[0])
-	stus[0].Info = make(map[UTF8]UTF8)
-	stus[0].Info["Country"] = "China"
-	w := INT32(60)
-	stus[0].Weight = &w
+	math02ID := INT64(2)
+	math02 := Class{
+		Name:     "Math2",
+		ID:       &math02ID,
+		Required: make([]UTF8, 0),
+	}
+	math02.Required = append(math02.Required, "Math01")
 
-	stus[1].Name = "xitong"
-	stus[1].Age = 27
-	stus[1].Classes = append(stus[1].Classes, clas[:2]...)
-	stus[1].Info = make(map[UTF8]UTF8)
-	stus[1].Info["Country"] = "Eng"
-	stus[1].Info["Address"] = "Road1"
+	physics := Class{
+		Name:     "Physics",
+		ID:       nil,
+		Required: make([]UTF8, 0),
+	}
+	physics.Required = append(physics.Required, "Math01", "Math02")
 
-	stus[2].Name = "ZhangXitong"
-	stus[2].Age = 26
-	stus[2].Classes = append(stus[2].Classes, clas...)
-	stus[2].Info = make(map[UTF8]UTF8)
-	stus[2].Info["Country"] = "USA"
-	stus[2].Info["Address"] = "Road3"
-	stus[2].Info["Height"] = "170"
+	stu01Class := make(map[UTF8][]*Class)
+	stu01Class["Science"] = make([]*Class, 0)
+	stu01Class["Science"] = append(stu01Class["Science"], &math01, &math02)
+	stu01 := Student{
+		Name:    "zxt",
+		Age:     18,
+		Weight:  nil,
+		Classes: &stu01Class,
+	}
+
+	stu02Class := make(map[UTF8][]*Class)
+	stu02Class["Science"] = make([]*Class, 0)
+	stu02Class["Science"] = append(stu02Class["Science"], &physics)
+	stu02 := Student{
+		Name:    "zxt2",
+		Age:     19,
+		Weight:  nil,
+		Classes: &stu02Class,
+	}
+
+	stus := make([]Student, 0)
+	stus = append(stus, stu01, stu02)
 
 	src := Marshal(stus, 0, len(stus), schemaHandler)
+	fmt.Println("Marshal Finished")
+
 	for name, table := range *src {
 		fmt.Println(name)
 		fmt.Println("Val: ", table.Values)
