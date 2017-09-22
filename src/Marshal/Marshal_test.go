@@ -11,6 +11,7 @@ type Student struct {
 	Name    UTF8
 	Age     INT32
 	Classes []Class
+	Info    map[UTF8]UTF8
 }
 
 type Class struct {

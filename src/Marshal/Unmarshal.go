@@ -69,7 +69,8 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 
 					} else if po.Type().Kind() == reflect.Slice {
 						if po.IsNil() {
-							po.Set(reflect.New(po.Type()).Elem())
+							po.Set(reflect.MakeSlice(po.Type(), 0, 0))
+							//po.Set(reflect.New(po.Type()).Elem())
 						}
 						if _, ok := sliceRecord[po]; !ok {
 							sliceRecord[po] = 0
@@ -99,7 +100,7 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 
 					} else if po.Type().Kind() == reflect.Map {
 						if po.IsNil() {
-							po.Set(reflect.New(po.Type()).Elem())
+							po.Set(reflect.MakeMap(po.Type()))
 						}
 
 						if _, ok := mapRecord[po]; !ok {
@@ -113,7 +114,7 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 								rl += 1
 
 								if int32(rl) >= table.RepetitionLevels[tableIndex[name]] {
-									if mapRecord[po].Index > len(mapRecord[po].KeyValues) {
+									if mapRecord[po].Index >= len(mapRecord[po].KeyValues) {
 										mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
 											KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
 									}
@@ -127,7 +128,7 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 								}
 
 							} else if path[pathIndex+2] == "key" {
-								if mapRecord[po].Index > len(mapRecord[po].KeyValues) {
+								if mapRecord[po].Index >= len(mapRecord[po].KeyValues) {
 									mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
 										KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
 								}

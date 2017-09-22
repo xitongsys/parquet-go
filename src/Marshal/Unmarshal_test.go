@@ -1,6 +1,7 @@
 package Marshal
 
 import (
+	. "ParquetType"
 	. "SchemaHandler"
 	"fmt"
 	"testing"
@@ -38,14 +39,23 @@ func TestUnmarshal(t *testing.T) {
 	stus[0].Name = "tong"
 	stus[0].Age = 28
 	stus[0].Classes = append(stus[0].Classes, clas[0])
+	stus[0].Info = make(map[UTF8]UTF8)
+	stus[0].Info["Country"] = "China"
 
 	stus[1].Name = "xitong"
 	stus[1].Age = 27
 	stus[1].Classes = append(stus[1].Classes, clas[:2]...)
+	stus[1].Info = make(map[UTF8]UTF8)
+	stus[1].Info["Country"] = "Eng"
+	stus[1].Info["Address"] = "Road1"
 
 	stus[2].Name = "ZhangXitong"
 	stus[2].Age = 26
 	stus[2].Classes = append(stus[2].Classes, clas...)
+	stus[2].Info = make(map[UTF8]UTF8)
+	stus[2].Info["Country"] = "USA"
+	stus[2].Info["Address"] = "Road3"
+	stus[2].Info["Height"] = "170"
 
 	src := Marshal(stus, 0, len(stus), schemaHandler)
 
