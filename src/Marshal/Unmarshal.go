@@ -86,7 +86,6 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 								sliceRecord[po]++
 								po = po.Index(sliceRecord[po] - 1)
 							} else {
-								sliceRecord[po]++
 								po = po.Index(sliceRecord[po] - 1)
 							}
 							pathIndex += 1
@@ -115,13 +114,15 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 										mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
 											KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
 									}
+
 									mapRecord[po].Index++
 									value := reflect.New(po.Type().Elem()).Elem()
+									//log.Println("======", mapRecord[po].Index, table.Values[tableIndex[name]], path, rl, table.RepetitionLevels[tableIndex[name]])
 									mapRecord[po].KeyValues[mapRecord[po].Index-1].Value = value
 									po = value
 
 								} else {
-									po = mapRecord[po].KeyValues[mapRecord[po].Index].Value
+									po = mapRecord[po].KeyValues[mapRecord[po].Index-1].Value
 								}
 
 							} else if path[pathIndex+2] == "key" {

@@ -90,6 +90,8 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					}
 				}
 
+				rlNow, _ := schemaHandler.MaxRepetitionLevel(path)
+
 				for j := ln - 1; j >= 0; j-- {
 					newNode := new(Node)
 					newNode.Path = path
@@ -97,7 +99,8 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					if j == 0 {
 						newNode.RL = node.RL
 					} else {
-						newNode.RL = node.RL + 1
+						//newNode.RL = node.RL + 1
+						newNode.RL = rlNow
 					}
 					newNode.DL = node.DL + 1 //list is repeated
 					stack = append(stack, newNode)
@@ -118,6 +121,9 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					}
 				}
 
+				rlNow, _ := schemaHandler.MaxRepetitionLevel(path)
+				rlNow += 1
+
 				for j := len(keys) - 1; j >= 0; j-- {
 					key := keys[j]
 					value := node.Val.MapIndex(key)
@@ -129,7 +135,8 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					if j == 0 {
 						newNode.RL = node.RL
 					} else {
-						newNode.RL = node.RL + 1
+						//newNode.RL = node.RL + 1
+						newNode.RL = rlNow
 					}
 					stack = append(stack, newNode)
 
@@ -141,9 +148,11 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					if j == 0 {
 						newNode.RL = node.RL
 					} else {
-						newNode.RL = node.RL + 1
+						//newNode.RL = node.RL + 1
+						newNode.RL = rlNow
 					}
 					stack = append(stack, newNode)
+
 				}
 			} else {
 				pathStr := PathToStr(node.Path)
