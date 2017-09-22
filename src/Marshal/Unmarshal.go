@@ -60,9 +60,7 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 
 							pathIndex++
 							po = po.FieldByName(path[pathIndex])
-							if po.Type().Kind() == reflect.Ptr {
-								dl += 1
-							}
+
 						} else {
 							break
 						}

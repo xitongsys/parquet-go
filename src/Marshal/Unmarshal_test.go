@@ -41,6 +41,8 @@ func TestUnmarshal(t *testing.T) {
 	stus[0].Classes = append(stus[0].Classes, clas[0])
 	stus[0].Info = make(map[UTF8]UTF8)
 	stus[0].Info["Country"] = "China"
+	w := INT32(60)
+	stus[0].Weight = &w
 
 	stus[1].Name = "xitong"
 	stus[1].Age = 27

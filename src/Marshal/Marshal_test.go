@@ -12,6 +12,7 @@ type Student struct {
 	Age     INT32
 	Classes []Class
 	Info    map[UTF8]UTF8
+	Weight  *INT32
 }
 
 type Class struct {
