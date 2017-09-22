@@ -58,6 +58,12 @@ func TestUnmarshal(t *testing.T) {
 	stus[2].Info["Height"] = "170"
 
 	src := Marshal(stus, 0, len(stus), schemaHandler)
+	for name, table := range *src {
+		fmt.Println(name)
+		fmt.Println("Val: ", table.Values)
+		fmt.Println("RL: ", table.RepetitionLevels)
+		fmt.Println("DL: ", table.DefinitionLevels)
+	}
 
 	dst := make([]Student, 0)
 	Unmarshal(src, &dst, schemaHandler)

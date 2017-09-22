@@ -117,7 +117,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					}
 				}
 
-				for j := 0; j < len(keys); j++ {
+				for j := len(keys) - 1; j >= 0; j-- {
 					key := keys[j]
 					value := node.Val.MapIndex(key)
 					newNode := new(Node)
