@@ -32,7 +32,7 @@ func (c Class) String() string {
 func (s Student) String() string {
 	weight := "nil"
 	if s.Weight != nil {
-		weight = fmt.Sprintf("%d", s.Weight)
+		weight = fmt.Sprintf("%d", *s.Weight)
 	}
 
 	cs := "{"
@@ -112,7 +112,10 @@ func TestMarshalUnmarshal(t *testing.T) {
 	dst := make([]Student, 0)
 	Unmarshal(src, &dst, schemaHandler)
 
-	fmt.Println(dst)
-	fmt.Println(stus)
+	s0 := fmt.Sprint(stus)
+	s1 := fmt.Sprint(dst)
+	if s0 != s1 {
+		t.Errorf("Fail expect %s, get %s", s0, s1)
+	}
 
 }
