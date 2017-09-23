@@ -21,11 +21,20 @@ type Class struct {
 }
 
 func (c Class) String() string {
-	res := fmt.Sprintf("{Name:%s, ID:%v, Required:%s}", c.Name, c.ID, fmt.Sprint(c.Required))
+	id := "nil"
+	if c.ID != nil {
+		id = fmt.Sprintf("%d", *c.ID)
+	}
+	res := fmt.Sprintf("{Name:%s, ID:%v, Required:%s}", c.Name, id, fmt.Sprint(c.Required))
 	return res
 }
 
 func (s Student) String() string {
+	weight := "nil"
+	if s.Weight != nil {
+		weight = fmt.Sprintf("%d", s.Weight)
+	}
+
 	cs := "{"
 	for key, classes := range *s.Classes {
 		s := string(key) + ":["
@@ -36,7 +45,7 @@ func (s Student) String() string {
 		cs += s
 	}
 	cs += "}"
-	res := fmt.Sprintf("{Name:%s, Age:%d, Weight:%v, Classes:%s}", s.Name, s.Age, s.Weight, cs)
+	res := fmt.Sprintf("{Name:%s, Age:%d, Weight:%s, Classes:%s}", s.Name, s.Age, weight, cs)
 	return res
 }
 
