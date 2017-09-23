@@ -20,6 +20,26 @@ type Class struct {
 	Required []UTF8
 }
 
+func (c Class) String() string {
+	res := fmt.Sprintf("{Name:%s, ID:%v, Required:%s}", c.Name, c.ID, fmt.Sprint(c.Required))
+	return res
+}
+
+func (s Student) String() string {
+	cs := "{"
+	for key, classes := range *s.Classes {
+		s := string(key) + ":["
+		for _, class := range classes {
+			s += (*class).String() + ","
+		}
+		s += "]"
+		cs += s
+	}
+	cs += "}"
+	res := fmt.Sprintf("{Name:%s, Age:%d, Weight:%v, Classes:%s}", s.Name, s.Age, s.Weight, cs)
+	return res
+}
+
 func TestMarshalUnmarshal(t *testing.T) {
 	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
 	fmt.Println("SchemaHandler Finished")
@@ -46,13 +66,14 @@ func TestMarshalUnmarshal(t *testing.T) {
 	}
 	physics.Required = append(physics.Required, "Math01", "Math02")
 
+	weight01 := INT32(60)
 	stu01Class := make(map[UTF8][]*Class)
 	stu01Class["Science"] = make([]*Class, 0)
 	stu01Class["Science"] = append(stu01Class["Science"], &math01, &math02)
 	stu01 := Student{
 		Name:    "zxt",
 		Age:     18,
-		Weight:  nil,
+		Weight:  &weight01,
 		Classes: &stu01Class,
 	}
 
@@ -60,8 +81,8 @@ func TestMarshalUnmarshal(t *testing.T) {
 	stu02Class["Science"] = make([]*Class, 0)
 	stu02Class["Science"] = append(stu02Class["Science"], &physics)
 	stu02 := Student{
-		Name:    "zxt2",
-		Age:     19,
+		Name:    "tong",
+		Age:     29,
 		Weight:  nil,
 		Classes: &stu02Class,
 	}
@@ -83,5 +104,6 @@ func TestMarshalUnmarshal(t *testing.T) {
 	Unmarshal(src, &dst, schemaHandler)
 
 	fmt.Println(dst)
+	fmt.Println(stus)
 
 }

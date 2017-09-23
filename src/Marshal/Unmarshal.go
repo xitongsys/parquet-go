@@ -42,10 +42,10 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 			}
 
 			for key, _ := range mapRecord {
-				mapRecord[key].Index = 0
+				mapRecord[key].Index = -1
 			}
 			for key, _ := range sliceRecord {
-				sliceRecord[key] = 0
+				sliceRecord[key] = -1
 			}
 
 			for {
@@ -57,7 +57,6 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 						if (table.DefinitionLevels[tableIndex[name]] < table.MaxDefinitionLevel &&
 							table.DefinitionLevels[tableIndex[name]] > int32(dl)) ||
 							table.DefinitionLevels[tableIndex[name]] == table.MaxDefinitionLevel {
-
 							pathIndex++
 							po = po.FieldByName(path[pathIndex])
 
@@ -70,25 +69,23 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 							po.Set(reflect.MakeSlice(po.Type(), 0, 0))
 						}
 						if _, ok := sliceRecord[po]; !ok {
-							sliceRecord[po] = 0
+							sliceRecord[po] = -1
 						}
 
 						if table.DefinitionLevels[tableIndex[name]] > int32(dl) {
-							pathIndex += 1
+							pathIndex += 2
 							dl += 1
 							rl += 1
-
-							if int32(rl) >= table.RepetitionLevels[tableIndex[name]] {
+							if table.RepetitionLevels[tableIndex[name]] <= int32(rl) {
+								sliceRecord[po]++
 								if sliceRecord[po] >= po.Len() {
 									potmp := reflect.Append(po, reflect.New(po.Type().Elem()).Elem())
 									po.Set(potmp)
 								}
-								sliceRecord[po]++
-								po = po.Index(sliceRecord[po] - 1)
+								po = po.Index(sliceRecord[po])
 							} else {
-								po = po.Index(sliceRecord[po] - 1)
+								po = po.Index(sliceRecord[po])
 							}
-							pathIndex += 1
 
 						} else {
 							break
@@ -100,7 +97,7 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 						}
 
 						if _, ok := mapRecord[po]; !ok {
-							mapRecord[po] = &MapRecord{KeyValues: make([]KeyValue, 0), Index: 0}
+							mapRecord[po] = &MapRecord{KeyValues: make([]KeyValue, 0), Index: -1}
 						}
 
 						if table.DefinitionLevels[tableIndex[name]] > int32(dl) {
@@ -109,29 +106,30 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 								dl += 1
 								rl += 1
 
-								if int32(rl) >= table.RepetitionLevels[tableIndex[name]] {
+								if table.RepetitionLevels[tableIndex[name]] <= int32(rl) {
+									mapRecord[po].Index++
 									if mapRecord[po].Index >= len(mapRecord[po].KeyValues) {
 										mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
 											KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
+										value := reflect.New(po.Type().Elem()).Elem()
+										mapRecord[po].KeyValues[mapRecord[po].Index].Value = value
 									}
-
-									mapRecord[po].Index++
-									value := reflect.New(po.Type().Elem()).Elem()
-									//log.Println("======", mapRecord[po].Index, table.Values[tableIndex[name]], path, rl, table.RepetitionLevels[tableIndex[name]])
-									mapRecord[po].KeyValues[mapRecord[po].Index-1].Value = value
-									po = value
+									if !mapRecord[po].KeyValues[mapRecord[po].Index].Value.IsValid() {
+										mapRecord[po].KeyValues[mapRecord[po].Index].Value = reflect.New(po.Type().Elem()).Elem()
+									}
+									po = mapRecord[po].KeyValues[mapRecord[po].Index].Value
 
 								} else {
-									po = mapRecord[po].KeyValues[mapRecord[po].Index-1].Value
+									po = mapRecord[po].KeyValues[mapRecord[po].Index].Value
 								}
 
 							} else if path[pathIndex+2] == "key" {
+								mapRecord[po].Index++
 								if mapRecord[po].Index >= len(mapRecord[po].KeyValues) {
 									mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
 										KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
 								}
-								mapRecord[po].Index++
-								mapRecord[po].KeyValues[mapRecord[po].Index-1].Key = reflect.ValueOf(table.Values[tableIndex[name]])
+								mapRecord[po].KeyValues[mapRecord[po].Index].Key = reflect.ValueOf(table.Values[tableIndex[name]])
 								break
 							}
 						} else {
