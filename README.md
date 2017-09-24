@@ -58,7 +58,12 @@ type Table struct {
 	RepetitionLevels []int32
 }
 ```
-Values is the column data; RepetitionLevels is the repetition levels of the values; DefinitionLevels is the definition levels of the values
+Values is the column data; RepetitionLevels is the repetition levels of the values; DefinitionLevels is the definition levels of the values.
+The architecture of the data struct is following:
+Table -> Page
+Pages -> Chunk
+Chunks -> RowGroup
+RowGroups -> ParquetFile
 
 ## Marshal/Unmarshal
 Marshal/Unmarshal functions are used to encode/decode the parquet file. 
@@ -67,48 +72,51 @@ Unmarshal convert a ```*map[string]*Table``` to a struct slice
 
 The example of Marshal/Unmarshl can be found the Marshal/Unmarshal_test.go
 
-## Example
+## Read/Write
 
-### Read Parquet File
+### Read Example
 ```
-func ReadParquet(fname string) {
+func Read(fname string) {
 	file, _ := os.Open(fname)
 	defer file.Close()
 
-	res := parquet_go.Reader(file)
-	for _, v := range res {
-		fmt.Println(v.Path)
-		for i, v2 := range v.Values {
-			if reflect.TypeOf(v2) == reflect.TypeOf([]uint8{}) {
-				fmt.Print(string(v2.([]byte)))
-			} else {
-				fmt.Print(v2)
+	res := ReadParquet(file)
+	for _, rowGroup := range res {
+		for _, chunk := range rowGroup.Chunks {
+			for _, page := range chunk.Pages {
+				fmt.Println(page.DataTable.Path)
+				for i := 0; i < len(page.DataTable.Values); i++ {
+					if page.Header.GetType() == parquet.PageType_DATA_PAGE {
+						fmt.Println(page.DataTable.Values[i],
+							page.DataTable.RepetitionLevels[i],
+							page.DataTable.DefinitionLevels[i])
+					}
+				}
 			}
-			fmt.Printf(" %d %d\n", v.DefinitionLevels[i], v.RepetitionLevels[i])
 		}
 	}
 }
 ```
 
-### Write Parquet File
+### Write Example
 ```
 type Student struct{
 ......
 }
 
 stus := make([]Student,10000)
+schemaHandler := NewSchemaHandlerFromStruct(new(Student))
 ......
 
-file, _ := os.Create("nested.parquet")
-parquet_go.WriteTo(file, stus, schemaHandler)	
+file, _ := os.Create("flat.parquet")
+WriteParquet(file, stus, schemaHandler)
 
 ```
 
 ## Note
 * Have tested the parquet file written by parquet-go on many big data platform (Spark/Hive/Presto), everything is ok :)
-* Not all the features of the parquet are provided now, so read some parquet file written by other programs may cause some failures.
+* Almost all the features of the parquet are provided now.
 
 ## To do
-* Add more features
 * Parallel
 * Optimize performance
