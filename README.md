@@ -60,17 +60,30 @@ type Table struct {
 ```
 Values is the column data; RepetitionLevels is the repetition levels of the values; DefinitionLevels is the definition levels of the values.
 The architecture of the data struct is following:
+```
 Table -> Page
 Pages -> Chunk
 Chunks -> RowGroup
 RowGroups -> ParquetFile
+```
 
 ## Marshal/Unmarshal
 Marshal/Unmarshal functions are used to encode/decode the parquet file. 
 Marshl convert a struct slice to a ```*map[string]*Table```
 Unmarshal convert a ```*map[string]*Table``` to a struct slice
 
-The example of Marshal/Unmarshl can be found the Marshal/Unmarshal_test.go
+### Marshal Example
+```
+stus := make([]Student, 0)
+stus = append(stus, stu01, stu02)
+src := Marshal(stus, 0, len(stus), schemaHandler)
+```
+
+### Unmarshal Example
+```
+dst := make([]Student, 0)
+Unmarshal(src, &dst, schemaHandler)
+```
 
 ## Read/Write
 
