@@ -437,22 +437,6 @@ func WriteUnsignedVarInt(num uint64) []byte {
 	return res
 }
 
-func WriteRLEDeprecated(val uint64, cnt int32, bitWidth int32) []byte {
-	header := cnt << 1
-	byteNum := (bitWidth + 7) / 8
-
-	headerBuf := WriteUnsignedVarInt(uint64(header))
-	bufTmp := make([]interface{}, 1)
-	bufTmp[0] = INT64(val)
-	valBuf := WritePlainINT64(bufTmp)
-
-	res := make([]byte, int64(len(headerBuf))+int64(byteNum))
-	copy(res[0:], headerBuf)
-	copy(res[len(headerBuf):], valBuf[0:byteNum])
-
-	return res
-}
-
 func WriteRLE(vals []interface{}, bitWidth int32) []byte {
 	ln := len(vals)
 	i := 0
