@@ -2,7 +2,7 @@
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
-* Very simple to use
+* Very simple to use (like json marshal/unmarshal)
 
 ## Required
 * git.apache.org/thrift.git/lib/go/thrift
@@ -41,6 +41,31 @@ type INTERVAL string // length=12
 type DECIMAL string
 
 ```
+The variables which will read/write from/to a parquet file mush be declare as these types.
+
+## Core Data Structure
+The core data structure named "Table":
+```
+type Table struct {
+	Repetition_Type    parquet.FieldRepetitionType
+	Type               parquet.Type
+	Path               []string
+	MaxDefinitionLevel int32
+	MaxRepetitionLevel int32
+
+	Values           []interface{}
+	DefinitionLevels []int32
+	RepetitionLevels []int32
+}
+```
+Values is the column data; RepetitionLevels is the repetition levels of the values; DefinitionLevels is the definition levels of the values
+
+## Marshal/Unmarshal
+Marshal/Unmarshal functions are used to encode/decode the parquet file. 
+Marshl convert a struct slice to a ```*map[string]*Table```
+Unmarshal convert a ```*map[string]*Table``` to a struct slice
+
+The example of Marshal/Unmarshl can be found the Marshal/Unmarshal_test.go
 
 ## Example
 
