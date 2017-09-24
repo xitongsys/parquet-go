@@ -133,11 +133,10 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 				j++
 			}
 			num := j - i
-			rleBufCur := WriteRLE(uint64(page.DataTable.DefinitionLevels[i]), int32(num),
+			rleBufCur := WriteRLEDeprecated(uint64(page.DataTable.DefinitionLevels[i]), int32(num),
 				int32(BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
 
 			rleBuf = append(rleBuf, rleBufCur...)
-
 			i = j
 		}
 
@@ -147,6 +146,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 		definitionLevelBuf = append(definitionLevelBuf, lengthBuf...)
 		definitionLevelBuf = append(definitionLevelBuf, rleBuf...)
+		log.Println("=====DL", definitionLevelBuf, ln)
 	}
 
 	//repetitionLevel/////////////////////////////////
@@ -161,7 +161,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			}
 
 			num := j - i
-			rleBufCur := WriteRLE(uint64(page.DataTable.RepetitionLevels[i]), int32(num),
+			rleBufCur := WriteRLEDeprecated(uint64(page.DataTable.RepetitionLevels[i]), int32(num),
 				int32(BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
 
 			rleBuf = append(rleBuf, rleBufCur...)
@@ -174,6 +174,8 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 		repetitionLevelBuf = append(repetitionLevelBuf, lengthBuf...)
 		repetitionLevelBuf = append(repetitionLevelBuf, rleBuf...)
+
+		log.Println("=====RL", repetitionLevelBuf, ln)
 
 	}
 
@@ -197,7 +199,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.CompressedPageSize = int32(len(dataEncodeBuf))
 	page.Header.UncompressedPageSize = int32(len(dataBuf))
 	page.Header.DataPageHeader = parquet.NewDataPageHeader()
-	page.Header.DataPageHeader.NumValues = int32(len(valuesBuf))
+	page.Header.DataPageHeader.NumValues = int32(len(page.DataTable.Values))
 	page.Header.DataPageHeader.DefinitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN

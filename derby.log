@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Thu Sep 21 22:03:17 UTC 2017:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-015e-a677-67f1-000010b9a478 
+on database directory /home/zxt/Workplace/parquet-go/metastore_db with class loader org.apache.spark.sql.hive.client.IsolatedClientLoader$$anon$1@2a0e5019 
+Loaded from file:/opt/spark-2.1.0-bin-hadoop2.7/jars/derby-10.12.1.1.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_121-b13
+user.dir=/home/zxt/Workplace/parquet-go
+os.name=Linux
+os.arch=amd64
+os.version=4.9.41-moby
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

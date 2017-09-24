@@ -3,8 +3,9 @@ package main
 import (
 	. "ParquetType"
 	. "SchemaHandler"
+	. "Writer"
 	"fmt"
-	"testing"
+	"os"
 )
 
 type Student struct {
@@ -16,7 +17,7 @@ type Student struct {
 
 type Class struct {
 	Name     UTF8
-	ID       *INT64
+	ID       *INT32
 	Required []UTF8
 }
 
@@ -49,18 +50,18 @@ func (s Student) String() string {
 	return res
 }
 
-func writeNested2(t *testing.T) {
+func writeNested2() {
 	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
 	fmt.Println("SchemaHandler Finished")
 
-	math01ID := INT64(1)
+	math01ID := INT32(1)
 	math01 := Class{
 		Name:     "Math1",
 		ID:       &math01ID,
 		Required: make([]UTF8, 0),
 	}
 
-	math02ID := INT64(2)
+	math02ID := INT32(2)
 	math02 := Class{
 		Name:     "Math2",
 		ID:       &math02ID,
@@ -99,23 +100,11 @@ func writeNested2(t *testing.T) {
 	stus := make([]Student, 0)
 	stus = append(stus, stu01, stu02)
 
-	src := Marshal(stus, 0, len(stus), schemaHandler)
-	fmt.Println("Marshal Finished")
-
-	for name, table := range *src {
-		fmt.Println(name)
-		fmt.Println("Val: ", table.Values)
-		fmt.Println("RL: ", table.RepetitionLevels)
-		fmt.Println("DL: ", table.DefinitionLevels)
-	}
-
+	file, _ := os.Create("nested2.parquet")
+	defer file.Close()
+	WriteTo(file, stus, schemaHandler)
 }
 
 func main() {
-	stus := CreateStudents()
-	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
-	file, _ := os.Create("nested.parquet")
-	log.Println("create file done")
-	defer file.Close()
-	WriteTo(file, stus, schemaHandler)
+	writeNested2()
 }

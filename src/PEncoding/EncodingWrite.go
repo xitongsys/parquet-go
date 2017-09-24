@@ -437,7 +437,7 @@ func WriteUnsignedVarInt(num uint64) []byte {
 	return res
 }
 
-func WriteRLE(val uint64, cnt int32, bitWidth int32) []byte {
+func WriteRLEDeprecated(val uint64, cnt int32, bitWidth int32) []byte {
 	header := cnt << 1
 	byteNum := (bitWidth + 7) / 8
 
@@ -450,6 +450,40 @@ func WriteRLE(val uint64, cnt int32, bitWidth int32) []byte {
 	copy(res[0:], headerBuf)
 	copy(res[len(headerBuf):], valBuf[0:byteNum])
 
+	return res
+}
+
+func WriteRLE(vals []interface{}, bitWidth int32) []byte {
+	ln := len(vals)
+	i := 0
+	res := make([]byte, 0)
+	for i < ln {
+		j := i + 1
+		for j < ln && vals[j] == vals[i] {
+			j++
+		}
+		num := j - i
+		header := num << 1
+		byteNum := (bitWidth + 7) / 8
+		headerBuf := WriteUnsignedVarInt(uint64(header))
+
+		valBuf := WritePlainINT64([]interface{}{vals[i]})
+
+		rleBuf := make([]byte, int64(len(headerBuf))+int64(byteNum))
+		copy(rleBuf[0:], headerBuf)
+		copy(rleBuf[len(headerBuf):], valBuf[0:byteNum])
+		res = append(res, rleBuf...)
+		i = j
+	}
+	return res
+}
+
+func WriteRLEBitPackedHybrid(vals []interface{}, bitWidths int32) []byte {
+	rleBuf := WriteRLE(vals, bitWidths)
+	res := make([]byte, 0)
+	lenBuf := WritePlainINT32([]interface{}{INT32(len(rleBuf))})
+	res = append(res, lenBuf...)
+	res = append(res, rleBuf...)
 	return res
 }
 
