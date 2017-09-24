@@ -13,7 +13,7 @@ import (
 	"reflect"
 )
 
-func WriteTo(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandler) {
+func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandler) {
 	var pageSize int64 = 8 * 1024              //8K
 	var rowGroupSize int64 = 256 * 1024 * 1024 //256MB
 

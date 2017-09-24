@@ -38,7 +38,7 @@ func GetFooter(file *os.File, size uint32) *parquet.FileMetaData {
 	return footer
 }
 
-func Reader(file *os.File) []*RowGroup {
+func ReadParquet(file *os.File) []*RowGroup {
 	rowGroups := make([]*RowGroup, 0)
 
 	footer := GetFooter(file, GetFooterSize(file))
