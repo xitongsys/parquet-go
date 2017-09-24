@@ -125,58 +125,21 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	//definitionLevel//////////////////////////////////
 	definitionLevelBuf := make([]byte, 0)
 	if page.DataTable.MaxDefinitionLevel > 0 {
-		i := 0
-		rleBuf := make([]byte, 0)
-		for i < ln {
-			j := i + 1
-			for j < ln && page.DataTable.DefinitionLevels[j] == page.DataTable.DefinitionLevels[i] {
-				j++
-			}
-			num := j - i
-			rleBufCur := WriteRLEDeprecated(uint64(page.DataTable.DefinitionLevels[i]), int32(num),
-				int32(BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
-
-			rleBuf = append(rleBuf, rleBufCur...)
-			i = j
+		numInterfaces := make([]interface{}, ln)
+		for i := 0; i < ln; i++ {
+			numInterfaces[i] = INT64(page.DataTable.DefinitionLevels[i])
 		}
-
-		tmpBuf := make([]interface{}, 1)
-		tmpBuf[0] = INT32(len(rleBuf))
-		lengthBuf := WritePlainINT32(tmpBuf)
-
-		definitionLevelBuf = append(definitionLevelBuf, lengthBuf...)
-		definitionLevelBuf = append(definitionLevelBuf, rleBuf...)
-		log.Println("=====DL", definitionLevelBuf, ln)
+		definitionLevelBuf = WriteRLEBitPackedHybrid(numInterfaces, int32(BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
 	}
 
 	//repetitionLevel/////////////////////////////////
 	repetitionLevelBuf := make([]byte, 0)
 	if page.DataTable.MaxRepetitionLevel > 0 {
-		i := 0
-		rleBuf := make([]byte, 0)
-		for i < ln {
-			j := i + 1
-			for j < ln && page.DataTable.RepetitionLevels[j] == page.DataTable.RepetitionLevels[i] {
-				j++
-			}
-
-			num := j - i
-			rleBufCur := WriteRLEDeprecated(uint64(page.DataTable.RepetitionLevels[i]), int32(num),
-				int32(BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
-
-			rleBuf = append(rleBuf, rleBufCur...)
-
-			i = j
+		numInterfaces := make([]interface{}, ln)
+		for i := 0; i < ln; i++ {
+			numInterfaces[i] = INT64(page.DataTable.RepetitionLevels[i])
 		}
-		tmpBuf := make([]interface{}, 1)
-		tmpBuf[0] = INT32(len(rleBuf))
-		lengthBuf := WritePlainINT32(tmpBuf)
-
-		repetitionLevelBuf = append(repetitionLevelBuf, lengthBuf...)
-		repetitionLevelBuf = append(repetitionLevelBuf, rleBuf...)
-
-		log.Println("=====RL", repetitionLevelBuf, ln)
-
+		repetitionLevelBuf = WriteRLEBitPackedHybrid(numInterfaces, int32(BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
 	}
 
 	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
