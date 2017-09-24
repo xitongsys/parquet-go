@@ -73,6 +73,6 @@ func main() {
 	log.Println("Finish Write Txt")
 
 	log.Println("Start Write Parquet")
-	WriteTo(file, stus, schemaHandler)
+	WriteParquet(file, stus, schemaHandler)
 	log.Println("Finish Write Parquet")
 }

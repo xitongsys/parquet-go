@@ -8,25 +8,11 @@ import (
 	"parquet"
 )
 
-func ReadParquet(fname string) {
+func Read(fname string) {
 	file, _ := os.Open(fname)
 	defer file.Close()
 
-	res := Reader(file)
-	/*
-		for _, v := range res {
-			fmt.Println(v.Path)
-			for i, v2 := range v.Values {
-				if reflect.TypeOf(v2) == reflect.TypeOf([]uint8{}) {
-					fmt.Print(string(v2.([]byte)))
-				} else {
-					fmt.Print(v2)
-				}
-				fmt.Printf(" %d %d\n", v.DefinitionLevels[i], v.RepetitionLevels[i])
-			}
-		}
-	*/
-
+	res := ReadParquet(file)
 	for _, rowGroup := range res {
 		for _, chunk := range rowGroup.Chunks {
 			for _, page := range chunk.Pages {
@@ -44,8 +30,5 @@ func ReadParquet(fname string) {
 }
 
 func main() {
-	//ReadParquet("./class.snappy.parquet")
-	//ReadParquet("./nation.dict.parquet")
-	ReadParquet("./nested2.parquet")
-	//ReadParquet("./flat.parquet")
+	Read("./class.snappy.parquet")
 }
