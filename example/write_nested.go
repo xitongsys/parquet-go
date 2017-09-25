@@ -100,7 +100,7 @@ func writeNested() {
 	stus := make([]Student, 0)
 	stus = append(stus, stu01, stu02)
 
-	file, _ := os.Create("nested2.parquet")
+	file, _ := os.Create("nested.parquet")
 	defer file.Close()
 	WriteParquet(file, stus, schemaHandler)
 }

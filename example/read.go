@@ -30,5 +30,5 @@ func Read(fname string) {
 }
 
 func main() {
-	Read("./class.snappy.parquet")
+	Read("./nested.parquet")
 }

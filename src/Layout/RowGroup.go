@@ -16,12 +16,17 @@ func NewRowGroup() *RowGroup {
 	return rowGroup
 }
 
-func (rowGroup *RowGroup) RowGroupToTable() *Table {
-	tabList := make([]*Table, 0)
+func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
+	tableMap := make(map[string]*Table, 0)
 	for _, chunk := range rowGroup.Chunks {
 		for _, page := range chunk.Pages {
-			tabList = append(tabList, page.DataTable)
+			pathStr := PathToStr(page.DataTable.Path)
+			if _, ok := tableMap[pathStr]; ok {
+				tableMap[pathStr] = MergeTable(tableMap[pathStr], page.DataTable)
+			} else {
+				tableMap[pathStr] = page.DataTable
+			}
 		}
 	}
-	return MergeTable(tabList...)
+	return &tableMap
 }
