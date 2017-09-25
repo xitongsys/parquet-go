@@ -8,26 +8,79 @@ import (
 	"parquet"
 )
 
-func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt uint64, bitWidth uint64) []interface{} {
-	if dataType == parquet.Type_BOOLEAN {
-		res := ReadBitPacked(bytesReader, uint64(cnt<<1), 1)
-		return res
-	} else if dataType == parquet.Type_INT32 {
-		return ReadPlainINT32(bytesReader, cnt)
-	} else if dataType == parquet.Type_INT64 {
-		return ReadPlainINT64(bytesReader, cnt)
-	} else if dataType == parquet.Type_INT96 {
-		return ReadPlainINT96(bytesReader, cnt)
-	} else if dataType == parquet.Type_FLOAT {
-		return ReadPlainFLOAT(bytesReader, cnt)
-	} else if dataType == parquet.Type_DOUBLE {
-		return ReadPlainDOUBLE(bytesReader, cnt)
-	} else if dataType == parquet.Type_BYTE_ARRAY {
-		return ReadPlainBYTE_ARRAY(bytesReader, cnt)
-	} else if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-		return ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, cnt, bitWidth)
+func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) []interface{} {
+	if convertedType < 0 {
+		if dataType == parquet.Type_BOOLEAN {
+			return ReadBitPacked(bytesReader, uint64(cnt<<1), 1)
+		} else if dataType == parquet.Type_INT32 {
+			return ReadPlainINT32(bytesReader, cnt)
+		} else if dataType == parquet.Type_INT64 {
+			return ReadPlainINT64(bytesReader, cnt)
+		} else if dataType == parquet.Type_INT96 {
+			return ReadPlainINT96(bytesReader, cnt)
+		} else if dataType == parquet.Type_FLOAT {
+			return ReadPlainFLOAT(bytesReader, cnt)
+		} else if dataType == parquet.Type_DOUBLE {
+			return ReadPlainDOUBLE(bytesReader, cnt)
+		} else if dataType == parquet.Type_BYTE_ARRAY {
+			return ReadPlainBYTE_ARRAY(bytesReader, cnt)
+		} else if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			return ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, cnt, bitWidth)
+		} else {
+			return nil
+		}
 	} else {
-		return nil
+		switch convertedType {
+		case parquet.ConvertedType_INT_8:
+			return ReadPlainINT_8(bytesReader, cnt)
+
+		case parquet.ConvertedType_INT_16:
+			return ReadPlainINT_16(bytesReader, cnt)
+
+		case parquet.ConvertedType_INT_32:
+			return ReadPlainINT_32(bytesReader, cnt)
+
+		case parquet.ConvertedType_INT_64:
+			return ReadPlainINT_64(bytesReader, cnt)
+
+		case parquet.ConvertedType_UINT_8:
+			return ReadPlainUINT_8(bytesReader, cnt)
+
+		case parquet.ConvertedType_UINT_16:
+			return ReadPlainUINT_16(bytesReader, cnt)
+
+		case parquet.ConvertedType_UINT_32:
+			return ReadPlainUINT_32(bytesReader, cnt)
+
+		case parquet.ConvertedType_UINT_64:
+			return ReadPlainUINT_64(bytesReader, cnt)
+
+		case parquet.ConvertedType_DATE:
+			return ReadPlainDATE(bytesReader, cnt)
+
+		case parquet.ConvertedType_TIME_MILLIS:
+			return ReadPlainTIME_MILLIS(bytesReader, cnt)
+
+		case parquet.ConvertedType_TIME_MICROS:
+			return ReadPlainTIME_MICROS(bytesReader, cnt)
+
+		case parquet.ConvertedType_TIMESTAMP_MILLIS:
+			return ReadPlainTIMESTAMP_MILLIS(bytesReader, cnt)
+
+		case parquet.ConvertedType_TIMESTAMP_MICROS:
+			return ReadPlainTIMESTAMP_MICROS(bytesReader, cnt)
+
+		case parquet.ConvertedType_INTERVAL:
+			return ReadPlainINTERVAL(bytesReader, cnt)
+
+		case parquet.ConvertedType_DECIMAL:
+			return ReadPlainDECIMAL(bytesReader, cnt)
+
+		case parquet.ConvertedType_UTF8:
+			return ReadPlainUTF8(bytesReader, cnt)
+		default:
+			return nil
+		}
 	}
 }
 

@@ -21,9 +21,9 @@ func ReadPageHeader(thriftReader *thrift.TBufferedTransport) *parquet.PageHeader
 	return pageHeader
 }
 
-func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, cnt uint64, bitWidth uint64) []interface{} {
+func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) []interface{} {
 	if encoding == parquet.Encoding_PLAIN {
-		return ReadPlain(bytesReader, dataType, cnt, bitWidth)
+		return ReadPlain(bytesReader, dataType, convertedType, cnt, bitWidth)
 
 	} else if encoding == parquet.Encoding_PLAIN_DICTIONARY {
 		b, _ := bytesReader.ReadByte()
@@ -114,6 +114,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			repetitionLevels = ReadDataPageValues(bytesReader,
 				pageHeader.DataPageHeader.GetRepetitionLevelEncoding(),
 				parquet.Type_INT64,
+				-1,
 				uint64(pageHeader.DataPageHeader.GetNumValues()),
 				bitWidth)
 
@@ -131,6 +132,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			definitionLevels = ReadDataPageValues(bytesReader,
 				pageHeader.DataPageHeader.GetDefinitionLevelEncoding(),
 				parquet.Type_INT64,
+				-1,
 				uint64(pageHeader.DataPageHeader.GetNumValues()),
 				bitWidth)
 
@@ -149,9 +151,14 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		}
 
 		var values []interface{}
+		var ct parquet.ConvertedType = -1
+		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
+			ct = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetConvertedType()
+		}
 		values = ReadDataPageValues(bytesReader,
 			pageHeader.DataPageHeader.GetEncoding(),
 			colMetaData.GetType(),
+			ct,
 			uint64(len(definitionLevels))-numNulls,
 			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
 
@@ -187,6 +194,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		table.Path = path
 		table.Values = ReadPlain(bytesReader,
 			colMetaData.GetType(),
+			-1,
 			uint64(pageHeader.DictionaryPageHeader.GetNumValues()),
 			0)
 		page.DataTable = table
