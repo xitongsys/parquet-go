@@ -88,6 +88,7 @@ Unmarshal(src, &dst, schemaHandler)
 ## Read/Write
 
 ### Read Example
+Example 1: Get the data/repetition levels/definition levels
 ```
 func Read(fname string) {
 	file, _ := os.Open(fname)
@@ -109,6 +110,23 @@ func Read(fname string) {
 		}
 	}
 }
+```
+Example 2: Unmarshal the read data
+```
+func Read(fname string) {
+	file, _ := os.Open(fname)
+	defer file.Close()
+
+	res := ReadParquet(file)
+	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
+	for _, rowGroup := range res {
+		tableMap := rowGroup.RowGroupToTableMap()
+		stus := make([]Student, 0)
+		Unmarshal(tableMap, &stus, schemaHandler)
+		fmt.Println(stus)
+	}
+}
+
 ```
 
 ### Write Example

@@ -62,7 +62,6 @@ func Read(fname string) {
 		stus := make([]Student, 0)
 		Unmarshal(tableMap, &stus, schemaHandler)
 		fmt.Println(stus)
-
 	}
 }
 
