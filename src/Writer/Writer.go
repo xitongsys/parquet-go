@@ -20,8 +20,13 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 	src := reflect.ValueOf(srcInterface)
 	ln := src.Len()
 
-	//create rowGroups
-	rowGroups := make([]*RowGroup, 0)
+	footer := parquet.NewFileMetaData()
+	footer.Version = 1
+	footer.Schema = append(footer.Schema, schemaHandler.SchemaElements...)
+
+	file.Write([]byte("PAR1"))
+	var offset int64 = 4
+
 	i := 0
 	for i < ln {
 		j := i
@@ -54,32 +59,21 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 			rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
 		}
 		rowGroup.RowGroupHeader.NumRows = int64(j - i)
-		rowGroups = append(rowGroups, rowGroup)
 
-		i = j
-	}
+		for k := 0; k < len(rowGroup.Chunks); k++ {
+			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = offset
+			rowGroup.Chunks[k].ChunkHeader.FileOffset = offset
 
-	footer := parquet.NewFileMetaData()
-	footer.Version = 1
-	footer.Schema = append(footer.Schema, schemaHandler.SchemaElements...)
-
-	file.Write([]byte("PAR1"))
-	var offset int64 = 4
-
-	for i := 0; i < len(rowGroups); i++ {
-		footer.RowGroups = append(footer.RowGroups, rowGroups[i].RowGroupHeader)
-		footer.NumRows += rowGroups[i].RowGroupHeader.NumRows
-		for j := 0; j < len(rowGroups[i].Chunks); j++ {
-			rowGroups[i].Chunks[j].ChunkHeader.MetaData.DataPageOffset = offset
-			rowGroups[i].Chunks[j].ChunkHeader.FileOffset = offset
-
-			for k := 0; k < len(rowGroups[i].Chunks[j].Pages); k++ {
-				data := rowGroups[i].Chunks[j].Pages[k].RawData
+			for l := 0; l < len(rowGroup.Chunks[k].Pages); l++ {
+				data := rowGroup.Chunks[k].Pages[l].RawData
 				file.Write(data)
 				offset += int64(len(data))
 			}
-
 		}
+		footer.NumRows += int64(j - i)
+		footer.RowGroups = append(footer.RowGroups, rowGroup.RowGroupHeader)
+
+		i = j
 	}
 
 	ts := thrift.NewTSerializer()
