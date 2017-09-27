@@ -13,7 +13,7 @@ import (
 	"reflect"
 )
 
-func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandler) {
+func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandler, np int) {
 	var pageSize int64 = 8 * 1024              //8K
 	var rowGroupSize int64 = 256 * 1024 * 1024 //256MB
 
@@ -35,13 +35,62 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 			size += SizeOf(src.Index(j))
 			j++
 		}
-		tableMap := Marshal(srcInterface, i, j, schemaHandler)
+
+		tableMapList := make([]*map[string]*Table, np)
+		doneChan := make(chan int)
+		delta := (j - i) / np
+		for c := 0; c < np; c++ {
+			bgn := i + c*delta
+			end := bgn + delta
+			if c == np-1 {
+				end = j
+			}
+			go func(index int) {
+				tableMapList[index] = Marshal(srcInterface, bgn, end, schemaHandler)
+				doneChan <- 0
+			}(c)
+		}
+
+		for c := 0; c < np; c++ {
+			<-doneChan
+		}
 
 		//table -> pages
 		pagesMap := make(map[string][]*Page)
-		for name, table := range *tableMap {
-			pagesMap[name], _ = TableToDataPages(table, int32(pageSize), parquet.CompressionCodec_SNAPPY)
-			//log.Println(name, table)
+		for _, tableMap := range tableMapList {
+			for name := range *tableMap {
+				pagesMap[name] = make([]*Page, 0)
+			}
+		}
+		nameList := make([]string, len(pagesMap))
+		k := 0
+		for name := range pagesMap {
+			nameList[k] = name
+			k++
+		}
+
+		delta = (len(nameList)) / np
+		for c := 0; c < np; c++ {
+			bgn := c * delta
+			end := bgn + delta
+			if c == np-1 {
+				end = len(nameList)
+			}
+
+			log.Println(len(nameList), bgn, end)
+			go func(names []string) {
+				for _, name := range names {
+					for _, tableMap := range tableMapList {
+						tmp, _ := TableToDataPages((*tableMap)[name], int32(pageSize), parquet.CompressionCodec_SNAPPY)
+						pagesMap[name] = append(pagesMap[name], tmp...)
+					}
+				}
+				doneChan <- 0
+			}(nameList[bgn:end])
+		}
+
+		for c := 0; c < np; c++ {
+			<-doneChan
 		}
 
 		//pages -> chunk

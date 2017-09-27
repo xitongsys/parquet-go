@@ -102,7 +102,7 @@ func writeNested() {
 
 	file, _ := os.Create("nested.parquet")
 	defer file.Close()
-	WriteParquet(file, stus, schemaHandler)
+	WriteParquet(file, stus, schemaHandler, 4)
 }
 
 func main() {

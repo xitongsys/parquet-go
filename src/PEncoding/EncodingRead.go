@@ -11,7 +11,7 @@ import (
 func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) []interface{} {
 	if convertedType < 0 {
 		if dataType == parquet.Type_BOOLEAN {
-			return ReadBitPacked(bytesReader, uint64(cnt<<1), 1)
+			return ReadPlainBOOLEAN(bytesReader, cnt)
 		} else if dataType == parquet.Type_INT32 {
 			return ReadPlainINT32(bytesReader, cnt)
 		} else if dataType == parquet.Type_INT64 {
@@ -82,6 +82,19 @@ func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, convertedType p
 			return nil
 		}
 	}
+}
+
+func ReadPlainBOOLEAN(bytesReader *bytes.Reader, cnt uint64) []interface{} {
+	res := make([]interface{}, cnt)
+	resInt := ReadBitPacked(bytesReader, uint64(cnt<<1), 1)
+	for i := 0; i < int(cnt); i++ {
+		if resInt[i].(INT64) > 0 {
+			res[i] = BOOLEAN(true)
+		} else {
+			res[i] = BOOLEAN(false)
+		}
+	}
+	return res
 }
 
 func ReadPlainINT32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
