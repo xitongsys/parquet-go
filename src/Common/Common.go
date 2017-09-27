@@ -322,6 +322,15 @@ func Min(a interface{}, b interface{}) interface{} {
 
 func SizeOf(val reflect.Value) int64 {
 	tk := val.Type().Kind()
+
+	if tk == reflect.Ptr {
+		if val.IsNil() {
+			return 0
+		}
+		val = val.Elem()
+		return SizeOf(val)
+	}
+
 	if tk == reflect.Slice {
 		var size int64 = 0
 		for i := 0; i < val.Len(); i++ {
