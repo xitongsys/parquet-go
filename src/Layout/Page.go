@@ -123,7 +123,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 		////////////////////////////////////////////
 	*/
 	//definitionLevel//////////////////////////////////
-	definitionLevelBuf := make([]byte, 0)
+	var definitionLevelBuf []byte
 	if page.DataTable.MaxDefinitionLevel > 0 {
 		numInterfaces := make([]interface{}, ln)
 		for i := 0; i < ln; i++ {
@@ -133,7 +133,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	}
 
 	//repetitionLevel/////////////////////////////////
-	repetitionLevelBuf := make([]byte, 0)
+	var repetitionLevelBuf []byte
 	if page.DataTable.MaxRepetitionLevel > 0 {
 		numInterfaces := make([]interface{}, ln)
 		for i := 0; i < ln; i++ {
@@ -143,11 +143,12 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	}
 
 	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
-	dataBuf := make([]byte, 0)
+	var dataBuf []byte
 	dataBuf = append(dataBuf, repetitionLevelBuf...)
 	dataBuf = append(dataBuf, definitionLevelBuf...)
 	dataBuf = append(dataBuf, valuesRawBuf...)
-	dataEncodeBuf := make([]byte, 0)
+
+	var dataEncodeBuf []byte
 	if compressType == parquet.CompressionCodec_GZIP {
 		dataEncodeBuf = CompressGzip(dataBuf)
 	} else if compressType == parquet.CompressionCodec_SNAPPY {
@@ -188,7 +189,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	pageHeaderBuf, _ := ts.Write(page.Header)
 
-	res := make([]byte, 0)
+	var res []byte
 	res = append(res, pageHeaderBuf...)
 	res = append(res, dataEncodeBuf...)
 

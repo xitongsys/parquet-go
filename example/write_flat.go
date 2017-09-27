@@ -4,7 +4,7 @@ import (
 	. "ParquetType"
 	. "SchemaHandler"
 	. "Writer"
-	"fmt"
+	//"fmt"
 	"log"
 	"os"
 )
@@ -43,7 +43,7 @@ func nextName(nameStr string) string {
 }
 
 func CreateStudents() []Student {
-	stus := make([]Student, 10)
+	stus := make([]Student, 1000000)
 	stuName := "aaaaa_STU"
 	var id int64 = 1
 	for i := 0; i < len(stus); i++ {
@@ -62,15 +62,7 @@ func main() {
 	stus := CreateStudents()
 	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
 	file, _ := os.Create("flat.parquet")
-	filetxt, _ := os.Create("flat.txt")
 	defer file.Close()
-	defer filetxt.Close()
-
-	log.Println("Start Write Txt")
-	for i := 0; i < len(stus); i++ {
-		filetxt.WriteString(fmt.Sprintf("%v %v %v %v %v\n", stus[i].Name, stus[i].Age, stus[i].Id, stus[i].Weight, stus[i].Sex))
-	}
-	log.Println("Finish Write Txt")
 
 	log.Println("Start Write Parquet")
 	WriteParquet(file, stus, schemaHandler, 4)
