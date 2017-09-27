@@ -77,7 +77,6 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 				end = len(nameList)
 			}
 
-			log.Println(len(nameList), bgn, end)
 			go func(names []string) {
 				for _, name := range names {
 					for _, tableMap := range tableMapList {
