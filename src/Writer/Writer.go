@@ -113,7 +113,7 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 			rowGroup.Chunks[k].ChunkHeader.FileOffset = offset
 
 			for l := 0; l < len(rowGroup.Chunks[k].Pages); l++ {
-				data := rowGroup.Chunks[k].Pages[l].RawData
+				data := rowGroup.Chunks[k].Pages[l].DataPageCompress(parquet.CompressionCodec_SNAPPY)
 				file.Write(data)
 				offset += int64(len(data))
 			}

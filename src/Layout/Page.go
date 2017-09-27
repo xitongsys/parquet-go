@@ -84,7 +84,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.DataType = dataType
 		page.CompressType = compressType
 
-		page.DataPageCompress(compressType)
+		//page.DataPageCompress(compressType)
 
 		totSize += int64(len(page.RawData))
 		res = append(res, page)
@@ -192,8 +192,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	var res []byte
 	res = append(res, pageHeaderBuf...)
 	res = append(res, dataEncodeBuf...)
-
-	page.RawData = res
+	//page.RawData = res
 
 	return res
 }
