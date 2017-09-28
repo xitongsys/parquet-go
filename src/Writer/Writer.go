@@ -11,6 +11,7 @@ import (
 	"os"
 	"parquet"
 	"reflect"
+	"sync"
 )
 
 func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandler, np int) {
@@ -38,13 +39,17 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 
 		tableMapList := make([]*map[string]*Table, np)
 		doneChan := make(chan int)
-		delta := (j - i) / np
+		delta := (j - i + np - 1) / np
 		for c := 0; c < np; c++ {
 			bgn := i + c*delta
 			end := bgn + delta
-			if c == np-1 {
+			if end > j {
 				end = j
 			}
+			if bgn >= j {
+				bgn, end = i, i
+			}
+
 			go func(index int) {
 				tableMapList[index] = Marshal(srcInterface, bgn, end, schemaHandler)
 				doneChan <- 0
@@ -56,6 +61,7 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 		}
 
 		//table -> pages
+		var mutex = &sync.Mutex{}
 		pagesMap := make(map[string][]*Page)
 		for _, tableMap := range tableMapList {
 			for name := range *tableMap {
@@ -69,19 +75,24 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 			k++
 		}
 
-		delta = (len(nameList)) / np
+		delta = (len(nameList) + np - 1) / np
 		for c := 0; c < np; c++ {
 			bgn := c * delta
 			end := bgn + delta
-			if c == np-1 {
+			if end > len(nameList) {
 				end = len(nameList)
+			}
+			if bgn >= len(nameList) {
+				bgn, end = 0, 0
 			}
 
 			go func(names []string) {
 				for _, name := range names {
 					for _, tableMap := range tableMapList {
 						tmp, _ := TableToDataPages((*tableMap)[name], int32(pageSize), parquet.CompressionCodec_SNAPPY)
+						mutex.Lock()
 						pagesMap[name] = append(pagesMap[name], tmp...)
+						mutex.Unlock()
 					}
 				}
 				doneChan <- 0
