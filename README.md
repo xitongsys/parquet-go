@@ -1,4 +1,4 @@
-# parquet-go v0.3
+# parquet-go v0.4
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
@@ -86,68 +86,12 @@ Unmarshal(src, &dst, schemaHandler)
 ```
 
 ## Read/Write
+Examples in example 
 
-### Read Example
-Example 1: Get the data/repetition levels/definition levels
-```
-func Read(fname string) {
-	file, _ := os.Open(fname)
-	defer file.Close()
-
-	res := ReadParquet(file)
-	for _, rowGroup := range res {
-		for _, chunk := range rowGroup.Chunks {
-			for _, page := range chunk.Pages {
-				fmt.Println(page.DataTable.Path)
-				for i := 0; i < len(page.DataTable.Values); i++ {
-					if page.Header.GetType() == parquet.PageType_DATA_PAGE {
-						fmt.Println(page.DataTable.Values[i],
-							page.DataTable.RepetitionLevels[i],
-							page.DataTable.DefinitionLevels[i])
-					}
-				}
-			}
-		}
-	}
-}
-```
-Example 2: Unmarshal the read data
-```
-func Read(fname string) {
-	file, _ := os.Open(fname)
-	defer file.Close()
-
-	res := ReadParquet(file)
-	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
-	for _, rowGroup := range res {
-		tableMap := rowGroup.RowGroupToTableMap()
-		stus := make([]Student, 0)
-		Unmarshal(tableMap, &stus, schemaHandler)
-		fmt.Println(stus)
-	}
-}
-
-```
-
-### Write Example
-```
-type Student struct{
-......
-}
-
-stus := make([]Student,10000)
-schemaHandler := NewSchemaHandlerFromStruct(new(Student))
-......
-
-file, _ := os.Create("flat.parquet")
-WriteParquet(file, stus, schemaHandler)
-
-```
 
 ## Note
 * Have tested the parquet file written by parquet-go on many big data platform (Spark/Hive/Presto), everything is ok :)
 * Almost all the features of the parquet are provided now.
 
 ## To do
-* Parallel
 * Optimize performance
