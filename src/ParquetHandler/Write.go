@@ -63,7 +63,6 @@ func (self *ParquetHandler) Flush() {
 			bgn, end = l, l
 		}
 
-		log.Println(bgn, end, l)
 		go func(index int64) {
 			tableMapList[index] = Marshal(self.Objs, int(bgn), int(end), self.SchemaHandler)
 			doneChan <- 0

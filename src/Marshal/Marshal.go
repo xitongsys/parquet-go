@@ -37,6 +37,9 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 		stack := make([]*Node, 0)
 		node := new(Node)
 		node.Val = src.Index(i)
+		if src.Index(i).Type().Kind() == reflect.Interface {
+			node.Val = src.Index(i).Elem()
+		}
 		node.Path = append(node.Path, rootName)
 		stack = append(stack, node)
 
