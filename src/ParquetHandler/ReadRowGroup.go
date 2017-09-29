@@ -11,6 +11,10 @@ func (self *ParquetHandler) ReadRowGroup(rowGroupHeader *parquet.RowGroup) *RowG
 	for _, columnChunk := range rowGroupHeader.GetColumns() {
 
 		offset := columnChunk.FileOffset
+		if columnChunk.FilePath != nil {
+			self.PFile.Open(*columnChunk.FilePath)
+		}
+
 		thriftReader := ConvertToThriftReader(self.PFile, offset)
 
 		chunk := self.ReadChunk(thriftReader, self.SchemaHandler, columnChunk)
