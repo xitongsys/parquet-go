@@ -12,23 +12,27 @@ type ParquetFile interface {
 	Write(b []byte) (n int, err error)
 	Close()
 	Open(name string) error
+	Create(name string) error
 }
 
 type ParquetHandler struct {
 	SchemaHandler *SchemaHandler
-	FileMap       map[string]*ParquetFile
-	Objs          []interface{}
-	Size          int64
 	NP            int64 //parallel number
 
 	Footer    *parquet.FileMetaData
 	RowGroups []*RowGroup
 
+	PFile ParquetFile
+
+	///read info///////
+	RowGroupIndex int64
+
 	////write info/////
-	PFile        ParquetFile
 	PageSize     int64
 	RowGroupSize int64
 	Offset       int64
+	Objs         []interface{}
+	Size         int64
 }
 
 func NewParquetHandler() *ParquetHandler {
