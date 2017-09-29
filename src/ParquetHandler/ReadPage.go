@@ -77,7 +77,7 @@ func (self *ParquetHandler) ReadDataPageValues(bytesReader *bytes.Reader, encodi
 }
 
 func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64) {
-	pageHeader := ReadPageHeader(thriftReader)
+	pageHeader := self.ReadPageHeader(thriftReader)
 
 	log.Println(pageHeader)
 
@@ -111,7 +111,7 @@ func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, sc
 		if maxRepetitionLevel > 0 {
 			bitWidth := BitNum(uint64(maxRepetitionLevel))
 
-			repetitionLevels = ReadDataPageValues(bytesReader,
+			repetitionLevels = self.ReadDataPageValues(bytesReader,
 				pageHeader.DataPageHeader.GetRepetitionLevelEncoding(),
 				parquet.Type_INT64,
 				-1,
@@ -129,7 +129,7 @@ func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, sc
 		if maxDefinitionLevel > 0 {
 			bitWidth := BitNum(uint64(maxDefinitionLevel))
 
-			definitionLevels = ReadDataPageValues(bytesReader,
+			definitionLevels = self.ReadDataPageValues(bytesReader,
 				pageHeader.DataPageHeader.GetDefinitionLevelEncoding(),
 				parquet.Type_INT64,
 				-1,
@@ -155,7 +155,7 @@ func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, sc
 		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
 			ct = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetConvertedType()
 		}
-		values = ReadDataPageValues(bytesReader,
+		values = self.ReadDataPageValues(bytesReader,
 			pageHeader.DataPageHeader.GetEncoding(),
 			colMetaData.GetType(),
 			ct,

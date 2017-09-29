@@ -1,15 +1,17 @@
 package ParquetHandler
 
 import (
-	. "Layout"
+	. "Common"
 	. "SchemaHandler"
+	"encoding/binary"
+	"git.apache.org/thrift.git/lib/go/thrift"
 	"parquet"
 )
 
-func ConvertToThriftReader(file *ParquetFile, offset int64) *thrift.TBufferedTransport {
-	file.Seek(offset, 0)
+func ConvertToThriftReader(file ParquetFile, offset int64) *thrift.TBufferedTransport {
+	file.Seek(int(offset), 0)
 	num, _ := file.Seek(0, 2)
-	file.Seek(offset, 0)
+	file.Seek(int(offset), 0)
 
 	thriftReader := thrift.NewStreamTransportR(file)
 	bufferReader := thrift.NewTBufferedTransport(thriftReader, int(num))
@@ -26,23 +28,24 @@ func (self *ParquetHandler) GetFooterSize() uint32 {
 
 func (self *ParquetHandler) ReadFooter() {
 	size := self.GetFooterSize()
-	self.PFile.Seek(-(int64)(8+size), 2)
+	self.PFile.Seek(int(-(int64)(8+size)), 2)
 	self.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
 	protocol := pf.GetProtocol(thrift.NewStreamTransportR(self.PFile))
 	self.Footer.Read(protocol)
 }
 
-func (self *ParquetHandler) ReadInit(pfile ParquetFile) {
+func (self *ParquetHandler) ReadInit(pfile ParquetFile) int {
 	self.PFile = pfile
 	self.ReadFooter()
 	self.SchemaHandler = NewSchemaHandlerFromSchemaList(self.Footer.GetSchema())
 	self.RowGroupIndex = 0
+	return len(self.Footer.GetRowGroups())
 }
 
 func (self *ParquetHandler) ReadOneRowGroup() *map[string]*Table {
 	rowGroups := self.Footer.GetRowGroups()
-	ln := len(rowGroups)
+	ln := int64(len(rowGroups))
 	if self.RowGroupIndex >= ln {
 		return nil
 	}

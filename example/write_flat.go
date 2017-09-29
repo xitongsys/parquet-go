@@ -1,6 +1,7 @@
 package main
 
 import (
+	. "Marshal"
 	. "ParquetHandler"
 	. "ParquetType"
 	"log"
@@ -60,14 +61,18 @@ type MyFile struct {
 	file *os.File
 }
 
-func (self *MyFile) Open(name string) error {
+func (self *MyFile) Create(name string) error {
 	file, err := os.Create(name)
 	self.file = file
 	return err
 }
-
-func (self *MyFile) Seek(offset int, pos int) {
-	self.file.Seek(int64(offset), pos)
+func (self *MyFile) Open(name string) error {
+	file, err := os.Open(name)
+	self.file = file
+	return err
+}
+func (self *MyFile) Seek(offset int, pos int) (int64, error) {
+	return self.file.Seek(int64(offset), pos)
 }
 
 func (self *MyFile) Read(b []byte) (n int, err error) {
@@ -85,7 +90,9 @@ func (self *MyFile) Close() {
 func main() {
 	var f ParquetFile
 	f = &MyFile{}
-	f.Open("flat.parquet")
+
+	//write flat
+	f.Create("flat.parquet")
 	ph := NewParquetHandler()
 	ph.WriteInit(f, new(Student), 4)
 
@@ -109,4 +116,18 @@ func main() {
 	ph.WriteStop()
 	f.Close()
 	log.Println("Write Finished")
+
+	///read flat
+
+	f.Open("flat.parquet")
+	ph = NewParquetHandler()
+	rgN := ph.ReadInit(f)
+	for i := 0; i < rgN; i++ {
+		stus := make([]Student, 0)
+		tmap := ph.ReadOneRowGroup()
+		Unmarshal(tmap, &stus, ph.SchemaHandler)
+		log.Println(stus)
+	}
+
+	f.Close()
 }

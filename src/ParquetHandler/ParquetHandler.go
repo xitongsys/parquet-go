@@ -7,7 +7,7 @@ import (
 )
 
 type ParquetFile interface {
-	Seek(offset int, pos int)
+	Seek(offset int, pos int) (int64, error)
 	Read(b []byte) (n int, err error)
 	Write(b []byte) (n int, err error)
 	Close()
@@ -38,7 +38,6 @@ type ParquetHandler struct {
 func NewParquetHandler() *ParquetHandler {
 	res := new(ParquetHandler)
 	res.NP = 1
-	res.FileMap = make(map[string]*ParquetFile)
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 256 * 1024 * 1024 //256M
 	return res
