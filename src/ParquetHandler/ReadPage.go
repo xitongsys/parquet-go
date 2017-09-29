@@ -79,8 +79,6 @@ func (self *ParquetHandler) ReadDataPageValues(bytesReader *bytes.Reader, encodi
 func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64) {
 	pageHeader := self.ReadPageHeader(thriftReader)
 
-	log.Println(pageHeader)
-
 	var page *Page
 	compressedPageSize := pageHeader.GetCompressedPageSize()
 	buf := make([]byte, compressedPageSize)
@@ -184,7 +182,6 @@ func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, sc
 		}
 		page.DataTable = table
 
-		//log.Println("====", table.Values)
 		return page, int64(len(definitionLevels))
 
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {

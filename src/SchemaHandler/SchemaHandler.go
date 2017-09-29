@@ -4,7 +4,7 @@ import (
 	"Common"
 	"ParquetType"
 	"errors"
-	"log"
+	//"log"
 	"parquet"
 	"reflect"
 	"strconv"
@@ -330,6 +330,6 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 			}
 		}
 	}
-	log.Println("NewSchemaHandlerFromSchemaList Finished")
+	//	log.Println("NewSchemaHandlerFromSchemaList Finished")
 	return schemaHandler
 }

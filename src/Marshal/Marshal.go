@@ -3,7 +3,6 @@ package Marshal
 import (
 	. "Common"
 	. "SchemaHandler"
-	"log"
 	"reflect"
 )
 
@@ -167,6 +166,5 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 			}
 		}
 	}
-	log.Println("Marshal Finished")
 	return &res
 }

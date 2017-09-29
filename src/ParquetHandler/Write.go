@@ -7,7 +7,6 @@ import (
 	. "SchemaHandler"
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"log"
 	"parquet"
 	"reflect"
 	"sync"
@@ -15,7 +14,7 @@ import (
 
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64) {
 	self.SchemaHandler = NewSchemaHandlerFromStruct(obj)
-	log.Println(self.SchemaHandler)
+	//log.Println(self.SchemaHandler)
 	self.NP = np
 	self.PFile = pfile
 	self.Footer = parquet.NewFileMetaData()
@@ -35,7 +34,7 @@ func (self *ParquetHandler) WriteStop() {
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
 	self.PFile.Write(footerSizeBuf)
 	self.PFile.Write([]byte("PAR1"))
-	log.Println(self.Footer)
+	//log.Println(self.Footer)
 }
 
 func (self *ParquetHandler) Write(src interface{}) {

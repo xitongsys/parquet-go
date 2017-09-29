@@ -94,7 +94,7 @@ func main() {
 	//write flat
 	f.Create("flat.parquet")
 	ph := NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4)
+	ph.WriteInit(f, new(Student), 20)
 
 	num := 10
 	id := 1
@@ -114,8 +114,8 @@ func main() {
 
 	}
 	ph.WriteStop()
-	f.Close()
 	log.Println("Write Finished")
+	f.Close()
 
 	///read flat
 

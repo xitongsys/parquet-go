@@ -6,7 +6,6 @@ import (
 	. "PEncoding"
 	. "ParquetType"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"log"
 	"parquet"
 	"reflect"
 )
@@ -91,7 +90,6 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		i = j
 	}
 
-	log.Println("TableToPages Finished")
 	return res, totSize
 }
 

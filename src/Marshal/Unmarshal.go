@@ -3,7 +3,6 @@ package Marshal
 import (
 	. "Common"
 	. "SchemaHandler"
-	"log"
 	"reflect"
 )
 
@@ -175,7 +174,5 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 			obj)
 		reflect.ValueOf(dstInterface).Elem().Set(tmp)
 	}
-
-	log.Println("Umarshal Finished")
 
 }

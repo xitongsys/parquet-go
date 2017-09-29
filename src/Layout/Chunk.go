@@ -3,7 +3,6 @@ package Layout
 import (
 	. "Common"
 	. "PEncoding"
-	"log"
 	"parquet"
 )
 
@@ -48,7 +47,5 @@ func PagesToChunk(pages []*Page) *Chunk {
 	metaData.Statistics.Min = WritePlain([]interface{}{minVal})
 
 	chunk.ChunkHeader.MetaData = metaData
-
-	log.Println("PagesToChunk Finished")
 	return chunk
 }
