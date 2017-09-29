@@ -121,8 +121,8 @@ func main() {
 
 	f.Open("flat.parquet")
 	ph = NewParquetHandler()
-	rgN := ph.ReadInit(f)
-	for i := 0; i < rgN; i++ {
+	rowGroupNum := ph.ReadInit(f)
+	for i := 0; i < rowGroupNum; i++ {
 		stus := make([]Student, 0)
 		tmap := ph.ReadOneRowGroup()
 		Unmarshal(tmap, &stus, ph.SchemaHandler)
