@@ -12,6 +12,7 @@ import (
 	"parquet"
 	"reflect"
 	"sync"
+	"time"
 )
 
 func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *SchemaHandler, np int) {
@@ -58,6 +59,10 @@ func WriteParquet(file *os.File, srcInterface interface{}, schemaHandler *Schema
 
 		for c := 0; c < np; c++ {
 			<-doneChan
+		}
+
+		for i := 0; i < 600; i++ {
+			time.Sleep(time.Second * 1)
 		}
 
 		//table -> pages

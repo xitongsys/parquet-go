@@ -1,10 +1,8 @@
 package main
 
 import (
+	. "ParquetHandler"
 	. "ParquetType"
-	. "SchemaHandler"
-	. "Writer"
-	//"fmt"
 	"log"
 	"os"
 )
@@ -58,13 +56,57 @@ func CreateStudents() []Student {
 	return stus
 }
 
-func main() {
-	stus := CreateStudents()
-	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
-	file, _ := os.Create("flat.parquet")
-	defer file.Close()
+type MyFile struct {
+	file *os.File
+}
 
-	log.Println("Start Write Parquet")
-	WriteParquet(file, stus, schemaHandler, 4)
-	log.Println("Finish Write Parquet")
+func (self *MyFile) Open(name string) error {
+	file, err := os.Create(name)
+	self.file = file
+	return err
+}
+
+func (self *MyFile) Seek(offset int, pos int) {
+	self.file.Seek(int64(offset), pos)
+}
+
+func (self *MyFile) Read(b []byte) (n int, err error) {
+	return self.file.Read(b)
+}
+
+func (self *MyFile) Write(b []byte) (n int, err error) {
+	return self.file.Write(b)
+}
+
+func (self *MyFile) Close() {
+	self.file.Close()
+}
+
+func main() {
+	var f ParquetFile
+	f = &MyFile{}
+	f.Open("flat.parquet")
+	ph := NewParquetHandler()
+	ph.WriteInit(f, new(Student), 4)
+
+	num := 10
+	id := 1
+	stuName := "aaaaaaaaaa_STU"
+
+	for i := 0; i < num; i++ {
+		stu := Student{
+			Name:   UTF8(stuName),
+			Age:    INT32(i),
+			Id:     INT64(id),
+			Weight: FLOAT(50.0 + float32(i)*0.1),
+			Sex:    BOOLEAN(i%2 == 0),
+		}
+		stuName = nextName(stuName)
+		id++
+		ph.Write(stu)
+
+	}
+	ph.WriteStop()
+	f.Close()
+	log.Println("Write Finished")
 }
