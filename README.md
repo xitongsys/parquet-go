@@ -181,6 +181,13 @@ func main() {
 
 ```
 
+## Parallel
+Write functions have a parallel parameters np which is the number of goroutines in writing.
+```
+func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64)
+```
+
+
 ## Note
 * Have tested the parquet file written by parquet-go on many big data platform (Spark/Hive/Presto), everything is ok :)
 * Almost all the features of the parquet are provided now.
