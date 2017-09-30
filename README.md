@@ -189,7 +189,7 @@ func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int
 
 
 ## Note
-* Have tested the parquet file written by parquet-go on many big data platform (Spark/Hive/Presto), everything is ok :)
+* Have tested the parquet file written by parquet-go on many big data plantform (Spark/Hive/Presto), everything is ok :)
 * Almost all the features of the parquet are provided now.
 
 ## To do
