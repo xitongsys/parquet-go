@@ -4,7 +4,7 @@ import (
 	. "ParquetType"
 	"bytes"
 	"encoding/binary"
-	"log"
+	//"log"
 	"parquet"
 )
 
@@ -429,7 +429,7 @@ func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length u
 	if length <= 0 {
 		length = uint64(ReadPlainINT32(bytesReader, 1)[0].(INT32))
 	}
-	log.Println("ReadRLEBitPackedHybrid length =", length)
+	//log.Println("ReadRLEBitPackedHybrid length =", length)
 
 	buf := make([]byte, length)
 	bytesReader.Read(buf)
