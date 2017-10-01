@@ -41,8 +41,8 @@ type INTERVAL string // length=12
 type DECIMAL string
 
 ```
-The variables which will read/write from/to a parquet file mush be declared as these types.
-OPTIONAL variables are declared as point 
+The variables which will read/write from/to a parquet file must be declared as these types.
+OPTIONAL variables are declared as pointers.
 
 ## Core Data Structure
 The core data structure named "Table":
@@ -145,7 +145,7 @@ func main() {
 
 	num := 10
 	id := 1
-	stuName := "aaaaaaaaaa_STU"
+	stuName := "aaaaaaaaaa"
 
 	for i := 0; i < num; i++ {
 		stu := Student{
