@@ -1,15 +1,14 @@
 package ParquetHandler
 
 import (
+	"encoding/binary"
+	"git.apache.org/thrift.git/lib/go/thrift"
 	. "github.com/xitongsys/parquet-go/Common"
 	. "github.com/xitongsys/parquet-go/Layout"
 	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
-	"encoding/binary"
-	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
-	"sync"
 )
 
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64) {
@@ -47,7 +46,11 @@ func (self *ParquetHandler) Write(src interface{}) {
 }
 
 func (self *ParquetHandler) Flush() {
-	tableMapList := make([]*map[string]*Table, self.NP)
+	pagesMapList := make([]map[string][]*Page, self.NP)
+	for i := 0; i < int(self.NP); i++ {
+		pagesMapList[i] = make(map[string][]*Page)
+	}
+
 	doneChan := make(chan int)
 	l := int64(len(self.Objs))
 	var c int64 = 0
@@ -63,7 +66,12 @@ func (self *ParquetHandler) Flush() {
 		}
 
 		go func(index int64) {
-			tableMapList[index] = Marshal(self.Objs, int(bgn), int(end), self.SchemaHandler)
+			tableMap := Marshal(self.Objs, int(bgn), int(end), self.SchemaHandler)
+			for name, table := range *tableMap {
+				pagesMapList[index][name], _ = TableToDataPages(table, int32(self.PageSize),
+					parquet.CompressionCodec_SNAPPY)
+			}
+
 			doneChan <- 0
 		}(c)
 	}
@@ -72,57 +80,20 @@ func (self *ParquetHandler) Flush() {
 		<-doneChan
 	}
 
-	//table->pages
-	var mutex = &sync.Mutex{}
-	pagesMap := make(map[string][]*Page)
-	for _, tableMap := range tableMapList {
-		if tableMap == nil {
-			continue
-		}
-		for name := range *tableMap {
-			pagesMap[name] = make([]*Page, 0)
-		}
-	}
-	nameList := make([]string, len(pagesMap))
-	k := 0
-	for name := range pagesMap {
-		nameList[k] = name
-		k++
-	}
-
-	l = int64(len(nameList))
-	delta = (l + self.NP - 1) / self.NP
-	for c = 0; c < self.NP; c++ {
-		bgn := c * delta
-		end := bgn + delta
-		if end > l {
-			end = l
-		}
-		if bgn >= l {
-			bgn, end = 0, 0
-		}
-
-		go func(names []string) {
-			for _, name := range names {
-				for _, tableMap := range tableMapList {
-					tmp, _ := TableToDataPages((*tableMap)[name], int32(self.PageSize),
-						parquet.CompressionCodec_SNAPPY)
-
-					mutex.Lock()
-					pagesMap[name] = append(pagesMap[name], tmp...)
-					mutex.Unlock()
-				}
+	totalPagesMap := make(map[string][]*Page)
+	for _, pagesMap := range pagesMapList {
+		for name, pages := range pagesMap {
+			if _, ok := totalPagesMap[name]; !ok {
+				totalPagesMap[name] = pages
+			} else {
+				totalPagesMap[name] = append(totalPagesMap[name], pages...)
 			}
-			doneChan <- 0
-		}(nameList[bgn:end])
-	}
-	for c = 0; c < self.NP; c++ {
-		<-doneChan
+		}
 	}
 
 	//pages -> chunk
 	chunkMap := make(map[string]*Chunk)
-	for name, pages := range pagesMap {
+	for name, pages := range totalPagesMap {
 		chunkMap[name] = PagesToChunk(pages)
 	}
 
