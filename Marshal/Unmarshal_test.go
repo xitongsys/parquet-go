@@ -1,8 +1,8 @@
 package Marshal
 
 import (
-	. "ParquetType"
-	. "SchemaHandler"
+	. "github.com/xitongsys/parquet-go/ParquetType"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"fmt"
 	"testing"
 )

@@ -1,9 +1,9 @@
 package Layout
 
 import (
-	. "Common"
-	. "PEncoding"
-	"parquet"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/PEncoding"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type Chunk struct {

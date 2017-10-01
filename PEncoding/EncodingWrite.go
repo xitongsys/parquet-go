@@ -1,8 +1,8 @@
 package PEncoding
 
 import (
-	. "Common"
-	. "ParquetType"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	"bufio"
 	"bytes"
 	"encoding/binary"

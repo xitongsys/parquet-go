@@ -1,11 +1,11 @@
 package ParquetHandler
 
 import (
-	. "Common"
-	. "SchemaHandler"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func ConvertToThriftReader(file ParquetFile, offset int64) *thrift.TBufferedTransport {

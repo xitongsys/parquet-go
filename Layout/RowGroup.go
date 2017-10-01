@@ -1,8 +1,8 @@
 package Layout
 
 import (
-	. "Common"
-	"parquet"
+	. "github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type RowGroup struct {

@@ -1,7 +1,7 @@
 package ParquetType
 
 import (
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //base type

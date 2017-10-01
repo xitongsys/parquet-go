@@ -1,12 +1,12 @@
 package Layout
 
 import (
-	. "Common"
-	. "Compress"
-	. "PEncoding"
-	. "ParquetType"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/Compress"
+	. "github.com/xitongsys/parquet-go/PEncoding"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 )
 

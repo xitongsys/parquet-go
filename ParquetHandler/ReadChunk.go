@@ -1,11 +1,11 @@
 package ParquetHandler
 
 import (
-	. "Layout"
-	. "ParquetType"
-	. "SchemaHandler"
+	. "github.com/xitongsys/parquet-go/Layout"
+	. "github.com/xitongsys/parquet-go/ParquetType"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func (self *ParquetHandler) DecodeDictChunk(chunk *Chunk) {

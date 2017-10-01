@@ -1,9 +1,9 @@
 package main
 
 import (
-	. "Marshal"
-	. "ParquetHandler"
-	. "ParquetType"
+	. "github.com/xitongsys/parquet-go/Marshal"
+	. "github.com/xitongsys/parquet-go/ParquetHandler"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	"fmt"
 	"log"
 	"os"

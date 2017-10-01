@@ -1,11 +1,11 @@
 package PEncoding
 
 import (
-	. "ParquetType"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	"bytes"
 	"encoding/binary"
 	//"log"
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) []interface{} {

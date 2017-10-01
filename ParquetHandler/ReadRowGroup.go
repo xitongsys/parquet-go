@@ -1,8 +1,8 @@
 package ParquetHandler
 
 import (
-	. "Layout"
-	"parquet"
+	. "github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func (self *ParquetHandler) ReadRowGroup(rowGroupHeader *parquet.RowGroup) *RowGroup {

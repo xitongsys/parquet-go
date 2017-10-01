@@ -1,8 +1,8 @@
 package Marshal
 
 import (
-	. "Common"
-	. "SchemaHandler"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"reflect"
 )
 

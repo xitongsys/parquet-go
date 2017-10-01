@@ -1,13 +1,13 @@
 package ParquetHandler
 
 import (
-	. "Common"
-	. "Layout"
-	. "Marshal"
-	. "SchemaHandler"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/Layout"
+	. "github.com/xitongsys/parquet-go/Marshal"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 	"sync"
 )

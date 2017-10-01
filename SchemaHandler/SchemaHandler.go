@@ -1,11 +1,11 @@
 package SchemaHandler
 
 import (
-	"Common"
-	"ParquetType"
+	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"errors"
 	//"log"
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 	"strconv"
 )

@@ -1,16 +1,16 @@
 package ParquetHandler
 
 import (
-	. "Common"
-	. "Compress"
-	. "Layout"
-	. "PEncoding"
-	. "ParquetType"
-	. "SchemaHandler"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/Compress"
+	. "github.com/xitongsys/parquet-go/Layout"
+	. "github.com/xitongsys/parquet-go/PEncoding"
+	. "github.com/xitongsys/parquet-go/ParquetType"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"bytes"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"log"
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 	"strings"
 )
 

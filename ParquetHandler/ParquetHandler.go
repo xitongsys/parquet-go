@@ -1,9 +1,9 @@
 package ParquetHandler
 
 import (
-	. "Layout"
-	. "SchemaHandler"
-	"parquet"
+	. "github.com/xitongsys/parquet-go/Layout"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type ParquetFile interface {

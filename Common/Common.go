@@ -1,8 +1,7 @@
 package Common
 
 import (
-	//	"log"
-	. "ParquetType"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	"reflect"
 	"strings"
 )

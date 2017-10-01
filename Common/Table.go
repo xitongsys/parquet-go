@@ -1,7 +1,7 @@
 package Common
 
 import (
-	"parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type Table struct {
