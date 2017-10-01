@@ -41,22 +41,6 @@ func nextName(nameStr string) string {
 	return string(name)
 }
 
-func CreateStudents() []Student {
-	stus := make([]Student, 10)
-	stuName := "aaaaa_STU"
-	var id int64 = 1
-	for i := 0; i < len(stus); i++ {
-		stus[i].Name = UTF8(stuName)
-		stus[i].Age = INT32(i)
-		stus[i].Id = INT64(i)
-		stus[i].Weight = FLOAT(50.0 + float32(stus[i].Age)*0.1)
-		stus[i].Sex = BOOLEAN(i%2 == 0)
-		stuName = nextName(stuName)
-		id++
-	}
-	return stus
-}
-
 type MyFile struct {
 	file *os.File
 }
@@ -94,11 +78,11 @@ func main() {
 	//write flat
 	f.Create("flat.parquet")
 	ph := NewParquetHandler()
-	ph.WriteInit(f, new(Student), 20)
+	ph.WriteInit(f, new(Student), 10)
 
 	num := 10
 	id := 1
-	stuName := "aaaaaaaaaa_STU"
+	stuName := "aaaaaaaaaa"
 
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -111,14 +95,12 @@ func main() {
 		stuName = nextName(stuName)
 		id++
 		ph.Write(stu)
-
 	}
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
 
 	///read flat
-
 	f.Open("flat.parquet")
 	ph = NewParquetHandler()
 	rowGroupNum := ph.ReadInit(f)
@@ -130,4 +112,5 @@ func main() {
 	}
 
 	f.Close()
+
 }
