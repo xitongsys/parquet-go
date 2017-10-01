@@ -42,40 +42,14 @@ func (self *NodeBufType) Reset() {
 	self.Index = 0
 }
 
-//PathMap to record the path
-type PathMapType struct {
-	Path     string
-	Children map[string]*PathMapType
-}
-
-func NewPathMap(path string) *PathMapType {
-	pathMap := new(PathMapType)
-	pathMap.Path = path
-	pathMap.Children = make(map[string]*PathMapType)
-	return pathMap
-}
-
-func (self *PathMapType) Add(path []string) {
-	ln := len(path)
-	if ln <= 1 {
-		return
-	}
-	c := path[1]
-	if _, ok := self.Children[c]; !ok {
-		self.Children[c] = NewPathMap(self.Path + "." + c)
-	}
-	self.Children[c].Add(path[1:])
-}
-
 ////////for improve performance///////////////////////////////////
 
 //srcInterface is a slice
 func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler) *map[string]*Table {
 	src := reflect.ValueOf(srcInterface)
 	res := make(map[string]*Table)
-	rootName := schemaHandler.GetRootName()
-	pathMap := NewPathMap(rootName)
-	nodeBuf := NewNodeBuf(100)
+	pathMap := schemaHandler.PathMap
+	nodeBuf := NewNodeBuf(1)
 
 	for i := 0; i < len(schemaHandler.SchemaElements); i++ {
 		schema := schemaHandler.SchemaElements[i]
@@ -88,8 +62,6 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 			res[pathStr].MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(res[pathStr].Path)
 			res[pathStr].Repetition_Type = schema.GetRepetitionType()
 			res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].GetType()
-
-			pathMap.Add(res[pathStr].Path)
 		}
 	}
 
@@ -111,7 +83,9 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 			node := stack[ln-1]
 			stack = stack[:ln-1]
 
-			if node.Val.Type().Kind() == reflect.Ptr {
+			tk := node.Val.Type().Kind()
+
+			if tk == reflect.Ptr {
 				if node.Val.IsNil() {
 					for key, table := range res {
 						path := node.PathMap.Path
@@ -126,7 +100,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					node.DL++
 					stack = append(stack, node)
 				}
-			} else if node.Val.Type().Kind() == reflect.Struct {
+			} else if tk == reflect.Struct {
 				numField := node.Val.Type().NumField()
 				for j := 0; j < numField; j++ {
 					tf := node.Val.Type().Field(j)
@@ -138,7 +112,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					newNode.DL = node.DL
 					stack = append(stack, newNode)
 				}
-			} else if node.Val.Type().Kind() == reflect.Slice {
+			} else if tk == reflect.Slice {
 				ln := node.Val.Len()
 				path := node.PathMap.Path + ".list" + ".element"
 
@@ -167,7 +141,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					newNode.DL = node.DL + 1 //list is repeated
 					stack = append(stack, newNode)
 				}
-			} else if node.Val.Type().Kind() == reflect.Map {
+			} else if tk == reflect.Map {
 				path := node.PathMap.Path + ".key_value"
 				keys := node.Val.MapKeys()
 				if len(keys) <= 0 {
