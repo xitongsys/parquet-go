@@ -1,9 +1,9 @@
 package SchemaHandler
 
 import (
+	"errors"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/ParquetType"
-	"errors"
 	//"log"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
@@ -12,10 +12,50 @@ import (
 
 //path is full path
 
+//PathMap to record the path; This is used in Marshal for imporve performance
+type PathMapType struct {
+	Path     string
+	Children map[string]*PathMapType
+}
+
+func NewPathMap(path string) *PathMapType {
+	pathMap := new(PathMapType)
+	pathMap.Path = path
+	pathMap.Children = make(map[string]*PathMapType)
+	return pathMap
+}
+
+func (self *PathMapType) Add(path []string) {
+	ln := len(path)
+	if ln <= 1 {
+		return
+	}
+	c := path[1]
+	if _, ok := self.Children[c]; !ok {
+		self.Children[c] = NewPathMap(self.Path + "." + c)
+	}
+	self.Children[c].Add(path[1:])
+}
+
+/////////////////pathMap///////////////////////////
+
 type SchemaHandler struct {
 	SchemaElements []*parquet.SchemaElement
 	MapIndex       map[string]int32
 	IndexMap       map[int32]string
+	PathMap        *PathMapType
+}
+
+func (self *SchemaHandler) GetPathMap() {
+	self.PathMap = NewPathMap(self.GetRootName())
+	for i := 0; i < len(self.SchemaElements); i++ {
+		schema := self.SchemaElements[i]
+		pathStr := self.IndexMap[int32(i)]
+		numChildren := schema.GetNumChildren()
+		if numChildren == 0 {
+			self.PathMap.Add(Common.StrToPath(pathStr))
+		}
+	}
 }
 
 func (self *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepetitionType, error) {
@@ -331,5 +371,6 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 		}
 	}
 	//	log.Println("NewSchemaHandlerFromSchemaList Finished")
+	schemaHandler.GetPathMap()
 	return schemaHandler
 }
