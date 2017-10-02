@@ -3,6 +3,7 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
 * Very simple to use (like json marshal/unmarshal)
+* High performance
 
 ## Required
 * git.apache.org/thrift.git/lib/go/thrift
@@ -206,7 +207,9 @@ func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int
 ```
 ## Performance
 A very simple performance test was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores)
-+![](https://github.com/xitongsys/parquet-go/example/benchmark/res.png) 
+
+![Test Results](https://github.com/xitongsys/parquet-go/blob/master/example/benchmark/res.png)
+
 
 ## Note
 * Have tested the parquet file written by parquet-go on many big data plantform (Spark/Hive/Presto), everything is ok :)
