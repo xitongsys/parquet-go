@@ -1,44 +1,20 @@
 package main
 
 import (
-	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"log"
 	"os"
+	//"runtime/pprof"
 )
 
 type Student struct {
 	Name   UTF8
 	Age    INT32
 	Id     INT64
-	Weight FLOAT
+	Weight DOUBLE
 	Sex    BOOLEAN
-}
-
-func nextName(nameStr string) string {
-	name := []byte(nameStr)
-	ln := len(name)
-	if name[0] >= 'a' && name[0] <= 'z' {
-		for i := 0; i < ln; i++ {
-			if name[i] >= 'z' {
-				name[i] = 'a'
-			} else {
-				name[i] = byte(int(name[i]) + 1)
-				break
-			}
-		}
-	} else {
-		for i := 0; i < ln; i++ {
-			if name[i] >= 'Z' {
-				name[i] = 'A'
-			} else {
-				name[i] = byte(int(name[i]) + 1)
-				break
-			}
-		}
-	}
-	return string(name)
+	School UTF8
 }
 
 type MyFile struct {
@@ -72,45 +48,43 @@ func (self *MyFile) Close() {
 }
 
 func main() {
+	/*
+		cpuf, _ := os.Create("cpu.profile")
+		pprof.StartCPUProfile(cpuf)
+		defer pprof.StopCPUProfile()
+	*/
+
 	var f ParquetFile
 	f = &MyFile{}
 
 	//write flat
-	f.Create("flat.parquet")
+	f.Create("benchmark.parquet")
 	ph := NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4, 30)
+	ph.WriteInit(f, new(Student), 10, 30)
 
-	num := 10
-	id := 1
-	stuName := "aaaaaaaaaa"
-
+	num := 100000000
 	for i := 0; i < num; i++ {
 		stu := Student{
-			Name:   UTF8(stuName),
-			Age:    INT32(i),
-			Id:     INT64(id),
-			Weight: FLOAT(50.0 + float32(i)*0.1),
+			Name:   UTF8("StudentName"),
+			Age:    INT32(18 + i%10),
+			Id:     INT64(i),
+			Weight: DOUBLE(60 + i%10),
 			Sex:    BOOLEAN(i%2 == 0),
+			School: UTF8("PKU"),
 		}
-		stuName = nextName(stuName)
-		id++
 		ph.Write(stu)
+
+		if i%(num/100) == 0 {
+			log.Println(i*100/num, "%")
+		}
 	}
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
-
-	///read flat
-	f.Open("flat.parquet")
-	ph = NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f)
-	for i := 0; i < rowGroupNum; i++ {
-		stus := make([]Student, 0)
-		tmap := ph.ReadOneRowGroup()
-		Unmarshal(tmap, &stus, ph.SchemaHandler)
-		log.Println(stus)
-	}
-
-	f.Close()
+	/*
+		memf, _ := os.Create("mem.profile")
+		pprof.WriteHeapProfile(memf)
+		memf.Close()
+	*/
 
 }

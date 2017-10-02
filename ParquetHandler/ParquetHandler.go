@@ -32,13 +32,15 @@ type ParquetHandler struct {
 	RowGroupSize int64
 	Offset       int64
 	Objs         []interface{}
-	Size         int64
+	ObjAveSize   int64
+
+	Size int64
 }
 
 func NewParquetHandler() *ParquetHandler {
 	res := new(ParquetHandler)
 	res.NP = 1
 	res.PageSize = 8 * 1024              //8K
-	res.RowGroupSize = 256 * 1024 * 1024 //256M
+	res.RowGroupSize = 128 * 1024 * 1024 //256M
 	return res
 }

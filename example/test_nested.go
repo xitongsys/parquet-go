@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
 	. "github.com/xitongsys/parquet-go/ParquetType"
-	"fmt"
 	"log"
 	"os"
 )
@@ -134,7 +134,7 @@ func writeNested() {
 	//write nested
 	f.Create("nested.parquet")
 	ph := NewParquetHandler()
-	ph.WriteInit(f, new(Student), 1)
+	ph.WriteInit(f, new(Student), 4, 30)
 	for _, stu := range stus {
 		ph.Write(stu)
 	}

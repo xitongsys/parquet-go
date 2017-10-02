@@ -90,7 +90,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "DOUBLE":
-		a, b := ai.(FLOAT), bi.(FLOAT)
+		a, b := ai.(DOUBLE), bi.(DOUBLE)
 		if a > b {
 			return 1
 		} else if a < b {

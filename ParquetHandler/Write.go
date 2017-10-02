@@ -3,18 +3,17 @@ package ParquetHandler
 import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	. "github.com/xitongsys/parquet-go/Common"
 	. "github.com/xitongsys/parquet-go/Layout"
 	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
 )
 
-func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64) {
+func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64, objAveSize int64) {
 	self.SchemaHandler = NewSchemaHandlerFromStruct(obj)
 	//log.Println(self.SchemaHandler)
 	self.NP = np
+	self.ObjAveSize = objAveSize
 	self.PFile = pfile
 	self.Footer = parquet.NewFileMetaData()
 	self.Footer.Version = 1
@@ -37,7 +36,8 @@ func (self *ParquetHandler) WriteStop() {
 }
 
 func (self *ParquetHandler) Write(src interface{}) {
-	self.Size += SizeOf(reflect.ValueOf(src))
+	//self.Size += SizeOf(reflect.ValueOf(src))
+	self.Size += self.ObjAveSize
 	self.Objs = append(self.Objs, src)
 
 	if self.Size >= self.RowGroupSize {
