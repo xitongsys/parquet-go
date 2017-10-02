@@ -1,4 +1,4 @@
-# parquet-go v0.4
+# parquet-go v0.5
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
@@ -206,7 +206,7 @@ func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64)
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64)
 ```
 ## Performance
-A very simple performance test was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores)
+A very simple performance test was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores). It is faster than java :)
 
 ![Test Results](https://github.com/xitongsys/parquet-go/blob/master/example/benchmark/res.png)
 
