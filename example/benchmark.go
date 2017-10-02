@@ -5,6 +5,7 @@ import (
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"log"
 	"os"
+	"strconv"
 	//"runtime/pprof"
 )
 
@@ -54,15 +55,19 @@ func main() {
 		defer pprof.StopCPUProfile()
 	*/
 
+	fname := os.Args[1]
+	num,_ := strconv.Atoi(os.Args[2])
+
+	log.Println(fname, num)
+
 	var f ParquetFile
 	f = &MyFile{}
 
 	//write flat
-	f.Create("benchmark.parquet")
+	f.Create(fname)
 	ph := NewParquetHandler()
 	ph.WriteInit(f, new(Student), 10, 30)
 
-	num := 100000000
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   UTF8("StudentName"),
