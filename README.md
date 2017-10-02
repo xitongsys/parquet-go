@@ -101,7 +101,7 @@ type ParquetFile interface {
 ```
 Using this interface, parquet-go can read/write parquet file on any plantform(local/hdfs/s3...)
 ### Note:
-* Open(name string) (ParquetFile, error) is used for read. If name is "", it should return a new file handler of the same file.
+* Open(name string) (ParquetFile, error) is used for read parquet. If name is "", it should return a new file handler of the same file.
 
 
 
@@ -200,13 +200,13 @@ func main() {
 ```
 
 ## Parallel
-Read/Write initial functions have a parallel parameters np which is the number of goroutines in writing.
+Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
 ```
 func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64)
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64)
 ```
 ## Performance
-A very simple performance test was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores). It is faster than java :)
+A very simple performance test of writing parquet was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores). It is faster than java :)
 
 ![Test Results](https://github.com/xitongsys/parquet-go/blob/master/example/benchmark/res.png)
 
