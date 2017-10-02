@@ -94,44 +94,69 @@ type ParquetFile interface {
 	Read(b []byte) (n int, err error)
 	Write(b []byte) (n int, err error)
 	Close()
-	Open(name string) error
-	Create(name string) error
+	Open(name string) (ParquetFile, error)
+	Create(name string) (ParquetFile, error)
 }
 ```
 Using this interface, parquet-go can read/write parquet file on any plantform(local/hdfs/s3...)
+### Note:
+* Open(name string) (ParquetFile, error) is used for read. If name is "", it should return a new file handler of the same file.
 
-The following is a simple example which can be found in example directory:
+
+
+The following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```
-...
+package main
+import (
+	. "github.com/xitongsys/parquet-go/Marshal"
+	. "github.com/xitongsys/parquet-go/ParquetHandler"
+	. "github.com/xitongsys/parquet-go/ParquetType"
+	"log"
+	"os"
+)
+type Student struct {
+	Name   UTF8
+	Age    INT32
+	Id     INT64
+	Weight FLOAT
+	Sex    BOOLEAN
+}
 
 type MyFile struct {
-	file *os.File
+	FilePath string
+	File     *os.File
 }
 
-func (self *MyFile) Create(name string) error {
+func (self *MyFile) Create(name string) (ParquetFile, error) {
 	file, err := os.Create(name)
-	self.file = file
-	return err
+	myFile := new(MyFile)
+	myFile.File = file
+	return myFile, err
+
 }
-func (self *MyFile) Open(name string) error {
-	file, err := os.Open(name)
-	self.file = file
-	return err
+func (self *MyFile) Open(name string) (ParquetFile, error) {
+	var (
+		err error
+	)
+	if name == "" {
+		name = self.FilePath
+	}
+	myFile := new(MyFile)
+	myFile.FilePath = name
+	myFile.File, err = os.Open(name)
+	return myFile, err
 }
 func (self *MyFile) Seek(offset int, pos int) (int64, error) {
-	return self.file.Seek(int64(offset), pos)
+	return self.File.Seek(int64(offset), pos)
 }
-
 func (self *MyFile) Read(b []byte) (n int, err error) {
-	return self.file.Read(b)
+	return self.File.Read(b)
 }
-
 func (self *MyFile) Write(b []byte) (n int, err error) {
-	return self.file.Write(b)
+	return self.File.Write(b)
 }
-
 func (self *MyFile) Close() {
-	self.file.Close()
+	self.File.Close()
 }
 
 func main() {
@@ -139,58 +164,53 @@ func main() {
 	f = &MyFile{}
 
 	//write flat
-	f.Create("flat.parquet")
+	f, _ = f.Create("flat.parquet")
 	ph := NewParquetHandler()
-	ph.WriteInit(f, new(Student), 20)
+	ph.WriteInit(f, new(Student), 4, 30)
 
 	num := 10
-	id := 1
-	stuName := "aaaaaaaaaa"
-
 	for i := 0; i < num; i++ {
 		stu := Student{
-			Name:   UTF8(stuName),
-			Age:    INT32(i),
-			Id:     INT64(id),
+			Name:   UTF8("StudentName"),
+			Age:    INT32(20 + i%5),
+			Id:     INT64(i),
 			Weight: FLOAT(50.0 + float32(i)*0.1),
 			Sex:    BOOLEAN(i%2 == 0),
 		}
-		stuName = nextName(stuName)
-		id++
 		ph.Write(stu)
-
 	}
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
 
-
 	///read flat
-	f.Open("flat.parquet")
+	f, _ = f.Open("flat.parquet")
 	ph = NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f)
+	rowGroupNum := ph.ReadInit(f, 10)
 	for i := 0; i < rowGroupNum; i++ {
 		stus := make([]Student, 0)
 		tmap := ph.ReadOneRowGroup()
 		Unmarshal(tmap, &stus, ph.SchemaHandler)
 		log.Println(stus)
 	}
-
 	f.Close()
 }
 
 ```
 
 ## Parallel
-Write functions have a parallel parameters np which is the number of goroutines in writing.
+Read/Write initial functions have a parallel parameters np which is the number of goroutines in writing.
 ```
+func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64)
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64)
 ```
-
+## Performance
+A very simple performance test was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores)
++![](https://github.com/xitongsys/parquet-go/example/benchmark/res.png) 
 
 ## Note
 * Have tested the parquet file written by parquet-go on many big data plantform (Spark/Hive/Presto), everything is ok :)
 * Almost all the features of the parquet are provided now.
 
-## To do
-* Optimize performance
+
+

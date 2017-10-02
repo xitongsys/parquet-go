@@ -1,10 +1,10 @@
 package ParquetHandler
 
 import (
-	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -35,8 +35,9 @@ func (self *ParquetHandler) ReadFooter() {
 	self.Footer.Read(protocol)
 }
 
-func (self *ParquetHandler) ReadInit(pfile ParquetFile) int {
+func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64) int {
 	self.PFile = pfile
+	self.NP = np
 	self.ReadFooter()
 	self.SchemaHandler = NewSchemaHandlerFromSchemaList(self.Footer.GetSchema())
 	self.RowGroupIndex = 0

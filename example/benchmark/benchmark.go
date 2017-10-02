@@ -1,19 +1,21 @@
 package main
 
 import (
-	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"log"
 	"os"
+	"strconv"
+	//"runtime/pprof"
 )
 
 type Student struct {
 	Name   UTF8
 	Age    INT32
 	Id     INT64
-	Weight FLOAT
+	Weight DOUBLE
 	Sex    BOOLEAN
+	School UTF8
 }
 
 type MyFile struct {
@@ -58,40 +60,47 @@ func (self *MyFile) Close() {
 }
 
 func main() {
+	/*
+		cpuf, _ := os.Create("cpu.profile")
+		pprof.StartCPUProfile(cpuf)
+		defer pprof.StopCPUProfile()
+	*/
+
+	fname := os.Args[1]
+	num, _ := strconv.Atoi(os.Args[2])
+
+	log.Println(fname, num)
+
 	var f ParquetFile
 	f = &MyFile{}
 
 	//write flat
-	f, _ = f.Create("flat.parquet")
+	f, _ = f.Create(fname)
 	ph := NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4, 30)
+	ph.WriteInit(f, new(Student), 10, 30)
 
-	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   UTF8("StudentName"),
-			Age:    INT32(20 + i%5),
+			Age:    INT32(18 + i%10),
 			Id:     INT64(i),
-			Weight: FLOAT(50.0 + float32(i)*0.1),
+			Weight: DOUBLE(60 + i%10),
 			Sex:    BOOLEAN(i%2 == 0),
+			School: UTF8("PKU"),
 		}
 		ph.Write(stu)
+
+		if i%(num/100) == 0 {
+			log.Println(i*100/num, "%")
+		}
 	}
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
-
-	///read flat
-	f, _ = f.Open("flat.parquet")
-	ph = NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f, 10)
-	for i := 0; i < rowGroupNum; i++ {
-		stus := make([]Student, 0)
-		tmap := ph.ReadOneRowGroup()
-		Unmarshal(tmap, &stus, ph.SchemaHandler)
-		log.Println(stus)
-	}
-
-	f.Close()
+	/*
+		memf, _ := os.Create("mem.profile")
+		pprof.WriteHeapProfile(memf)
+		memf.Close()
+	*/
 
 }

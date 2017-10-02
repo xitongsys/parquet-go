@@ -10,33 +10,44 @@ import (
 )
 
 type MyFile struct {
-	file *os.File
+	FilePath string
+	File     *os.File
 }
 
-func (self *MyFile) Create(name string) error {
+func (self *MyFile) Create(name string) (ParquetFile, error) {
 	file, err := os.Create(name)
-	self.file = file
-	return err
+	myFile := new(MyFile)
+	myFile.File = file
+	return myFile, err
+
 }
-func (self *MyFile) Open(name string) error {
-	file, err := os.Open(name)
-	self.file = file
-	return err
+func (self *MyFile) Open(name string) (ParquetFile, error) {
+	var (
+		err error
+	)
+	if name == "" {
+		name = self.FilePath
+	}
+
+	myFile := new(MyFile)
+	myFile.FilePath = name
+	myFile.File, err = os.Open(name)
+	return myFile, err
 }
 func (self *MyFile) Seek(offset int, pos int) (int64, error) {
-	return self.file.Seek(int64(offset), pos)
+	return self.File.Seek(int64(offset), pos)
 }
 
 func (self *MyFile) Read(b []byte) (n int, err error) {
-	return self.file.Read(b)
+	return self.File.Read(b)
 }
 
 func (self *MyFile) Write(b []byte) (n int, err error) {
-	return self.file.Write(b)
+	return self.File.Write(b)
 }
 
 func (self *MyFile) Close() {
-	self.file.Close()
+	self.File.Close()
 }
 
 type Student struct {
@@ -132,7 +143,7 @@ func writeNested() {
 	f = &MyFile{}
 
 	//write nested
-	f.Create("nested.parquet")
+	f, _ = f.Create("nested.parquet")
 	ph := NewParquetHandler()
 	ph.WriteInit(f, new(Student), 4, 30)
 	for _, stu := range stus {
@@ -143,9 +154,9 @@ func writeNested() {
 	log.Println("Write Finished")
 
 	//read nested
-	f.Open("nested.parquet")
+	f, _ = f.Open("nested.parquet")
 	ph = NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f)
+	rowGroupNum := ph.ReadInit(f, 10)
 	for i := 0; i < rowGroupNum; i++ {
 		stus := make([]Student, 0)
 		tmap := ph.ReadOneRowGroup()

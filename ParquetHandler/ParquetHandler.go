@@ -11,8 +11,8 @@ type ParquetFile interface {
 	Read(b []byte) (n int, err error)
 	Write(b []byte) (n int, err error)
 	Close()
-	Open(name string) error
-	Create(name string) error
+	Open(name string) (ParquetFile, error)
+	Create(name string) (ParquetFile, error)
 }
 
 type ParquetHandler struct {
