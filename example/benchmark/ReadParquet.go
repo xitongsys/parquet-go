@@ -72,7 +72,7 @@ func main() {
 	f, _ = f.Open(fname)
 	ph := NewParquetHandler()
 	np := 20
-	rowGroupNum := ph.ReadInit(f, int64(1))
+	rowGroupNum := ph.ReadInit(f, int64(np))
 	for i := 0; i < rowGroupNum; i++ {
 
 		stusList := make([][]Student, np)
@@ -101,10 +101,10 @@ func main() {
 			<-doneChan
 		}
 
-		pprof.WriteHeapProfile(memf)
 		//log.Println(stus)
 		log.Println("====", i)
 	}
+	pprof.WriteHeapProfile(memf)
 
 	f.Close()
 }

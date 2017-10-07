@@ -9,9 +9,9 @@ import (
 )
 
 func ConvertToThriftReader(file ParquetFile, offset int64) *thrift.TBufferedTransport {
-	file.Seek(int(offset), 0)
-	num, _ := file.Seek(0, 2)
-	file.Seek(int(offset), 0)
+	pEnd, _ := file.Seek(0, 2)
+	pBgn, _ := file.Seek(int(offset), 0)
+	num := pEnd - pBgn
 
 	thriftReader := thrift.NewStreamTransportR(file)
 	bufferReader := thrift.NewTBufferedTransport(thriftReader, int(num))

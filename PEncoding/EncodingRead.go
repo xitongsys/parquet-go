@@ -1,9 +1,9 @@
 package PEncoding
 
 import (
-	. "github.com/xitongsys/parquet-go/ParquetType"
 	"bytes"
 	"encoding/binary"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	//"log"
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -376,7 +376,9 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []
 	numGroup := (header >> 1)
 	cnt := numGroup * 8
 	byteCnt := cnt * bitWidth / 8
-	res := make([]interface{}, 0)
+
+	res := make([]interface{}, 0, cnt)
+
 	if bitWidth == 0 {
 		for i := 0; i < int(cnt); i++ {
 			res = append(res, INT64(0))
