@@ -8,13 +8,11 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-func ConvertToThriftReader(file ParquetFile, offset int64) *thrift.TBufferedTransport {
-	pEnd, _ := file.Seek(0, 2)
-	pBgn, _ := file.Seek(int(offset), 0)
-	num := pEnd - pBgn
+func ConvertToThriftReader(file ParquetFile, offset int64, size int64) *thrift.TBufferedTransport {
+	file.Seek(int(offset), 0)
 
 	thriftReader := thrift.NewStreamTransportR(file)
-	bufferReader := thrift.NewTBufferedTransport(thriftReader, int(num))
+	bufferReader := thrift.NewTBufferedTransport(thriftReader, int(size))
 	return bufferReader
 }
 

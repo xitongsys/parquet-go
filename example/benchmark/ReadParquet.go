@@ -4,9 +4,7 @@ import (
 	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
 	. "github.com/xitongsys/parquet-go/ParquetType"
-	"log"
 	"os"
-	"runtime/pprof"
 )
 
 type Student struct {
@@ -60,12 +58,6 @@ func (self *MyFile) Close() {
 }
 
 func main() {
-	cpuf, _ := os.Create("cpu.profile")
-	pprof.StartCPUProfile(cpuf)
-	defer pprof.StopCPUProfile()
-	memf, _ := os.Create("mem.profile")
-	defer memf.Close()
-
 	fname := os.Args[1]
 	var f ParquetFile
 	f = &MyFile{}
@@ -101,10 +93,8 @@ func main() {
 			<-doneChan
 		}
 
-		//log.Println(stus)
-		log.Println("====", i)
+		//log.Println(stusList)
 	}
-	pprof.WriteHeapProfile(memf)
 
 	f.Close()
 }

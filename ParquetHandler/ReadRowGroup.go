@@ -38,7 +38,8 @@ func (self *ParquetHandler) ReadRowGroup(rowGroupHeader *parquet.RowGroup) *RowG
 				} else {
 					PFile, _ = self.PFile.Open("")
 				}
-				thriftReader := ConvertToThriftReader(PFile, offset)
+				size := columnChunks[i].MetaData.GetTotalCompressedSize()
+				thriftReader := ConvertToThriftReader(PFile, offset, size)
 				chunk := self.ReadChunk(thriftReader, self.SchemaHandler, columnChunks[i])
 				chunksList[index] = append(chunksList[index], chunk)
 				PFile.Close()
