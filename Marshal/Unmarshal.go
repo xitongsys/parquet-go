@@ -17,12 +17,31 @@ type MapRecord struct {
 }
 
 //desInterface is a slice ptr
-func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHandler *SchemaHandler) {
+func Unmarshal(tableMap *map[string]*Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler) {
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	tableIndex := make(map[string]int)
+	tableBgn, tableEnd := make(map[string]int), make(map[string]int)
 
-	for name, _ := range *tableMap {
-		tableIndex[name] = 0
+	for name, table := range *tableMap {
+		ln := len(table.Values)
+		num := -1
+		tableBgn[name], tableEnd[name] = -1, -1
+		for i := 0; i < ln; i++ {
+			if table.RepetitionLevels[i] == 0 {
+				num++
+				if num == bgn {
+					tableBgn[name] = i
+					tableIndex[name] = i
+				}
+				if num == end {
+					tableEnd[name] = i
+					break
+				}
+			}
+		}
+		if tableEnd[name] < 0 {
+			tableEnd[name] = ln
+		}
 	}
 
 	flag := true
@@ -33,10 +52,10 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 		sliceRecord := make(map[reflect.Value]int)
 
 		for name, table := range *tableMap {
-			ln := len(table.Values)
 			path := table.Path
+			end := tableEnd[name]
 
-			if tableIndex[name] >= ln {
+			if tableIndex[name] >= end {
 				continue
 			}
 
@@ -152,12 +171,12 @@ func Unmarshal(tableMap *map[string]*Table, dstInterface interface{}, schemaHand
 				} //for pathIndex < len(path) {
 
 				tableIndex[name]++
-				if (tableIndex[name] < ln && table.RepetitionLevels[tableIndex[name]] == 0) ||
-					(tableIndex[name] >= ln) {
+				if (tableIndex[name] < end && table.RepetitionLevels[tableIndex[name]] == 0) ||
+					(tableIndex[name] >= end) {
 					break
 				}
 			}
-			if tableIndex[name] < ln {
+			if tableIndex[name] < end {
 				flag = true
 			}
 

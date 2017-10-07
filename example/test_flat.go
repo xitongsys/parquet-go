@@ -87,8 +87,8 @@ func main() {
 	rowGroupNum := ph.ReadInit(f, 10)
 	for i := 0; i < rowGroupNum; i++ {
 		stus := make([]Student, 0)
-		tmap := ph.ReadOneRowGroup()
-		Unmarshal(tmap, &stus, ph.SchemaHandler)
+		tmap, num := ph.ReadOneRowGroup()
+		Unmarshal(tmap, 0, num, &stus, ph.SchemaHandler)
 		log.Println(stus)
 	}
 

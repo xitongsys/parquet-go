@@ -44,15 +44,15 @@ func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64) int {
 	return len(self.Footer.GetRowGroups())
 }
 
-func (self *ParquetHandler) ReadOneRowGroup() *map[string]*Table {
+func (self *ParquetHandler) ReadOneRowGroup() (*map[string]*Table, int) {
 	rowGroups := self.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
 	if self.RowGroupIndex >= ln {
-		return nil
+		return nil, 0
 	}
 
 	rowGroupHeader := self.Footer.GetRowGroups()[self.RowGroupIndex]
 	self.RowGroupIndex++
 	rowGroup := self.ReadRowGroup(rowGroupHeader)
-	return rowGroup.RowGroupToTableMap()
+	return rowGroup.RowGroupToTableMap(), int(rowGroup.RowGroupHeader.GetNumRows())
 }

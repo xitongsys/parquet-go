@@ -64,12 +64,37 @@ func main() {
 	f = &MyFile{}
 	f, _ = f.Open(fname)
 	ph := NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f, 10)
+	np := 10
+	rowGroupNum := ph.ReadInit(f, int64(1))
 	for i := 0; i < rowGroupNum; i++ {
-		stus := make([]Student, 0)
-		tmap := ph.ReadOneRowGroup()
-		Unmarshal(tmap, &stus, ph.SchemaHandler)
-		log.Println(stus)
+
+		stusList := make([][]Student, np)
+		for i := 0; i < np; i++ {
+			stusList[i] = make([]Student, 0)
+		}
+		tmap, num := ph.ReadOneRowGroup()
+		delta := (num + np - 1) / np
+
+		doneChan := make(chan int)
+		for c := 0; c < np; c++ {
+			bgn := c * delta
+			end := bgn + delta
+			if end > num {
+				end = num
+			}
+			if bgn >= num {
+				bgn, end = num, num
+			}
+			go func(b, e, index int) {
+				Unmarshal(tmap, b, e, &stusList[index], ph.SchemaHandler)
+				doneChan <- 0
+			}(bgn, end, c)
+		}
+		for c := 0; c < np; c++ {
+			<-doneChan
+		}
+		//log.Println(stus)
+		log.Println("====", i)
 	}
 
 	f.Close()
