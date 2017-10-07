@@ -6,6 +6,7 @@ import (
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"log"
 	"os"
+	"runtime/pprof"
 )
 
 type Student struct {
@@ -59,12 +60,18 @@ func (self *MyFile) Close() {
 }
 
 func main() {
+	cpuf, _ := os.Create("cpu.profile")
+	pprof.StartCPUProfile(cpuf)
+	defer pprof.StopCPUProfile()
+	memf, _ := os.Create("mem.profile")
+	defer memf.Close()
+
 	fname := os.Args[1]
 	var f ParquetFile
 	f = &MyFile{}
 	f, _ = f.Open(fname)
 	ph := NewParquetHandler()
-	np := 10
+	np := 20
 	rowGroupNum := ph.ReadInit(f, int64(1))
 	for i := 0; i < rowGroupNum; i++ {
 
@@ -93,6 +100,8 @@ func main() {
 		for c := 0; c < np; c++ {
 			<-doneChan
 		}
+
+		pprof.WriteHeapProfile(memf)
 		//log.Println(stus)
 		log.Println("====", i)
 	}
