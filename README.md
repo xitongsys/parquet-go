@@ -1,4 +1,4 @@
-# parquet-go v0.5
+# parquet-go v0.6
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
@@ -205,10 +205,18 @@ Read/Write initial functions have a parallel parameters np which is the number o
 func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64)
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64)
 ```
-## Performance
-A very simple performance test of writing parquet was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores). It is faster than java :)
+In reading process, Unmarshal is a very time-consuming function. If this process is not needed, you can just get the table map and values by yourself. 
 
-![Test Results](https://github.com/xitongsys/parquet-go/blob/master/example/benchmark/res.png)
+You can also do the Unmarshal parallelly to improve performance. An example is shown in example/benchmark/ReadParquet.go
+
+## Performance
+A very simple performance test of writing/reading parquet was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores). It is faster than java :)
+
+Write Test Results
+![](https://github.com/xitongsys/parquet-go/blob/master/example/benchmark/WriteRes.png)
+
+Read Test Results
+![](https://github.com/xitongsys/parquet-go/blob/master/example/benchmark/ReadRes.png)
 
 
 ## Note
