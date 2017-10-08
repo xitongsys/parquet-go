@@ -22,6 +22,8 @@ func Unmarshal(tableMap *map[string]*Table, bgn int, end int, dstInterface inter
 	tableIndex := make(map[string]int)
 	tableBgn, tableEnd := make(map[string]int), make(map[string]int)
 
+	tmpRes := reflect.ValueOf(dstInterface).Elem()
+
 	for name, table := range *tableMap {
 		ln := len(table.Values)
 		num := -1
@@ -41,6 +43,9 @@ func Unmarshal(tableMap *map[string]*Table, bgn int, end int, dstInterface inter
 		}
 		if tableEnd[name] < 0 {
 			tableEnd[name] = ln
+		}
+		if tableBgn[name] < 0 {
+			return
 		}
 	}
 
@@ -188,10 +193,9 @@ func Unmarshal(tableMap *map[string]*Table, bgn int, end int, dstInterface inter
 			}
 		}
 
-		tmp := reflect.Append(
-			reflect.ValueOf(dstInterface).Elem(),
-			obj)
-		reflect.ValueOf(dstInterface).Elem().Set(tmp)
+		tmpRes = reflect.Append(tmpRes, obj)
+
 	}
+	reflect.ValueOf(dstInterface).Elem().Set(tmpRes)
 
 }

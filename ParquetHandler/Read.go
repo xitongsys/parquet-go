@@ -4,8 +4,10 @@ import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
+	"reflect"
 )
 
 func ConvertToThriftReader(file ParquetFile, offset int64, size int64) *thrift.TBufferedTransport {
@@ -53,4 +55,39 @@ func (self *ParquetHandler) ReadOneRowGroup() (*map[string]*Table, int) {
 	self.RowGroupIndex++
 	rowGroup := self.ReadRowGroup(rowGroupHeader)
 	return rowGroup.RowGroupToTableMap(), int(rowGroup.RowGroupHeader.GetNumRows())
+}
+
+func (self *ParquetHandler) ReadOneRowGroupAndUnmarshal(dstInterface interface{}) {
+	tmap, num := self.ReadOneRowGroup()
+	ot := reflect.TypeOf(dstInterface).Elem().Elem()
+	dstList := make([]interface{}, self.NP)
+	delta := (int64(num) + self.NP - 1) / self.NP
+
+	doneChan := make(chan int)
+	for c := int64(0); c < self.NP; c++ {
+		bgn := c * delta
+		end := bgn + delta
+		if end > int64(num) {
+			end = int64(num)
+		}
+		if bgn >= int64(num) {
+			bgn, end = int64(num), int64(num)
+		}
+		go func(b, e, index int) {
+			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
+			Unmarshal(tmap, b, e, dstList[index], self.SchemaHandler)
+			doneChan <- 0
+		}(int(bgn), int(end), int(c))
+	}
+	for c := int64(0); c < self.NP; c++ {
+		<-doneChan
+	}
+
+	resTmp := reflect.MakeSlice(reflect.SliceOf(ot), 0, num)
+	for _, dst := range dstList {
+		resTmp = reflect.AppendSlice(resTmp, reflect.ValueOf(dst).Elem())
+	}
+
+	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
+
 }

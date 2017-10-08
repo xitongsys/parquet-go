@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"log"
@@ -159,8 +158,7 @@ func writeNested() {
 	rowGroupNum := ph.ReadInit(f, 10)
 	for i := 0; i < rowGroupNum; i++ {
 		stus := make([]Student, 0)
-		tmap, num := ph.ReadOneRowGroup()
-		Unmarshal(tmap, 0, num, &stus, ph.SchemaHandler)
+		ph.ReadOneRowGroupAndUnmarshal(&stus)
 		log.Println(stus)
 	}
 	f.Close()

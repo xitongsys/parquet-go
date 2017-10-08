@@ -1,7 +1,6 @@
 package main
 
 import (
-	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"log"
@@ -67,33 +66,9 @@ func main() {
 	np := 20
 	rowGroupNum := ph.ReadInit(f, int64(np))
 	for i := 0; i < rowGroupNum; i++ {
-
-		doneChan := make(chan int)
-		tmap, num := ph.ReadOneRowGroup()
-		stus := make([]Student, num)
-
-		delta := (num + np - 1) / np
-
-		for c := 0; c < np; c++ {
-			bgn := c * delta
-			end := bgn + delta
-			if end > num {
-				end = num
-			}
-			if bgn >= num {
-				bgn, end = num, num
-			}
-			go func(b, e, index int) {
-				tmp := stus[b:b]
-				Unmarshal(tmap, b, e, &tmp, ph.SchemaHandler)
-				doneChan <- 0
-			}(bgn, end, c)
-		}
-		for c := 0; c < np; c++ {
-			<-doneChan
-		}
+		stus := make([]Student, 0)
+		ph.ReadOneRowGroupAndUnmarshal(&stus)
 		log.Println(i)
-		//log.Println(stus)
 	}
 
 	f.Close()
