@@ -104,12 +104,13 @@ Using this interface, parquet-go can read/write parquet file on any plantform(lo
 * Open(name string) (ParquetFile, error) is used for read parquet. If name is "", it should return a new file handler of the same file.
 
 
+The read and unmarshal processes can be separated and an example is shown in example/benchmark/ReadParquet.go  
+In reading process, Unmarshal is a very time-consuming function. If this process is not needed, you can just get the table map and values by yourself.   
 
 The following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```
 package main
 import (
-	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"log"
@@ -190,8 +191,7 @@ func main() {
 	rowGroupNum := ph.ReadInit(f, 10)
 	for i := 0; i < rowGroupNum; i++ {
 		stus := make([]Student, 0)
-		tmap, num := ph.ReadOneRowGroup()
-		Unmarshal(tmap, 0, num, &stus, ph.SchemaHandler)
+		ph.ReadOneRowGroupAndUnmarshal(&stus)
 		log.Println(stus)
 	}
 	f.Close()
@@ -205,9 +205,7 @@ Read/Write initial functions have a parallel parameters np which is the number o
 func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64)
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64)
 ```
-In reading process, Unmarshal is a very time-consuming function. If this process is not needed, you can just get the table map and values by yourself. 
 
-You can also do the Unmarshal parallelly to improve performance. An example is shown in example/benchmark/ReadParquet.go
 
 ## Performance
 A very simple performance test of writing/reading parquet was did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores). It is faster than java :)
@@ -217,11 +215,5 @@ Write Test Results
 
 Read Test Results  
 ![](https://github.com/xitongsys/parquet-go/blob/master/example/benchmark/ReadRes.png)
-
-
-## Note
-* Have tested the parquet file written by parquet-go on many big data plantform (Spark/Hive/Presto), everything is ok :)
-* Almost all the features of the parquet are provided now.
-
 
 
