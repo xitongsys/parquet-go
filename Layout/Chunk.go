@@ -21,7 +21,11 @@ func PagesToChunk(pages []*Page) *Chunk {
 	var minVal interface{} = pages[0].MinVal
 
 	for i := 0; i < ln; i++ {
-		numValues += int64(pages[i].Header.DataPageHeader.NumValues)
+		if pages[i].Header.DataPageHeader != nil {
+			numValues += int64(pages[i].Header.DataPageHeader.NumValues)
+		} else {
+			numValues += int64(pages[i].Header.DataPageHeaderV2.NumValues)
+		}
 		totalUncompressedSize += int64(pages[i].Header.UncompressedPageSize) + int64(len(pages[i].RawData)) - int64(pages[i].Header.CompressedPageSize)
 		totalCompressedSize += int64(len(pages[i].RawData))
 		maxVal = Max(maxVal, pages[i].MaxVal)
