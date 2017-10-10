@@ -65,15 +65,20 @@ func (self *ParquetHandler) Flush() {
 			bgn, end = l, l
 		}
 
-		go func(index int64) {
-			tableMap := Marshal(self.Objs, int(bgn), int(end), self.SchemaHandler)
+		go func(b, e int, index int64) {
+			if e <= b {
+				doneChan <- 0
+				return
+			}
+
+			tableMap := Marshal(self.Objs, b, e, self.SchemaHandler)
 			for name, table := range *tableMap {
 				pagesMapList[index][name], _ = TableToDataPages(table, int32(self.PageSize),
 					parquet.CompressionCodec_SNAPPY)
 			}
 
 			doneChan <- 0
-		}(c)
+		}(int(bgn), int(end), c)
 	}
 
 	for c = 0; c < self.NP; c++ {

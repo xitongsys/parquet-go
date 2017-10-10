@@ -180,8 +180,12 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 		//////////////////////////////////////
 	*/
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
-	page.Header.DataPageHeader.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
-	page.Header.DataPageHeader.Statistics.Min = WritePlain([]interface{}{page.MinVal})
+	if page.MaxVal != nil {
+		page.Header.DataPageHeader.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
+	}
+	if page.MinVal != nil {
+		page.Header.DataPageHeader.Statistics.Min = WritePlain([]interface{}{page.MinVal})
+	}
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
@@ -254,9 +258,13 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	page.Header.DataPageHeaderV2.RepetitionLevelsByteLength = int32(len(repetitionLevelBuf))
 	page.Header.DataPageHeaderV2.IsCompressed = true
 
-	//page.Header.DataPageHeaderV2.Statistics = parquet.NewStatistics()
-	//page.Header.DataPageHeaderV2.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
-	//page.Header.DataPageHeaderV2.Statistics.Min = WritePlain([]interface{}{page.MinVal})
+	page.Header.DataPageHeaderV2.Statistics = parquet.NewStatistics()
+	if page.MaxVal != nil {
+		page.Header.DataPageHeaderV2.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
+	}
+	if page.MinVal != nil {
+		page.Header.DataPageHeaderV2.Statistics.Min = WritePlain([]interface{}{page.MinVal})
+	}
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
