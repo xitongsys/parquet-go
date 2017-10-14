@@ -1,10 +1,10 @@
 package ParquetHandler
 
 import (
+	"git.apache.org/thrift.git/lib/go/thrift"
 	. "github.com/xitongsys/parquet-go/Layout"
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
-	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -20,6 +20,7 @@ func (self *ParquetHandler) DecodeDictChunk(chunk *Chunk) {
 			}
 		}
 	}
+	chunk.Pages = chunk.Pages[1:] // delete the head dict page
 }
 
 func (self *ParquetHandler) ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler, chunkHeader *parquet.ColumnChunk) *Chunk {

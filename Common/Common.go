@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+func HeadToUpper(str string) string {
+	ln := len(str)
+	if ln <= 0 {
+		return str
+	}
+	return strings.ToUpper(str[0:1]) + str[1:]
+}
+
 func BitNum(num uint64) uint64 { //the number of bits needed by the num; 0 needs 0, 1 need 1, 2 need 2, 3 need 2 ....
 	var bitn int64 = 63
 	for (bitn >= 0) && (((1 << uint64(bitn)) & num) == 0) {
