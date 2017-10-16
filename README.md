@@ -1,4 +1,4 @@
-# parquet-go v0.7.3
+# parquet-go v0.7.4
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet

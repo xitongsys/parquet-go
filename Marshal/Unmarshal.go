@@ -81,7 +81,7 @@ func Unmarshal(tableMap *map[string]*Table, bgn int, end int, dstInterface inter
 							table.DefinitionLevels[tableIndex[name]] > int32(dl)) ||
 							table.DefinitionLevels[tableIndex[name]] == table.MaxDefinitionLevel {
 							pathIndex++
-							po = po.FieldByName(path[pathIndex])
+							po = po.FieldByName(HeadToUpper(path[pathIndex])) //HeadToUpper is for some filed is lowercase
 
 						} else {
 							break
