@@ -18,6 +18,8 @@ func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int
 	self.Footer = parquet.NewFileMetaData()
 	self.Footer.Version = 1
 	self.Footer.Schema = append(self.Footer.Schema, self.SchemaHandler.SchemaElements...)
+	self.Offset = 4
+	self.PFile.Write([]byte("PAR1"))
 }
 
 func (self *ParquetHandler) WriteStop() {

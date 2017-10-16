@@ -33,19 +33,21 @@ func (self *ParquetHandler) ReadFooter() {
 	pf := thrift.NewTCompactProtocolFactory()
 	protocol := pf.GetProtocol(thrift.NewStreamTransportR(self.PFile))
 	self.Footer.Read(protocol)
-	for _, schema := range self.Footer.Schema {
-		schema.Name = HeadToUpper(schema.Name)
-	}
+	/*
+		for _, schema := range self.Footer.Schema {
+			schema.Name = HeadToUpper(schema.Name)
+		}
 
-	for _, rowGroup := range self.Footer.RowGroups {
-		for _, chunk := range rowGroup.Columns {
-			path := chunk.MetaData.PathInSchema
-			ln := len(path)
-			for i := 0; i < ln; i++ {
-				path[i] = HeadToUpper(path[i])
+		for _, rowGroup := range self.Footer.RowGroups {
+			for _, chunk := range rowGroup.Columns {
+				path := chunk.MetaData.PathInSchema
+				ln := len(path)
+				for i := 0; i < ln; i++ {
+					path[i] = HeadToUpper(path[i])
+				}
 			}
 		}
-	}
+	*/
 
 }
 
