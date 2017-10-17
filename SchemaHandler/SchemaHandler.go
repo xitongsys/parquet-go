@@ -181,7 +181,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schema.Type = nil
 			schemaElements = append(schemaElements, schema)
 
-			for i := 0; int32(i) < numField; i++ {
+			for i := int(numField - 1); i >= 0; i-- {
 				f := item.GoType.Field(i)
 				newItem := NewItem()
 				newItem.Info["Name"] = f.Name

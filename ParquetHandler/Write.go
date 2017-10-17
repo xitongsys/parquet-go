@@ -107,7 +107,14 @@ func (self *ParquetHandler) Flush() {
 	//chunks -> rowGroup
 	rowGroup := NewRowGroup()
 	rowGroup.RowGroupHeader.Columns = make([]*parquet.ColumnChunk, 0)
-	for _, chunk := range chunkMap {
+
+	for k := 0; k < len(self.SchemaHandler.SchemaElements); k++ {
+		//for _, chunk := range chunkMap {
+		schema := self.SchemaHandler.SchemaElements[k]
+		if schema.GetNumChildren() > 0 {
+			continue
+		}
+		chunk := chunkMap[self.SchemaHandler.IndexMap[int32(k)]]
 		rowGroup.Chunks = append(rowGroup.Chunks, chunk)
 		rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
 		rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
