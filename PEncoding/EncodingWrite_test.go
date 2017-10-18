@@ -1,10 +1,33 @@
 package PEncoding
 
 import (
-	"fmt"
+	"encoding/json"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	"testing"
 )
 
+func TestToInt64(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []int64
+	}{
+		{nums: []interface{}{int(1), int(2), int(3)}, expected: []int64{int64(1), int64(2), int64(3)}},
+		{nums: []interface{}{true, false, true}, expected: []int64{int64(1), int64(0), int64(1)}},
+		{nums: []interface{}{}, expected: []int64{}},
+	}
+
+	for _, data := range testData {
+		res := ToInt64(data.nums)
+		sb1, _ := json.Marshal(res)
+		sb2, _ := json.Marshal(data.expected)
+		s1, s2 := string(sb1), string(sb2)
+		if s1 != s2 {
+			t.Errorf("TestToInt64 Error, expected %v, get %v", s1, s2)
+		}
+
+	}
+}
 
 func TestWriteUnsignedVarInt(t *testing.T) {
 	resBuf := make([]byte, 0)
@@ -33,7 +56,7 @@ func TestWriteUnsignedVarInt(t *testing.T) {
 
 	testRes := make([]byte, 0)
 	for i := 0; i < len(testNum); i++ {
-		tmpBuf := WriteUnsignedVarInt(testNum[i])
+		tmpBuf := WriteUnsignedVarInt(uint64(testNum[i]))
 		testRes = append(testRes, tmpBuf...)
 	}
 
@@ -43,21 +66,22 @@ func TestWriteUnsignedVarInt(t *testing.T) {
 }
 
 func TestWriteRLE(t *testing.T) {
-	resBuf := make([]byte, 0)
-	resBuf = append(resBuf, byte(0x2<<1))
-
-	testRes := WriteRLE(0, 2, 0)
-	if string(resBuf) != string(testRes) {
-		t.Errorf("WriteRLE Error: Expect %v Get %v", resBuf, testRes)
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{INT64(0), INT64(0), INT64(0)}, []byte{byte(3 << 1)}},
 	}
 
-	resBuf = make([]byte, 0)
-	resBuf = append(resBuf, byte(0x2<<1), byte(0x2))
-	testRes = WriteRLE(2, 2, int32(BitNum(2)))
-	if string(resBuf) != string(testRes) {
-		t.Errorf("WriteRLE Error: Expect %v Get %v", resBuf, testRes)
+	for _, data := range testData {
+		res := WriteRLE(data.nums, int32(BitNum(uint64(data.nums[0].(INT64)))))
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteRLE error, expect %v, get %v", data.expected, res)
+		}
 	}
 }
+
+/*
 
 func TestWriteBitPacked(t *testing.T) {
 	testBuf := make([]interface{}, 8)
@@ -94,3 +118,5 @@ func TestWriteBitPackedDeprecated(t *testing.T) {
 	fmt.Println(WriteBitPackedDeprecated(vals, 3))
 
 }
+
+*/

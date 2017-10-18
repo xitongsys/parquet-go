@@ -1,17 +1,20 @@
 package PEncoding
 
 import (
-	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/ParquetType"
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	. "github.com/xitongsys/parquet-go/Common"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	"reflect"
 )
 
 func ToInt64(nums []interface{}) []int64 { //convert bool/int values to int64 values
 	ln := len(nums)
 	res := make([]int64, ln)
+	if ln <= 0 {
+		return res
+	}
 	tk := reflect.TypeOf(nums[0]).Kind()
 	for i := 0; i < ln; i++ {
 		if tk == reflect.Bool {
