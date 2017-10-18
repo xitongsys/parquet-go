@@ -71,10 +71,29 @@ func TestWriteRLE(t *testing.T) {
 		expected []byte
 	}{
 		{[]interface{}{INT64(0), INT64(0), INT64(0)}, []byte{byte(3 << 1)}},
+		{[]interface{}{INT64(3)}, []byte{byte(1 << 1), byte(3)}},
+		{[]interface{}{INT64(1), INT64(2), INT64(3), INT64(3)}, []byte{byte(1 << 1), byte(1), byte(1 << 1), byte(2), byte(2 << 1), byte(3)}},
 	}
 
 	for _, data := range testData {
-		res := WriteRLE(data.nums, int32(BitNum(uint64(data.nums[0].(INT64)))))
+		res := WriteRLE(data.nums, int32(BitNum(uint64(data.nums[len(data.nums)-1].(INT64)))))
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteRLE error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteBitPacked(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{0, 0, 0, 0, 0, 0, 0, 0}, []byte{3}},
+		{[]interface{}{0, 1, 2, 3, 4, 5, 6, 7}, []byte{3, 0x88, 0xC6, 0xFA}},
+	}
+
+	for _, data := range testData {
+		res := WriteBitPacked(data.nums, int64(BitNum(uint64(data.nums[len(data.nums)-1].(int)))), true)
 		if string(res) != string(data.expected) {
 			t.Errorf("WriteRLE error, expect %v, get %v", data.expected, res)
 		}
@@ -82,35 +101,6 @@ func TestWriteRLE(t *testing.T) {
 }
 
 /*
-
-func TestWriteBitPacked(t *testing.T) {
-	testBuf := make([]interface{}, 8)
-	for i := 0; i < len(testBuf); i++ {
-		testBuf[i] = int32(i)
-	}
-
-	resBuf := make([]byte, 0)
-	resBuf = append(resBuf, byte(0x3), byte(0x88), byte(0xC6), byte(0xFA))
-
-	testRes := WriteBitPacked(testBuf, int64(BitNum(7)))
-
-	if string(resBuf) != string(testRes) {
-		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes)
-	}
-
-	testBuf = make([]interface{}, 8)
-	for i := 0; i < len(testBuf); i++ {
-		testBuf[i] = ((i % 2) == 0)
-	}
-	resBuf = make([]byte, 0)
-	resBuf = append(resBuf, byte(0x3), byte(0x55))
-
-	testRes = WriteBitPacked(testBuf, 1)
-
-	if string(testRes) != string(resBuf) {
-		t.Errorf("WriteBitPacked Error: Expect %v Get %v", resBuf, testRes)
-	}
-}
 
 func TestWriteBitPackedDeprecated(t *testing.T) {
 	vals := make([]interface{}, 0)
