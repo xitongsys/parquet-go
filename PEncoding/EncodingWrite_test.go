@@ -100,13 +100,242 @@ func TestWriteBitPacked(t *testing.T) {
 	}
 }
 
-/*
+func TestWritePlainBOOLEAN(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{BOOLEAN(true)}, []byte{1}},
+		{[]interface{}{BOOLEAN(true), BOOLEAN(false)}, []byte{1}},
+		{[]interface{}{BOOLEAN(true), BOOLEAN(false), BOOLEAN(false), BOOLEAN(true), BOOLEAN(false)}, []byte{9}},
+	}
 
-func TestWriteBitPackedDeprecated(t *testing.T) {
-	vals := make([]interface{}, 0)
-	vals = append(vals, 0, 1, 2, 3, 4, 5, 6, 7)
-	fmt.Println(WriteBitPackedDeprecated(vals, 3))
-
+	for _, data := range testData {
+		res := WritePlainBOOLEAN(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainBOOLEAN error, expect %v, get %v", data.expected, res)
+		}
+	}
 }
 
-*/
+func TestWritePlainINT32(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{INT32(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{INT32(0), INT32(1), INT32(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainINT32(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainINT32 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainINT64(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{INT64(0)}, []byte{0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{INT64(0), INT64(1), INT64(2)}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainINT64(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainINT64 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainINT96(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{
+			INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+			INT96([]byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+			INT96([]byte{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})},
+
+			[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainINT96(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainINT96 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteINT_8(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{INT_8(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{INT_8(0), INT_8(1), INT_8(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainINT_8(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainINT_8 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteINT_16(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{INT_16(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{INT_16(0), INT_16(1), INT_16(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainINT_16(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainINT_16 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteINT_32(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{INT_32(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{INT_32(0), INT_32(1), INT_32(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainINT_32(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainINT_32 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainINT_64(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{INT_64(0)}, []byte{0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{INT_64(0), INT_64(1), INT_64(2)}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainINT_64(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainINT_64 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteUINT_8(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{UINT_8(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{UINT_8(0), UINT_8(1), UINT_8(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainUINT_8(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainUINT_8 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteUINT_16(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{UINT_16(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{UINT_16(0), UINT_16(1), UINT_16(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainUINT_16(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainUINT_16 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteUINT_32(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{UINT_32(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{UINT_32(0), UINT_32(1), UINT_32(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainUINT_32(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainUINT_32 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainUINT_64(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{UINT_64(0)}, []byte{0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{UINT_64(0), UINT_64(1), UINT_64(2)}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainUINT_64(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainUINT_64 error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainUTF8(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{UTF8("a"), UTF8("abc")}, []byte{1, 0, 0, 0, 97, 3, 0, 0, 0, 97, 98, 99}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainUTF8(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainUTF8 error, expect %v, get %v", data.expected, res)
+		}
+	}
+
+}
