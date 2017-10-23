@@ -337,5 +337,150 @@ func TestWritePlainUTF8(t *testing.T) {
 			t.Errorf("WritePlainUTF8 error, expect %v, get %v", data.expected, res)
 		}
 	}
+}
 
+func TestWritePlainDATE(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{DATE(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{DATE(0), DATE(1), DATE(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainDATE(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainDATE error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainTIME_MILLIS(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{TIME_MILLIS(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{TIME_MILLIS(0), TIME_MILLIS(1), TIME_MILLIS(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainTIME_MILLIS(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainTIME_MILLIS error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainTIMESTAMP_MILLIS(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{TIMESTAMP_MILLIS(0)}, []byte{0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{TIMESTAMP_MILLIS(0), TIMESTAMP_MILLIS(1), TIMESTAMP_MILLIS(2)}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainTIMESTAMP_MILLIS(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteTIMESTAMP_MILLIS error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainTIMESTAMP_MICROS(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{TIMESTAMP_MICROS(0)}, []byte{0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{TIMESTAMP_MICROS(0), TIMESTAMP_MICROS(1), TIMESTAMP_MICROS(2)}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainTIMESTAMP_MICROS(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteTIMESTAMP_MICROS error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainINTERVAL(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{INTERVAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{
+			INTERVAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+			INTERVAL([]byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+			INTERVAL([]byte{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})},
+
+			[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainINTERVAL(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainINTERVAL error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainDECIMAL(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{DECIMAL("a"), DECIMAL("abc")}, []byte{1, 0, 0, 0, 97, 3, 0, 0, 0, 97, 98, 99}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainDECIMAL(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainDECIMAL error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainBYTE_ARRAY(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{BYTE_ARRAY("a"), BYTE_ARRAY("abc")}, []byte{1, 0, 0, 0, 97, 3, 0, 0, 0, 97, 98, 99}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainBYTE_ARRAY(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainBYTE_ARRAY error, expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWritePlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{}, []byte{}},
+		{[]interface{}{FIXED_LEN_BYTE_ARRAY("bca"), FIXED_LEN_BYTE_ARRAY("abc")}, []byte{98, 99, 97, 97, 98, 99}},
+	}
+
+	for _, data := range testData {
+		res := WritePlainFIXED_LEN_BYTE_ARRAY(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WritePlainFIXED_LEN_BYTE_ARRAY error, expect %v, get %v", data.expected, res)
+		}
+	}
 }
