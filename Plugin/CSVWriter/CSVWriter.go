@@ -109,12 +109,14 @@ func NewCSVWriterHandler() *CSVWriterHandler {
 }
 
 func (self *CSVWriterHandler) WriteInit(md []string, pfile ParquetFile, np int64, recordAveSize int64) {
+	self.SchemaHandler = NewSchemaHandlerFromMetadata(md)
 	self.Metadata = md
 	self.PFile = pfile
 	self.NP = np
 	self.RecAveSize = recordAveSize
 	self.Footer = parquet.NewFileMetaData()
 	self.Footer.Version = 1
+	self.Footer.Schema = append(self.Footer.Schema, self.SchemaHandler.SchemaElements...)
 	self.Offset = 4
 	self.PFile.Write([]byte("PAR1"))
 }
