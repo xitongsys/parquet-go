@@ -279,6 +279,12 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			if ParquetType.IsBaseType(name) {
 				t := ParquetType.NameToBaseType(name)
 				schema.Type = &t
+				if name == "FIXED_LEN_BYTE_ARRAY" {
+					lnTmp, _ := strconv.Atoi(tag.Get("Length"))
+					ln := int32(lnTmp)
+					schema.TypeLength = &ln
+				}
+
 			} else {
 				if name == "INT_8" || name == "INT_16" || name == "INT_32" ||
 					name == "UINT_8" || name == "UINT_16" || name == "UINT_32" ||
@@ -320,7 +326,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 					schema.Scale = &scale
 					schema.Precision = &precision
 
-					if bT == "FIX_LEN_BYTE_ARRAY" {
+					if bT == "FIXED_LEN_BYTE_ARRAY" {
 						lnTmp, _ := strconv.Atoi(tag.Get("Length"))
 						ln := int32(lnTmp)
 						schema.TypeLength = &ln

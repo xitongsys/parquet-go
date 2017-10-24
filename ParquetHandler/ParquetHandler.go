@@ -41,6 +41,6 @@ func NewParquetHandler() *ParquetHandler {
 	res := new(ParquetHandler)
 	res.NP = 1
 	res.PageSize = 8 * 1024              //8K
-	res.RowGroupSize = 128 * 1024 * 1024 //256M
+	res.RowGroupSize = 128 * 1024 * 1024 //128M
 	return res
 }
