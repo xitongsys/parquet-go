@@ -1,4 +1,4 @@
-# parquet-go v0.7.6
+# parquet-go v0.8
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
@@ -204,6 +204,50 @@ Read/Write initial functions have a parallel parameters np which is the number o
 ```
 func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64)
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64)
+```
+
+## Plugin
+Plugin is used for some special purpose and will be added gradually.
+### CSVWriter Plugin
+This plugin is used for data format similar with CSV(not nested).
+```
+func main() {
+	md := []MetadataType{
+		{Type: "UTF8", Name: "Name"},
+		{Type: "INT32", Name: "Age"},
+		{Type: "INT64", Name: "Id"},
+		{Type: "FLOAT", Name: "Weight"},
+		{Type: "BOOLEAN", Name: "Sex"},
+	}
+
+	var f ParquetFile
+	f = &MyFile{}
+
+	//write flat
+	f, _ = f.Create("csv.parquet")
+	ph := NewCSVWriterHandler()
+	ph.WriteInit(md, f, 10, 30)
+
+	num := 10
+	for i := 0; i < num; i++ {
+		data := []string{
+			"StudentName",
+			fmt.Sprintf("%d", 20+i%5),
+			fmt.Sprintf("%d", i),
+			fmt.Sprintf("%f", 50.0+float32(i)*0.1),
+			fmt.Sprintf("%t", i%2 == 0),
+		}
+		rec := make([]*string, len(data))
+		for j := 0; j < len(data); j++ {
+			rec[j] = &data[j]
+		}
+
+		ph.Write(rec)
+	}
+	ph.WriteStop()
+	log.Println("Write Finished")
+	f.Close()
+}
 ```
 
 
