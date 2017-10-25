@@ -2,14 +2,14 @@ package CSVWriter
 
 import (
 	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/ParquetType"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func MarshalCSV(records [][]*string, bgn int, end int, md []MetadataType, schemaHandler *SchemaHandler) *map[string]*Table {
 	res := make(map[string]*Table)
 	for i := 0; i < len(md); i++ {
-		pathStr = "parquet-go-root." + md[i].Name
+		pathStr := "parquet-go-root." + md[i].Name
 		res[pathStr] = new(Table)
 		res[pathStr].Path = StrToPath(pathStr)
 		res[pathStr].MaxDefinitionLevel = 1

@@ -280,6 +280,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 				t := ParquetType.NameToBaseType(name)
 				schema.Type = &t
 				if name == "FIXED_LEN_BYTE_ARRAY" {
+					tag := item.Info["Tag"].(reflect.StructTag)
 					lnTmp, _ := strconv.Atoi(tag.Get("Length"))
 					ln := int32(lnTmp)
 					schema.TypeLength = &ln

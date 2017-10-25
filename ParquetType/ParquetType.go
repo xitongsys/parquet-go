@@ -3,6 +3,7 @@ package ParquetType
 import (
 	"fmt"
 	"github.com/xitongsys/parquet-go/parquet"
+	"log"
 )
 
 //base type
@@ -203,6 +204,7 @@ func StrToParquetType(s string, typeName string) interface{} {
 		return v
 	} else {
 		log.Printf("Type Error: %v ", typeName)
+		return nil
 	}
 
 }

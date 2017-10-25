@@ -1,8 +1,12 @@
 package CSVWriter
 
 import (
-	. "github.com/xitongsys/parquet-go/Common"
+	"encoding/binary"
+	"git.apache.org/thrift.git/lib/go/thrift"
+	. "github.com/xitongsys/parquet-go/Layout"
+	. "github.com/xitongsys/parquet-go/ParquetHandler"
 	. "github.com/xitongsys/parquet-go/ParquetType"
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -18,25 +22,25 @@ type CSVWriterHandler struct {
 	SchemaHandler *SchemaHandler
 	NP            int64
 	Footer        *parquet.FileMetaData
-	RowGroups     []*RowGroups
+	RowGroups     []*RowGroup
 
 	PFile ParquetFile
 
 	PageSize     int64
 	RowGroupSize int64
 	Offset       int64
-	Record       [][]string
+	Record       [][]*string
 	Metadata     []MetadataType
 	RecAveSize   int64
 	Size         int64
 }
 
 func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler {
-	schemaList := make([]*parquet.SchemaElement)
+	schemaList := make([]*parquet.SchemaElement, 0)
 
 	rootSchema := parquet.NewSchemaElement()
 	rootSchema.Name = "parquet-go-root"
-	rootNumChildren := len(mds)
+	rootNumChildren := int32(len(mds))
 	rootSchema.NumChildren = &rootNumChildren
 	rt := parquet.FieldRepetitionType(-1)
 	rootSchema.RepetitionType = &rt
@@ -45,47 +49,48 @@ func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler {
 	for _, md := range mds {
 		schema := parquet.NewSchemaElement()
 		schema.Name = md.Name
-		numChildren := 0
+		numChildren := int32(0)
 		schema.NumChildren = &numChildren
 		rt := parquet.FieldRepetitionType(1)
-		schema.FieldRepetitionType = &rt
+		schema.RepetitionType = &rt
 
 		if IsBaseType(md.Type) {
 			t := NameToBaseType(md.Type)
 			schema.Type = &t
 			if md.Type == "FIXED_LEN_BYTE_ARRAY" {
-				schema.TypeLength = &schema.TypeLength
+				schema.TypeLength = &md.TypeLength
 			}
 
 		} else {
+			name := md.Type
 			if name == "INT_8" || name == "INT_16" || name == "INT_32" ||
 				name == "UINT_8" || name == "UINT_16" || name == "UINT_32" ||
 				name == "DATE" || name == "TIME_MILLIS" {
 				t := parquet.Type_INT32
-				ct := ParquetType.NameToConvertedType(name)
+				ct := NameToConvertedType(name)
 				schema.Type = &t
 				schema.ConvertedType = &ct
 			} else if name == "INT_64" || name == "UINT_64" ||
 				name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" {
 				t := parquet.Type_INT64
-				ct := ParquetType.NameToConvertedType(name)
+				ct := NameToConvertedType(name)
 				schema.Type = &t
 				schema.ConvertedType = &ct
 			} else if name == "UTF8" {
 				t := parquet.Type_BYTE_ARRAY
-				ct := ParquetType.NameToConvertedType(name)
+				ct := NameToConvertedType(name)
 				schema.Type = &t
 				schema.ConvertedType = &ct
 			} else if name == "INTERVAL" {
 				t := parquet.Type_FIXED_LEN_BYTE_ARRAY
-				ct := ParquetType.NameToConvertedType(name)
+				ct := NameToConvertedType(name)
 				var ln int32 = 12
 				schema.Type = &t
 				schema.ConvertedType = &ct
 				schema.TypeLength = &ln
 			} else if name == "DECIMAL" {
-				ct := ParquetType.NameToConvertedType(name)
-				t := ParquetType.NameToBaseType("BYTE_ARRAY")
+				ct := NameToConvertedType(name)
+				t := NameToBaseType("BYTE_ARRAY")
 				scale := md.Scale
 				precision := md.Precision
 
@@ -112,7 +117,7 @@ func NewCSVWriterHandler() *CSVWriterHandler {
 	return res
 }
 
-func (self *CSVWriterHandler) WriteInit(md []string, pfile ParquetFile, np int64, recordAveSize int64) {
+func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetFile, np int64, recordAveSize int64) {
 	self.SchemaHandler = NewSchemaHandlerFromMetadata(md)
 	self.Metadata = md
 	self.PFile = pfile
@@ -125,13 +130,27 @@ func (self *CSVWriterHandler) WriteInit(md []string, pfile ParquetFile, np int64
 	self.PFile.Write([]byte("PAR1"))
 }
 
-func (self *CSVWriterHandler) Write(rec []string) {
+func (self *CSVWriterHandler) Write(rec []*string) {
 	self.Size += self.RecAveSize
 	self.Record = append(self.Record, rec)
 
 	if self.Size > self.RowGroupSize {
 		self.Flush()
 	}
+}
+
+func (self *CSVWriterHandler) WriteStop() {
+	self.Flush()
+
+	ts := thrift.NewTSerializer()
+	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
+	footerBuf, _ := ts.Write(self.Footer)
+
+	self.PFile.Write(footerBuf)
+	footerSizeBuf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
+	self.PFile.Write(footerSizeBuf)
+	self.PFile.Write([]byte("PAR1"))
 }
 
 func (self *CSVWriterHandler) Flush() {
@@ -141,7 +160,7 @@ func (self *CSVWriterHandler) Flush() {
 	}
 
 	doneChan := make(chan int)
-	l := int64(len(self.Objs))
+	l := int64(len(self.Record))
 	var c int64 = 0
 	delta := (l + self.NP - 1) / self.NP
 	for c = 0; c < self.NP; c++ {
@@ -160,7 +179,7 @@ func (self *CSVWriterHandler) Flush() {
 				return
 			}
 
-			tableMap := MarshalCSV(self.Objs, b, e, md, self.SchemaHandler)
+			tableMap := MarshalCSV(self.Record, b, e, self.Metadata, self.SchemaHandler)
 			for name, table := range *tableMap {
 				pagesMapList[index][name], _ = TableToDataPages(table, int32(self.PageSize),
 					parquet.CompressionCodec_SNAPPY)
@@ -206,7 +225,7 @@ func (self *CSVWriterHandler) Flush() {
 		rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
 		rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
 	}
-	rowGroup.RowGroupHeader.NumRows = int64(len(self.Objs))
+	rowGroup.RowGroupHeader.NumRows = int64(len(self.Record))
 
 	for k := 0; k < len(rowGroup.Chunks); k++ {
 		rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
@@ -218,8 +237,8 @@ func (self *CSVWriterHandler) Flush() {
 			self.Offset += int64(len(data))
 		}
 	}
-	self.Footer.NumRows += int64(len(self.Objs))
+	self.Footer.NumRows += int64(len(self.Record))
 	self.Footer.RowGroups = append(self.Footer.RowGroups, rowGroup.RowGroupHeader)
 	self.Size = 0
-	self.Objs = self.Objs[0:0]
+	self.Record = self.Record[0:0]
 }
