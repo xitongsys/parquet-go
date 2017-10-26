@@ -34,7 +34,7 @@ func (self *ParquetHandler) WriteStop() {
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
 	self.PFile.Write(footerSizeBuf)
 	self.PFile.Write([]byte("PAR1"))
-	//log.Println(self.Footer)
+
 }
 
 func (self *ParquetHandler) Write(src interface{}) {

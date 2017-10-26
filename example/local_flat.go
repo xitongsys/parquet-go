@@ -5,6 +5,7 @@ import (
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"log"
 	"os"
+	"time"
 )
 
 type Student struct {
@@ -13,6 +14,8 @@ type Student struct {
 	Id     INT64
 	Weight FLOAT
 	Sex    BOOLEAN
+	Day    DATE
+	Second TIMESTAMP_MILLIS
 }
 
 type MyFile struct {
@@ -73,6 +76,8 @@ func main() {
 			Id:     INT64(i),
 			Weight: FLOAT(50.0 + float32(i)*0.1),
 			Sex:    BOOLEAN(i%2 == 0),
+			Day:    DATE(time.Now().Unix() / 3600 / 24),
+			Second: TIMESTAMP_MILLIS(time.Now().Unix()),
 		}
 		ph.Write(stu)
 	}
