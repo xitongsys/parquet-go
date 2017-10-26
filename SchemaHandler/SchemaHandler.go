@@ -295,7 +295,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 					schema.Type = &t
 					schema.ConvertedType = &ct
 				} else if name == "INT_64" || name == "UINT_64" ||
-					name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" {
+					name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" || name == "TIMESTAMP_MILLIS" {
 					t := parquet.Type_INT64
 					ct := ParquetType.NameToConvertedType(name)
 					schema.Type = &t
