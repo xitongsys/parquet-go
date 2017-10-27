@@ -81,7 +81,7 @@ func main() {
 	f = &MyFile{}
 
 	//write flat
-	f, _ = f.Create("flat.parquet")
+	f, _ = f.Create("type.parquet")
 	ph := NewParquetHandler()
 	ph.WriteInit(f, new(TypeList), 4, 30)
 
@@ -121,7 +121,7 @@ func main() {
 	f.Close()
 
 	///read flat
-	f, _ = f.Open("flat.parquet")
+	f, _ = f.Open("type.parquet")
 	ph = NewParquetHandler()
 	rowGroupNum := ph.ReadInit(f, 10)
 	for i := 0; i < rowGroupNum; i++ {
