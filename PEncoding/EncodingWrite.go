@@ -1,7 +1,6 @@
 package PEncoding
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	. "github.com/xitongsys/parquet-go/Common"
@@ -105,179 +104,126 @@ func WritePlainBOOLEAN(nums []interface{}) []byte {
 }
 
 func WritePlainINT32(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num INT32 = nums[i].(INT32)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainINT64(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num INT64 = nums[i].(INT64)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*8)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainINT96(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		for j := 0; j < len(nums[i].(INT96)); j++ {
 			b := nums[i].(INT96)[j]
 			binary.Write(bufWriter, binary.LittleEndian, &b)
 		}
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*12)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainINT_8(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num INT_8 = nums[i].(INT_8)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainINT_16(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num INT_16 = nums[i].(INT_16)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainINT_32(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num INT_32 = nums[i].(INT_32)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainINT_64(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num INT_64 = nums[i].(INT_64)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*8)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainUINT_8(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num UINT_8 = nums[i].(UINT_8)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainUINT_16(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num UINT_16 = nums[i].(UINT_16)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainUINT_32(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num UINT_32 = nums[i].(UINT_32)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainUINT_64(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num UINT_64 = nums[i].(UINT_64)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*8)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainFLOAT(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num FLOAT = nums[i].(FLOAT)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainDOUBLE(nums []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		var num DOUBLE = nums[i].(DOUBLE)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(nums)*8)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainUTF8(utf8s []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	var size uint32 = 0
 	cnt := len(utf8s)
 	for i := 0; i < int(cnt); i++ {
@@ -286,141 +232,92 @@ func WritePlainUTF8(utf8s []interface{}) []byte {
 		bufWriter.Write([]byte(utf8s[i].(UTF8)))
 		size += 4 + ln
 	}
-	bufWriter.Flush()
-	res := make([]byte, size)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainDATE(dates []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(dates); i++ {
 		var num DATE = dates[i].(DATE)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(dates)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainTIME_MILLIS(times []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(times); i++ {
 		var num TIME_MILLIS = times[i].(TIME_MILLIS)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(times)*4)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainTIME_MICROS(times []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(times); i++ {
 		var num TIME_MICROS = times[i].(TIME_MICROS)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(times)*8)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainTIMESTAMP_MILLIS(times []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(times); i++ {
 		var num TIMESTAMP_MILLIS = times[i].(TIMESTAMP_MILLIS)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(times)*8)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainTIMESTAMP_MICROS(times []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
+	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(times); i++ {
 		var num TIMESTAMP_MICROS = times[i].(TIMESTAMP_MICROS)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
 	}
-	bufWriter.Flush()
-	res := make([]byte, len(times)*8)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainINTERVAL(intervals []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
-	var size uint32 = 0
+	bufWriter := new(bytes.Buffer)
 	cnt := len(intervals)
 	for i := 0; i < int(cnt); i++ {
-		ln := uint32(len(intervals[i].(INTERVAL)))
 		bufWriter.Write([]byte(intervals[i].(INTERVAL)))
-		size += ln
 	}
-	bufWriter.Flush()
-	res := make([]byte, size)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainDECIMAL(decimals []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
-	var size uint32 = 0
+	bufWriter := new(bytes.Buffer)
 	cnt := len(decimals)
 	for i := 0; i < int(cnt); i++ {
 		ln := uint32(len(decimals[i].(DECIMAL)))
 		binary.Write(bufWriter, binary.LittleEndian, &ln)
 		bufWriter.Write([]byte(decimals[i].(DECIMAL)))
-		size += 4 + ln
 	}
-	bufWriter.Flush()
-	res := make([]byte, size)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainBYTE_ARRAY(arrays []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
-	var size uint32 = 0
+	bufWriter := new(bytes.Buffer)
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
 		ln := uint32(len(arrays[i].(BYTE_ARRAY)))
 		binary.Write(bufWriter, binary.LittleEndian, &ln)
 		bufWriter.Write([]byte(arrays[i].(BYTE_ARRAY)))
-		size += 4 + ln
 	}
-	bufWriter.Flush()
-	res := make([]byte, size)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []interface{}) []byte {
-	var b bytes.Buffer
-	bufWriter := bufio.NewWriter(&b)
-	var size uint32 = 0
+	bufWriter := new(bytes.Buffer)
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
-		ln := uint32(len(arrays[i].(FIXED_LEN_BYTE_ARRAY)))
 		bufWriter.Write([]byte(arrays[i].(FIXED_LEN_BYTE_ARRAY)))
-		size += ln
 	}
-	bufWriter.Flush()
-	res := make([]byte, size)
-	b.Read(res)
-	return res
+	return bufWriter.Bytes()
 }
 
 func WriteUnsignedVarInt(num uint64) []byte {
