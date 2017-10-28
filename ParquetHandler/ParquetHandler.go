@@ -4,7 +4,6 @@ import (
 	. "github.com/xitongsys/parquet-go/Layout"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"strings"
 )
 
 type ParquetFile interface {
@@ -44,18 +43,4 @@ func NewParquetHandler() *ParquetHandler {
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
 	return res
-}
-
-func (self *ParquetHandler) NameToLower() {
-	for _, schema := range self.Footer.Schema {
-		schema.Name = strings.ToLower(schema.Name)
-	}
-	for _, rowGroup := range self.Footer.RowGroups {
-		for _, chunk := range rowGroup.Columns {
-			ln := len(chunk.MetaData.PathInSchema)
-			for i := 0; i < ln; i++ {
-				chunk.MetaData.PathInSchema[i] = strings.ToLower(chunk.MetaData.PathInSchema[i])
-			}
-		}
-	}
 }

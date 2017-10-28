@@ -1,4 +1,4 @@
-# parquet-go v0.8.3
+# parquet-go v0.8.5
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
@@ -181,6 +181,7 @@ func main() {
 		}
 		ph.Write(stu)
 	}
+	ph.Flush()
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
@@ -241,7 +242,7 @@ func main() {
 		for j := 0; j < len(data); j++ {
 			rec[j] = &data[j]
 		}
-
+		ph.Flush()
 		ph.Write(rec)
 	}
 	ph.WriteStop()
@@ -250,6 +251,48 @@ func main() {
 }
 ```
 
+## Tips
+### Uppercase/Lowercase of field name
+In parquet-go the first letter of filed name must be uppercase. So the Marshal/Unmarshal functions can get the filed of the object. But there is no such restriction in other systems (e.g. Spark: support uppercase/lowercase; Hive: all the field names will convert to lowercase when load a parquet file, because Hive is not case sensitive).
+  
+Generally this isn't a problem in writing parquet, but I still provide a function 'NameToLower()' to convert the field names to lowercase when write parquet file. 
+```
+//write flat
+f, _ = f.Create("flat.parquet")
+ph := NewParquetHandler()
+ph.WriteInit(f, new(Student), 4, 30)
+
+num := 10
+for i := 0; i < num; i++ {
+	stu := Student{
+		Name:   UTF8("StudentName"),
+		Age:    INT32(20 + i%5),
+		Id:     INT64(i),
+		Weight: FLOAT(50.0 + float32(i)*0.1),
+		Sex:    BOOLEAN(i%2 == 0),
+		Day:    DATE(time.Now().Unix() / 3600 / 24),
+	}
+	ph.Write(stu)
+}
+ph.Flush()
+ph.NameToLower()// convert the field name to lowercase
+ph.WriteStop()
+log.Println("Write Finished")
+f.Close()
+
+```
+
+It is a problem in reading parquet file and it's solved in the following way:  
+If the first letter of some field names are lowercase, you just need define a variable with a capitilized first letter. e.g.  
+The field names in a parquet file is: nameofstudent, ageOfStudent, School_of_Student  
+You need to define a struct as following:
+```
+type Student struct{
+	 Nameofstudent UTF8 // nameofstudent
+	 AgeOfStudent INT32 // ageOfStudent
+	 School_of_Student UTF8 // School_of_Student
+}
+```
 
 ## Performance
 A very simple performance test of writing/reading parquet did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores). It is faster than java :)

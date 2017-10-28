@@ -94,6 +94,7 @@ func main() {
 			log.Println(i*100/num, "%")
 		}
 	}
+	ph.Flush()
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()

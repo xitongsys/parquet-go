@@ -85,7 +85,7 @@ func main() {
 	//write flat
 	f, _ = f.Create("/flat.parquet")
 	ph := NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4, 30)
+	ph.WriteInit(f, new(Student), 2, 30)
 
 	num := 10
 	for i := 0; i < num; i++ {

@@ -7,7 +7,22 @@ import (
 	. "github.com/xitongsys/parquet-go/Marshal"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
+	"strings"
 )
+
+func (self *ParquetHandler) NameToLower() {
+	for _, schema := range self.Footer.Schema {
+		schema.Name = strings.ToLower(schema.Name)
+	}
+	for _, rowGroup := range self.Footer.RowGroups {
+		for _, chunk := range rowGroup.Columns {
+			ln := len(chunk.MetaData.PathInSchema)
+			for i := 0; i < ln; i++ {
+				chunk.MetaData.PathInSchema[i] = strings.ToLower(chunk.MetaData.PathInSchema[i])
+			}
+		}
+	}
+}
 
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64, objAveSize int64) {
 	self.SchemaHandler = NewSchemaHandlerFromStruct(obj)
