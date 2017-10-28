@@ -58,16 +58,16 @@ type Student struct {
 
 type Class struct {
 	Name     UTF8
-	ID       *INT32
+	Id       *INT32
 	Required []UTF8
 }
 
 func (c Class) String() string {
 	id := "nil"
-	if c.ID != nil {
-		id = fmt.Sprintf("%d", *c.ID)
+	if c.Id != nil {
+		id = fmt.Sprintf("%d", *c.Id)
 	}
-	res := fmt.Sprintf("{Name:%s, ID:%v, Required:%s}", c.Name, id, fmt.Sprint(c.Required))
+	res := fmt.Sprintf("{Name:%s, Id:%v, Required:%s}", c.Name, id, fmt.Sprint(c.Required))
 	return res
 }
 
@@ -95,21 +95,21 @@ func writeNested() {
 	math01ID := INT32(1)
 	math01 := Class{
 		Name:     "Math1",
-		ID:       &math01ID,
+		Id:       &math01ID,
 		Required: make([]UTF8, 0),
 	}
 
 	math02ID := INT32(2)
 	math02 := Class{
 		Name:     "Math2",
-		ID:       &math02ID,
+		Id:       &math02ID,
 		Required: make([]UTF8, 0),
 	}
 	math02.Required = append(math02.Required, "Math01")
 
 	physics := Class{
 		Name:     "Physics",
-		ID:       nil,
+		Id:       nil,
 		Required: make([]UTF8, 0),
 	}
 	physics.Required = append(physics.Required, "Math01", "Math02")
@@ -148,6 +148,7 @@ func writeNested() {
 	for _, stu := range stus {
 		ph.Write(stu)
 	}
+	ph.Flush()
 	ph.WriteStop()
 	f.Close()
 	log.Println("Write Finished")

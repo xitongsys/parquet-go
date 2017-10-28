@@ -23,8 +23,7 @@ func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int
 }
 
 func (self *ParquetHandler) WriteStop() {
-	self.Flush()
-
+	//self.Flush()
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	footerBuf, _ := ts.Write(self.Footer)

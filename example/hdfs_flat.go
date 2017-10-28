@@ -98,6 +98,7 @@ func main() {
 		}
 		ph.Write(stu)
 	}
+	ph.Flush()
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()

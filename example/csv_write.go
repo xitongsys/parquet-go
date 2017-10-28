@@ -80,9 +80,9 @@ func main() {
 		for j := 0; j < len(data); j++ {
 			rec[j] = &data[j]
 		}
-
 		ph.Write(rec)
 	}
+	ph.Flush()
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()

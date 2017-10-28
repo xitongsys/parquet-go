@@ -48,7 +48,6 @@ func (self *ParquetHandler) ReadFooter() {
 			}
 		}
 	*/
-
 }
 
 func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64) int {

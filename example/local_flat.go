@@ -79,6 +79,8 @@ func main() {
 		}
 		ph.Write(stu)
 	}
+	ph.Flush()
+	//ph.NameToLower()// convert the column name to lowercase
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
