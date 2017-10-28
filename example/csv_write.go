@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	. "github.com/xitongsys/parquet-go/Plugin/CSVWriter"
 	"log"
 	"os"
@@ -80,7 +81,16 @@ func main() {
 		for j := 0; j < len(data); j++ {
 			rec[j] = &data[j]
 		}
-		ph.Write(rec)
+		ph.WriteString(rec)
+
+		data2 := []interface{}{
+			UTF8("StudentName"),
+			INT32(20 + i*5),
+			INT64(i),
+			FLOAT(50.0 + float32(i)*0.1),
+			BOOLEAN(i%2 == 0),
+		}
+		ph.Write(data2)
 	}
 	ph.Flush()
 	ph.WriteStop()

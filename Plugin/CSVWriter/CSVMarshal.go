@@ -2,12 +2,11 @@ package CSVWriter
 
 import (
 	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/ParquetType"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-func MarshalCSV(records [][]*string, bgn int, end int, md []MetadataType, schemaHandler *SchemaHandler) *map[string]*Table {
+func MarshalCSV(records [][]interface{}, bgn int, end int, md []MetadataType, schemaHandler *SchemaHandler) *map[string]*Table {
 	res := make(map[string]*Table)
 	for i := 0; i < len(md); i++ {
 		pathStr := "parquet-go-root." + md[i].Name
@@ -19,7 +18,7 @@ func MarshalCSV(records [][]*string, bgn int, end int, md []MetadataType, schema
 		res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].GetType()
 
 		for j := bgn; j < end; j++ {
-			rec := StrToParquetType(*records[j][i], md[i].Type)
+			rec := records[j][i]
 			res[pathStr].Values = append(res[pathStr].Values, rec)
 			res[pathStr].RepetitionLevels = append(res[pathStr].RepetitionLevels, 0)
 

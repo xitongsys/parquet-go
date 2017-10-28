@@ -5,6 +5,7 @@ import (
 	"git.apache.org/thrift.git/lib/go/thrift"
 	. "github.com/xitongsys/parquet-go/Layout"
 	. "github.com/xitongsys/parquet-go/ParquetHandler"
+	. "github.com/xitongsys/parquet-go/ParquetType"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"strings"
@@ -21,7 +22,7 @@ type CSVWriterHandler struct {
 	PageSize     int64
 	RowGroupSize int64
 	Offset       int64
-	Record       [][]*string
+	Record       [][]interface{}
 	Metadata     []MetadataType
 	RecAveSize   int64
 	Size         int64
@@ -62,7 +63,25 @@ func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetFile, np
 	self.PFile.Write([]byte("PAR1"))
 }
 
-func (self *CSVWriterHandler) Write(rec []*string) {
+func (self *CSVWriterHandler) WriteString(recs []*string) {
+	self.Size += self.RecAveSize
+
+	ln := len(recs)
+	rec := make([]interface{}, ln)
+	for i := 0; i < ln; i++ {
+		rec[i] = nil
+		if recs[i] != nil {
+			rec[i] = StrToParquetType(*recs[i], self.Metadata[i].Type)
+		}
+	}
+	self.Record = append(self.Record, rec)
+
+	if self.Size > self.RowGroupSize {
+		self.Flush()
+	}
+}
+
+func (self *CSVWriterHandler) Write(rec []interface{}) {
 	self.Size += self.RecAveSize
 	self.Record = append(self.Record, rec)
 
