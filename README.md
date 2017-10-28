@@ -1,4 +1,4 @@
-# parquet-go v0.8.5
+# parquet-go v0.8.6
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
@@ -242,7 +242,16 @@ func main() {
 		for j := 0; j < len(data); j++ {
 			rec[j] = &data[j]
 		}
-		ph.Write(rec)
+		ph.WriteString(rec)
+
+		data2 := []interface{}{
+			UTF8("StudentName"),
+			INT32(20 + i*5),
+			INT64(i),
+			FLOAT(50.0 + float32(i)*0.1),
+			BOOLEAN(i%2 == 0),
+		}
+		ph.Write(data2)
 	}
 	ph.Flush()
 	ph.WriteStop()
