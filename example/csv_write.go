@@ -71,7 +71,7 @@ func main() {
 	num := 10
 	for i := 0; i < num; i++ {
 		data := []string{
-			"Student Name",
+			fmt.Sprintf("%s_%d", "Student Name", i),
 			fmt.Sprintf("%d", 20+i%5),
 			fmt.Sprintf("%d", i),
 			fmt.Sprintf("%f", 50.0+float32(i)*0.1),

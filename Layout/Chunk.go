@@ -4,6 +4,7 @@ import (
 	. "github.com/xitongsys/parquet-go/Common"
 	. "github.com/xitongsys/parquet-go/PEncoding"
 	"github.com/xitongsys/parquet-go/parquet"
+	"reflect"
 )
 
 type Chunk struct {
@@ -47,8 +48,16 @@ func PagesToChunk(pages []*Page) *Chunk {
 	metaData.TotalUncompressedSize = totalUncompressedSize
 	metaData.PathInSchema = pages[0].DataTable.Path[1:]
 	metaData.Statistics = parquet.NewStatistics()
-	metaData.Statistics.Max = WritePlain([]interface{}{maxVal})
-	metaData.Statistics.Min = WritePlain([]interface{}{minVal})
+
+	tmpBufMax := WritePlain([]interface{}{maxVal})
+	tmpBufMin := WritePlain([]interface{}{minVal})
+
+	if reflect.TypeOf(maxVal).Name() == "UTF8" {
+		tmpBufMax = tmpBufMax[4:]
+		tmpBufMin = tmpBufMin[4:]
+	}
+	metaData.Statistics.Max = tmpBufMax
+	metaData.Statistics.Min = tmpBufMin
 
 	chunk.ChunkHeader.MetaData = metaData
 	return chunk

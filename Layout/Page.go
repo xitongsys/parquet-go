@@ -181,10 +181,18 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	*/
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		page.Header.DataPageHeader.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
+		tmpBuf := WritePlain([]interface{}{page.MaxVal})
+		if reflect.TypeOf(page.MaxVal).Name() == "UTF8" {
+			tmpBuf = tmpBuf[4:]
+		}
+		page.Header.DataPageHeader.Statistics.Max = tmpBuf
 	}
 	if page.MinVal != nil {
-		page.Header.DataPageHeader.Statistics.Min = WritePlain([]interface{}{page.MinVal})
+		tmpBuf := WritePlain([]interface{}{page.MinVal})
+		if reflect.TypeOf(page.MinVal).Name() == "UTF8" {
+			tmpBuf = tmpBuf[4:]
+		}
+		page.Header.DataPageHeader.Statistics.Min = tmpBuf
 	}
 
 	ts := thrift.NewTSerializer()
