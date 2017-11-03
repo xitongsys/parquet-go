@@ -120,7 +120,7 @@ func StrToParquetType(s string, typeName string) interface{} {
 		return v
 	} else if typeName == "INT96" {
 		var v INT96
-		fmt.Sscanf(s, "%s", &v)
+		v = INT96(s)
 		return v
 	} else if typeName == "FLOAT" {
 		var v FLOAT
@@ -132,15 +132,15 @@ func StrToParquetType(s string, typeName string) interface{} {
 		return v
 	} else if typeName == "BYTE_ARRAY" {
 		var v BYTE_ARRAY
-		fmt.Sscanf(s, "%s", &v)
+		v = BYTE_ARRAY(s)
 		return v
 	} else if typeName == "FIXED_LEN_BYTE_ARRAY" {
 		var v FIXED_LEN_BYTE_ARRAY
-		fmt.Sscanf(s, "%s", &v)
+		v = FIXED_LEN_BYTE_ARRAY(s)
 		return v
 	} else if typeName == "UTF8" {
 		var v UTF8
-		fmt.Sscanf(s, "%s", &v)
+		v = UTF8(s)
 		return v
 	} else if typeName == "INT_8" {
 		var v INT_8
@@ -196,11 +196,11 @@ func StrToParquetType(s string, typeName string) interface{} {
 		return v
 	} else if typeName == "INTERVAL" {
 		var v INTERVAL
-		fmt.Sscanf(s, "%s", &v)
+		v = INTERVAL(s)
 		return v
 	} else if typeName == "DECIMAL" {
 		var v DECIMAL
-		fmt.Sscanf(s, "%s", &v)
+		v = DECIMAL(s)
 		return v
 	} else {
 		log.Printf("Type Error: %v ", typeName)

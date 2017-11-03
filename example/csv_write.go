@@ -71,7 +71,7 @@ func main() {
 	num := 10
 	for i := 0; i < num; i++ {
 		data := []string{
-			"StudentName",
+			"Student Name",
 			fmt.Sprintf("%d", 20+i%5),
 			fmt.Sprintf("%d", i),
 			fmt.Sprintf("%f", 50.0+float32(i)*0.1),
@@ -84,7 +84,7 @@ func main() {
 		ph.WriteString(rec)
 
 		data2 := []interface{}{
-			UTF8("StudentName"),
+			UTF8("Student Name"),
 			INT32(20 + i*5),
 			INT64(i),
 			FLOAT(50.0 + float32(i)*0.1),
