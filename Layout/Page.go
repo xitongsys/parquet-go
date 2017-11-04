@@ -270,10 +270,20 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 
 	page.Header.DataPageHeaderV2.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		page.Header.DataPageHeaderV2.Statistics.Max = WritePlain([]interface{}{page.MaxVal})
+		tmpBuf := WritePlain([]interface{}{page.MaxVal})
+		name := reflect.TypeOf(page.MaxVal).Name()
+		if name == "UTF8" || name == "DECIMAL" {
+			tmpBuf = tmpBuf[4:]
+		}
+		page.Header.DataPageHeaderV2.Statistics.Max = tmpBuf
 	}
 	if page.MinVal != nil {
-		page.Header.DataPageHeaderV2.Statistics.Min = WritePlain([]interface{}{page.MinVal})
+		tmpBuf := WritePlain([]interface{}{page.MinVal})
+		name := reflect.TypeOf(page.MinVal).Name()
+		if name == "UTF8" || name == "DECIMAL" {
+			tmpBuf = tmpBuf[4:]
+		}
+		page.Header.DataPageHeaderV2.Statistics.Min = tmpBuf
 	}
 
 	ts := thrift.NewTSerializer()
