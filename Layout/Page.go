@@ -182,14 +182,16 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
 		tmpBuf := WritePlain([]interface{}{page.MaxVal})
-		if reflect.TypeOf(page.MaxVal).Name() == "UTF8" {
+		name := reflect.TypeOf(page.MaxVal).Name()
+		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Max = tmpBuf
 	}
 	if page.MinVal != nil {
 		tmpBuf := WritePlain([]interface{}{page.MinVal})
-		if reflect.TypeOf(page.MinVal).Name() == "UTF8" {
+		name := reflect.TypeOf(page.MinVal).Name()
+		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Min = tmpBuf

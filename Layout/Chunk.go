@@ -51,8 +51,9 @@ func PagesToChunk(pages []*Page) *Chunk {
 
 	tmpBufMax := WritePlain([]interface{}{maxVal})
 	tmpBufMin := WritePlain([]interface{}{minVal})
+	name := reflect.TypeOf(maxVal).Name()
 
-	if reflect.TypeOf(maxVal).Name() == "UTF8" {
+	if name == "UTF8" || name == "DECIMAL" {
 		tmpBufMax = tmpBufMax[4:]
 		tmpBufMin = tmpBufMin[4:]
 	}
