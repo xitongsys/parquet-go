@@ -15,6 +15,7 @@ type ParquetFile interface {
 	Create(name string) (ParquetFile, error)
 }
 
+//ParquetHandler is a handler for read/write parquet file
 type ParquetHandler struct {
 	SchemaHandler *SchemaHandler
 	NP            int64 //parallel number
