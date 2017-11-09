@@ -8,6 +8,22 @@ import (
 	"testing"
 )
 
+func TestReadPlainBOOLEAN(t *testing.T) {
+	testData := [][]interface{}{
+		[]interface{}{BOOLEAN(true)},
+		[]interface{}{BOOLEAN(false)},
+		[]interface{}{BOOLEAN(false), BOOLEAN(false)},
+		[]interface{}{BOOLEAN(false), BOOLEAN(true)},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainBOOLEAN(bytes.NewReader(WritePlainBOOLEAN(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainBOOLEAN err, expect %v, get %v", data, res)
+		}
+	}
+}
+
 func TestReadPlainINT32(t *testing.T) {
 	testData := []struct {
 		expected   []interface{}
