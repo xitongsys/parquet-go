@@ -3,6 +3,7 @@ package PEncoding
 import (
 	"bytes"
 	"fmt"
+	. "github.com/xitongsys/parquet-go/Common"
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"testing"
 )
@@ -238,6 +239,138 @@ func TestReadPlainDATE(t *testing.T) {
 		res := ReadPlainDATE(bytes.NewReader(WritePlainDATE(data)), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainDATE err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainTIME_MILLIS(t *testing.T) {
+	testData := [][]interface{}{
+		{TIME_MILLIS(0), TIME_MILLIS(1), TIME_MILLIS(2)},
+		{TIME_MILLIS(0), TIME_MILLIS(0), TIME_MILLIS(0)},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainTIME_MILLIS(bytes.NewReader(WritePlainTIME_MILLIS(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainTIME_MILLIS err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainTIME_MICROS(t *testing.T) {
+	testData := [][]interface{}{
+		{TIME_MICROS(0), TIME_MICROS(1), TIME_MICROS(2)},
+		{TIME_MICROS(0), TIME_MICROS(0), TIME_MICROS(0)},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainTIME_MICROS(bytes.NewReader(WritePlainTIME_MICROS(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainTIME_MICROS err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainTIMESTAMP_MILLIS(t *testing.T) {
+	testData := [][]interface{}{
+		{TIMESTAMP_MILLIS(0), TIMESTAMP_MILLIS(1), TIMESTAMP_MILLIS(2)},
+		{TIMESTAMP_MILLIS(0), TIMESTAMP_MILLIS(0), TIMESTAMP_MILLIS(0)},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainTIMESTAMP_MILLIS(bytes.NewReader(WritePlainTIMESTAMP_MILLIS(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainTIMESTAMP_MILLIS err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainTIMESTAMP_MICROS(t *testing.T) {
+	testData := [][]interface{}{
+		{TIMESTAMP_MICROS(0), TIMESTAMP_MICROS(1), TIMESTAMP_MICROS(2)},
+		{TIMESTAMP_MICROS(0), TIMESTAMP_MICROS(0), TIMESTAMP_MICROS(0)},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainTIMESTAMP_MICROS(bytes.NewReader(WritePlainTIMESTAMP_MICROS(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainTIMESTAMP_MICROS err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainFLOAT(t *testing.T) {
+	testData := [][]interface{}{
+		{FLOAT(0), FLOAT(1), FLOAT(2)},
+		{FLOAT(0), FLOAT(0.1), FLOAT(0.2)},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainFLOAT(bytes.NewReader(WritePlainFLOAT(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainFLOAT err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainDOUBLE(t *testing.T) {
+	testData := [][]interface{}{
+		{DOUBLE(0), DOUBLE(1), DOUBLE(2)},
+		{DOUBLE(0), DOUBLE(0), DOUBLE(0)},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainDOUBLE(bytes.NewReader(WritePlainDOUBLE(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainDOUBLE err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainINTERVAL(t *testing.T) {
+	testData := [][]interface{}{
+		{INTERVAL("0123456789ab"), INTERVAL("0123456789ab"), INTERVAL("0123456789ab")},
+	}
+	for _, data := range testData {
+		res := ReadPlainINTERVAL(bytes.NewReader(WritePlainINTERVAL(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainINTERVAL err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainDECIMAL(t *testing.T) {
+	testData := [][]interface{}{
+		{DECIMAL("0123456789ab"), DECIMAL("0123456789ab"), DECIMAL("0123456789ab")},
+	}
+	for _, data := range testData {
+		res := ReadPlainDECIMAL(bytes.NewReader(WritePlainDECIMAL(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainDECIMAL err, %v", data)
+		}
+	}
+}
+
+func TestReadUnsignedVarInt(t *testing.T) {
+	testData := []uint64{1, 2, 3, 11, 22, 33, 111, 222, 333, 0}
+	for _, data := range testData {
+		res := ReadUnsignedVarInt(bytes.NewReader(WriteUnsignedVarInt(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadUnsignedVarInt err, %v", data)
+		}
+	}
+}
+
+func TestReadRLEBitPackedHybrid(t *testing.T) {
+	testData := [][]interface{}{
+		[]interface{}{INT64(1), INT64(2), INT64(3), INT64(4)},
+		[]interface{}{INT64(0), INT64(0), INT64(0), INT64(0), INT64(0)},
+	}
+	for _, data := range testData {
+		maxVal := uint64(data[len(data)-1].(INT64))
+		res := ReadRLEBitPackedHybrid(bytes.NewReader(WriteRLEBitPackedHybrid(data, int32(BitNum(maxVal)))), uint64(BitNum(maxVal)), 0)
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadRLEBitpackedHybrid err, %v", data)
 		}
 	}
 }
