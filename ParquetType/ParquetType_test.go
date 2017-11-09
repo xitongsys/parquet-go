@@ -49,6 +49,7 @@ func TestNameToConvertedType(t *testing.T) {
 		{"TIMESTAMP_MICROS", parquet.ConvertedType_TIMESTAMP_MICROS},
 		{"INTERVAL", parquet.ConvertedType_INTERVAL},
 		{"DECIMAL", parquet.ConvertedType_DECIMAL},
+		{"hehe", parquet.ConvertedType_UTF8},
 	}
 
 	for _, data := range testData {
@@ -128,6 +129,7 @@ func TestStrToParquetType(t *testing.T) {
 		{"1", "TIMESTAMP_MILLIS", TIMESTAMP_MILLIS(1)},
 		{"012345678901", "INTERVAL", INTERVAL("012345678901")},
 		{"012345678901", "DECIMAL", DECIMAL("012345678901")},
+		{"", "hehe", nil},
 	}
 
 	for _, data := range testData {
