@@ -388,7 +388,7 @@ func TestReadDeltaBinaryPackedINT(t *testing.T) {
 	}
 }
 
-func TestReadDeltaLengthByteArray(t *testing.T) {
+func TestReadDeltaByteArray(t *testing.T) {
 	testData := [][]interface{}{
 		[]interface{}{"Hello", "world"},
 	}
@@ -396,6 +396,34 @@ func TestReadDeltaLengthByteArray(t *testing.T) {
 		res := ReadDeltaByteArray(bytes.NewReader(WriteDeltaByteArray(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadDeltaByteArray err, expect %v, get %v", data, res)
+		}
+	}
+}
+
+func TestReadLengthDeltaByteArray(t *testing.T) {
+	testData := [][]interface{}{
+		[]interface{}{"Hello", "world"},
+	}
+	for _, data := range testData {
+		res := ReadDeltaLengthByteArray(bytes.NewReader(WriteDeltaLengthByteArray(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadDeltaByteArray err, expect %v, get %v", data, res)
+		}
+	}
+}
+
+func TestReadBitPacked(t *testing.T) {
+	testData := [][]interface{}{
+		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
+		[]interface{}{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	}
+	for _, data := range testData {
+		ln := len(data)
+		header := ((ln/8)<<1 | 1)
+		bitWidth := BitNum(uint64(data[ln-1].(int)))
+		res := ReadBitPacked(bytes.NewReader(WriteBitPacked(data, int64(bitWidth), false)), uint64(header), bitWidth)
+		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", data) {
+
 		}
 	}
 }
