@@ -484,3 +484,91 @@ func TestWritePlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
 		}
 	}
 }
+
+func TestWriteDeltaINT32(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{INT32(1), INT32(2), INT32(3), INT32(4), INT32(5)}, []byte{128, 1, 4, 5, 2, 2, 0, 0, 0, 0}},
+		{
+			[]interface{}{INT32(7), INT32(5), INT32(3), INT32(1), INT32(2), INT32(3), INT32(4), INT32(5)},
+			[]byte{128, 1, 4, 8, 14, 3, 2, 0, 0, 0, 192, 63, 0, 0, 0, 0, 0, 0},
+		},
+	}
+
+	for _, data := range testData {
+		res := WriteDeltaINT32(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteDeltaINT32 error,expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteDeltaINT64(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{INT64(1), INT64(2), INT64(3), INT64(4), INT64(5)}, []byte{128, 1, 4, 5, 2, 2, 0, 0, 0, 0}},
+		{
+			[]interface{}{INT64(7), INT64(5), INT64(3), INT64(1), INT64(2), INT64(3), INT64(4), INT64(5)},
+			[]byte{128, 1, 4, 8, 14, 3, 2, 0, 0, 0, 192, 63, 0, 0, 0, 0, 0, 0},
+		},
+	}
+
+	for _, data := range testData {
+		res := WriteDeltaINT64(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteDeltaINT64 error,expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteDeltaLengthByteArray(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{"Hello", "World", "Foobar", "ABCDEF"}, []byte{128, 1, 4, 4, 10, 0, 1, 0, 0, 0, 2, 0, 0, 0, 72, 101, 108, 108, 111, 87, 111, 114, 108, 100, 70, 111, 111, 98, 97, 114, 65, 66, 67, 68, 69, 70}},
+	}
+
+	for _, data := range testData {
+		res := WriteDeltaLengthByteArray(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteDeltaLengthByteArray error,expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteDeltaByteArray(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{"Hello", "World", "Foobar", "ABCDEF"}, []byte{128, 1, 4, 4, 0, 0, 0, 0, 0, 0, 128, 1, 4, 4, 10, 0, 1, 0, 0, 0, 2, 0, 0, 0, 72, 101, 108, 108, 111, 87, 111, 114, 108, 100, 70, 111, 111, 98, 97, 114, 65, 66, 67, 68, 69, 70}},
+	}
+
+	for _, data := range testData {
+		res := WriteDeltaByteArray(data.nums)
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteDeltaByteArray error,expect %v, get %v", data.expected, res)
+		}
+	}
+}
+
+func TestWriteBitPackedDeprecated(t *testing.T) {
+	testData := []struct {
+		nums     []interface{}
+		expected []byte
+	}{
+		{[]interface{}{1, 2, 3, 4}, []byte{41}},
+	}
+
+	for _, data := range testData {
+		res := WriteBitPackedDeprecated(data.nums, 3)
+		if string(res) != string(data.expected) {
+			t.Errorf("WriteBitPackedDeprecated error,expect %v, get %v", data.expected, res)
+		}
+	}
+}
