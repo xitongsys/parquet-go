@@ -97,3 +97,27 @@ func TestIsBaseType(t *testing.T) {
 		}
 	}
 }
+
+func TestStrToParquetType(t *testing.T) {
+	testData := []struct {
+		StrData     string
+		Type        string
+		ParquetData interface{}
+	}{
+		{"false", "BOOLEAN", BOOLEAN(false)},
+		{"1", "INT32", INT32(1)},
+		{"0", "INT64", INT64(0)},
+		{"012345678901", "INT96", INT96("012345678901")},
+		{"0.1", "FLOAT", FLOAT(0.1)},
+		{"0.1", "DOUBLE", DOUBLE(0.1)},
+		{"abc bcd", "BYTE_ARRAY", BYTE_ARRAY("abc bcd")},
+		{"abc bcd", "FIXED_LEN_BYTE_ARRAY", FIXED_LEN_BYTE_ARRAY("abc bcd")},
+	}
+
+	for _, data := range testData {
+		res := StrToParquetType(data.StrData, data.Type)
+		if res != data.ParquetData {
+			t.Errorf("StrToParquetType err, expect %v, get %v", data.ParquetData, res)
+		}
+	}
+}
