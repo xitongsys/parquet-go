@@ -186,3 +186,58 @@ func TestReadPlainUINT_64(t *testing.T) {
 		}
 	}
 }
+
+func TestReadPlainBYTE_ARRAY(t *testing.T) {
+	testData := [][]interface{}{
+		{BYTE_ARRAY("hello"), BYTE_ARRAY("world")},
+		{BYTE_ARRAY("good"), BYTE_ARRAY(""), BYTE_ARRAY("a"), BYTE_ARRAY("b")},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainBYTE_ARRAY(bytes.NewReader(WritePlainBYTE_ARRAY(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainBYTE_ARRAY err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
+	testData := [][]interface{}{
+		{FIXED_LEN_BYTE_ARRAY("hello"), FIXED_LEN_BYTE_ARRAY("world")},
+		{FIXED_LEN_BYTE_ARRAY("a"), FIXED_LEN_BYTE_ARRAY("b"), FIXED_LEN_BYTE_ARRAY("c"), FIXED_LEN_BYTE_ARRAY("d")},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainFIXED_LEN_BYTE_ARRAY(bytes.NewReader(WritePlainFIXED_LEN_BYTE_ARRAY(data)), uint64(len(data)), uint64(len(data[0].(FIXED_LEN_BYTE_ARRAY))))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainFIXED_LEN_BYTE_ARRAY err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainUTF8(t *testing.T) {
+	testData := [][]interface{}{
+		{UTF8("hello"), UTF8("world")},
+		{UTF8("a"), UTF8("b"), UTF8("c"), UTF8("d")},
+	}
+	for _, data := range testData {
+		res := ReadPlainUTF8(bytes.NewReader(WritePlainUTF8(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainUTF8 err, %v", data)
+		}
+	}
+}
+
+func TestReadPlainDATE(t *testing.T) {
+	testData := [][]interface{}{
+		{DATE(0), DATE(1), DATE(2)},
+		{DATE(0), DATE(0), DATE(0)},
+	}
+
+	for _, data := range testData {
+		res := ReadPlainDATE(bytes.NewReader(WritePlainDATE(data)), uint64(len(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadPlainDATE err, %v", data)
+		}
+	}
+}
