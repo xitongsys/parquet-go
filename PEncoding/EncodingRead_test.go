@@ -374,3 +374,28 @@ func TestReadRLEBitPackedHybrid(t *testing.T) {
 		}
 	}
 }
+
+func TestReadDeltaBinaryPackedINT(t *testing.T) {
+	testData := [][]interface{}{
+		[]interface{}{INT64(1), INT64(2), INT64(3), INT64(4)},
+		[]interface{}{INT64(0), INT64(0), INT64(0), INT64(0), INT64(0)},
+	}
+	for _, data := range testData {
+		res := ReadDeltaBinaryPackedINT(bytes.NewReader(WriteDeltaINT64(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadRLEBitpackedHybrid err, expect %v, get %v", data, res)
+		}
+	}
+}
+
+func TestReadDeltaLengthByteArray(t *testing.T) {
+	testData := [][]interface{}{
+		[]interface{}{"Hello", "world"},
+	}
+	for _, data := range testData {
+		res := ReadDeltaByteArray(bytes.NewReader(WriteDeltaByteArray(data)))
+		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
+			t.Errorf("ReadDeltaByteArray err, expect %v, get %v", data, res)
+		}
+	}
+}

@@ -475,7 +475,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 			}
 		}
 	}
-	return res
+	return res[:numValues]
 }
 
 func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) []interface{} {
