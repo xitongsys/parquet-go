@@ -15,7 +15,7 @@ type TypeList struct {
 	Float             FLOAT
 	Double            DOUBLE
 	ByteArray         BYTE_ARRAY
-	FixedLenByteArray FIXED_LEN_BYTE_ARRAY
+	FixedLenByteArray FIXED_LEN_BYTE_ARRAY `Length:"10"`
 
 	Utf8            UTF8
 	Int_8           INT_8
@@ -32,7 +32,7 @@ type TypeList struct {
 	TimestampMillis TIMESTAMP_MILLIS
 	TimestampMicros TIMESTAMP_MICROS
 	Interval        INTERVAL
-	Decimal         DECIMAL
+	Decimal         DECIMAL `BaseType:"BYTE_ARRAY" Scale:"2" Precision:"2"`
 }
 
 type MyFile struct {
@@ -95,7 +95,7 @@ func main() {
 			Float:             FLOAT(float32(i) * 0.5),
 			Double:            DOUBLE(float64(i) * 0.5),
 			ByteArray:         BYTE_ARRAY("ByteArray"),
-			FixedLenByteArray: FIXED_LEN_BYTE_ARRAY("FixedLenByteArray"),
+			FixedLenByteArray: FIXED_LEN_BYTE_ARRAY("HelloWorld"),
 
 			Utf8:            UTF8("utf8"),
 			Int_8:           INT_8(i),
@@ -116,6 +116,7 @@ func main() {
 		}
 		ph.Write(tp)
 	}
+	ph.Flush()
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
