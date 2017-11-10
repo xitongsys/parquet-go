@@ -5,6 +5,8 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 * Very simple to use (like json marshal/unmarshal)
 * High performance
 
+[![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
+
 ## Required
 * git.apache.org/thrift.git/lib/go/thrift
 * github.com/golang/snappy
