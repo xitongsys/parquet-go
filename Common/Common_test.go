@@ -202,6 +202,26 @@ func TestSizeOf(t *testing.T) {
 		{reflect.ValueOf(TIMESTAMP_MICROS(1)), 8},
 		{reflect.ValueOf(INTERVAL("")), 12},
 		{reflect.ValueOf(DECIMAL("0123")), 4},
+		{reflect.ValueOf(new(DECIMAL)), 0},
+		{reflect.ValueOf((*DECIMAL)(nil)), 0},
+		{reflect.ValueOf([]INT32{1, 2, 3}), 12},
+		{reflect.ValueOf(map[UTF8]INT32{
+			UTF8("1"):   1,
+			UTF8("11"):  11,
+			UTF8("111"): 111,
+		}), 18},
+		{reflect.ValueOf(struct {
+			A INT32
+			B INT64
+			C []UTF8
+			D map[UTF8]INT96
+		}{
+			1, 2, []UTF8{"hello", "world", "", "good"},
+			map[UTF8]INT96{
+				UTF8("hello"): INT96("012345678901"),
+				UTF8("world"): INT96("012345678901"),
+			},
+		}), 60},
 	}
 
 	for _, data := range testData {
