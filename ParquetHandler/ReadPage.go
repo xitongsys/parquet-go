@@ -14,6 +14,7 @@ import (
 	"strings"
 )
 
+//Read page header
 func (self *ParquetHandler) ReadPageHeader(thriftReader *thrift.TBufferedTransport) *parquet.PageHeader {
 	protocol := thrift.NewTCompactProtocol(thriftReader)
 	pageHeader := parquet.NewPageHeader()
@@ -21,6 +22,7 @@ func (self *ParquetHandler) ReadPageHeader(thriftReader *thrift.TBufferedTranspo
 	return pageHeader
 }
 
+//Read data page values
 func (self *ParquetHandler) ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) []interface{} {
 	if encoding == parquet.Encoding_PLAIN {
 		return ReadPlain(bytesReader, dataType, convertedType, cnt, bitWidth)
@@ -76,6 +78,7 @@ func (self *ParquetHandler) ReadDataPageValues(bytesReader *bytes.Reader, encodi
 	return make([]interface{}, 0)
 }
 
+//Read page from parquet file
 func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64) {
 	pageHeader := self.ReadPageHeader(thriftReader)
 

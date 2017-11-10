@@ -5,6 +5,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
+//Read one RowGroup from parquet file
 func (self *ParquetHandler) ReadRowGroup(rowGroupHeader *parquet.RowGroup) *RowGroup {
 	rowGroup := new(RowGroup)
 	rowGroup.RowGroupHeader = rowGroupHeader

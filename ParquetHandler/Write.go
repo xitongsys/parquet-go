@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+//Convert the column names in schema to lowercases
 func (self *ParquetHandler) NameToLower() {
 	for _, schema := range self.Footer.Schema {
 		schema.Name = strings.ToLower(schema.Name)
@@ -24,6 +25,7 @@ func (self *ParquetHandler) NameToLower() {
 	}
 }
 
+//Write init function
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64, objAveSize int64) {
 	self.SchemaHandler = NewSchemaHandlerFromStruct(obj)
 	//log.Println(self.SchemaHandler)
@@ -37,6 +39,7 @@ func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int
 	self.PFile.Write([]byte("PAR1"))
 }
 
+//Write the footer and stop writing
 func (self *ParquetHandler) WriteStop() {
 	//self.Flush()
 	ts := thrift.NewTSerializer()
@@ -51,6 +54,7 @@ func (self *ParquetHandler) WriteStop() {
 
 }
 
+//Write one object to parquet file
 func (self *ParquetHandler) Write(src interface{}) {
 	//self.Size += SizeOf(reflect.ValueOf(src))
 	self.Size += self.ObjAveSize
@@ -61,6 +65,7 @@ func (self *ParquetHandler) Write(src interface{}) {
 	}
 }
 
+//Flush the write buffer to parquet file
 func (self *ParquetHandler) Flush() {
 	pagesMapList := make([]map[string][]*Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {

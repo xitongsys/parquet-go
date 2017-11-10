@@ -34,6 +34,7 @@ type TIMESTAMP_MICROS int64
 type INTERVAL string // length=12
 type DECIMAL string
 
+//Convert the name string to basic parquet type
 func NameToBaseType(name string) parquet.Type {
 	switch name {
 	case "BOOLEAN":
@@ -55,6 +56,7 @@ func NameToBaseType(name string) parquet.Type {
 	}
 }
 
+//Convert the name string to converted parquet type
 func NameToConvertedType(name string) parquet.ConvertedType {
 	switch name {
 	case "UTF8":
@@ -95,6 +97,7 @@ func NameToConvertedType(name string) parquet.ConvertedType {
 
 }
 
+//Check a type name if it is base type
 func IsBaseType(name string) bool {
 	if name == "BOOLEAN" ||
 		name == "INT32" || name == "INT64" || name == "INT96" ||
@@ -105,6 +108,7 @@ func IsBaseType(name string) bool {
 	return false
 }
 
+//Scan a string to parquet value
 func StrToParquetType(s string, typeName string) interface{} {
 	if typeName == "BOOLEAN" {
 		var v BOOLEAN

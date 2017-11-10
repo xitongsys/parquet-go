@@ -8,6 +8,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
+//Decode a dict chunk
 func (self *ParquetHandler) DecodeDictChunk(chunk *Chunk) {
 	dictPage := chunk.Pages[0]
 	numPages := len(chunk.Pages)
@@ -23,6 +24,7 @@ func (self *ParquetHandler) DecodeDictChunk(chunk *Chunk) {
 	chunk.Pages = chunk.Pages[1:] // delete the head dict page
 }
 
+//Read one chunk from parquet file
 func (self *ParquetHandler) ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler, chunkHeader *parquet.ColumnChunk) *Chunk {
 	chunk := new(Chunk)
 	chunk.ChunkHeader = chunkHeader

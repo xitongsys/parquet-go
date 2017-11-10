@@ -6,6 +6,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
+//CSV metadata
 type MetadataType struct {
 	Type       string
 	Name       string
@@ -14,6 +15,7 @@ type MetadataType struct {
 	Precision  int32
 }
 
+//Create a schema handler from CSV metadata
 func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler {
 	schemaList := make([]*parquet.SchemaElement, 0)
 

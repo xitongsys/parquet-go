@@ -6,6 +6,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
+//Marshal function for CSV like data
 func MarshalCSV(records [][]interface{}, bgn int, end int, md []MetadataType, schemaHandler *SchemaHandler) *map[string]*Table {
 	res := make(map[string]*Table)
 	for i := 0; i < len(md); i++ {

@@ -10,6 +10,7 @@ import (
 	"reflect"
 )
 
+//Convert a file reater to Thrift reader
 func ConvertToThriftReader(file ParquetFile, offset int64, size int64) *thrift.TBufferedTransport {
 	file.Seek(int(offset), 0)
 
@@ -18,6 +19,7 @@ func ConvertToThriftReader(file ParquetFile, offset int64, size int64) *thrift.T
 	return bufferReader
 }
 
+//Get the footer size
 func (self *ParquetHandler) GetFooterSize() uint32 {
 	buf := make([]byte, 4)
 	self.PFile.Seek(-8, 2)
@@ -26,6 +28,7 @@ func (self *ParquetHandler) GetFooterSize() uint32 {
 	return size
 }
 
+//Read footer from parquet file
 func (self *ParquetHandler) ReadFooter() {
 	size := self.GetFooterSize()
 	self.PFile.Seek(int(-(int64)(8+size)), 2)
@@ -50,6 +53,7 @@ func (self *ParquetHandler) ReadFooter() {
 	*/
 }
 
+//Read init function. np is the parallel number
 func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64) int {
 	self.PFile = pfile
 	self.NP = np
@@ -59,6 +63,7 @@ func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64) int {
 	return len(self.Footer.GetRowGroups())
 }
 
+//Read one RowGroup to table map
 func (self *ParquetHandler) ReadOneRowGroup() (*map[string]*Table, int) {
 	rowGroups := self.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
@@ -72,6 +77,7 @@ func (self *ParquetHandler) ReadOneRowGroup() (*map[string]*Table, int) {
 	return rowGroup.RowGroupToTableMap(), int(rowGroup.RowGroupHeader.GetNumRows())
 }
 
+//Read one RowGroup and Unmarshal to objects slice
 func (self *ParquetHandler) ReadOneRowGroupAndUnmarshal(dstInterface interface{}) {
 	tmap, num := self.ReadOneRowGroup()
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()

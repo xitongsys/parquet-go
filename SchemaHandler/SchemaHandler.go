@@ -39,6 +39,7 @@ func (self *PathMapType) Add(path []string) {
 
 /////////////////pathMap///////////////////////////
 
+//Schema handler stores the schema data
 type SchemaHandler struct {
 	SchemaElements []*parquet.SchemaElement
 	MapIndex       map[string]int32
@@ -46,6 +47,7 @@ type SchemaHandler struct {
 	PathMap        *PathMapType
 }
 
+//Get the PathMap from SchemaHandler
 func (self *SchemaHandler) GetPathMap() {
 	self.PathMap = NewPathMap(self.GetRootName())
 	for i := 0; i < len(self.SchemaElements); i++ {
@@ -58,6 +60,7 @@ func (self *SchemaHandler) GetPathMap() {
 	}
 }
 
+//Get the repetition type of a column by it's schema path
 func (self *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepetitionType, error) {
 	pathStr := Common.PathToStr(path)
 	if index, ok := self.MapIndex[pathStr]; ok {
@@ -67,6 +70,7 @@ func (self *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepeti
 	}
 }
 
+//Get the max definition level type of a column by it's schema path
 func (self *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
@@ -82,6 +86,7 @@ func (self *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 	return res, nil
 }
 
+//Get the max repetition level type of a column by it's schema path
 func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
@@ -97,6 +102,7 @@ func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	return res, nil
 }
 
+//Get the index from the repetition level
 func (self *SchemaHandler) IndexFromRepetitionLevel(path []string, rl int32) (int32, error) {
 	if rl <= 0 {
 		return 0, nil
@@ -117,6 +123,7 @@ func (self *SchemaHandler) IndexFromRepetitionLevel(path []string, rl int32) (in
 	return int32(i), nil
 }
 
+//Get the index from the definition level
 func (self *SchemaHandler) IndexFromDefinitionLevel(path []string, dl int32) (int32, error) {
 	if dl <= 0 {
 		return 0, nil
@@ -137,6 +144,7 @@ func (self *SchemaHandler) IndexFromDefinitionLevel(path []string, dl int32) (in
 	return int32(i), nil
 }
 
+//Get root name from the schema handler
 func (self *SchemaHandler) GetRootName() string {
 	if len(self.SchemaElements) <= 0 {
 		return ""
@@ -155,6 +163,7 @@ func NewItem() *Item {
 	return item
 }
 
+//Create schema handler from a object
 func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 	ot := reflect.TypeOf(obj).Elem()
 	item := NewItem()
@@ -340,6 +349,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 	return NewSchemaHandlerFromSchemaList(schemaElements)
 }
 
+//Create schema handler from schema list
 func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHandler {
 	schemaHandler := new(SchemaHandler)
 	schemaHandler.MapIndex = make(map[string]int32)

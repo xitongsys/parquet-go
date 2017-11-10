@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+//Write handler for CSV data
 type CSVWriterHandler struct {
 	SchemaHandler *SchemaHandler
 	NP            int64
@@ -28,6 +29,7 @@ type CSVWriterHandler struct {
 	Size         int64
 }
 
+//Create a CSV writer handler
 func NewCSVWriterHandler() *CSVWriterHandler {
 	res := new(CSVWriterHandler)
 	res.NP = 1
@@ -36,6 +38,7 @@ func NewCSVWriterHandler() *CSVWriterHandler {
 	return res
 }
 
+//Convert the column names to lowercase
 func (self *CSVWriterHandler) NameToLower() {
 	for _, schema := range self.Footer.Schema {
 		schema.Name = strings.ToLower(schema.Name)
@@ -50,6 +53,7 @@ func (self *CSVWriterHandler) NameToLower() {
 	}
 }
 
+//Write init function for CSV writer
 func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetFile, np int64, recordAveSize int64) {
 	self.SchemaHandler = NewSchemaHandlerFromMetadata(md)
 	self.Metadata = md
@@ -63,6 +67,7 @@ func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetFile, np
 	self.PFile.Write([]byte("PAR1"))
 }
 
+//Write string values to parquet file
 func (self *CSVWriterHandler) WriteString(recs []*string) {
 	self.Size += self.RecAveSize
 
@@ -81,6 +86,7 @@ func (self *CSVWriterHandler) WriteString(recs []*string) {
 	}
 }
 
+//Write parquet values to parquet file
 func (self *CSVWriterHandler) Write(rec []interface{}) {
 	self.Size += self.RecAveSize
 	self.Record = append(self.Record, rec)
@@ -90,6 +96,7 @@ func (self *CSVWriterHandler) Write(rec []interface{}) {
 	}
 }
 
+//Write footer to parquet file and stop writing
 func (self *CSVWriterHandler) WriteStop() {
 	//self.Flush()
 	ts := thrift.NewTSerializer()
@@ -103,6 +110,7 @@ func (self *CSVWriterHandler) WriteStop() {
 	self.PFile.Write([]byte("PAR1"))
 }
 
+//Flush the write buffer to parquet file
 func (self *CSVWriterHandler) Flush() {
 	pagesMapList := make([]map[string][]*Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
