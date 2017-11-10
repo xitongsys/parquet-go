@@ -1,4 +1,4 @@
-package PEncoding
+package ParquetEncoding
 
 import (
 	"bytes"

@@ -2,7 +2,7 @@ package Layout
 
 import (
 	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/PEncoding"
+	. "github.com/xitongsys/parquet-go/ParquetEncoding"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 )
