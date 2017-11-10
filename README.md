@@ -1,11 +1,11 @@
 # parquet-go v0.9.1
+[![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
+
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
 * Very simple to use (like json marshal/unmarshal)
 * High performance
-
-[![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
 ## Required
 * git.apache.org/thrift.git/lib/go/thrift
