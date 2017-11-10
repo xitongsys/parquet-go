@@ -9,6 +9,16 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 * git.apache.org/thrift.git/lib/go/thrift
 * github.com/golang/snappy
 
+## Install
+Add the parquet-go library to your $GOPATH/src:
+```sh
+go get github.com/xitongsys/parquet-go
+```
+Look at a few examples in `example/`. 
+```sh
+go run example/local_flat.go
+```
+
 ## Types
 There are two Types in Parquet: Base Type and Logical Type
 They are defined in ParquetType.go as following:
