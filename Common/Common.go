@@ -63,30 +63,14 @@ func Cmp(ai interface{}, bi interface{}) int {
 
 	case "INT96":
 		a, b := []byte(ai.(INT96)), []byte(bi.(INT96))
-		fa, fb := (a[11] >> 7), (b[11] >> 7)
-		if fa > fb {
-			return -1
-		} else if fa < fb {
-			return 1
-		} else if fa == 1 {
-			for i := 11; i >= 0; i-- {
-				if a[i] > b[i] {
-					return -1
-				} else if a[i] < b[i] {
-					return 1
-				}
+		for i := 11; i >= 0; i-- {
+			if a[i] > b[i] {
+				return 1
+			} else if a[i] < b[i] {
+				return -1
 			}
-			return 0
-		} else {
-			for i := 11; i >= 0; i-- {
-				if a[i] > b[i] {
-					return 1
-				} else if a[i] < b[i] {
-					return -1
-				}
-			}
-			return 0
 		}
+		return 0
 
 	case "FLOAT":
 		a, b := ai.(FLOAT), bi.(FLOAT)
