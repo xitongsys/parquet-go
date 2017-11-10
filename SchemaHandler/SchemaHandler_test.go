@@ -1,8 +1,8 @@
 package SchemaHandler
 
 import (
-	"ParquetType"
 	"fmt"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"testing"
 )
 
