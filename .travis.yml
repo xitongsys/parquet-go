@@ -1,13 +1,19 @@
 language: go
+
 go:
-	- 1.8.3
-	- tip
+  - 1.8.3
+  - tip
 
 services:
-	- docker
+  - docker
 
 install:
-	- go get -v .
+  - go get -v .
 
 script:
-	- make test
+  - make test
+
+after_script:
+
+
+after_success:
