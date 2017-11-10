@@ -16,7 +16,7 @@ type MapRecord struct {
 	Index     int
 }
 
-//desInterface is a slice ptr
+//Convert the table map to objects slice. desInterface is a slice of pointers of objects
 func Unmarshal(tableMap *map[string]*Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler) {
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	tableIndex := make(map[string]int)

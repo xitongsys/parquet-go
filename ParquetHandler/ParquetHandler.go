@@ -38,6 +38,7 @@ type ParquetHandler struct {
 	Size int64
 }
 
+//Create a parquet handler
 func NewParquetHandler() *ParquetHandler {
 	res := new(ParquetHandler)
 	res.NP = 1

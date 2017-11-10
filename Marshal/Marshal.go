@@ -44,7 +44,7 @@ func (self *NodeBufType) Reset() {
 
 ////////for improve performance///////////////////////////////////
 
-//srcInterface is a slice
+//Convert the objects to table map. srcInterface is a slice of objects
 func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler) *map[string]*Table {
 	src := reflect.ValueOf(srcInterface)
 	res := make(map[string]*Table)

@@ -10,18 +10,25 @@ import (
 	"reflect"
 )
 
-//functions in this file: assumed the page is dataPage; dictPage will add soon
-
+//Page is used to store the page data
 type Page struct {
-	Header       *parquet.PageHeader
-	DataTable    *Table
-	RawData      []byte
+	//Header of a page
+	Header *parquet.PageHeader
+	//Table to store values
+	DataTable *Table
+	//Compressed data of the page, which is written in parquet file
+	RawData []byte
+	//Compress type: gzip/snappy/none
 	CompressType parquet.CompressionCodec
-	DataType     parquet.Type
-	MaxVal       interface{}
-	MinVal       interface{}
+	//Parquet type of the values in the page
+	DataType parquet.Type
+	//Maximum of the values
+	MaxVal interface{}
+	//Minimum of the values
+	MinVal interface{}
 }
 
+//Create a new page
 func NewPage() *Page {
 	page := new(Page)
 	page.DataTable = nil
@@ -29,18 +36,21 @@ func NewPage() *Page {
 	return page
 }
 
+//Create a new dict page
 func NewDictPage() *Page {
 	page := NewPage()
 	page.Header.DictionaryPageHeader = parquet.NewDictionaryPageHeader()
 	return page
 }
 
+//Create a new data page
 func NewDataPage() *Page {
 	page := NewPage()
 	page.Header.DataPageHeader = parquet.NewDataPageHeader()
 	return page
 }
 
+//Convert a table to data pages
 func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
@@ -93,6 +103,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	return res, totSize
 }
 
+//Compress the data page to parquet file
 func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte {
 	ln := len(page.DataTable.DefinitionLevels)
 
@@ -209,6 +220,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	return res
 }
 
+//Compress data page v2 to parquet file
 func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []byte {
 	ln := len(page.DataTable.DefinitionLevels)
 
@@ -300,12 +312,12 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	return res
 }
 
-//ToDo
+//Convert table to dict data page. ToDo
 func TableToDictDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	return []*Page{}, 0
 }
 
-//ToDo
+//Compress dict page. ToDo
 func (page *Page) DictPageCompress(compressType parquet.CompressionCodec) []byte {
 	return []byte{}
 }

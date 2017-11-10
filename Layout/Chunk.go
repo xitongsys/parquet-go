@@ -7,11 +7,13 @@ import (
 	"reflect"
 )
 
+//Chunk stores the ColumnChunk in parquet file
 type Chunk struct {
 	Pages       []*Page
 	ChunkHeader *parquet.ColumnChunk
 }
 
+//Convert several pages to one chunk
 func PagesToChunk(pages []*Page) *Chunk {
 	ln := len(pages)
 	var numValues int64 = 0

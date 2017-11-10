@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+//Convert the first letter of a string to uppercase
 func HeadToUpper(str string) string {
 	ln := len(str)
 	if ln <= 0 {
@@ -14,7 +15,8 @@ func HeadToUpper(str string) string {
 	return strings.ToUpper(str[0:1]) + str[1:]
 }
 
-func BitNum(num uint64) uint64 { //the number of bits needed by the num; 0 needs 0, 1 need 1, 2 need 2, 3 need 2 ....
+//Get the number of bits needed by the num; 0 needs 0, 1 need 1, 2 need 2, 3 need 2 ....
+func BitNum(num uint64) uint64 {
 	var bitn int64 = 63
 	for (bitn >= 0) && (((1 << uint64(bitn)) & num) == 0) {
 		bitn--
@@ -22,6 +24,10 @@ func BitNum(num uint64) uint64 { //the number of bits needed by the num; 0 needs
 	return uint64(bitn + 1)
 }
 
+//Compare two values:
+//a>b return 1
+//a<b return -1
+//a==b return 0
 func Cmp(ai interface{}, bi interface{}) int {
 	if ai == nil && bi != nil {
 		return -1
@@ -283,6 +289,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 	return 0
 }
 
+//Get the maximum of two parquet values
 func Max(a interface{}, b interface{}) interface{} {
 	if a == nil {
 		return b
@@ -296,6 +303,7 @@ func Max(a interface{}, b interface{}) interface{} {
 	return b
 }
 
+//Get the minimum of two parquet values
 func Min(a interface{}, b interface{}) interface{} {
 	if a == nil {
 		return b
@@ -309,6 +317,7 @@ func Min(a interface{}, b interface{}) interface{} {
 	return a
 }
 
+//Get the size of a parquet value
 func SizeOf(val reflect.Value) int64 {
 	tk := val.Type().Kind()
 
@@ -397,10 +406,12 @@ func SizeOf(val reflect.Value) int64 {
 	return 4
 }
 
+//Convert path slice to string
 func PathToStr(path []string) string {
 	return strings.Join(path, ".")
 }
 
+//Convert string to path slice
 func StrToPath(str string) []string {
 	return strings.Split(str, ".")
 }
