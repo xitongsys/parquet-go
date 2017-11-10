@@ -1,6 +1,7 @@
 package Common
 
 import (
+	"fmt"
 	. "github.com/xitongsys/parquet-go/ParquetType"
 	"reflect"
 	"testing"
@@ -136,14 +137,111 @@ func TestCmp(t *testing.T) {
 	}
 }
 
+func TestMax(t *testing.T) {
+	testData := []struct {
+		Num1, Num2 interface{}
+		Expected   interface{}
+	}{
+		{nil, 1, 1},
+		{nil, nil, nil},
+		{1, nil, 1},
+		{1, 2, 2},
+	}
+	for _, data := range testData {
+		res := Max(data.Num1, data.Num2)
+		if res != data.Expected {
+			t.Errorf("Max err, expect %v, get %v", data.Expected, res)
+		}
+	}
+}
+
+func TestMin(t *testing.T) {
+	testData := []struct {
+		Num1, Num2 interface{}
+		Expected   interface{}
+	}{
+		{nil, 1, 1},
+		{nil, nil, nil},
+		{1, nil, 1},
+		{1, 2, 1},
+	}
+	for _, data := range testData {
+		res := Min(data.Num1, data.Num2)
+		if res != data.Expected {
+			t.Errorf("Min err, expect %v, get %v", data.Expected, res)
+		}
+	}
+}
+
 func TestSizeOf(t *testing.T) {
+	testData := []struct {
+		Value    reflect.Value
+		Expected int64
+	}{
+		{reflect.ValueOf(BOOLEAN(true)), 1},
+		{reflect.ValueOf(INT32(1)), 4},
+		{reflect.ValueOf(INT64(1)), 8},
+		{reflect.ValueOf(INT96("")), 12},
+		{reflect.ValueOf(FLOAT(0.1)), 4},
+		{reflect.ValueOf(DOUBLE(0.1)), 8},
+		{reflect.ValueOf(BYTE_ARRAY("hello")), 5},
+		{reflect.ValueOf(FIXED_LEN_BYTE_ARRAY("hello")), 5},
+		{reflect.ValueOf(UTF8("hello")), 5},
+		{reflect.ValueOf(INT_8(1)), 4},
+		{reflect.ValueOf(INT_16(1)), 4},
+		{reflect.ValueOf(INT_32(1)), 4},
+		{reflect.ValueOf(INT_64(1)), 8},
+		{reflect.ValueOf(UINT_8(1)), 4},
+		{reflect.ValueOf(UINT_16(1)), 4},
+		{reflect.ValueOf(UINT_32(1)), 4},
+		{reflect.ValueOf(UINT_64(1)), 8},
+		{reflect.ValueOf(DATE(1)), 4},
+		{reflect.ValueOf(TIME_MILLIS(1)), 4},
+		{reflect.ValueOf(TIME_MICROS(1)), 8},
+		{reflect.ValueOf(TIMESTAMP_MILLIS(1)), 8},
+		{reflect.ValueOf(TIMESTAMP_MICROS(1)), 8},
+		{reflect.ValueOf(INTERVAL("")), 12},
+		{reflect.ValueOf(DECIMAL("0123")), 4},
+	}
 
+	for _, data := range testData {
+		res := SizeOf(data.Value)
+		if res != data.Expected {
+			t.Errorf("SizeOf err, expect %v, get %v", data.Expected, res)
+		}
+	}
 }
 
-func TestTypeNumberField(t *testing.T) {
+func TestPathToStr(t *testing.T) {
+	testData := []struct {
+		Path     []string
+		Expected string
+	}{
+		{[]string{"a", "b", "c"}, "a.b.c"},
+		{[]string{"a", "", "c"}, "a..c"},
+	}
 
+	for _, data := range testData {
+		res := PathToStr(data.Path)
+		if res != data.Expected {
+			t.Errorf("PathToStr err, expect %v, get %v", data.Expected, res)
+		}
+	}
 }
 
-func TestGoTypeToParquetType(t *testing.T) {
+func TestStrToPath(t *testing.T) {
+	testData := []struct {
+		Str      string
+		Expected []string
+	}{
+		{"a.b.c", []string{"a", "b", "c"}},
+		{"a..c", []string{"a", "", "c"}},
+	}
 
+	for _, data := range testData {
+		res := StrToPath(data.Str)
+		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", data.Expected) {
+			t.Errorf("PathToStr err, expect %v, get %v", data.Expected, res)
+		}
+	}
 }
