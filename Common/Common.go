@@ -63,6 +63,12 @@ func Cmp(ai interface{}, bi interface{}) int {
 
 	case "INT96":
 		a, b := []byte(ai.(INT96)), []byte(bi.(INT96))
+		fa, fb := a[11]>>7, b[11]>>7
+		if fa > fb {
+			return -1
+		} else if fa < fb {
+			return 1
+		}
 		for i := 11; i >= 0; i-- {
 			if a[i] > b[i] {
 				return 1
@@ -245,7 +251,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		}
 		return 0
 
-	case "DCEIMAL":
+	case "DECIMAL":
 		a, b := []byte(ai.(DECIMAL)), []byte(bi.(DECIMAL))
 		fa, fb := (a[0] >> 7), (b[0] >> 7)
 		la, lb := len(a), len(b)
@@ -266,17 +272,9 @@ func Cmp(ai interface{}, bi interface{}) int {
 					j++
 				}
 				if ba > bb {
-					if fa == 1 {
-						return -1
-					} else {
-						return 1
-					}
+					return 1
 				} else if ba < bb {
-					if fa == 1 {
-						return 1
-					} else {
-						return -1
-					}
+					return -1
 				}
 			}
 			return 0

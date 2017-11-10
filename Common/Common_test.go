@@ -2,6 +2,7 @@ package Common
 
 import (
 	. "github.com/xitongsys/parquet-go/ParquetType"
+	"reflect"
 	"testing"
 )
 
@@ -63,13 +64,74 @@ func TestCmp(t *testing.T) {
 		{INT64(2), INT64(3), -1},
 		{INT64(2), INT64(2), 0},
 		{INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0},
-		{INT96([]byte{0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), INT96([]byte{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}), -1},
-		{INT96([]byte{0xFF, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), INT96([]byte{0xFF, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 1},
+		{INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), INT96([]byte{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}), -1},
+		{INT96([]byte{0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), INT96([]byte{0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), 1},
+		{FLOAT(-0.1), FLOAT(-0.1), 0},
+		{FLOAT(-0.1), FLOAT(-0.0), -1},
+		{FLOAT(-0.0), FLOAT(-0.1), 1},
+		{DOUBLE(-0.1), DOUBLE(-0.1), 0},
+		{DOUBLE(-0.1), DOUBLE(-0.0), -1},
+		{DOUBLE(-0.0), DOUBLE(-0.1), 1},
+		{BYTE_ARRAY("hello"), BYTE_ARRAY("hello"), 0},
+		{BYTE_ARRAY("hello"), BYTE_ARRAY("hell"), 1},
+		{BYTE_ARRAY(""), BYTE_ARRAY("hello"), -1},
+		{FIXED_LEN_BYTE_ARRAY("hello"), FIXED_LEN_BYTE_ARRAY("hello"), 0},
+		{FIXED_LEN_BYTE_ARRAY("hello"), FIXED_LEN_BYTE_ARRAY("hella"), 1},
+		{FIXED_LEN_BYTE_ARRAY("hella"), FIXED_LEN_BYTE_ARRAY("hello"), -1},
+		{UTF8("hello"), UTF8("hello"), 0},
+		{UTF8("hello"), UTF8("hell"), 1},
+		{UTF8(""), UTF8("hello"), -1},
+		{INT_8(2), INT_8(1), 1},
+		{INT_8(2), INT_8(3), -1},
+		{INT_8(2), INT_8(2), 0},
+		{INT_16(2), INT_16(1), 1},
+		{INT_16(2), INT_16(3), -1},
+		{INT_16(2), INT_16(2), 0},
+		{INT_32(2), INT_32(1), 1},
+		{INT_32(2), INT_32(3), -1},
+		{INT_32(2), INT_32(2), 0},
+		{INT_64(2), INT_64(1), 1},
+		{INT_64(2), INT_64(3), -1},
+		{INT_64(2), INT_64(2), 0},
+		{UINT_8(2), UINT_8(1), 1},
+		{UINT_8(2), UINT_8(3), -1},
+		{UINT_8(2), UINT_8(2), 0},
+		{UINT_16(2), UINT_16(1), 1},
+		{UINT_16(2), UINT_16(3), -1},
+		{UINT_16(2), UINT_16(2), 0},
+		{UINT_32(2), UINT_32(1), 1},
+		{UINT_32(2), UINT_32(3), -1},
+		{UINT_32(2), UINT_32(2), 0},
+		{UINT_64(2), UINT_64(1), 1},
+		{UINT_64(2), UINT_64(3), -1},
+		{UINT_64(2), UINT_64(2), 0},
+		{DATE(2), DATE(1), 1},
+		{DATE(2), DATE(3), -1},
+		{DATE(2), DATE(2), 0},
+		{TIME_MILLIS(2), TIME_MILLIS(1), 1},
+		{TIME_MILLIS(2), TIME_MILLIS(3), -1},
+		{TIME_MILLIS(2), TIME_MILLIS(2), 0},
+		{TIME_MICROS(2), TIME_MICROS(1), 1},
+		{TIME_MICROS(2), TIME_MICROS(3), -1},
+		{TIME_MICROS(2), TIME_MICROS(2), 0},
+		{TIMESTAMP_MILLIS(2), TIMESTAMP_MILLIS(1), 1},
+		{TIMESTAMP_MILLIS(2), TIMESTAMP_MILLIS(3), -1},
+		{TIMESTAMP_MILLIS(2), TIMESTAMP_MILLIS(2), 0},
+		{TIMESTAMP_MICROS(2), TIMESTAMP_MICROS(1), 1},
+		{TIMESTAMP_MICROS(2), TIMESTAMP_MICROS(3), -1},
+		{TIMESTAMP_MICROS(2), TIMESTAMP_MICROS(2), 0},
+		{INTERVAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), INTERVAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0},
+		{INTERVAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), INTERVAL([]byte{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}), 1},
+		{INTERVAL([]byte{0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), INTERVAL([]byte{0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), -1},
+		{DECIMAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), DECIMAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0},
+		{DECIMAL([]byte{0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), DECIMAL([]byte{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}), -1},
+		{DECIMAL([]byte{0xFF, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), DECIMAL([]byte{0xFF, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 1},
 	}
+
 	for _, data := range testData {
 		res := Cmp(data.Num1, data.Num2)
 		if res != data.Expected {
-			t.Errorf("Cmp err, expect %v, get %v", data.Expected, res)
+			t.Errorf("Cmp %v err, expect %v, get %v", reflect.TypeOf(data.Num1).Name(), data.Expected, res)
 		}
 	}
 }
