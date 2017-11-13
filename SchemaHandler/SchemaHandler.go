@@ -3,8 +3,6 @@ package SchemaHandler
 import (
 	"errors"
 	"github.com/xitongsys/parquet-go/Common"
-	"github.com/xitongsys/parquet-go/ParquetType"
-	//"log"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 	"strconv"
@@ -276,47 +274,35 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schema.NumChildren = nil
 
 			name := item.GoType.Name()
-			if ParquetType.IsBaseType(name) {
-				t := ParquetType.NameToBaseType(name)
+			t, err := parquet.TypeFromString(name)
+			if err == nil {
 				schema.Type = &t
 			} else {
+				ct, _ := parquet.ConvertedTypeFromString(name)
+				schema.ConvertedType = &ct
 				if name == "INT_8" || name == "INT_16" || name == "INT_32" ||
 					name == "UINT_8" || name == "UINT_16" || name == "UINT_32" ||
 					name == "DATE" || name == "TIME_MILLIS" {
-					t := parquet.Type_INT32
-					ct := ParquetType.NameToConvertedType(name)
-					schema.Type = &t
-					schema.ConvertedType = &ct
+					schema.Type = parquet.TypePtr(parquet.Type_INT32)
 				} else if name == "INT_64" || name == "UINT_64" ||
 					name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" {
-					t := parquet.Type_INT64
-					ct := ParquetType.NameToConvertedType(name)
-					schema.Type = &t
-					schema.ConvertedType = &ct
+					schema.Type = parquet.TypePtr(parquet.Type_INT64)
 				} else if name == "UTF8" {
-					t := parquet.Type_BYTE_ARRAY
-					ct := ParquetType.NameToConvertedType(name)
-					schema.Type = &t
-					schema.ConvertedType = &ct
+					schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
 				} else if name == "INTERVAL" {
-					t := parquet.Type_FIXED_LEN_BYTE_ARRAY
-					ct := ParquetType.NameToConvertedType(name)
+					schema.Type = parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY)
 					var ln int32 = 12
-					schema.Type = &t
-					schema.ConvertedType = &ct
 					schema.TypeLength = &ln
 				} else if name == "DECIMAL" {
 					tag := item.Info["Tag"].(reflect.StructTag)
-					ct := ParquetType.NameToConvertedType(name)
 					bT := tag.Get("BaseType")
-					t := ParquetType.NameToBaseType(bT)
+					t, _ := parquet.TypeFromString(bT)
 					scaleTmp, _ := strconv.Atoi(tag.Get("Scale"))
 					precisionTmp, _ := strconv.Atoi(tag.Get("Precision"))
 					scale := int32(scaleTmp)
 					precision := int32(precisionTmp)
 
 					schema.Type = &t
-					schema.ConvertedType = &ct
 					schema.Scale = &scale
 					schema.Precision = &precision
 
