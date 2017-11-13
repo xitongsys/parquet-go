@@ -1,10 +1,10 @@
 package ParquetType
 
 import (
-	"github.com/xitongsys/parquet-go/parquet"
 	"testing"
 )
 
+/*
 func TestNameToBaseType(t *testing.T) {
 	testData := []struct {
 		Name string
@@ -98,6 +98,7 @@ func TestIsBaseType(t *testing.T) {
 		}
 	}
 }
+*/
 
 func TestStrToParquetType(t *testing.T) {
 	testData := []struct {
