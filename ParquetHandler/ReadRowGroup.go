@@ -1,20 +1,20 @@
 package ParquetHandler
 
 import (
-	. "github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //Read one RowGroup from parquet file
-func (self *ParquetHandler) ReadRowGroup(rowGroupHeader *parquet.RowGroup) *RowGroup {
-	rowGroup := new(RowGroup)
+func (self *ParquetHandler) ReadRowGroup(rowGroupHeader *parquet.RowGroup) *Layout.RowGroup {
+	rowGroup := new(Layout.RowGroup)
 	rowGroup.RowGroupHeader = rowGroupHeader
 
 	columnChunks := rowGroupHeader.GetColumns()
 	ln := int64(len(columnChunks))
-	chunksList := make([][]*Chunk, self.NP)
+	chunksList := make([][]*Layout.Chunk, self.NP)
 	for i := int64(0); i < self.NP; i++ {
-		chunksList[i] = make([]*Chunk, 0)
+		chunksList[i] = make([]*Layout.Chunk, 0)
 	}
 
 	delta := (ln + self.NP - 1) / self.NP

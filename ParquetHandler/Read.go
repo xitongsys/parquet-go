@@ -3,9 +3,9 @@ package ParquetHandler
 import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/Marshal"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/Marshal"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 )
@@ -58,13 +58,13 @@ func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64) int {
 	self.PFile = pfile
 	self.NP = np
 	self.ReadFooter()
-	self.SchemaHandler = NewSchemaHandlerFromSchemaList(self.Footer.GetSchema())
+	self.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(self.Footer.GetSchema())
 	self.RowGroupIndex = 0
 	return len(self.Footer.GetRowGroups())
 }
 
 //Read one RowGroup to table map
-func (self *ParquetHandler) ReadOneRowGroup() (*map[string]*Table, int) {
+func (self *ParquetHandler) ReadOneRowGroup() (*map[string]*Common.Table, int) {
 	rowGroups := self.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
 	if self.RowGroupIndex >= ln {
@@ -96,7 +96,7 @@ func (self *ParquetHandler) ReadOneRowGroupAndUnmarshal(dstInterface interface{}
 		}
 		go func(b, e, index int) {
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
-			Unmarshal(tmap, b, e, dstList[index], self.SchemaHandler)
+			Marshal.Unmarshal(tmap, b, e, dstList[index], self.SchemaHandler)
 			doneChan <- 0
 		}(int(bgn), int(end), int(c))
 	}

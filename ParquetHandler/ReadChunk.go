@@ -2,21 +2,21 @@ package ParquetHandler
 
 import (
 	"git.apache.org/thrift.git/lib/go/thrift"
-	. "github.com/xitongsys/parquet-go/Layout"
-	. "github.com/xitongsys/parquet-go/ParquetType"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //Decode a dict chunk
-func (self *ParquetHandler) DecodeDictChunk(chunk *Chunk) {
+func (self *ParquetHandler) DecodeDictChunk(chunk *Layout.Chunk) {
 	dictPage := chunk.Pages[0]
 	numPages := len(chunk.Pages)
 	for i := 1; i < numPages; i++ {
 		numValues := len(chunk.Pages[i].DataTable.Values)
 		for j := 0; j < numValues; j++ {
 			if chunk.Pages[i].DataTable.Values[j] != nil {
-				index := chunk.Pages[i].DataTable.Values[j].(INT64)
+				index := chunk.Pages[i].DataTable.Values[j].(ParquetType.INT64)
 				chunk.Pages[i].DataTable.Values[j] = dictPage.DataTable.Values[index]
 			}
 		}
@@ -25,8 +25,8 @@ func (self *ParquetHandler) DecodeDictChunk(chunk *Chunk) {
 }
 
 //Read one chunk from parquet file
-func (self *ParquetHandler) ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler, chunkHeader *parquet.ColumnChunk) *Chunk {
-	chunk := new(Chunk)
+func (self *ParquetHandler) ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, chunkHeader *parquet.ColumnChunk) *Layout.Chunk {
+	chunk := new(Layout.Chunk)
 	chunk.ChunkHeader = chunkHeader
 
 	var readRows int64 = 0

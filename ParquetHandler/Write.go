@@ -3,9 +3,9 @@ package ParquetHandler
 import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	. "github.com/xitongsys/parquet-go/Layout"
-	. "github.com/xitongsys/parquet-go/Marshal"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/Marshal"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"strings"
 )
@@ -27,7 +27,7 @@ func (self *ParquetHandler) NameToLower() {
 
 //Write init function
 func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64, objAveSize int64) {
-	self.SchemaHandler = NewSchemaHandlerFromStruct(obj)
+	self.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
 	//log.Println(self.SchemaHandler)
 	self.NP = np
 	self.ObjAveSize = objAveSize
@@ -67,9 +67,9 @@ func (self *ParquetHandler) Write(src interface{}) {
 
 //Flush the write buffer to parquet file
 func (self *ParquetHandler) Flush() {
-	pagesMapList := make([]map[string][]*Page, self.NP)
+	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
-		pagesMapList[i] = make(map[string][]*Page)
+		pagesMapList[i] = make(map[string][]*Layout.Page)
 	}
 
 	doneChan := make(chan int)
@@ -92,9 +92,9 @@ func (self *ParquetHandler) Flush() {
 				return
 			}
 
-			tableMap := Marshal(self.Objs, b, e, self.SchemaHandler)
+			tableMap := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler)
 			for name, table := range *tableMap {
-				pagesMapList[index][name], _ = TableToDataPages(table, int32(self.PageSize),
+				pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
 					parquet.CompressionCodec_SNAPPY)
 			}
 
@@ -106,7 +106,7 @@ func (self *ParquetHandler) Flush() {
 		<-doneChan
 	}
 
-	totalPagesMap := make(map[string][]*Page)
+	totalPagesMap := make(map[string][]*Layout.Page)
 	for _, pagesMap := range pagesMapList {
 		for name, pages := range pagesMap {
 			if _, ok := totalPagesMap[name]; !ok {
@@ -118,13 +118,13 @@ func (self *ParquetHandler) Flush() {
 	}
 
 	//pages -> chunk
-	chunkMap := make(map[string]*Chunk)
+	chunkMap := make(map[string]*Layout.Chunk)
 	for name, pages := range totalPagesMap {
-		chunkMap[name] = PagesToChunk(pages)
+		chunkMap[name] = Layout.PagesToChunk(pages)
 	}
 
 	//chunks -> rowGroup
-	rowGroup := NewRowGroup()
+	rowGroup := Layout.NewRowGroup()
 	rowGroup.RowGroupHeader.Columns = make([]*parquet.ColumnChunk, 0)
 
 	for k := 0; k < len(self.SchemaHandler.SchemaElements); k++ {

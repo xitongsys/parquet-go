@@ -1,8 +1,8 @@
 package ParquetHandler
 
 import (
-	. "github.com/xitongsys/parquet-go/Layout"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -17,11 +17,11 @@ type ParquetFile interface {
 
 //ParquetHandler is a handler for read/write parquet file
 type ParquetHandler struct {
-	SchemaHandler *SchemaHandler
+	SchemaHandler *SchemaHandler.SchemaHandler
 	NP            int64 //parallel number
 
 	Footer    *parquet.FileMetaData
-	RowGroups []*RowGroup
+	RowGroups []*Layout.RowGroup
 
 	PFile ParquetFile
 
