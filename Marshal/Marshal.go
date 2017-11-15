@@ -1,14 +1,14 @@
 package Marshal
 
 import (
-	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"reflect"
 )
 
 type Node struct {
 	Val     reflect.Value
-	PathMap *PathMapType
+	PathMap *SchemaHandler.PathMapType
 	RL      int32
 	DL      int32
 }
@@ -45,9 +45,9 @@ func (self *NodeBufType) Reset() {
 ////////for improve performance///////////////////////////////////
 
 //Convert the objects to table map. srcInterface is a slice of objects
-func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler) *map[string]*Table {
+func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Common.Table {
 	src := reflect.ValueOf(srcInterface)
-	res := make(map[string]*Table)
+	res := make(map[string]*Common.Table)
 	pathMap := schemaHandler.PathMap
 	nodeBuf := NewNodeBuf(1)
 
@@ -56,8 +56,8 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 		pathStr := schemaHandler.IndexMap[int32(i)]
 		numChildren := schema.GetNumChildren()
 		if numChildren == 0 {
-			res[pathStr] = new(Table)
-			res[pathStr].Path = StrToPath(pathStr)
+			res[pathStr] = new(Common.Table)
+			res[pathStr].Path = Common.StrToPath(pathStr)
 			res[pathStr].MaxDefinitionLevel, _ = schemaHandler.MaxDefinitionLevel(res[pathStr].Path)
 			res[pathStr].MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(res[pathStr].Path)
 			res[pathStr].RepetitionType = schema.GetRepetitionType()
@@ -126,7 +126,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					}
 				}
 
-				rlNow, _ := schemaHandler.MaxRepetitionLevel(StrToPath(path))
+				rlNow, _ := schemaHandler.MaxRepetitionLevel(Common.StrToPath(path))
 
 				for j := ln - 1; j >= 0; j-- {
 					newNode := nodeBuf.GetNode()
@@ -154,7 +154,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					}
 				}
 
-				rlNow, _ := schemaHandler.MaxRepetitionLevel(StrToPath(path))
+				rlNow, _ := schemaHandler.MaxRepetitionLevel(Common.StrToPath(path))
 				rlNow += 1
 
 				for j := len(keys) - 1; j >= 0; j-- {

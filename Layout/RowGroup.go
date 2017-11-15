@@ -1,7 +1,7 @@
 package Layout
 
 import (
-	. "github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -19,16 +19,16 @@ func NewRowGroup() *RowGroup {
 }
 
 //Convert a RowGroup to table map
-func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
-	tableMap := make(map[string]*Table, 0)
+func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Common.Table {
+	tableMap := make(map[string]*Common.Table, 0)
 	for _, chunk := range rowGroup.Chunks {
 		pathStr := ""
 		for _, page := range chunk.Pages {
 			if pathStr == "" {
-				pathStr = PathToStr(page.DataTable.Path)
+				pathStr = Common.PathToStr(page.DataTable.Path)
 			}
 			if _, ok := tableMap[pathStr]; ok {
-				tableMap[pathStr] = MergeTable(tableMap[pathStr], page.DataTable)
+				tableMap[pathStr] = Common.MergeTable(tableMap[pathStr], page.DataTable)
 			} else {
 				tableMap[pathStr] = page.DataTable
 			}
