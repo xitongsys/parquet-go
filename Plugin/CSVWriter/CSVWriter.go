@@ -3,22 +3,22 @@ package CSVWriter
 import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	. "github.com/xitongsys/parquet-go/Layout"
-	. "github.com/xitongsys/parquet-go/ParquetHandler"
-	. "github.com/xitongsys/parquet-go/ParquetType"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"strings"
 )
 
 //Write handler for CSV data
 type CSVWriterHandler struct {
-	SchemaHandler *SchemaHandler
+	SchemaHandler *SchemaHandler.SchemaHandler
 	NP            int64
 	Footer        *parquet.FileMetaData
-	RowGroups     []*RowGroup
+	RowGroups     []*Layout.RowGroup
 
-	PFile ParquetFile
+	PFile ParquetHandler.ParquetFile
 
 	PageSize     int64
 	RowGroupSize int64
@@ -54,7 +54,7 @@ func (self *CSVWriterHandler) NameToLower() {
 }
 
 //Write init function for CSV writer
-func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetFile, np int64, recordAveSize int64) {
+func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetHandler.ParquetFile, np int64, recordAveSize int64) {
 	self.SchemaHandler = NewSchemaHandlerFromMetadata(md)
 	self.Metadata = md
 	self.PFile = pfile
@@ -76,7 +76,7 @@ func (self *CSVWriterHandler) WriteString(recs []*string) {
 	for i := 0; i < ln; i++ {
 		rec[i] = nil
 		if recs[i] != nil {
-			rec[i] = StrToParquetType(*recs[i], self.Metadata[i].Type)
+			rec[i] = ParquetType.StrToParquetType(*recs[i], self.Metadata[i].Type)
 		}
 	}
 	self.Record = append(self.Record, rec)
@@ -112,9 +112,9 @@ func (self *CSVWriterHandler) WriteStop() {
 
 //Flush the write buffer to parquet file
 func (self *CSVWriterHandler) Flush() {
-	pagesMapList := make([]map[string][]*Page, self.NP)
+	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
-		pagesMapList[i] = make(map[string][]*Page)
+		pagesMapList[i] = make(map[string][]*Layout.Page)
 	}
 
 	doneChan := make(chan int)
@@ -139,7 +139,7 @@ func (self *CSVWriterHandler) Flush() {
 
 			tableMap := MarshalCSV(self.Record, b, e, self.Metadata, self.SchemaHandler)
 			for name, table := range *tableMap {
-				pagesMapList[index][name], _ = TableToDataPages(table, int32(self.PageSize),
+				pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
 					parquet.CompressionCodec_SNAPPY)
 			}
 
@@ -151,7 +151,7 @@ func (self *CSVWriterHandler) Flush() {
 		<-doneChan
 	}
 
-	totalPagesMap := make(map[string][]*Page)
+	totalPagesMap := make(map[string][]*Layout.Page)
 	for _, pagesMap := range pagesMapList {
 		for name, pages := range pagesMap {
 			if _, ok := totalPagesMap[name]; !ok {
@@ -163,13 +163,13 @@ func (self *CSVWriterHandler) Flush() {
 	}
 
 	//pages -> chunk
-	chunkMap := make(map[string]*Chunk)
+	chunkMap := make(map[string]*Layout.Chunk)
 	for name, pages := range totalPagesMap {
-		chunkMap[name] = PagesToChunk(pages)
+		chunkMap[name] = Layout.PagesToChunk(pages)
 	}
 
 	//chunks -> rowGroup
-	rowGroup := NewRowGroup()
+	rowGroup := Layout.NewRowGroup()
 	rowGroup.RowGroupHeader.Columns = make([]*parquet.ColumnChunk, 0)
 
 	for k := 0; k < len(self.SchemaHandler.SchemaElements); k++ {

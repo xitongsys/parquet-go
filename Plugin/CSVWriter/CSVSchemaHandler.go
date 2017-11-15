@@ -1,7 +1,7 @@
 package CSVWriter
 
 import (
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -15,7 +15,7 @@ type MetadataType struct {
 }
 
 //Create a schema handler from CSV metadata
-func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler {
+func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler.SchemaHandler {
 	schemaList := make([]*parquet.SchemaElement, 0)
 
 	rootSchema := parquet.NewSchemaElement()
@@ -70,6 +70,6 @@ func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler {
 		schemaList = append(schemaList, schema)
 	}
 
-	return NewSchemaHandlerFromSchemaList(schemaList)
+	return SchemaHandler.NewSchemaHandlerFromSchemaList(schemaList)
 
 }
