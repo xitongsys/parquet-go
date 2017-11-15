@@ -3,8 +3,7 @@ package ParquetEncoding
 import (
 	"bytes"
 	"encoding/binary"
-	. "github.com/xitongsys/parquet-go/ParquetType"
-	//"log"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -88,10 +87,10 @@ func ReadPlainBOOLEAN(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	resInt := ReadBitPacked(bytesReader, uint64(cnt<<1), 1)
 	for i := 0; i < int(cnt); i++ {
-		if resInt[i].(INT64) > 0 {
-			res[i] = BOOLEAN(true)
+		if resInt[i].(ParquetType.INT64) > 0 {
+			res[i] = ParquetType.BOOLEAN(true)
 		} else {
-			res[i] = BOOLEAN(false)
+			res[i] = ParquetType.BOOLEAN(false)
 		}
 	}
 	return res
@@ -100,7 +99,7 @@ func ReadPlainBOOLEAN(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainINT32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur INT32
+		var cur ParquetType.INT32
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -110,7 +109,7 @@ func ReadPlainINT32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainINT64(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur INT64
+		var cur ParquetType.INT64
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -122,7 +121,7 @@ func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	for i := 0; i < int(cnt); i++ {
 		var cur [12]byte
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = INT96(cur[:12])
+		res[i] = ParquetType.INT96(cur[:12])
 	}
 	return res
 }
@@ -130,7 +129,7 @@ func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainINT_8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur INT_8
+		var cur ParquetType.INT_8
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -140,7 +139,7 @@ func ReadPlainINT_8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainINT_16(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur INT_16
+		var cur ParquetType.INT_16
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -150,7 +149,7 @@ func ReadPlainINT_16(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainINT_32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur INT_32
+		var cur ParquetType.INT_32
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -160,7 +159,7 @@ func ReadPlainINT_32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainINT_64(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur INT_64
+		var cur ParquetType.INT_64
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -170,7 +169,7 @@ func ReadPlainINT_64(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainUINT_8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur UINT_8
+		var cur ParquetType.UINT_8
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -180,7 +179,7 @@ func ReadPlainUINT_8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainUINT_16(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur UINT_16
+		var cur ParquetType.UINT_16
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -190,7 +189,7 @@ func ReadPlainUINT_16(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainUINT_32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur UINT_32
+		var cur ParquetType.UINT_32
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -200,7 +199,7 @@ func ReadPlainUINT_32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainUINT_64(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur UINT_64
+		var cur ParquetType.UINT_64
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -210,7 +209,7 @@ func ReadPlainUINT_64(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur FLOAT
+		var cur ParquetType.FLOAT
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -220,7 +219,7 @@ func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainDOUBLE(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur DOUBLE
+		var cur ParquetType.DOUBLE
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -235,7 +234,7 @@ func ReadPlainBYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 		ln := binary.LittleEndian.Uint32(buf)
 		cur := make([]byte, ln)
 		bytesReader.Read(cur)
-		res[i] = BYTE_ARRAY(cur)
+		res[i] = ParquetType.BYTE_ARRAY(cur)
 	}
 	return res
 }
@@ -245,7 +244,7 @@ func ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64, fixedL
 	for i := 0; i < int(cnt); i++ {
 		cur := make([]byte, fixedLength)
 		bytesReader.Read(cur)
-		res[i] = FIXED_LEN_BYTE_ARRAY(cur)
+		res[i] = ParquetType.FIXED_LEN_BYTE_ARRAY(cur)
 	}
 	return res
 }
@@ -258,7 +257,7 @@ func ReadPlainUTF8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 		ln := binary.LittleEndian.Uint32(buf)
 		cur := make([]byte, ln)
 		bytesReader.Read(cur)
-		res[i] = UTF8(cur)
+		res[i] = ParquetType.UTF8(cur)
 	}
 	return res
 }
@@ -266,7 +265,7 @@ func ReadPlainUTF8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainDATE(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur DATE
+		var cur ParquetType.DATE
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -276,7 +275,7 @@ func ReadPlainDATE(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainTIME_MILLIS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur TIME_MILLIS
+		var cur ParquetType.TIME_MILLIS
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -286,7 +285,7 @@ func ReadPlainTIME_MILLIS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainTIME_MICROS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur TIME_MICROS
+		var cur ParquetType.TIME_MICROS
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -296,7 +295,7 @@ func ReadPlainTIME_MICROS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 func ReadPlainTIMESTAMP_MILLIS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur TIMESTAMP_MILLIS
+		var cur ParquetType.TIMESTAMP_MILLIS
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -306,7 +305,7 @@ func ReadPlainTIMESTAMP_MILLIS(bytesReader *bytes.Reader, cnt uint64) []interfac
 func ReadPlainTIMESTAMP_MICROS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur TIMESTAMP_MICROS
+		var cur ParquetType.TIMESTAMP_MICROS
 		binary.Read(bytesReader, binary.LittleEndian, &cur)
 		res[i] = cur
 	}
@@ -318,7 +317,7 @@ func ReadPlainINTERVAL(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	for i := 0; i < int(cnt); i++ {
 		cur := make([]byte, 12)
 		bytesReader.Read(cur)
-		res[i] = INTERVAL(cur)
+		res[i] = ParquetType.INTERVAL(cur)
 	}
 	return res
 }
@@ -331,7 +330,7 @@ func ReadPlainDECIMAL(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 		ln := binary.LittleEndian.Uint32(buf)
 		cur := make([]byte, ln)
 		bytesReader.Read(cur)
-		res[i] = DECIMAL(cur)
+		res[i] = ParquetType.DECIMAL(cur)
 	}
 	return res
 }
@@ -362,7 +361,7 @@ func ReadRLE(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []interf
 	for len(data) < 4 {
 		data = append(data, byte(0))
 	}
-	val := INT64(binary.LittleEndian.Uint32(data))
+	val := ParquetType.INT64(binary.LittleEndian.Uint32(data))
 	res := make([]interface{}, cnt)
 
 	for i := 0; i < int(cnt); i++ {
@@ -381,7 +380,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []
 
 	if bitWidth == 0 {
 		for i := 0; i < int(cnt); i++ {
-			res = append(res, INT64(0))
+			res = append(res, ParquetType.INT64(0))
 		}
 		return res
 	}
@@ -397,7 +396,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []
 	for i < len(bytesBuf) {
 		if left >= resCurNeedBits {
 			resCur |= uint64(((uint64(b) >> uint64(used)) & ((1 << uint64(resCurNeedBits)) - 1)) << uint64(bitWidth-resCurNeedBits))
-			res = append(res, INT64(resCur))
+			res = append(res, ParquetType.INT64(resCur))
 			left -= resCurNeedBits
 			used += resCurNeedBits
 
@@ -429,7 +428,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []
 func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length uint64) []interface{} {
 	res := make([]interface{}, 0)
 	if length <= 0 {
-		length = uint64(ReadPlainINT32(bytesReader, 1)[0].(INT32))
+		length = uint64(ReadPlainINT32(bytesReader, 1)[0].(ParquetType.INT32))
 	}
 	//log.Println("ReadRLEBitPackedHybrid length =", length)
 
@@ -459,7 +458,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
 
 	res := make([]interface{}, 0)
-	res = append(res, INT64(firstValue))
+	res = append(res, ParquetType.INT64(firstValue))
 	for uint64(len(res)) < numValues {
 		minDeltaZigZag := ReadUnsignedVarInt(bytesReader)
 		var minDelta int64 = int64(minDeltaZigZag>>1) ^ (-int64(minDeltaZigZag & 1))
@@ -471,7 +470,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
 			cur := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
 			for j := 1; j < len(cur); j++ {
-				res = append(res, INT64(int64(res[len(res)-1].(INT64))+int64(cur[j].(INT64))+minDelta))
+				res = append(res, ParquetType.INT64(int64(res[len(res)-1].(ParquetType.INT64))+int64(cur[j].(ParquetType.INT64))+minDelta))
 			}
 		}
 	}
@@ -482,8 +481,8 @@ func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) []interface{} {
 	lengths := ReadDeltaBinaryPackedINT(bytesReader)
 	res := make([]interface{}, len(lengths))
 	for i := 0; i < len(lengths); i++ {
-		cur := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(INT64)))
-		res[i] = BYTE_ARRAY(cur[0].(FIXED_LEN_BYTE_ARRAY))
+		cur := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(ParquetType.INT64)))
+		res[i] = ParquetType.BYTE_ARRAY(cur[0].(ParquetType.FIXED_LEN_BYTE_ARRAY))
 	}
 	return res
 }
@@ -495,9 +494,9 @@ func ReadDeltaByteArray(bytesReader *bytes.Reader) []interface{} {
 
 	res[0] = suffixes[0]
 	for i := 1; i < len(prefixLengths); i++ {
-		prefixLength := prefixLengths[i].(INT64)
-		prefix := res[i-1].(BYTE_ARRAY)[:prefixLength]
-		suffix := suffixes[i].(BYTE_ARRAY)
+		prefixLength := prefixLengths[i].(ParquetType.INT64)
+		prefix := res[i-1].(ParquetType.BYTE_ARRAY)[:prefixLength]
+		suffix := suffixes[i].(ParquetType.BYTE_ARRAY)
 		res[i] = prefix + suffix
 	}
 	return res
