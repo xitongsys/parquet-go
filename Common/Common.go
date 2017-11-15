@@ -1,7 +1,7 @@
 package Common
 
 import (
-	. "github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"reflect"
 	"strings"
 )
@@ -41,16 +41,16 @@ func Cmp(ai interface{}, bi interface{}) int {
 	switch name {
 	case "BOOLEAN":
 		a, b := 0, 0
-		if ai.(BOOLEAN) {
+		if ai.(ParquetType.BOOLEAN) {
 			a = 1
 		}
-		if bi.(BOOLEAN) {
+		if bi.(ParquetType.BOOLEAN) {
 			b = 1
 		}
 		return a - b
 
 	case "INT32":
-		a, b := ai.(INT32), bi.(INT32)
+		a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -59,7 +59,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT64":
-		a, b := ai.(INT64), bi.(INT64)
+		a, b := ai.(ParquetType.INT64), bi.(ParquetType.INT64)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -68,7 +68,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT96":
-		a, b := []byte(ai.(INT96)), []byte(bi.(INT96))
+		a, b := []byte(ai.(ParquetType.INT96)), []byte(bi.(ParquetType.INT96))
 		fa, fb := a[11]>>7, b[11]>>7
 		if fa > fb {
 			return -1
@@ -85,7 +85,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "FLOAT":
-		a, b := ai.(FLOAT), bi.(FLOAT)
+		a, b := ai.(ParquetType.FLOAT), bi.(ParquetType.FLOAT)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -94,7 +94,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "DOUBLE":
-		a, b := ai.(DOUBLE), bi.(DOUBLE)
+		a, b := ai.(ParquetType.DOUBLE), bi.(ParquetType.DOUBLE)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -103,7 +103,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "BYTE_ARRAY":
-		a, b := ai.(BYTE_ARRAY), bi.(BYTE_ARRAY)
+		a, b := ai.(ParquetType.BYTE_ARRAY), bi.(ParquetType.BYTE_ARRAY)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -112,7 +112,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "FIXED_LEN_BYTE_ARRAY":
-		a, b := ai.(FIXED_LEN_BYTE_ARRAY), bi.(FIXED_LEN_BYTE_ARRAY)
+		a, b := ai.(ParquetType.FIXED_LEN_BYTE_ARRAY), bi.(ParquetType.FIXED_LEN_BYTE_ARRAY)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -121,7 +121,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UTF8":
-		a, b := ai.(UTF8), bi.(UTF8)
+		a, b := ai.(ParquetType.UTF8), bi.(ParquetType.UTF8)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -130,7 +130,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT_8":
-		a, b := ai.(INT_8), bi.(INT_8)
+		a, b := ai.(ParquetType.INT_8), bi.(ParquetType.INT_8)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -139,7 +139,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT_16":
-		a, b := ai.(INT_16), bi.(INT_16)
+		a, b := ai.(ParquetType.INT_16), bi.(ParquetType.INT_16)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -148,7 +148,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT_32":
-		a, b := ai.(INT_32), bi.(INT_32)
+		a, b := ai.(ParquetType.INT_32), bi.(ParquetType.INT_32)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -157,7 +157,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT_64":
-		a, b := ai.(INT_64), bi.(INT_64)
+		a, b := ai.(ParquetType.INT_64), bi.(ParquetType.INT_64)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -166,7 +166,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UINT_8":
-		a, b := ai.(UINT_8), bi.(UINT_8)
+		a, b := ai.(ParquetType.UINT_8), bi.(ParquetType.UINT_8)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -175,7 +175,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UINT_16":
-		a, b := ai.(UINT_16), bi.(UINT_16)
+		a, b := ai.(ParquetType.UINT_16), bi.(ParquetType.UINT_16)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -184,7 +184,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UINT_32":
-		a, b := ai.(UINT_32), bi.(UINT_32)
+		a, b := ai.(ParquetType.UINT_32), bi.(ParquetType.UINT_32)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -193,7 +193,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UINT_64":
-		a, b := ai.(UINT_64), bi.(UINT_64)
+		a, b := ai.(ParquetType.UINT_64), bi.(ParquetType.UINT_64)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -202,7 +202,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "DATE":
-		a, b := ai.(DATE), bi.(DATE)
+		a, b := ai.(ParquetType.DATE), bi.(ParquetType.DATE)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -211,7 +211,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "TIME_MILLIS":
-		a, b := ai.(TIME_MILLIS), bi.(TIME_MILLIS)
+		a, b := ai.(ParquetType.TIME_MILLIS), bi.(ParquetType.TIME_MILLIS)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -220,7 +220,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "TIME_MICROS":
-		a, b := ai.(TIME_MICROS), bi.(TIME_MICROS)
+		a, b := ai.(ParquetType.TIME_MICROS), bi.(ParquetType.TIME_MICROS)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -229,7 +229,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "TIMESTAMP_MILLIS":
-		a, b := ai.(TIMESTAMP_MILLIS), bi.(TIMESTAMP_MILLIS)
+		a, b := ai.(ParquetType.TIMESTAMP_MILLIS), bi.(ParquetType.TIMESTAMP_MILLIS)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -238,7 +238,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "TIMESTAMP_MICROS":
-		a, b := ai.(TIMESTAMP_MICROS), bi.(TIMESTAMP_MICROS)
+		a, b := ai.(ParquetType.TIMESTAMP_MICROS), bi.(ParquetType.TIMESTAMP_MICROS)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -247,7 +247,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INTERVAL":
-		a, b := []byte(ai.(INTERVAL)), []byte(bi.(INTERVAL))
+		a, b := []byte(ai.(ParquetType.INTERVAL)), []byte(bi.(ParquetType.INTERVAL))
 		for i := 11; i >= 0; i-- {
 			if a[i] > b[i] {
 				return 1
@@ -258,7 +258,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "DECIMAL":
-		a, b := []byte(ai.(DECIMAL)), []byte(bi.(DECIMAL))
+		a, b := []byte(ai.(ParquetType.DECIMAL)), []byte(bi.(ParquetType.DECIMAL))
 		fa, fb := (a[0] >> 7), (b[0] >> 7)
 		la, lb := len(a), len(b)
 		if fa > fb {
