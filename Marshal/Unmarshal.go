@@ -1,8 +1,8 @@
 package Marshal
 
 import (
-	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"reflect"
 )
 
@@ -17,7 +17,7 @@ type MapRecord struct {
 }
 
 //Convert the table map to objects slice. desInterface is a slice of pointers of objects
-func Unmarshal(tableMap *map[string]*Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler) {
+func Unmarshal(tableMap *map[string]*Common.Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler.SchemaHandler) {
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	tableIndex := make(map[string]int)
 	tableBgn, tableEnd := make(map[string]int), make(map[string]int)
@@ -81,7 +81,7 @@ func Unmarshal(tableMap *map[string]*Table, bgn int, end int, dstInterface inter
 							table.DefinitionLevels[tableIndex[name]] > int32(dl)) ||
 							table.DefinitionLevels[tableIndex[name]] == table.MaxDefinitionLevel {
 							pathIndex++
-							po = po.FieldByName(HeadToUpper(path[pathIndex])) //HeadToUpper is for some filed is lowercase
+							po = po.FieldByName(Common.HeadToUpper(path[pathIndex])) //HeadToUpper is for some filed is lowercase
 
 						} else {
 							break
