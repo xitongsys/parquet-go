@@ -2,10 +2,10 @@ package Layout
 
 import (
 	"git.apache.org/thrift.git/lib/go/thrift"
-	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/Compress"
-	. "github.com/xitongsys/parquet-go/ParquetEncoding"
-	. "github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/Compress"
+	"github.com/xitongsys/parquet-go/ParquetEncoding"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 )
@@ -15,7 +15,7 @@ type Page struct {
 	//Header of a page
 	Header *parquet.PageHeader
 	//Table to store values
-	DataTable *Table
+	DataTable *Common.Table
 	//Compressed data of the page, which is written in parquet file
 	RawData []byte
 	//Compress type: gzip/snappy/none
@@ -51,7 +51,7 @@ func NewDataPage() *Page {
 }
 
 //Convert a table to data pages
-func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func TableToDataPages(table *Common.Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
@@ -69,9 +69,9 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		for j < totalLn && size < pageSize {
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
-				size += int32(SizeOf(reflect.ValueOf(table.Values[j])))
-				maxVal = Max(maxVal, table.Values[j])
-				minVal = Min(minVal, table.Values[j])
+				size += int32(Common.SizeOf(reflect.ValueOf(table.Values[j])))
+				maxVal = Common.Max(maxVal, table.Values[j])
+				minVal = Common.Min(minVal, table.Values[j])
 			}
 			j++
 		}
@@ -80,7 +80,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.Header.DataPageHeader.NumValues = numValues
 		page.Header.Type = parquet.PageType_DATA_PAGE
 
-		page.DataTable = new(Table)
+		page.DataTable = new(Common.Table)
 		page.DataTable.RepetitionType = table.RepetitionType
 		page.DataTable.Path = table.Path
 		page.DataTable.MaxDefinitionLevel = table.MaxDefinitionLevel
@@ -114,7 +114,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
 		}
 	}
-	valuesRawBuf := WritePlain(valuesBuf)
+	valuesRawBuf := ParquetEncoding.WritePlain(valuesBuf)
 
 	/*
 		////////test DeltaINT64///////////////////
@@ -136,9 +136,9 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.DataTable.MaxDefinitionLevel > 0 {
 		numInterfaces := make([]interface{}, ln)
 		for i := 0; i < ln; i++ {
-			numInterfaces[i] = INT64(page.DataTable.DefinitionLevels[i])
+			numInterfaces[i] = ParquetType.INT64(page.DataTable.DefinitionLevels[i])
 		}
-		definitionLevelBuf = WriteRLEBitPackedHybrid(numInterfaces, int32(BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
+		definitionLevelBuf = ParquetEncoding.WriteRLEBitPackedHybrid(numInterfaces, int32(Common.BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
 	}
 
 	//repetitionLevel/////////////////////////////////
@@ -146,9 +146,9 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.DataTable.MaxRepetitionLevel > 0 {
 		numInterfaces := make([]interface{}, ln)
 		for i := 0; i < ln; i++ {
-			numInterfaces[i] = INT64(page.DataTable.RepetitionLevels[i])
+			numInterfaces[i] = ParquetType.INT64(page.DataTable.RepetitionLevels[i])
 		}
-		repetitionLevelBuf = WriteRLEBitPackedHybrid(numInterfaces, int32(BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
+		repetitionLevelBuf = ParquetEncoding.WriteRLEBitPackedHybrid(numInterfaces, int32(Common.BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
 	}
 
 	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
@@ -159,9 +159,9 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 	var dataEncodeBuf []byte
 	if compressType == parquet.CompressionCodec_GZIP {
-		dataEncodeBuf = CompressGzip(dataBuf)
+		dataEncodeBuf = Compress.CompressGzip(dataBuf)
 	} else if compressType == parquet.CompressionCodec_SNAPPY {
-		dataEncodeBuf = CompressSnappy(dataBuf)
+		dataEncodeBuf = Compress.CompressSnappy(dataBuf)
 	} else {
 		dataEncodeBuf = dataBuf
 	}
@@ -192,7 +192,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	*/
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		tmpBuf := WritePlain([]interface{}{page.MaxVal})
+		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MaxVal})
 		name := reflect.TypeOf(page.MaxVal).Name()
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
@@ -200,7 +200,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 		page.Header.DataPageHeader.Statistics.Max = tmpBuf
 	}
 	if page.MinVal != nil {
-		tmpBuf := WritePlain([]interface{}{page.MinVal})
+		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MinVal})
 		name := reflect.TypeOf(page.MinVal).Name()
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
@@ -231,16 +231,16 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
 		}
 	}
-	valuesRawBuf := WritePlain(valuesBuf)
+	valuesRawBuf := ParquetEncoding.WritePlain(valuesBuf)
 
 	//definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
 	if page.DataTable.MaxDefinitionLevel > 0 {
 		numInterfaces := make([]interface{}, ln)
 		for i := 0; i < ln; i++ {
-			numInterfaces[i] = INT64(page.DataTable.DefinitionLevels[i])
+			numInterfaces[i] = ParquetType.INT64(page.DataTable.DefinitionLevels[i])
 		}
-		definitionLevelBuf = WriteRLE(numInterfaces, int32(BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
+		definitionLevelBuf = ParquetEncoding.WriteRLE(numInterfaces, int32(Common.BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
 	}
 
 	//repetitionLevel/////////////////////////////////
@@ -249,19 +249,19 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.DataTable.MaxRepetitionLevel > 0 {
 		numInterfaces := make([]interface{}, ln)
 		for i := 0; i < ln; i++ {
-			numInterfaces[i] = INT64(page.DataTable.RepetitionLevels[i])
+			numInterfaces[i] = ParquetType.INT64(page.DataTable.RepetitionLevels[i])
 			if page.DataTable.RepetitionLevels[i] == 0 {
 				r0Num++
 			}
 		}
-		repetitionLevelBuf = WriteRLE(numInterfaces, int32(BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
+		repetitionLevelBuf = ParquetEncoding.WriteRLE(numInterfaces, int32(Common.BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
 	}
 
 	var dataEncodeBuf []byte
 	if compressType == parquet.CompressionCodec_GZIP {
-		dataEncodeBuf = CompressGzip(valuesRawBuf)
+		dataEncodeBuf = Compress.CompressGzip(valuesRawBuf)
 	} else if compressType == parquet.CompressionCodec_SNAPPY {
-		dataEncodeBuf = CompressSnappy(valuesRawBuf)
+		dataEncodeBuf = Compress.CompressSnappy(valuesRawBuf)
 	} else {
 		dataEncodeBuf = valuesRawBuf
 	}
@@ -282,7 +282,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 
 	page.Header.DataPageHeaderV2.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		tmpBuf := WritePlain([]interface{}{page.MaxVal})
+		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MaxVal})
 		name := reflect.TypeOf(page.MaxVal).Name()
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
@@ -290,7 +290,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 		page.Header.DataPageHeaderV2.Statistics.Max = tmpBuf
 	}
 	if page.MinVal != nil {
-		tmpBuf := WritePlain([]interface{}{page.MinVal})
+		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MinVal})
 		name := reflect.TypeOf(page.MinVal).Name()
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
@@ -313,7 +313,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 }
 
 //Convert table to dict data page. ToDo
-func TableToDictDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func TableToDictDataPages(table *Common.Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	return []*Page{}, 0
 }
 

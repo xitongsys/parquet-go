@@ -1,8 +1,8 @@
 package Layout
 
 import (
-	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/ParquetEncoding"
+	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/ParquetEncoding"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 )
@@ -31,8 +31,8 @@ func PagesToChunk(pages []*Page) *Chunk {
 		}
 		totalUncompressedSize += int64(pages[i].Header.UncompressedPageSize) + int64(len(pages[i].RawData)) - int64(pages[i].Header.CompressedPageSize)
 		totalCompressedSize += int64(len(pages[i].RawData))
-		maxVal = Max(maxVal, pages[i].MaxVal)
-		minVal = Min(minVal, pages[i].MinVal)
+		maxVal = Common.Max(maxVal, pages[i].MaxVal)
+		minVal = Common.Min(minVal, pages[i].MinVal)
 	}
 
 	chunk := new(Chunk)
@@ -51,8 +51,8 @@ func PagesToChunk(pages []*Page) *Chunk {
 	metaData.PathInSchema = pages[0].DataTable.Path[1:]
 	metaData.Statistics = parquet.NewStatistics()
 
-	tmpBufMax := WritePlain([]interface{}{maxVal})
-	tmpBufMin := WritePlain([]interface{}{minVal})
+	tmpBufMax := ParquetEncoding.WritePlain([]interface{}{maxVal})
+	tmpBufMin := ParquetEncoding.WritePlain([]interface{}{minVal})
 	name := reflect.TypeOf(maxVal).Name()
 
 	if name == "UTF8" || name == "DECIMAL" {
