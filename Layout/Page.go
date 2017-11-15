@@ -81,7 +81,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.Header.Type = parquet.PageType_DATA_PAGE
 
 		page.DataTable = new(Table)
-		page.DataTable.Repetition_Type = table.Repetition_Type
+		page.DataTable.RepetitionType = table.RepetitionType
 		page.DataTable.Path = table.Path
 		page.DataTable.MaxDefinitionLevel = table.MaxDefinitionLevel
 		page.DataTable.MaxRepetitionLevel = table.MaxRepetitionLevel

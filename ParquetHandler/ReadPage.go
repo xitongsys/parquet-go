@@ -206,7 +206,7 @@ func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, sc
 
 		table := new(Table)
 		table.Path = path
-		table.Repetition_Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
+		table.RepetitionType = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
 		table.MaxRepetitionLevel = maxRepetitionLevel
 		table.MaxDefinitionLevel = maxDefinitionLevel
 		table.Values = make([]interface{}, len(definitionLevels))
@@ -306,7 +306,7 @@ func (self *ParquetHandler) ReadPage(thriftReader *thrift.TBufferedTransport, sc
 
 		table := new(Table)
 		table.Path = path
-		table.Repetition_Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
+		table.RepetitionType = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
 		table.MaxRepetitionLevel = maxRepetitionLevel
 		table.MaxDefinitionLevel = maxDefinitionLevel
 		table.Values = make([]interface{}, len(definitionLevels))

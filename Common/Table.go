@@ -7,7 +7,7 @@ import (
 //Table is the core data structure used to store the values
 type Table struct {
 	//Repetition type of the values: REQUIRED/OPTIONAL/REPEATED
-	Repetition_Type parquet.FieldRepetitionType
+	RepetitionType parquet.FieldRepetitionType
 	//Parquet type
 	Type parquet.Type
 	//Path of this column
