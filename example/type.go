@@ -1,38 +1,38 @@
 package main
 
 import (
-	. "github.com/xitongsys/parquet-go/ParquetHandler"
-	. "github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"log"
 	"os"
 )
 
 type TypeList struct {
-	Bool              BOOLEAN
-	Int32             INT32
-	Int64             INT64
-	Int96             INT96
-	Float             FLOAT
-	Double            DOUBLE
-	ByteArray         BYTE_ARRAY
-	FixedLenByteArray FIXED_LEN_BYTE_ARRAY `Length:"10"`
+	Bool              ParquetType.BOOLEAN
+	Int32             ParquetType.INT32
+	Int64             ParquetType.INT64
+	Int96             ParquetType.INT96
+	Float             ParquetType.FLOAT
+	Double            ParquetType.DOUBLE
+	ByteArray         ParquetType.BYTE_ARRAY
+	FixedLenByteArray ParquetType.FIXED_LEN_BYTE_ARRAY `Length:"10"`
 
-	Utf8            UTF8
-	Int_8           INT_8
-	Int_16          INT_16
-	Int_32          INT_32
-	Int_64          INT_64
-	Uint_8          UINT_8
-	Uint_16         UINT_16
-	Uint_32         UINT_32
-	Uint_64         UINT_64
-	Date            DATE
-	TimeMillis      TIME_MILLIS
-	TimeMicros      TIME_MICROS
-	TimestampMillis TIMESTAMP_MILLIS
-	TimestampMicros TIMESTAMP_MICROS
-	Interval        INTERVAL
-	Decimal         DECIMAL `BaseType:"BYTE_ARRAY" Scale:"2" Precision:"2"`
+	Utf8            ParquetType.UTF8
+	Int_8           ParquetType.INT_8
+	Int_16          ParquetType.INT_16
+	Int_32          ParquetType.INT_32
+	Int_64          ParquetType.INT_64
+	Uint_8          ParquetType.UINT_8
+	Uint_16         ParquetType.UINT_16
+	Uint_32         ParquetType.UINT_32
+	Uint_64         ParquetType.UINT_64
+	Date            ParquetType.DATE
+	TimeMillis      ParquetType.TIME_MILLIS
+	TimeMicros      ParquetType.TIME_MICROS
+	TimestampMillis ParquetType.TIMESTAMP_MILLIS
+	TimestampMicros ParquetType.TIMESTAMP_MICROS
+	Interval        ParquetType.INTERVAL
+	Decimal         ParquetType.DECIMAL `BaseType:"BYTE_ARRAY" Scale:"2" Precision:"2"`
 }
 
 type MyFile struct {
@@ -40,14 +40,14 @@ type MyFile struct {
 	File     *os.File
 }
 
-func (self *MyFile) Create(name string) (ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(MyFile)
 	myFile.File = file
 	return myFile, err
 
 }
-func (self *MyFile) Open(name string) (ParquetFile, error) {
+func (self *MyFile) Open(name string) (ParquetHandler.ParquetFile, error) {
 	var (
 		err error
 	)
@@ -77,42 +77,42 @@ func (self *MyFile) Close() {
 }
 
 func main() {
-	var f ParquetFile
+	var f ParquetHandler.ParquetFile
 	f = &MyFile{}
 
 	//write flat
 	f, _ = f.Create("type.parquet")
-	ph := NewParquetHandler()
+	ph := ParquetHandler.NewParquetHandler()
 	ph.WriteInit(f, new(TypeList), 4, 30)
 
 	num := 10
 	for i := 0; i < num; i++ {
 		tp := TypeList{
-			Bool:              BOOLEAN(i%2 == 0),
-			Int32:             INT32(i),
-			Int64:             INT64(i),
-			Int96:             INT96("012345678912"),
-			Float:             FLOAT(float32(i) * 0.5),
-			Double:            DOUBLE(float64(i) * 0.5),
-			ByteArray:         BYTE_ARRAY("ByteArray"),
-			FixedLenByteArray: FIXED_LEN_BYTE_ARRAY("HelloWorld"),
+			Bool:              ParquetType.BOOLEAN(i%2 == 0),
+			Int32:             ParquetType.INT32(i),
+			Int64:             ParquetType.INT64(i),
+			Int96:             ParquetType.INT96("012345678912"),
+			Float:             ParquetType.FLOAT(float32(i) * 0.5),
+			Double:            ParquetType.DOUBLE(float64(i) * 0.5),
+			ByteArray:         ParquetType.BYTE_ARRAY("ByteArray"),
+			FixedLenByteArray: ParquetType.FIXED_LEN_BYTE_ARRAY("HelloWorld"),
 
-			Utf8:            UTF8("utf8"),
-			Int_8:           INT_8(i),
-			Int_16:          INT_16(i),
-			Int_32:          INT_32(i),
-			Int_64:          INT_64(i),
-			Uint_8:          UINT_8(i),
-			Uint_16:         UINT_16(i),
-			Uint_32:         UINT_32(i),
-			Uint_64:         UINT_64(i),
-			Date:            DATE(i),
-			TimeMillis:      TIME_MILLIS(i),
-			TimeMicros:      TIME_MICROS(i),
-			TimestampMillis: TIMESTAMP_MILLIS(i),
-			TimestampMicros: TIMESTAMP_MICROS(i),
-			Interval:        INTERVAL("012345678912"),
-			Decimal:         DECIMAL("12345"),
+			Utf8:            ParquetType.UTF8("utf8"),
+			Int_8:           ParquetType.INT_8(i),
+			Int_16:          ParquetType.INT_16(i),
+			Int_32:          ParquetType.INT_32(i),
+			Int_64:          ParquetType.INT_64(i),
+			Uint_8:          ParquetType.UINT_8(i),
+			Uint_16:         ParquetType.UINT_16(i),
+			Uint_32:         ParquetType.UINT_32(i),
+			Uint_64:         ParquetType.UINT_64(i),
+			Date:            ParquetType.DATE(i),
+			TimeMillis:      ParquetType.TIME_MILLIS(i),
+			TimeMicros:      ParquetType.TIME_MICROS(i),
+			TimestampMillis: ParquetType.TIMESTAMP_MILLIS(i),
+			TimestampMicros: ParquetType.TIMESTAMP_MICROS(i),
+			Interval:        ParquetType.INTERVAL("012345678912"),
+			Decimal:         ParquetType.DECIMAL("12345"),
 		}
 		ph.Write(tp)
 	}
@@ -123,7 +123,7 @@ func main() {
 
 	///read flat
 	f, _ = f.Open("type.parquet")
-	ph = NewParquetHandler()
+	ph = ParquetHandler.NewParquetHandler()
 	rowGroupNum := ph.ReadInit(f, 10)
 	for i := 0; i < rowGroupNum; i++ {
 		tps := make([]TypeList, 0)

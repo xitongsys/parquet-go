@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	. "github.com/xitongsys/parquet-go/ParquetHandler"
-	. "github.com/xitongsys/parquet-go/ParquetType"
-	. "github.com/xitongsys/parquet-go/Plugin/CSVWriter"
+	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/Plugin/CSVWriter"
 	"log"
 	"os"
 )
@@ -14,14 +14,14 @@ type MyFile struct {
 	File     *os.File
 }
 
-func (self *MyFile) Create(name string) (ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(MyFile)
 	myFile.File = file
 	return myFile, err
 
 }
-func (self *MyFile) Open(name string) (ParquetFile, error) {
+func (self *MyFile) Open(name string) (ParquetHandler.ParquetFile, error) {
 	var (
 		err error
 	)
@@ -52,7 +52,7 @@ func (self *MyFile) Close() {
 }
 
 func main() {
-	md := []MetadataType{
+	md := []CSVWriter.MetadataType{
 		{Type: "UTF8", Name: "Name"},
 		{Type: "INT32", Name: "Age"},
 		{Type: "INT64", Name: "Id"},
@@ -60,12 +60,12 @@ func main() {
 		{Type: "BOOLEAN", Name: "Sex"},
 	}
 
-	var f ParquetFile
+	var f ParquetHandler.ParquetFile
 	f = &MyFile{}
 
 	//write flat
 	f, _ = f.Create("csv.parquet")
-	ph := NewCSVWriterHandler()
+	ph := CSVWriter.NewCSVWriterHandler()
 	ph.WriteInit(md, f, 10, 30)
 
 	num := 10
@@ -84,11 +84,11 @@ func main() {
 		ph.WriteString(rec)
 
 		data2 := []interface{}{
-			UTF8("Student Name"),
-			INT32(20 + i*5),
-			INT64(i),
-			FLOAT(50.0 + float32(i)*0.1),
-			BOOLEAN(i%2 == 0),
+			ParquetType.UTF8("Student Name"),
+			ParquetType.INT32(20 + i*5),
+			ParquetType.INT64(i),
+			ParquetType.FLOAT(50.0 + float32(i)*0.1),
+			ParquetType.BOOLEAN(i%2 == 0),
 		}
 		ph.Write(data2)
 	}

@@ -1,20 +1,20 @@
 package main
 
 import (
-	. "github.com/xitongsys/parquet-go/ParquetHandler"
-	. "github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"log"
 	"os"
 	"time"
 )
 
 type Student struct {
-	Name   UTF8
-	Age    INT32
-	Id     INT64
-	Weight FLOAT
-	Sex    BOOLEAN
-	Day    DATE
+	Name   ParquetType.UTF8
+	Age    ParquetType.INT32
+	Id     ParquetType.INT64
+	Weight ParquetType.FLOAT
+	Sex    ParquetType.BOOLEAN
+	Day    ParquetType.DATE
 }
 
 type MyFile struct {
@@ -22,14 +22,14 @@ type MyFile struct {
 	File     *os.File
 }
 
-func (self *MyFile) Create(name string) (ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(MyFile)
 	myFile.File = file
 	return myFile, err
 
 }
-func (self *MyFile) Open(name string) (ParquetFile, error) {
+func (self *MyFile) Open(name string) (ParquetHandler.ParquetFile, error) {
 	var (
 		err error
 	)
@@ -59,23 +59,23 @@ func (self *MyFile) Close() {
 }
 
 func main() {
-	var f ParquetFile
+	var f ParquetHandler.ParquetFile
 	f = &MyFile{}
 
 	//write flat
 	f, _ = f.Create("flat.parquet")
-	ph := NewParquetHandler()
+	ph := ParquetHandler.NewParquetHandler()
 	ph.WriteInit(f, new(Student), 4, 30)
 
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
-			Name:   UTF8("StudentName"),
-			Age:    INT32(20 + i%5),
-			Id:     INT64(i),
-			Weight: FLOAT(50.0 + float32(i)*0.1),
-			Sex:    BOOLEAN(i%2 == 0),
-			Day:    DATE(time.Now().Unix() / 3600 / 24),
+			Name:   ParquetType.UTF8("StudentName"),
+			Age:    ParquetType.INT32(20 + i%5),
+			Id:     ParquetType.INT64(i),
+			Weight: ParquetType.FLOAT(50.0 + float32(i)*0.1),
+			Sex:    ParquetType.BOOLEAN(i%2 == 0),
+			Day:    ParquetType.DATE(time.Now().Unix() / 3600 / 24),
 		}
 		ph.Write(stu)
 	}
@@ -87,7 +87,7 @@ func main() {
 
 	///read flat
 	f, _ = f.Open("flat.parquet")
-	ph = NewParquetHandler()
+	ph = ParquetHandler.NewParquetHandler()
 	rowGroupNum := ph.ReadInit(f, 10)
 	for i := 0; i < rowGroupNum; i++ {
 		stus := make([]Student, 0)
