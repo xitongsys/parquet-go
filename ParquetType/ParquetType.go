@@ -3,6 +3,7 @@ package ParquetType
 import (
 	"fmt"
 	"log"
+	"reflect"
 )
 
 //base type
@@ -32,6 +33,62 @@ type TIMESTAMP_MILLIS int64
 type TIMESTAMP_MICROS int64
 type INTERVAL string // length=12
 type DECIMAL string
+
+func ParquetTypeToGoType(value interface{}) interface{} {
+	typeName := reflect.TypeOf(value).Name()
+	switch typeName {
+	case "BOOLEAN":
+		return bool(value.(BOOLEAN))
+	case "INT32":
+		return int32(value.(INT32))
+	case "INT64":
+		return int64(value.(INT64))
+	case "INT96":
+		return string(value.(INT96))
+	case "FLOAT":
+		return float32(value.(FLOAT))
+	case "DOUBLE":
+		return float64(value.(DOUBLE))
+	case "BYTE_ARRAY":
+		return string(value.(BYTE_ARRAY))
+	case "FIXED_LEN_BYTE_ARRAY":
+		return string(value.(FIXED_LEN_BYTE_ARRAY))
+	case "UTF8":
+		return string(value.(UTF8))
+	case "INT_8":
+		return int32(value.(INT_8))
+	case "INT_16":
+		return int32(value.(INT_16))
+	case "INT_32":
+		return int32(value.(INT_32))
+	case "INT_64":
+		return int64(value.(INT_64))
+	case "UINT_8":
+		return uint32(value.(UINT_8))
+	case "UINT_16":
+		return uint32(value.(UINT_16))
+	case "UINT_32":
+		return uint32(value.(UINT_32))
+	case "UINT_64":
+		return uint64(value.(UINT_64))
+	case "DATE":
+		return int32(value.(DATE))
+	case "TIME_MILLIS":
+		return int32(value.(TIME_MILLIS))
+	case "TIME_MICROS":
+		return int64(value.(TIME_MICROS))
+	case "TIMESTAMP_MILLIS":
+		return int64(value.(TIMESTAMP_MILLIS))
+	case "TIMESTAMP_MICROS":
+		return int64(value.(TIMESTAMP_MICROS))
+	case "INTERVAL":
+		return string(value.(INTERVAL))
+	case "DECIMAL":
+		return string(value.(DECIMAL))
+	}
+	return nil
+
+}
 
 //Scan a string to parquet value
 func StrToParquetType(s string, typeName string) interface{} {
