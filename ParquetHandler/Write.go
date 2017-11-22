@@ -3,10 +3,12 @@ package ParquetHandler
 import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
+	"reflect"
 	"strings"
 )
 
@@ -26,11 +28,10 @@ func (self *ParquetHandler) NameToLower() {
 }
 
 //Write init function
-func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64, objAveSize int64) {
+func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64) {
 	self.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
 	//log.Println(self.SchemaHandler)
 	self.NP = np
-	self.ObjAveSize = objAveSize
 	self.PFile = pfile
 	self.Footer = parquet.NewFileMetaData()
 	self.Footer.Version = 1
@@ -56,17 +57,26 @@ func (self *ParquetHandler) WriteStop() {
 
 //Write one object to parquet file
 func (self *ParquetHandler) Write(src interface{}) {
-	//self.Size += SizeOf(reflect.ValueOf(src))
-	self.Size += self.ObjAveSize
+	ln := int64(len(self.Objs))
+	if self.CheckSizeCritical <= ln {
+		self.ObjSize = Common.SizeOf(reflect.ValueOf(src))
+	}
+	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, src)
 
-	if self.Size >= self.RowGroupSize {
-		self.Flush()
+	criSize := self.NP * self.PageSize * self.SchemaHandler.ColumnNum
+
+	if self.ObjsSize >= criSize {
+		self.Flush(false)
+	} else {
+		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
+		self.CheckSizeCritical = dln + ln
 	}
+
 }
 
 //Flush the write buffer to parquet file
-func (self *ParquetHandler) Flush() {
+func (self *ParquetHandler) Flush(flag bool) {
 	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
 		pagesMapList[i] = make(map[string][]*Layout.Page)
@@ -106,52 +116,61 @@ func (self *ParquetHandler) Flush() {
 		<-doneChan
 	}
 
-	totalPagesMap := make(map[string][]*Layout.Page)
 	for _, pagesMap := range pagesMapList {
 		for name, pages := range pagesMap {
-			if _, ok := totalPagesMap[name]; !ok {
-				totalPagesMap[name] = pages
+			if _, ok := self.PagesMapBuf[name]; !ok {
+				self.PagesMapBuf[name] = pages
 			} else {
-				totalPagesMap[name] = append(totalPagesMap[name], pages...)
+				self.PagesMapBuf[name] = append(self.PagesMapBuf[name], pages...)
+			}
+			for _, page := range pages {
+				self.Size += int64(len(page.RawData))
 			}
 		}
 	}
 
-	//pages -> chunk
-	chunkMap := make(map[string]*Layout.Chunk)
-	for name, pages := range totalPagesMap {
-		chunkMap[name] = Layout.PagesToChunk(pages)
-	}
-
-	//chunks -> rowGroup
-	rowGroup := Layout.NewRowGroup()
-	rowGroup.RowGroupHeader.Columns = make([]*parquet.ColumnChunk, 0)
-
-	for k := 0; k < len(self.SchemaHandler.SchemaElements); k++ {
-		//for _, chunk := range chunkMap {
-		schema := self.SchemaHandler.SchemaElements[k]
-		if schema.GetNumChildren() > 0 {
-			continue
+	if self.Size+self.ObjSize >= self.RowGroupSize || flag {
+		//pages -> chunk
+		chunkMap := make(map[string]*Layout.Chunk)
+		for name, pages := range self.PagesMapBuf {
+			chunkMap[name] = Layout.PagesToChunk(pages)
 		}
-		chunk := chunkMap[self.SchemaHandler.IndexMap[int32(k)]]
-		rowGroup.Chunks = append(rowGroup.Chunks, chunk)
-		rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
-		rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
-	}
-	rowGroup.RowGroupHeader.NumRows = int64(len(self.Objs))
 
-	for k := 0; k < len(rowGroup.Chunks); k++ {
-		rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
-		rowGroup.Chunks[k].ChunkHeader.FileOffset = self.Offset
+		//chunks -> rowGroup
+		rowGroup := Layout.NewRowGroup()
+		rowGroup.RowGroupHeader.Columns = make([]*parquet.ColumnChunk, 0)
 
-		for l := 0; l < len(rowGroup.Chunks[k].Pages); l++ {
-			data := rowGroup.Chunks[k].Pages[l].RawData
-			self.PFile.Write(data)
-			self.Offset += int64(len(data))
+		for k := 0; k < len(self.SchemaHandler.SchemaElements); k++ {
+			//for _, chunk := range chunkMap {
+			schema := self.SchemaHandler.SchemaElements[k]
+			if schema.GetNumChildren() > 0 {
+				continue
+			}
+			chunk := chunkMap[self.SchemaHandler.IndexMap[int32(k)]]
+			rowGroup.Chunks = append(rowGroup.Chunks, chunk)
+			rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
+			rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
 		}
+		rowGroup.RowGroupHeader.NumRows = int64(len(self.Objs))
+
+		for k := 0; k < len(rowGroup.Chunks); k++ {
+			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
+			rowGroup.Chunks[k].ChunkHeader.FileOffset = self.Offset
+
+			for l := 0; l < len(rowGroup.Chunks[k].Pages); l++ {
+				data := rowGroup.Chunks[k].Pages[l].RawData
+				self.PFile.Write(data)
+				self.Offset += int64(len(data))
+			}
+		}
+		self.Footer.NumRows += int64(len(self.Objs))
+		self.Footer.RowGroups = append(self.Footer.RowGroups, rowGroup.RowGroupHeader)
+
+		self.Size = 0
+		self.PagesMapBuf = make(map[string][]*Layout.Page)
 	}
-	self.Footer.NumRows += int64(len(self.Objs))
-	self.Footer.RowGroups = append(self.Footer.RowGroups, rowGroup.RowGroupHeader)
-	self.Size = 0
+
 	self.Objs = self.Objs[0:0]
+	self.ObjsSize = 0
+
 }

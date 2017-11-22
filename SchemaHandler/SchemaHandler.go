@@ -43,6 +43,20 @@ type SchemaHandler struct {
 	MapIndex       map[string]int32
 	IndexMap       map[int32]string
 	PathMap        *PathMapType
+
+	ColumnNum int64
+}
+
+func (self *SchemaHandler) GetColumnNum() int64 {
+	var res int64
+	for i := 0; i < len(self.SchemaElements); i++ {
+		schema := self.SchemaElements[i]
+		if schema.GetNumChildren() == 0 {
+			res++
+		}
+	}
+	self.ColumnNum = res
+	return res
 }
 
 //Get the PathMap from SchemaHandler
@@ -373,5 +387,6 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	}
 	//	log.Println("NewSchemaHandlerFromSchemaList Finished")
 	schemaHandler.GetPathMap()
+	schemaHandler.GetColumnNum()
 	return schemaHandler
 }

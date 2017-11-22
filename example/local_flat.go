@@ -65,9 +65,9 @@ func main() {
 	//write flat
 	f, _ = f.Create("flat.parquet")
 	ph := ParquetHandler.NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4, 30)
+	ph.WriteInit(f, new(Student), 16)
 
-	num := 10
+	num := 100000000
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   ParquetType.UTF8("StudentName"),
@@ -79,7 +79,7 @@ func main() {
 		}
 		ph.Write(stu)
 	}
-	ph.Flush()
+	ph.Flush(true)
 	//ph.NameToLower()// convert the field name to lowercase
 	ph.WriteStop()
 	log.Println("Write Finished")
