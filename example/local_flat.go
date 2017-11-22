@@ -65,9 +65,9 @@ func main() {
 	//write flat
 	f, _ = f.Create("flat.parquet")
 	ph := ParquetHandler.NewParquetHandler()
-	ph.WriteInit(f, new(Student), 16)
+	ph.WriteInit(f, new(Student), 4)
 
-	num := 100000000
+	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   ParquetType.UTF8("StudentName"),

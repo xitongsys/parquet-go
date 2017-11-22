@@ -144,11 +144,11 @@ func writeNested() {
 	//write nested
 	f, _ = f.Create("nested.parquet")
 	ph := ParquetHandler.NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4, 30)
+	ph.WriteInit(f, new(Student), 4)
 	for _, stu := range stus {
 		ph.Write(stu)
 	}
-	ph.Flush()
+	ph.Flush(true)
 	ph.WriteStop()
 	f.Close()
 	log.Println("Write Finished")

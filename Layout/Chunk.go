@@ -48,7 +48,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 	metaData.NumValues = numValues
 	metaData.TotalCompressedSize = totalCompressedSize
 	metaData.TotalUncompressedSize = totalUncompressedSize
-	metaData.PathInSchema = pages[0].DataTable.Path[1:]
+	metaData.PathInSchema = pages[0].Path[1:]
 	metaData.Statistics = parquet.NewStatistics()
 
 	tmpBufMax := ParquetEncoding.WritePlain([]interface{}{maxVal})

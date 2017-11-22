@@ -22,6 +22,8 @@ type Page struct {
 	CompressType parquet.CompressionCodec
 	//Parquet type of the values in the page
 	DataType parquet.Type
+	//Path in schema(include the root)
+	Path []string
 	//Maximum of the values
 	MaxVal interface{}
 	//Minimum of the values
@@ -92,6 +94,7 @@ func TableToDataPages(table *Common.Table, pageSize int32, compressType parquet.
 		page.MinVal = minVal
 		page.DataType = dataType
 		page.CompressType = compressType
+		page.Path = table.Path
 
 		page.DataPageCompress(compressType)
 

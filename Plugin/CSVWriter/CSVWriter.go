@@ -186,6 +186,7 @@ func (self *CSVWriterHandler) Flush(flag bool) {
 			}
 			for _, page := range pages {
 				self.Size += int64(len(page.RawData))
+				page.DataTable = nil
 			}
 		}
 	}

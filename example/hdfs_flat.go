@@ -85,7 +85,7 @@ func main() {
 	//write flat
 	f, _ = f.Create("/flat.parquet")
 	ph := ParquetHandler.NewParquetHandler()
-	ph.WriteInit(f, new(Student), 2, 30)
+	ph.WriteInit(f, new(Student), 2)
 
 	num := 10
 	for i := 0; i < num; i++ {
@@ -98,7 +98,7 @@ func main() {
 		}
 		ph.Write(stu)
 	}
-	ph.Flush()
+	ph.Flush(true)
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()

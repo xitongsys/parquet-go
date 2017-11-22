@@ -66,7 +66,7 @@ func main() {
 	//write flat
 	f, _ = f.Create("csv.parquet")
 	ph := CSVWriter.NewCSVWriterHandler()
-	ph.WriteInit(md, f, 10)
+	ph.WriteInit(md, f, 4)
 
 	num := 10
 	for i := 0; i < num; i++ {
