@@ -62,7 +62,7 @@ func (self *CSVWriterHandler) NameToLower() {
 }
 
 //Write init function for CSV writer
-func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetHandler.ParquetFile, np int64, recordAveSize int64) {
+func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetHandler.ParquetFile, np int64) {
 	self.SchemaHandler = NewSchemaHandlerFromMetadata(md)
 	self.Metadata = md
 	self.PFile = pfile
