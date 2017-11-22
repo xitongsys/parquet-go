@@ -92,7 +92,7 @@ func main() {
 		}
 		ph.Write(data2)
 	}
-	ph.Flush()
+	ph.Flush(true)
 	ph.WriteStop()
 	log.Println("Write Finished")
 	f.Close()

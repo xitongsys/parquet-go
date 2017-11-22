@@ -129,7 +129,7 @@ func (self *ParquetHandler) Flush(flag bool) {
 		}
 	}
 
-	if self.Size+self.ObjSize >= self.RowGroupSize || flag {
+	if self.Size+self.ObjsSize >= self.RowGroupSize || flag {
 		//pages -> chunk
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
