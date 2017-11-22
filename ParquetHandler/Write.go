@@ -163,14 +163,12 @@ func (self *ParquetHandler) Flush(flag bool) {
 				self.Offset += int64(len(data))
 			}
 		}
-		self.Footer.NumRows += int64(len(self.Objs))
 		self.Footer.RowGroups = append(self.Footer.RowGroups, rowGroup.RowGroupHeader)
-
 		self.Size = 0
 		self.PagesMapBuf = make(map[string][]*Layout.Page)
 	}
-
-	self.Objs = self.Objs[0:0]
+	self.Footer.NumRows += int64(len(self.Objs))
+	self.Objs = self.Objs[:0]
 	self.ObjsSize = 0
 
 }
