@@ -130,6 +130,8 @@ func (self *ParquetHandler) Flush(flag bool) {
 		}
 	}
 
+	self.NumRows += int64(len(self.Objs))
+
 	if self.Size+self.ObjsSize >= self.RowGroupSize || flag {
 		//pages -> chunk
 		chunkMap := make(map[string]*Layout.Chunk)
@@ -152,7 +154,8 @@ func (self *ParquetHandler) Flush(flag bool) {
 			rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
 			rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
 		}
-		rowGroup.RowGroupHeader.NumRows = int64(len(self.Objs))
+		rowGroup.RowGroupHeader.NumRows = self.NumRows
+		self.NumRows = 0
 
 		for k := 0; k < len(rowGroup.Chunks); k++ {
 			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
