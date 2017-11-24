@@ -1,8 +1,19 @@
 package Common
 
 import (
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
+
+func NewTableFromTable(src *Table) *Table {
+	table := new(Table)
+	table.RepetitionLevels = src.RepetitionLevels
+	table.Type = src.Type
+	table.Path = append(table.Path, src.Path...)
+	table.MaxDefinitionLevel = 0
+	table.MaxRepetitionLevel = 0
+	return table
+}
 
 //Table is the core data structure used to store the values
 type Table struct {
@@ -26,14 +37,53 @@ type Table struct {
 }
 
 //Merge several tables to one table(the first table)
-func (table *Table) Merge(tables ...*Table) {
+func (self *Table) Merge(tables ...*Table) {
 	ln := len(tables)
 	if ln <= 0 {
 		return
 	}
 	for i := 0; i < ln; i++ {
-		table.Values = append(table.Values, tables[i].Values...)
-		table.RepetitionLevels = append(table.RepetitionLevels, tables[i].RepetitionLevels...)
-		table.DefinitionLevels = append(table.DefinitionLevels, tables[i].DefinitionLevels...)
+		self.Values = append(table.Values, tables[i].Values...)
+		self.RepetitionLevels = append(self.RepetitionLevels, tables[i].RepetitionLevels...)
+		self.DefinitionLevels = append(self.DefinitionLevels, tables[i].DefinitionLevels...)
+		if tables[i].MaxDefinitionLevel > self.MaxDefinitionLevel {
+			self.MaxDefinitionLevel = tables[i].MaxDefinitionLevel
+		}
+		if tables[i].MaxRepetitionLevel > self.MaxRepetitionLevel {
+			self.MaxRepetitionLevel = tables[i].MaxRepetitionLevel
+		}
 	}
+}
+
+func (self *Table) Pop(numRows int) *Common.Table {
+	res := NewTableFromTable(table)
+	endIndex := 0
+	ln := len(table.Values)
+	i, num := 0, 0
+	for i = 0; i < ln; i++ {
+		if self.RepetitionLevels[i] == 0 {
+			num++
+			if num > numRows {
+				break
+			}
+		}
+		if res.MaxRepetitionLevel < self.RepetitionLevels[i] {
+			res.MaxRepetitionLevel = self.RepetitionLevels[i]
+		}
+		if res.MaxDefinitionLevel < self.DefinitionLevels[i] {
+			res.MaxDefinitionLevel = self.DefinitionLevels[i]
+		}
+	}
+	endIndex = i
+
+	res.RepetitionLevels = self.RepetitionLevels[:endIndex]
+	res.DefinitionLevels = self.DefinitionLevels[:endIndex]
+	res.Values = self.Values[:endIndex]
+
+	self.RepetitionLevels = self.RepetitionLevels[endIndex:]
+	self.DefinitionLevels = self.DefinitionLevels[endIndex:]
+	self.Values = self.Values[endIndex:]
+
+	return res
+
 }
