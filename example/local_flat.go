@@ -66,7 +66,7 @@ func main() {
 
 	//write flat
 	f, _ = f.Create("flat.parquet")
-	pw := ParquetWriter.NewParquetWriter(f, new(Student), 4)
+	pw := ParquetWriter.NewParquetWriter(f, new(Student), 1)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -87,7 +87,10 @@ func main() {
 
 	///read flat
 	f, _ = f.Open("flat.parquet")
-	pr, _ := ParquetReader.NewParquetReader(f, 4)
+	pr, err := ParquetReader.NewParquetReader(f, 4)
+	if err != nil {
+		log.Println("Failed new reader", err)
+	}
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)

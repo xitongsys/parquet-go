@@ -182,19 +182,6 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN
 
-	/*
-		/////////test DeltaINT64////////////////
-		if page.DataType == parquet.Type_INT64 {
-			//page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
-		}
-		if page.DataType == parquet.Type_INT32 {
-			page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
-		}
-		if page.DataType == parquet.Type_BYTE_ARRAY {
-			page.Header.DataPageHeader.Encoding = parquet.Encoding_DELTA_BYTE_ARRAY
-		}
-		//////////////////////////////////////
-	*/
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MaxVal})

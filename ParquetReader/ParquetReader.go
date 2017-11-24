@@ -26,8 +26,9 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, 
 	var err error
 	res := new(ParquetReader)
 	res.NP = np
-	res.ReadFooter()
 	res.PFile = pFile
+	res.ReadFooter()
+	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
 		schema := res.SchemaHandler.SchemaElements[i]
@@ -36,7 +37,7 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, 
 		if numChildren == 0 {
 			res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr)
 			if err != nil {
-				return nil, err
+				return res, err
 			}
 		}
 	}

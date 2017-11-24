@@ -31,12 +31,18 @@ type ColumnBufferType struct {
 
 func NewColumnBuffer(pFile ParquetFile.ParquetFile, footer *parquet.FileMetaData, schemaHandler *SchemaHandler.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
 	newPFile, err := pFile.Open("")
-	return &ColumnBufferType{
+	if err != nil {
+		return nil, err
+	}
+	res := &ColumnBufferType{
 		PFile:         newPFile,
 		Footer:        footer,
 		SchemaHandler: schemaHandler,
 		PathStr:       pathStr,
-	}, err
+		DataTable:     new(Common.Table),
+	}
+	err = res.NextRowGroup()
+	return res, err
 }
 
 func (self *ColumnBufferType) NextRowGroup() error {
@@ -47,8 +53,9 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	}
 	self.RowGroupIndex++
 
-	columnChunks := rowGroups[self.RowGroupIndex].GetColumns()
+	columnChunks := rowGroups[self.RowGroupIndex-1].GetColumns()
 	i := int64(0)
+	ln = int64(len(columnChunks))
 	for i = 0; i < ln; i++ {
 		path := make([]string, 0)
 		path = append(path, self.SchemaHandler.GetRootName())
@@ -58,7 +65,7 @@ func (self *ColumnBufferType) NextRowGroup() error {
 		}
 	}
 	if i >= ln {
-		return fmt.Errorf("Column not found")
+		return fmt.Errorf("Column not found", self.PathStr)
 	}
 
 	self.ChunkHeader = columnChunks[i]
@@ -83,8 +90,12 @@ func (self *ColumnBufferType) ReadPage() error {
 		}
 		page.Decode(self.DictPage)
 		self.DataTable.Merge(page.DataTable)
-		self.DataTableNumRows += numRows
 		self.ChunkReadValues += numValues
+		if self.ChunkReadValues == self.ChunkHeader.MetaData.NumValues {
+			numRows++
+		}
+		self.DataTableNumRows += numRows
+
 	} else {
 		err := self.NextRowGroup()
 		if err != nil {
@@ -97,9 +108,11 @@ func (self *ColumnBufferType) ReadPage() error {
 
 func (self *ColumnBufferType) ReadRows(num int64) (*Common.Table, int64) {
 	var err error
+
 	for self.DataTableNumRows < num && err == nil {
 		err = self.ReadPage()
 	}
+
 	if num > self.DataTableNumRows {
 		num = self.DataTableNumRows
 	}
