@@ -1,4 +1,4 @@
-package ParquetHandler
+package ParquetWriter
 
 import (
 	"encoding/binary"
@@ -6,14 +6,51 @@ import (
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
+	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 	"strings"
 )
 
+//ParquetWriter is a writer  parquet file
+type ParquetWriter struct {
+	SchemaHandler *SchemaHandler.SchemaHandler
+	NP            int64 //parallel number
+	Footer        *parquet.FileMetaData
+	PFile         ParquetFile.ParquetFile
+
+	////write info/////
+	PageSize     int64
+	RowGroupSize int64
+	Offset       int64
+
+	Objs              []interface{}
+	ObjsSize          int64
+	ObjSize           int64
+	CheckSizeCritical int64
+
+	PagesMapBuf map[string][]*Layout.Page
+	Size        int64
+	NumRows     int64
+}
+
+//Create a parquet handler
+func NewParquetWriter() *ParquetWriter {
+	res := new(ParquetWriter)
+	res.NP = 1
+	res.PageSize = 8 * 1024              //8K
+	res.RowGroupSize = 128 * 1024 * 1024 //128M
+	res.ObjsSize = 0
+	res.CheckSizeCritical = 0
+	res.Size = 0
+	res.NumRows = 0
+	res.PagesMapBuf = make(map[string][]*Layout.Page)
+	return res
+}
+
 //Convert the column names in schema to lowercases
-func (self *ParquetHandler) NameToLower() {
+func (self *ParquetWriter) NameToLower() {
 	for _, schema := range self.Footer.Schema {
 		schema.Name = strings.ToLower(schema.Name)
 	}
@@ -28,7 +65,7 @@ func (self *ParquetHandler) NameToLower() {
 }
 
 //Write init function
-func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64) {
+func (self *ParquetWriter) WriteInit(pfile ParquetFile, obj interface{}, np int64) {
 	self.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
 	//log.Println(self.SchemaHandler)
 	self.NP = np
@@ -41,7 +78,7 @@ func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int
 }
 
 //Write the footer and stop writing
-func (self *ParquetHandler) WriteStop() {
+func (self *ParquetWriter) WriteStop() {
 	//self.Flush()
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
@@ -56,7 +93,7 @@ func (self *ParquetHandler) WriteStop() {
 }
 
 //Write one object to parquet file
-func (self *ParquetHandler) Write(src interface{}) {
+func (self *ParquetWriter) Write(src interface{}) {
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(src))
@@ -76,7 +113,7 @@ func (self *ParquetHandler) Write(src interface{}) {
 }
 
 //Flush the write buffer to parquet file
-func (self *ParquetHandler) Flush(flag bool) {
+func (self *ParquetWriter) Flush(flag bool) {
 	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
 		pagesMapList[i] = make(map[string][]*Layout.Page)

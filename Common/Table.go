@@ -26,15 +26,14 @@ type Table struct {
 }
 
 //Merge several tables to one table(the first table)
-func MergeTable(tables ...*Table) *Table {
+func (table *Table) Merge(tables ...*Table) {
 	ln := len(tables)
 	if ln <= 0 {
-		return nil
+		return
 	}
-	for i := 1; i < ln; i++ {
-		tables[0].Values = append(tables[0].Values, tables[i].Values...)
-		tables[0].RepetitionLevels = append(tables[0].RepetitionLevels, tables[i].RepetitionLevels...)
-		tables[0].DefinitionLevels = append(tables[0].DefinitionLevels, tables[i].DefinitionLevels...)
+	for i := 0; i < ln; i++ {
+		table.Values = append(table.Values, tables[i].Values...)
+		table.RepetitionLevels = append(table.RepetitionLevels, tables[i].RepetitionLevels...)
+		table.DefinitionLevels = append(table.DefinitionLevels, tables[i].DefinitionLevels...)
 	}
-	return tables[0]
 }
