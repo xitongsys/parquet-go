@@ -70,7 +70,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 }
 
 //Decode a dict chunk
-func DecodeDictChunk(chunk *Layout.Chunk) {
+func DecodeDictChunk(chunk *Chunk) {
 	dictPage := chunk.Pages[0]
 	numPages := len(chunk.Pages)
 	for i := 1; i < numPages; i++ {
@@ -86,16 +86,16 @@ func DecodeDictChunk(chunk *Layout.Chunk) {
 }
 
 //Read one chunk from parquet file
-func ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, chunkHeader *parquet.ColumnChunk) *Layout.Chunk {
-	chunk := new(Layout.Chunk)
+func ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, chunkHeader *parquet.ColumnChunk) *Chunk {
+	chunk := new(Chunk)
 	chunk.ChunkHeader = chunkHeader
 
-	var readRows int64 = 0
-	var numRows int64 = chunkHeader.MetaData.GetNumValues()
-	for readRows < numRows {
-		page, cnt := ReadPage(thriftReader, schemaHandler, chunkHeader.GetMetaData())
+	var readValues int64 = 0
+	var numValues int64 = chunkHeader.MetaData.GetNumValues()
+	for readValues < numValues {
+		page, cnt, _ := ReadPage(thriftReader, schemaHandler, chunkHeader.GetMetaData())
 		chunk.Pages = append(chunk.Pages, page)
-		readRows += cnt
+		readValues += cnt
 	}
 
 	if len(chunk.Pages) > 0 && chunk.Pages[0].Header.GetType() == parquet.PageType_DICTIONARY_PAGE {

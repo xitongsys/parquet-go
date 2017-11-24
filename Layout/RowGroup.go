@@ -2,6 +2,8 @@ package Layout
 
 import (
 	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -27,26 +29,25 @@ func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Common.Table {
 			if pathStr == "" {
 				pathStr = Common.PathToStr(page.DataTable.Path)
 			}
-			if _, ok := tableMap[pathStr]; ok {
-				tableMap[pathStr] = Common.MergeTable(tableMap[pathStr], page.DataTable)
-			} else {
-				tableMap[pathStr] = page.DataTable
+			if _, ok := tableMap[pathStr]; !ok {
+				tableMap[pathStr] = Common.NewTableFromTable(page.DataTable)
 			}
+			tableMap[pathStr].Merge(page.DataTable)
 		}
 	}
 	return &tableMap
 }
 
 //Read one RowGroup from parquet file
-func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile *ParquetFile, NP int64) *RowGroup {
-	rowGroup := new(Layout.RowGroup)
+func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile ParquetFile.ParquetFile, schemaHandler *SchemaHandler.SchemaHandler, NP int64) *RowGroup {
+	rowGroup := new(RowGroup)
 	rowGroup.RowGroupHeader = rowGroupHeader
 
 	columnChunks := rowGroupHeader.GetColumns()
 	ln := int64(len(columnChunks))
-	chunksList := make([][]*Layout.Chunk, NP)
+	chunksList := make([][]*Chunk, NP)
 	for i := int64(0); i < NP; i++ {
-		chunksList[i] = make([]*Layout.Chunk, 0)
+		chunksList[i] = make([]*Chunk, 0)
 	}
 
 	delta := (ln + NP - 1) / NP
@@ -72,8 +73,8 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile *ParquetFile, NP int64
 					PFile, _ = PFile.Open("")
 				}
 				size := columnChunks[i].MetaData.GetTotalCompressedSize()
-				thriftReader := ConvertToThriftReader(PFile, offset, size)
-				chunk := ReadChunk(thriftReader, SchemaHandler, columnChunks[i])
+				thriftReader := ParquetFile.ConvertToThriftReader(PFile, offset, size)
+				chunk := ReadChunk(thriftReader, schemaHandler, columnChunks[i])
 				chunksList[index] = append(chunksList[index], chunk)
 				PFile.Close()
 			}

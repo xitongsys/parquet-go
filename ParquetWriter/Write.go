@@ -36,16 +36,24 @@ type ParquetWriter struct {
 }
 
 //Create a parquet handler
-func NewParquetWriter() *ParquetWriter {
+func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) *ParquetWriter {
 	res := new(ParquetWriter)
-	res.NP = 1
+	res.NP = np
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
 	res.ObjsSize = 0
 	res.CheckSizeCritical = 0
 	res.Size = 0
 	res.NumRows = 0
+	res.Offset = 4
+	res.PFile = pFile
 	res.PagesMapBuf = make(map[string][]*Layout.Page)
+	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+	res.Footer = parquet.NewFileMetaData()
+	res.Footer.Version = 1
+	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
+	res.PFile.Write([]byte("PAR1"))
+
 	return res
 }
 
@@ -62,19 +70,6 @@ func (self *ParquetWriter) NameToLower() {
 			}
 		}
 	}
-}
-
-//Write init function
-func (self *ParquetWriter) WriteInit(pfile ParquetFile, obj interface{}, np int64) {
-	self.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
-	//log.Println(self.SchemaHandler)
-	self.NP = np
-	self.PFile = pfile
-	self.Footer = parquet.NewFileMetaData()
-	self.Footer.Version = 1
-	self.Footer.Schema = append(self.Footer.Schema, self.SchemaHandler.SchemaElements...)
-	self.Offset = 4
-	self.PFile.Write([]byte("PAR1"))
 }
 
 //Write the footer and stop writing

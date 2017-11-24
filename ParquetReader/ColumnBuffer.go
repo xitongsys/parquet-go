@@ -3,14 +3,15 @@ package ParquetReader
 import (
 	"fmt"
 	"git.apache.org/thrift.git/lib/go/thrift"
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
 )
 
 type ColumnBufferType struct {
-	PFile        ParquetFile
+	PFile        ParquetFile.ParquetFile
 	ThriftReader *thrift.TBufferedTransport
 
 	Footer        *parquet.FileMetaData
@@ -22,19 +23,20 @@ type ColumnBufferType struct {
 
 	ChunkReadValues int64
 
-	DictPage *Page
+	DictPage *Layout.Page
 
 	DataTable        *Common.Table
 	DataTableNumRows int64
 }
 
-func NewColumnBuffer(pFile PFile, footer *parquet.FileMetaData, schemaHandler *SchemaHandler.SchemaHandler, pathStr string) *ColumnBufferType {
+func NewColumnBuffer(pFile ParquetFile.ParquetFile, footer *parquet.FileMetaData, schemaHandler *SchemaHandler.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
+	newPFile, err := pFile.Open("")
 	return &ColumnBufferType{
-		PFile:         pFile,
+		PFile:         newPFile,
 		Footer:        footer,
 		SchemaHandler: schemaHandler,
 		PathStr:       pathStr,
-	}
+	}, err
 }
 
 func (self *ColumnBufferType) NextRowGroup() error {
@@ -45,9 +47,10 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	}
 	self.RowGroupIndex++
 
-	columnChunks := rowGroups[self.RowGroupIndex]
+	columnChunks := rowGroups[self.RowGroupIndex].GetColumns()
 	i := int64(0)
 	for i = 0; i < ln; i++ {
+		path := make([]string, 0)
 		path = append(path, self.SchemaHandler.GetRootName())
 		path = append(path, columnChunks[i].MetaData.GetPathInSchema()...)
 		if self.PathStr == Common.PathToStr(path) {
@@ -65,7 +68,7 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	}
 	offset := columnChunks[i].FileOffset
 	size := columnChunks[i].MetaData.GetTotalCompressedSize()
-	self.ThriftReader = ConvertToThriftReader(self.PFile, offset, size)
+	self.ThriftReader = ParquetFile.ConvertToThriftReader(self.PFile, offset, size)
 	self.ChunkReadValues = 0
 	self.DictPage = nil
 	return nil
@@ -83,15 +86,16 @@ func (self *ColumnBufferType) ReadPage() error {
 		self.DataTableNumRows += numRows
 		self.ChunkReadValues += numValues
 	} else {
-		err := self.NewRowGroup()
+		err := self.NextRowGroup()
 		if err != nil {
 			return err
 		}
 		self.ReadPage()
 	}
+	return nil
 }
 
-func (self *ColumnBufferType) ReadRows(num int) (*Common.Table, int) {
+func (self *ColumnBufferType) ReadRows(num int64) (*Common.Table, int64) {
 	var err error
 	for self.DataTableNumRows < num && err == nil {
 		err = self.ReadPage()

@@ -1,7 +1,6 @@
 package Common
 
 import (
-	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -43,7 +42,7 @@ func (self *Table) Merge(tables ...*Table) {
 		return
 	}
 	for i := 0; i < ln; i++ {
-		self.Values = append(table.Values, tables[i].Values...)
+		self.Values = append(self.Values, tables[i].Values...)
 		self.RepetitionLevels = append(self.RepetitionLevels, tables[i].RepetitionLevels...)
 		self.DefinitionLevels = append(self.DefinitionLevels, tables[i].DefinitionLevels...)
 		if tables[i].MaxDefinitionLevel > self.MaxDefinitionLevel {
@@ -55,11 +54,11 @@ func (self *Table) Merge(tables ...*Table) {
 	}
 }
 
-func (self *Table) Pop(numRows int) *Common.Table {
-	res := NewTableFromTable(table)
-	endIndex := 0
-	ln := len(table.Values)
-	i, num := 0, 0
+func (self *Table) Pop(numRows int64) *Table {
+	res := NewTableFromTable(self)
+	endIndex := int64(0)
+	ln := int64(len(self.Values))
+	i, num := int64(0), int64(0)
 	for i = 0; i < ln; i++ {
 		if self.RepetitionLevels[i] == 0 {
 			num++

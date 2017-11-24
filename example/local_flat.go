@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 	"os"
 	"time"
@@ -22,14 +24,14 @@ type MyFile struct {
 	File     *os.File
 }
 
-func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(MyFile)
 	myFile.File = file
 	return myFile, err
 
 }
-func (self *MyFile) Open(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
 	var (
 		err error
 	)
@@ -59,14 +61,12 @@ func (self *MyFile) Close() {
 }
 
 func main() {
-	var f ParquetHandler.ParquetFile
+	var f ParquetFile.ParquetFile
 	f = &MyFile{}
 
 	//write flat
 	f, _ = f.Create("flat.parquet")
-	ph := ParquetHandler.NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4)
-
+	pw := ParquetWriter.NewParquetWriter(f, new(Student), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -77,21 +77,21 @@ func main() {
 			Sex:    ParquetType.BOOLEAN(i%2 == 0),
 			Day:    ParquetType.DATE(time.Now().Unix() / 3600 / 24),
 		}
-		ph.Write(stu)
+		pw.Write(stu)
 	}
-	ph.Flush(true)
-	//ph.NameToLower()// convert the field name to lowercase
-	ph.WriteStop()
+	pw.Flush(true)
+	//pw.NameToLower()// convert the field name to lowercase
+	pw.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
 
 	///read flat
 	f, _ = f.Open("flat.parquet")
-	ph = ParquetHandler.NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f, 10)
-	for i := 0; i < rowGroupNum; i++ {
-		stus := make([]Student, 0)
-		ph.ReadOneRowGroupAndUnmarshal(&stus)
+	pr, _ := ParquetReader.NewParquetReader(f, 4)
+	num = int(pr.GetNumRows())
+	for i := 0; i < num; i++ {
+		stus := make([]Student, 1)
+		pr.Read(&stus)
 		log.Println(stus)
 	}
 

@@ -5,7 +5,6 @@ import (
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Compress"
-	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/ParquetEncoding"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
@@ -393,12 +392,12 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 }
 
 //Read page from parquet file
-func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Layout.Page, int64, int64) {
+func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64) {
 	pageHeader := ReadPageHeader(thriftReader)
 
 	buf := make([]byte, 0)
 
-	var page *Layout.Page
+	var page *Page
 	compressedPageSize := pageHeader.GetCompressedPageSize()
 
 	if pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
@@ -458,7 +457,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 	name := strings.Join(path, ".")
 
 	if pageHeader.GetType() == parquet.PageType_DATA_PAGE {
-		page = Layout.NewDataPage()
+		page = NewDataPage()
 		page.Header = pageHeader
 		maxDefinitionLevel, _ := schemaHandler.MaxDefinitionLevel(path)
 		maxRepetitionLevel, _ := schemaHandler.MaxRepetitionLevel(path)
@@ -547,7 +546,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		return page, int64(len(definitionLevels)), numRows
 
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
-		page = Layout.NewDictPage()
+		page = NewDictPage()
 		page.Header = pageHeader
 		table := new(Common.Table)
 		table.Path = path
@@ -562,7 +561,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 	} else if pageHeader.GetType() == parquet.PageType_INDEX_PAGE {
 
 	} else if pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
-		page = Layout.NewDataPage()
+		page = NewDataPage()
 		page.Header = pageHeader
 		maxDefinitionLevel, _ := schemaHandler.MaxDefinitionLevel(path)
 		maxRepetitionLevel, _ := schemaHandler.MaxRepetitionLevel(path)
