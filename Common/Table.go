@@ -84,5 +84,4 @@ func (self *Table) Pop(numRows int64) *Table {
 	self.Values = self.Values[endIndex:]
 
 	return res
-
 }
