@@ -91,9 +91,8 @@ func (self *ColumnBufferType) ReadPage() error {
 	}
 }
 
-func (self *ColumnBufferType) ReadRows(dst interface{}) (*Common.Table, int) {
+func (self *ColumnBufferType) ReadRows(num int) (*Common.Table, int) {
 	var err error
-	num := reflect.ValueOf(dst).Elem().Len()
 	for self.DataTableNumRows < num && err == nil {
 		err = self.ReadPage()
 	}
