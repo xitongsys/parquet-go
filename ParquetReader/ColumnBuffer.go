@@ -74,6 +74,9 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	}
 	offset := columnChunks[i].FileOffset
 	size := columnChunks[i].MetaData.GetTotalCompressedSize()
+	if self.ThriftReader != nil {
+		self.ThriftReader.Close()
+	}
 	self.ThriftReader = ParquetFile.ConvertToThriftReader(self.PFile, offset, size)
 	self.ChunkReadValues = 0
 	self.DictPage = nil
@@ -88,6 +91,7 @@ func (self *ColumnBufferType) ReadPage() error {
 			return nil
 		}
 		page.Decode(self.DictPage)
+
 		if self.DataTable == nil {
 			self.DataTable = Common.NewTableFromTable(page.DataTable)
 		}
@@ -97,7 +101,6 @@ func (self *ColumnBufferType) ReadPage() error {
 			numRows++
 		}
 		self.DataTableNumRows += numRows
-
 	} else {
 		err := self.NextRowGroup()
 		if err != nil {
@@ -105,6 +108,7 @@ func (self *ColumnBufferType) ReadPage() error {
 		}
 		self.ReadPage()
 	}
+
 	return nil
 }
 
@@ -113,10 +117,12 @@ func (self *ColumnBufferType) ReadRows(num int64) (*Common.Table, int64) {
 
 	for self.DataTableNumRows < num && err == nil {
 		err = self.ReadPage()
-	}
 
+	}
 	if num > self.DataTableNumRows {
 		num = self.DataTableNumRows
 	}
-	return self.DataTable.Pop(num), num
+	res := self.DataTable.Pop(num)
+	self.DataTableNumRows -= num
+	return res, num
 }

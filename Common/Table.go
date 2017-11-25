@@ -58,11 +58,11 @@ func (self *Table) Pop(numRows int64) *Table {
 	res := NewTableFromTable(self)
 	endIndex := int64(0)
 	ln := int64(len(self.Values))
-	i, num := int64(0), int64(0)
+	i, num := int64(0), int64(-1)
 	for i = 0; i < ln; i++ {
 		if self.RepetitionLevels[i] == 0 {
 			num++
-			if num > numRows {
+			if num >= numRows {
 				break
 			}
 		}
