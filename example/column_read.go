@@ -92,11 +92,11 @@ func main() {
 		log.Println("Failed new reader", err)
 	}
 	num = int(pr.GetNumRows())
-	names := make([]ParquetType.UTF8, num)
+	names := make([]interface{}, num)
 	pr.ReadColumnByPath("Name", &names)
 	log.Println(names)
 
-	ids := make([]ParquetType.INT64, num)
+	ids := make([]interface{}, num)
 	pr.ReadColumnByIndex(2, &ids)
 	log.Println(ids)
 

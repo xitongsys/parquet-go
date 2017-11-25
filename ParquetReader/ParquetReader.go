@@ -144,7 +144,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 }
 
 //Read column by path in schema.
-func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface interface{}) {
+func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]interface{}) {
 	num := reflect.ValueOf(dstInterface).Elem().Len()
 	if num <= 0 {
 		return
@@ -159,16 +159,14 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface interfa
 
 	cb := self.ColumnBuffers[pathStr]
 	table, _ := cb.ReadRows(int64(num))
-
-	resTmp := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(table.Values[0])), 0, num)
 	for i := 0; i < len(table.Values); i++ {
-		resTmp = reflect.Append(resTmp, reflect.ValueOf(table.Values[i]))
+		(*dstInterface)[i] = table.Values[i]
 	}
-	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
+
 }
 
 //Read column by index. The index of first column is 0.
-func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface interface{}) {
+func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface *[]interface{}) {
 	if index >= len(self.SchemaHandler.ValueColumns) {
 		return
 	}
