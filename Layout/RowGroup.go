@@ -38,7 +38,7 @@ func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
 	return &tableMap
 }
 
-//Read one RowGroup from parquet file
+//Read one RowGroup from parquet file (Deprecated)
 func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile ParquetFile.ParquetFile, schemaHandler *SchemaHandler.SchemaHandler, NP int64) *RowGroup {
 	rowGroup := new(RowGroup)
 	rowGroup.RowGroupHeader = rowGroupHeader

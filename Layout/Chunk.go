@@ -85,7 +85,7 @@ func DecodeDictChunk(chunk *Chunk) {
 	chunk.Pages = chunk.Pages[1:] // delete the head dict page
 }
 
-//Read one chunk from parquet file
+//Read one chunk from parquet file (Deprecated)
 func ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, chunkHeader *parquet.ColumnChunk) *Chunk {
 	chunk := new(Chunk)
 	chunk.ChunkHeader = chunkHeader

@@ -1,4 +1,4 @@
-# parquet-go v0.9.2
+# parquet-go v0.9.5
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -125,35 +125,34 @@ The following is a simple example of read/write parquet file on local disk. It c
 ```
 package main
 import (
-	. "github.com/xitongsys/parquet-go/ParquetHandler"
-	. "github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/ParquetReader"
+	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 	"os"
+	"time"
 )
 type Student struct {
-	Name   UTF8
-	Age    INT32
-	Id     INT64
-	Weight FLOAT
-	Sex    BOOLEAN
+	Name   ParquetType.UTF8
+	Age    ParquetType.INT32
+	Id     ParquetType.INT64
+	Weight ParquetType.FLOAT
+	Sex    ParquetType.BOOLEAN
+	Day    ParquetType.DATE
 }
-
 type MyFile struct {
 	FilePath string
 	File     *os.File
 }
-
-func (self *MyFile) Create(name string) (ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(MyFile)
 	myFile.File = file
 	return myFile, err
-
 }
-func (self *MyFile) Open(name string) (ParquetFile, error) {
-	var (
-		err error
-	)
+func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
+	var err error
 	if name == "" {
 		name = self.FilePath
 	}
@@ -176,37 +175,39 @@ func (self *MyFile) Close() {
 }
 
 func main() {
-	var f ParquetFile
+	var f ParquetFile.ParquetFile
 	f = &MyFile{}
-
 	//write flat
 	f, _ = f.Create("flat.parquet")
-	ph := NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4, 30)
-
+	pw := ParquetWriter.NewParquetWriter(f, new(Student), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
-			Name:   UTF8("StudentName"),
-			Age:    INT32(20 + i%5),
-			Id:     INT64(i),
-			Weight: FLOAT(50.0 + float32(i)*0.1),
-			Sex:    BOOLEAN(i%2 == 0),
+			Name:   ParquetType.UTF8("StudentName"),
+			Age:    ParquetType.INT32(20 + i%5),
+			Id:     ParquetType.INT64(i),
+			Weight: ParquetType.FLOAT(50.0 + float32(i)*0.1),
+			Sex:    ParquetType.BOOLEAN(i%2 == 0),
+			Day:    ParquetType.DATE(time.Now().Unix() / 3600 / 24),
 		}
-		ph.Write(stu)
+		pw.Write(stu)
 	}
-	ph.Flush()
-	ph.WriteStop()
+	pw.Flush(true)
+	//pw.NameToLower()// convert the field name to lowercase
+	pw.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
 
 	///read flat
 	f, _ = f.Open("flat.parquet")
-	ph = NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f, 10)
-	for i := 0; i < rowGroupNum; i++ {
-		stus := make([]Student, 0)
-		ph.ReadOneRowGroupAndUnmarshal(&stus)
+	pr, err := ParquetReader.NewParquetReader(f, 4)
+	if err != nil {
+		log.Println("Failed new reader", err)
+	}
+	num = int(pr.GetNumRows())
+	for i := 0; i < num; i++ {
+		stus := make([]Student, 1)
+		pr.Read(&stus)
 		log.Println(stus)
 	}
 	f.Close()
@@ -217,8 +218,8 @@ func main() {
 ## Parallel
 Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
 ```
-func (self *ParquetHandler) ReadInit(pfile ParquetFile, np int64)
-func (self *ParquetHandler) WriteInit(pfile ParquetFile, obj interface{}, np int64)
+func NewParquetReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error)
+func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) *ParquetWriter
 ```
 
 ## Plugin
@@ -227,26 +228,23 @@ Plugin is used for some special purpose and will be added gradually.
 This plugin is used for data format similar with CSV(not nested).
 ```
 func main() {
-	md := []MetadataType{
+	md := []CSVWriter.MetadataType{
 		{Type: "UTF8", Name: "Name"},
 		{Type: "INT32", Name: "Age"},
 		{Type: "INT64", Name: "Id"},
 		{Type: "FLOAT", Name: "Weight"},
 		{Type: "BOOLEAN", Name: "Sex"},
 	}
-
-	var f ParquetFile
+	var f ParquetFile.ParquetFile
 	f = &MyFile{}
-
 	//write flat
 	f, _ = f.Create("csv.parquet")
-	ph := NewCSVWriterHandler()
-	ph.WriteInit(md, f, 10, 30)
+	pw := CSVWriter.NewCSVWriter(md, f, 4)
 
 	num := 10
 	for i := 0; i < num; i++ {
 		data := []string{
-			"StudentName",
+			fmt.Sprintf("%s_%d", "Student Name", i),
 			fmt.Sprintf("%d", 20+i%5),
 			fmt.Sprintf("%d", i),
 			fmt.Sprintf("%f", 50.0+float32(i)*0.1),
@@ -256,22 +254,23 @@ func main() {
 		for j := 0; j < len(data); j++ {
 			rec[j] = &data[j]
 		}
-		ph.WriteString(rec)
+		pw.WriteString(rec)
 
 		data2 := []interface{}{
-			UTF8("StudentName"),
-			INT32(20 + i*5),
-			INT64(i),
-			FLOAT(50.0 + float32(i)*0.1),
-			BOOLEAN(i%2 == 0),
+			ParquetType.UTF8("Student Name"),
+			ParquetType.INT32(20 + i*5),
+			ParquetType.INT64(i),
+			ParquetType.FLOAT(50.0 + float32(i)*0.1),
+			ParquetType.BOOLEAN(i%2 == 0),
 		}
-		ph.Write(data2)
+		pw.Write(data2)
 	}
-	ph.Flush()
-	ph.WriteStop()
+	pw.Flush(true)
+	pw.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
 }
+
 ```
 
 ## Tips
@@ -280,29 +279,23 @@ In parquet-go the first letter of filed name must be uppercase. So the Marshal/U
   
 Generally this isn't a problem in writing parquet, but I still provide a function 'NameToLower()' to convert the field names to lowercase when write parquet file. 
 ```
-//write flat
-f, _ = f.Create("flat.parquet")
-ph := NewParquetHandler()
-ph.WriteInit(f, new(Student), 4, 30)
-
 num := 10
 for i := 0; i < num; i++ {
 	stu := Student{
-		Name:   UTF8("StudentName"),
-		Age:    INT32(20 + i%5),
-		Id:     INT64(i),
-		Weight: FLOAT(50.0 + float32(i)*0.1),
-		Sex:    BOOLEAN(i%2 == 0),
-		Day:    DATE(time.Now().Unix() / 3600 / 24),
+		Name:   ParquetType.UTF8("StudentName"),
+		Age:    ParquetType.INT32(20 + i%5),
+		Id:     ParquetType.INT64(i),
+		Weight: ParquetType.FLOAT(50.0 + float32(i)*0.1),
+		Sex:    ParquetType.BOOLEAN(i%2 == 0),
+		Day:    ParquetType.DATE(time.Now().Unix() / 3600 / 24),
 	}
-	ph.Write(stu)
+	pw.Write(stu)
 }
-ph.Flush()
-ph.NameToLower()// convert the field name to lowercase
-ph.WriteStop()
+pw.Flush(true)
+pw.NameToLower()// convert the field name to lowercase
+pw.WriteStop()
 log.Println("Write Finished")
 f.Close()
-
 ```
 
 It is a problem in reading parquet file and it's solved in the following way:  

@@ -65,8 +65,7 @@ func main() {
 
 	//write flat
 	f, _ = f.Create("csv.parquet")
-	ph := CSVWriter.NewCSVWriterHandler()
-	ph.WriteInit(md, f, 4)
+	pw := CSVWriter.NewCSVWriter(md, f, 4)
 
 	num := 10
 	for i := 0; i < num; i++ {
@@ -81,7 +80,7 @@ func main() {
 		for j := 0; j < len(data); j++ {
 			rec[j] = &data[j]
 		}
-		ph.WriteString(rec)
+		pw.WriteString(rec)
 
 		data2 := []interface{}{
 			ParquetType.UTF8("Student Name"),
@@ -90,10 +89,10 @@ func main() {
 			ParquetType.FLOAT(50.0 + float32(i)*0.1),
 			ParquetType.BOOLEAN(i%2 == 0),
 		}
-		ph.Write(data2)
+		pw.Write(data2)
 	}
-	ph.Flush(true)
-	ph.WriteStop()
+	pw.Flush(true)
+	pw.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
 
