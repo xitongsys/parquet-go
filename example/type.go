@@ -84,7 +84,7 @@ func main() {
 
 	//write flat
 	f, _ = f.Create("type.parquet")
-	pw := ParquetWriter.NewParquetWriter(f, new(TypeList), 4)
+	pw, _ := ParquetWriter.NewParquetWriter(f, new(TypeList), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		tp := TypeList{

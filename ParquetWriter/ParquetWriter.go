@@ -36,7 +36,7 @@ type ParquetWriter struct {
 }
 
 //Create a parquet handler
-func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) *ParquetWriter {
+func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
 	res := new(ParquetWriter)
 	res.NP = np
 	res.PageSize = 8 * 1024              //8K
@@ -52,9 +52,9 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
-	res.PFile.Write([]byte("PAR1"))
+	_, err := res.PFile.Write([]byte("PAR1"))
 
-	return res
+	return res, err
 }
 
 //Convert the column names in schema to lowercases

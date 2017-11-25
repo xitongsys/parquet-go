@@ -38,7 +38,7 @@ type CSVWriter struct {
 }
 
 //Create CSV writer
-func NewCSVWriter(md []MetadataType, pfile ParquetFile.ParquetFile, np int64) *CSVWriter {
+func NewCSVWriter(md []MetadataType, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error) {
 	res := new(CSVWriter)
 	res.SchemaHandler = NewSchemaHandlerFromMetadata(md)
 	res.Metadata = md
@@ -51,8 +51,8 @@ func NewCSVWriter(md []MetadataType, pfile ParquetFile.ParquetFile, np int64) *C
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	res.Offset = 4
-	res.PFile.Write([]byte("PAR1"))
-	return res
+	_, err := res.PFile.Write([]byte("PAR1"))
+	return res, err
 }
 
 //Convert the column names to lowercase
@@ -88,7 +88,7 @@ func (self *CSVWriter) WriteString(recs []*string) {
 	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, rec)
 
-	criSize := self.NP * self.PageSize * self.SchemaHandler.ColumnNum
+	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize > criSize {
 		self.Flush(false)
@@ -108,7 +108,7 @@ func (self *CSVWriter) Write(rec []interface{}) {
 	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, rec)
 
-	criSize := self.NP * self.PageSize * self.SchemaHandler.ColumnNum
+	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize > criSize {
 		self.Flush(false)

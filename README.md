@@ -179,7 +179,7 @@ func main() {
 	f = &MyFile{}
 	//write flat
 	f, _ = f.Create("flat.parquet")
-	pw := ParquetWriter.NewParquetWriter(f, new(Student), 4)
+	pw,_ := ParquetWriter.NewParquetWriter(f, new(Student), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -219,7 +219,7 @@ func main() {
 Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
 ```
 func NewParquetReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error)
-func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) *ParquetWriter
+func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error)
 ```
 
 ## Plugin
@@ -239,7 +239,7 @@ func main() {
 	f = &MyFile{}
 	//write flat
 	f, _ = f.Create("csv.parquet")
-	pw := CSVWriter.NewCSVWriter(md, f, 4)
+	pw,_ := CSVWriter.NewCSVWriter(md, f, 4)
 
 	num := 10
 	for i := 0; i < num; i++ {

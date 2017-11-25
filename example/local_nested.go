@@ -145,7 +145,7 @@ func writeNested() {
 
 	//write nested
 	f, _ = f.Create("nested.parquet")
-	pw := ParquetWriter.NewParquetWriter(f, new(Student), 4)
+	pw, _ := ParquetWriter.NewParquetWriter(f, new(Student), 4)
 	for _, stu := range stus {
 		pw.Write(stu)
 	}

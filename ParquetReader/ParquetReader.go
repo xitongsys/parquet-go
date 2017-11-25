@@ -143,6 +143,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
 }
 
+//Read column by path in schema.
 func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface interface{}) {
 	num := reflect.ValueOf(dstInterface).Elem().Len()
 	if num <= 0 {
@@ -166,6 +167,7 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface interfa
 	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
 }
 
+//Read column by index. The index of first column is 0.
 func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface interface{}) {
 	if index >= len(self.SchemaHandler.ValueColumns) {
 		return
