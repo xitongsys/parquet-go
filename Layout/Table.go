@@ -1,4 +1,4 @@
-package Common
+package Layout
 
 import (
 	"github.com/xitongsys/parquet-go/parquet"

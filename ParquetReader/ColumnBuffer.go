@@ -25,7 +25,7 @@ type ColumnBufferType struct {
 
 	DictPage *Layout.Page
 
-	DataTable        *Common.Table
+	DataTable        *Layout.Table
 	DataTableNumRows int64
 }
 
@@ -93,7 +93,7 @@ func (self *ColumnBufferType) ReadPage() error {
 		page.Decode(self.DictPage)
 
 		if self.DataTable == nil {
-			self.DataTable = Common.NewTableFromTable(page.DataTable)
+			self.DataTable = Layout.NewTableFromTable(page.DataTable)
 		}
 		self.DataTable.Merge(page.DataTable)
 		self.ChunkReadValues += numValues
@@ -112,7 +112,7 @@ func (self *ColumnBufferType) ReadPage() error {
 	return nil
 }
 
-func (self *ColumnBufferType) ReadRows(num int64) (*Common.Table, int64) {
+func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 	var err error
 
 	for self.DataTableNumRows < num && err == nil {

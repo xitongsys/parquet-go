@@ -3,7 +3,7 @@ package ParquetReader
 import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
@@ -68,7 +68,7 @@ func (self *ParquetReader) ReadFooter() {
 }
 
 func (self *ParquetReader) Read(dstInterface interface{}) {
-	tmap := make(map[string]*Common.Table)
+	tmap := make(map[string]*Layout.Table)
 	locker := new(sync.Mutex)
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	num := reflect.ValueOf(dstInterface).Elem().Len()
@@ -90,7 +90,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 					if _, ok := tmap[pathStr]; ok {
 						tmap[pathStr].Merge(table)
 					} else {
-						tmap[pathStr] = Common.NewTableFromTable(table)
+						tmap[pathStr] = Layout.NewTableFromTable(table)
 						tmap[pathStr].Merge(table)
 					}
 					locker.Unlock()

@@ -2,6 +2,7 @@ package Marshal
 
 import (
 	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"reflect"
 )
@@ -17,7 +18,7 @@ type MapRecord struct {
 }
 
 //Convert the table map to objects slice. desInterface is a slice of pointers of objects
-func Unmarshal(tableMap *map[string]*Common.Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler.SchemaHandler) {
+func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler.SchemaHandler) {
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	tableIndex := make(map[string]int)
 	tableBgn, tableEnd := make(map[string]int), make(map[string]int)

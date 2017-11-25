@@ -19,7 +19,7 @@ type Page struct {
 	//Header of a page
 	Header *parquet.PageHeader
 	//Table to store values
-	DataTable *Common.Table
+	DataTable *Table
 	//Compressed data of the page, which is written in parquet file
 	RawData []byte
 	//Compress type: gzip/snappy/none
@@ -57,7 +57,7 @@ func NewDataPage() *Page {
 }
 
 //Convert a table to data pages
-func TableToDataPages(table *Common.Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
@@ -86,7 +86,7 @@ func TableToDataPages(table *Common.Table, pageSize int32, compressType parquet.
 		page.Header.DataPageHeader.NumValues = numValues
 		page.Header.Type = parquet.PageType_DATA_PAGE
 
-		page.DataTable = new(Common.Table)
+		page.DataTable = new(Table)
 		page.DataTable.RepetitionType = table.RepetitionType
 		page.DataTable.Path = table.Path
 		page.DataTable.MaxDefinitionLevel = table.MaxDefinitionLevel
@@ -305,7 +305,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 }
 
 //Convert table to dict data page. ToDo
-func TableToDictDataPages(table *Common.Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func TableToDictDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	return []*Page{}, 0
 }
 
@@ -504,7 +504,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			uint64(len(definitionLevels))-numNulls,
 			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
 
-		table := new(Common.Table)
+		table := new(Table)
 		table.Path = path
 		table.RepetitionType = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
 		table.MaxRepetitionLevel = maxRepetitionLevel
@@ -535,7 +535,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		page = NewDictPage()
 		page.Header = pageHeader
-		table := new(Common.Table)
+		table := new(Table)
 		table.Path = path
 		table.Values = ParquetEncoding.ReadPlain(bytesReader,
 			colMetaData.GetType(),
@@ -608,7 +608,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			uint64(len(definitionLevels))-numNulls,
 			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
 
-		table := new(Common.Table)
+		table := new(Table)
 		table.Path = path
 		table.RepetitionType = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
 		table.MaxRepetitionLevel = maxRepetitionLevel

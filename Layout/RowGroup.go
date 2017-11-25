@@ -21,8 +21,8 @@ func NewRowGroup() *RowGroup {
 }
 
 //Convert a RowGroup to table map
-func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Common.Table {
-	tableMap := make(map[string]*Common.Table, 0)
+func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
+	tableMap := make(map[string]*Table, 0)
 	for _, chunk := range rowGroup.Chunks {
 		pathStr := ""
 		for _, page := range chunk.Pages {
@@ -30,7 +30,7 @@ func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Common.Table {
 				pathStr = Common.PathToStr(page.DataTable.Path)
 			}
 			if _, ok := tableMap[pathStr]; !ok {
-				tableMap[pathStr] = Common.NewTableFromTable(page.DataTable)
+				tableMap[pathStr] = NewTableFromTable(page.DataTable)
 			}
 			tableMap[pathStr].Merge(page.DataTable)
 		}

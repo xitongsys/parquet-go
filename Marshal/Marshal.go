@@ -2,6 +2,7 @@ package Marshal
 
 import (
 	"github.com/xitongsys/parquet-go/Common"
+	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"reflect"
 )
@@ -45,9 +46,9 @@ func (self *NodeBufType) Reset() {
 ////////for improve performance///////////////////////////////////
 
 //Convert the objects to table map. srcInterface is a slice of objects
-func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Common.Table {
+func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
 	src := reflect.ValueOf(srcInterface)
-	res := make(map[string]*Common.Table)
+	res := make(map[string]*Layout.Table)
 	pathMap := schemaHandler.PathMap
 	nodeBuf := NewNodeBuf(1)
 
@@ -56,7 +57,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 		pathStr := schemaHandler.IndexMap[int32(i)]
 		numChildren := schema.GetNumChildren()
 		if numChildren == 0 {
-			res[pathStr] = new(Common.Table)
+			res[pathStr] = new(Layout.Table)
 			res[pathStr].Path = Common.StrToPath(pathStr)
 			res[pathStr].MaxDefinitionLevel, _ = schemaHandler.MaxDefinitionLevel(res[pathStr].Path)
 			res[pathStr].MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(res[pathStr].Path)

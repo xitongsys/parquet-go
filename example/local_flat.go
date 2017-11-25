@@ -66,8 +66,8 @@ func main() {
 
 	//write flat
 	f, _ = f.Create("flat.parquet")
-	pw := ParquetWriter.NewParquetWriter(f, new(Student), 10)
-	num := 100000000
+	pw := ParquetWriter.NewParquetWriter(f, new(Student), 4)
+	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   ParquetType.UTF8("StudentName"),
@@ -87,13 +87,13 @@ func main() {
 
 	///read flat
 	f, _ = f.Open("flat.parquet")
-	pr, err := ParquetReader.NewParquetReader(f, 10)
+	pr, err := ParquetReader.NewParquetReader(f, 4)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
-		stus := make([]Student, 20)
+		stus := make([]Student, 1)
 		pr.Read(&stus)
 		log.Println(stus)
 	}
