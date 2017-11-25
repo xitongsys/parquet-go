@@ -157,10 +157,11 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]inte
 		pathStr = rootName + "." + pathStr
 	}
 
-	cb := self.ColumnBuffers[pathStr]
-	table, _ := cb.ReadRows(int64(num))
-	for i := 0; i < len(table.Values); i++ {
-		(*dstInterface)[i] = table.Values[i]
+	if cb, ok := self.ColumnBuffers[pathStr]; ok {
+		table, _ := cb.ReadRows(int64(num))
+		for i := 0; i < len(table.Values); i++ {
+			(*dstInterface)[i] = table.Values[i]
+		}
 	}
 
 }
