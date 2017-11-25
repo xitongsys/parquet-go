@@ -11,7 +11,7 @@ import (
 func MarshalCSV(records [][]interface{}, bgn int, end int, md []MetadataType, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
 	res := make(map[string]*Layout.Table)
 	for i := 0; i < len(md); i++ {
-		pathStr := "parquet-go-root." + md[i].Name
+		pathStr := "parquet_go_root." + md[i].Name
 		res[pathStr] = new(Layout.Table)
 		res[pathStr].Path = Common.StrToPath(pathStr)
 		res[pathStr].MaxDefinitionLevel = 1
