@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 	"os"
 )
@@ -13,14 +15,14 @@ type MyFile struct {
 	File     *os.File
 }
 
-func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(MyFile)
 	myFile.File = file
 	return myFile, err
 
 }
-func (self *MyFile) Open(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
 	var (
 		err error
 	)
@@ -138,28 +140,27 @@ func writeNested() {
 	stus := make([]Student, 0)
 	stus = append(stus, stu01, stu02)
 
-	var f ParquetHandler.ParquetFile
+	var f ParquetFile.ParquetFile
 	f = &MyFile{}
 
 	//write nested
 	f, _ = f.Create("nested.parquet")
-	ph := ParquetHandler.NewParquetHandler()
-	ph.WriteInit(f, new(Student), 4)
+	pw := ParquetWriter.NewParquetWriter(f, new(Student), 4)
 	for _, stu := range stus {
-		ph.Write(stu)
+		pw.Write(stu)
 	}
-	ph.Flush(true)
-	ph.WriteStop()
+	pw.Flush(true)
+	pw.WriteStop()
 	f.Close()
 	log.Println("Write Finished")
 
 	//read nested
 	f, _ = f.Open("nested.parquet")
-	ph = ParquetHandler.NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f, 10)
-	for i := 0; i < rowGroupNum; i++ {
-		stus := make([]Student, 0)
-		ph.ReadOneRowGroupAndUnmarshal(&stus)
+	pr, _ := ParquetReader.NewParquetReader(f, 4)
+	num := int(pr.GetNumRows())
+	for i := 0; i < num; i++ {
+		stus := make([]Student, 1)
+		pr.Read(&stus)
 		log.Println(stus)
 	}
 	f.Close()

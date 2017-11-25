@@ -524,7 +524,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 				table.Values[i] = values[j]
 				j++
 			}
-			if i+1 < len(definitionLevels) && table.RepetitionLevels[i+1] == 0 {
+			if table.RepetitionLevels[i] == 0 {
 				numRows++
 			}
 		}
@@ -628,7 +628,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 				table.Values[i] = values[j]
 				j++
 			}
-			if i+1 < len(definitionLevels) && table.RepetitionLevels[i+1] == 0 {
+			if table.RepetitionLevels[i] == 0 {
 				numRows++
 			}
 		}

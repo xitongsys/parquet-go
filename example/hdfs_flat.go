@@ -2,8 +2,10 @@ package main
 
 import (
 	"github.com/colinmarc/hdfs"
-	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 )
 
@@ -29,7 +31,7 @@ func (self *MyFile) Init() error {
 	return err
 }
 
-func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
 	file, err := self.Client.Create(name)
 	myFile := new(MyFile)
 	myFile.HdfsURL = self.HdfsURL
@@ -38,7 +40,7 @@ func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
 	return myFile, err
 
 }
-func (self *MyFile) Open(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
 	var (
 		err error
 	)
@@ -75,7 +77,7 @@ func (self *MyFile) Close() {
 }
 
 func main() {
-	var f ParquetHandler.ParquetFile
+	var f ParquetFile.ParquetFile
 	myFile := &MyFile{
 		HdfsURL: "localhost:9000",
 	}
@@ -84,8 +86,7 @@ func main() {
 
 	//write flat
 	f, _ = f.Create("/flat.parquet")
-	ph := ParquetHandler.NewParquetHandler()
-	ph.WriteInit(f, new(Student), 2)
+	pw := ParquetWriter.NewParquetWriter(f, new(Student), 4)
 
 	num := 10
 	for i := 0; i < num; i++ {
@@ -96,20 +97,20 @@ func main() {
 			Weight: ParquetType.FLOAT(50.0 + float32(i)*0.1),
 			Sex:    ParquetType.BOOLEAN(i%2 == 0),
 		}
-		ph.Write(stu)
+		pw.Write(stu)
 	}
-	ph.Flush(true)
-	ph.WriteStop()
+	pw.Flush(true)
+	pw.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
 
 	///read flat
 	f, _ = f.Open("/flat.parquet")
-	ph = ParquetHandler.NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f, 10)
-	for i := 0; i < rowGroupNum; i++ {
-		stus := make([]Student, 0)
-		ph.ReadOneRowGroupAndUnmarshal(&stus)
+	pr, _ := ParquetReader.NewParquetReader(f, 4)
+	num = int(pr.GetNumRows())
+	for i := 0; i < num; i++ {
+		stus := make([]Student, 1)
+		pr.Read(&stus)
 		log.Println(stus)
 	}
 

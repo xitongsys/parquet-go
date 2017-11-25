@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/Plugin/CSVWriter"
 	"log"
@@ -14,14 +14,14 @@ type MyFile struct {
 	File     *os.File
 }
 
-func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(MyFile)
 	myFile.File = file
 	return myFile, err
 
 }
-func (self *MyFile) Open(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
 	var (
 		err error
 	)
@@ -60,7 +60,7 @@ func main() {
 		{Type: "BOOLEAN", Name: "Sex"},
 	}
 
-	var f ParquetHandler.ParquetFile
+	var f ParquetFile.ParquetFile
 	f = &MyFile{}
 
 	//write flat

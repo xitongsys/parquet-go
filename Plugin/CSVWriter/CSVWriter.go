@@ -5,7 +5,7 @@ import (
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
-	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -20,7 +20,7 @@ type CSVWriterHandler struct {
 	Footer        *parquet.FileMetaData
 	RowGroups     []*Layout.RowGroup
 
-	PFile ParquetHandler.ParquetFile
+	PFile ParquetFile.ParquetFile
 
 	PageSize     int64
 	RowGroupSize int64
@@ -63,7 +63,7 @@ func (self *CSVWriterHandler) NameToLower() {
 }
 
 //Write init function for CSV writer
-func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetHandler.ParquetFile, np int64) {
+func (self *CSVWriterHandler) WriteInit(md []MetadataType, pfile ParquetFile.ParquetFile, np int64) {
 	self.SchemaHandler = NewSchemaHandlerFromMetadata(md)
 	self.Metadata = md
 	self.PFile = pfile

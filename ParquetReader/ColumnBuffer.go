@@ -35,10 +35,11 @@ func NewColumnBuffer(pFile ParquetFile.ParquetFile, footer *parquet.FileMetaData
 		return nil, err
 	}
 	res := &ColumnBufferType{
-		PFile:         newPFile,
-		Footer:        footer,
-		SchemaHandler: schemaHandler,
-		PathStr:       pathStr,
+		PFile:            newPFile,
+		Footer:           footer,
+		SchemaHandler:    schemaHandler,
+		PathStr:          pathStr,
+		DataTableNumRows: -1,
 	}
 	err = res.NextRowGroup()
 	return res, err
@@ -97,7 +98,7 @@ func (self *ColumnBufferType) ReadPage() error {
 		}
 		self.DataTable.Merge(page.DataTable)
 		self.ChunkReadValues += numValues
-		if self.ChunkReadValues == self.ChunkHeader.MetaData.NumValues {
+		if self.ChunkReadValues >= self.ChunkHeader.MetaData.NumValues {
 			numRows++
 		}
 		self.DataTableNumRows += numRows

@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/xitongsys/parquet-go/ParquetHandler"
+	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 	"os"
 )
@@ -40,14 +42,14 @@ type MyFile struct {
 	File     *os.File
 }
 
-func (self *MyFile) Create(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(MyFile)
 	myFile.File = file
 	return myFile, err
 
 }
-func (self *MyFile) Open(name string) (ParquetHandler.ParquetFile, error) {
+func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
 	var (
 		err error
 	)
@@ -77,14 +79,12 @@ func (self *MyFile) Close() {
 }
 
 func main() {
-	var f ParquetHandler.ParquetFile
+	var f ParquetFile.ParquetFile
 	f = &MyFile{}
 
 	//write flat
 	f, _ = f.Create("type.parquet")
-	ph := ParquetHandler.NewParquetHandler()
-	ph.WriteInit(f, new(TypeList), 4, 30)
-
+	pw := ParquetWriter.NewParquetWriter(f, new(TypeList), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		tp := TypeList{
@@ -114,20 +114,20 @@ func main() {
 			Interval:        ParquetType.INTERVAL("012345678912"),
 			Decimal:         ParquetType.DECIMAL("12345"),
 		}
-		ph.Write(tp)
+		pw.Write(tp)
 	}
-	ph.Flush()
-	ph.WriteStop()
+	pw.Flush(true)
+	pw.WriteStop()
 	log.Println("Write Finished")
 	f.Close()
 
 	///read flat
 	f, _ = f.Open("type.parquet")
-	ph = ParquetHandler.NewParquetHandler()
-	rowGroupNum := ph.ReadInit(f, 10)
-	for i := 0; i < rowGroupNum; i++ {
-		tps := make([]TypeList, 0)
-		ph.ReadOneRowGroupAndUnmarshal(&tps)
+	pr, _ := ParquetReader.NewParquetReader(f, 10)
+	num = int(pr.GetNumRows())
+	for i := 0; i < num; i++ {
+		tps := make([]TypeList, 1)
+		pr.Read(&tps)
 		log.Println(tps)
 	}
 
