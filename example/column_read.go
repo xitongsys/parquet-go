@@ -87,13 +87,13 @@ func main() {
 
 	///read flat
 	f, _ = f.Open("column.parquet")
-	pr, err := ParquetReader.NewParquetReader(f, 1)
+	pr, err := ParquetReader.NewParquetReader(f, 4)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
 	num = int(pr.GetNumRows())
 	names := make([]interface{}, num)
-	pr.ReadColumnByPath("parquet_go_root.Name", &names)
+	pr.ReadColumnByPath("Name", &names)
 	log.Println(names)
 
 	ids := make([]interface{}, num)
