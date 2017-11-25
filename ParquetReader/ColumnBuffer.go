@@ -65,7 +65,7 @@ func (self *ColumnBufferType) NextRowGroup() error {
 		}
 	}
 	if i >= ln {
-		return fmt.Errorf("Column not found", self.PathStr)
+		return fmt.Errorf("Column not found: %v", self.PathStr)
 	}
 
 	self.ChunkHeader = columnChunks[i]
