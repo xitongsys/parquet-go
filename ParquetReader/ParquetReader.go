@@ -67,11 +67,15 @@ func (self *ParquetReader) ReadFooter() {
 	self.Footer.Read(protocol)
 }
 
+//Read rows of parquet file
 func (self *ParquetReader) Read(dstInterface interface{}) {
 	tmap := make(map[string]*Layout.Table)
 	locker := new(sync.Mutex)
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	num := reflect.ValueOf(dstInterface).Elem().Len()
+	if num <= 0 {
+		return
+	}
 
 	doneChan := make(chan int, self.NP)
 	taskChan := make(chan string, len(self.ColumnBuffers))
@@ -136,7 +140,36 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 	for _, dst := range dstList {
 		resTmp = reflect.AppendSlice(resTmp, reflect.ValueOf(dst).Elem())
 	}
-
 	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
+}
 
+func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface interface{}) {
+	num := reflect.ValueOf(dstInterface).Elem().Len()
+	if num <= 0 {
+		return
+	}
+	rootName := self.SchemaHandler.GetRootName()
+
+	if len(pathStr) <= 0 {
+		return
+	} else if len(pathStr) < len(rootName) || pathStr[:len(rootName)] != rootName {
+		pathStr = rootName + "." + pathStr
+	}
+
+	cb := self.ColumnBuffers[pathStr]
+	table, _ := cb.ReadRows(int64(num))
+
+	resTmp := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(table.Values[0])), 0, num)
+	for i := 0; i < len(table.Values); i++ {
+		resTmp = reflect.Append(resTmp, reflect.ValueOf(table.Values[i]))
+	}
+	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
+}
+
+func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface interface{}) {
+	if index >= len(self.SchemaHandler.ValueColumns) {
+		return
+	}
+	pathStr := self.SchemaHandler.ValueColumns[index]
+	self.ReadColumnByPath(pathStr, dstInterface)
 }

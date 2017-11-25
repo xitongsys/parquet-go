@@ -96,7 +96,7 @@ func (self *ParquetWriter) Write(src interface{}) {
 	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, src)
 
-	criSize := self.NP * self.PageSize * self.SchemaHandler.ColumnNum
+	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize >= criSize {
 		self.Flush(false)
