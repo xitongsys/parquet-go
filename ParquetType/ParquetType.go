@@ -35,6 +35,9 @@ type INTERVAL string // length=12
 type DECIMAL string
 
 func ParquetTypeToGoType(value interface{}) interface{} {
+	if value == nil {
+		return nil
+	}
 	typeName := reflect.TypeOf(value).Name()
 	switch typeName {
 	case "BOOLEAN":
