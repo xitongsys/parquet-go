@@ -75,22 +75,27 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 
 	doneChan := make(chan int, self.NP)
 	taskChan := make(chan string, len(self.ColumnBuffers))
+	stopChan := make(chan int)
 
-	stopFlag := false
 	for i := int64(0); i < self.NP; i++ {
 		go func() {
-			for !stopFlag {
-				pathStr := <-taskChan
-				cb := self.ColumnBuffers[pathStr]
-				table, _ := cb.ReadRows(int64(num))
-				locker.Lock()
-				if _, ok := tmap[pathStr]; ok {
-					tmap[pathStr].Merge(table)
-				} else {
-					tmap[pathStr] = table
+			for {
+				select {
+				case <-stopChan:
+					return
+				case pathStr := <-taskChan:
+					cb := self.ColumnBuffers[pathStr]
+					table, _ := cb.ReadRows(int64(num))
+					locker.Lock()
+					if _, ok := tmap[pathStr]; ok {
+						tmap[pathStr].Merge(table)
+					} else {
+						tmap[pathStr] = Common.NewTableFromTable(table)
+						tmap[pathStr].Merge(table)
+					}
+					locker.Unlock()
+					doneChan <- 0
 				}
-				locker.Unlock()
-				doneChan <- 0
 			}
 		}()
 	}
@@ -100,7 +105,9 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 	for i := 0; i < len(self.ColumnBuffers); i++ {
 		<-doneChan
 	}
-	stopFlag = true
+	for i := int64(0); i < self.NP; i++ {
+		stopChan <- 0
+	}
 
 	dstList := make([]interface{}, self.NP)
 	delta := (int64(num) + self.NP - 1) / self.NP
