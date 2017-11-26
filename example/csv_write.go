@@ -19,7 +19,7 @@ func main() {
 
 	//write flat
 	fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
-	pw, _ := CSVWriter.NewCSVWriter(md, fw, 4)
+	pw, _ := CSVWriter.NewCSVWriter(md, fw, 1)
 
 	num := 10
 	for i := 0; i < num; i++ {

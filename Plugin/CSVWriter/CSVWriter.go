@@ -158,7 +158,6 @@ func (self *CSVWriter) Flush(flag bool) {
 				doneChan <- 0
 				return
 			}
-
 			tableMap := MarshalCSV(self.Objs, b, e, self.Metadata, self.SchemaHandler)
 			for name, table := range *tableMap {
 				pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
