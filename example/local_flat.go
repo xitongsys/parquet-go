@@ -19,7 +19,7 @@ type Student struct {
 }
 
 func main() {
-	fw, _ := ParquetFile.CreateLocalFile("flat.parquet")
+	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
 
 	//write flat
 	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
@@ -42,7 +42,7 @@ func main() {
 	fw.Close()
 
 	///read flat
-	fr, _ := ParquetFile.OpenLocalFile("flat.parquet")
+	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
 	pr, err := ParquetReader.NewParquetReader(fr, 4)
 	if err != nil {
 		log.Println("Failed new reader", err)

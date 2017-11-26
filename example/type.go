@@ -6,7 +6,6 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
-	"os"
 )
 
 type TypeList struct {
@@ -37,54 +36,10 @@ type TypeList struct {
 	Decimal         ParquetType.DECIMAL `BaseType:"BYTE_ARRAY" Scale:"2" Precision:"2"`
 }
 
-type MyFile struct {
-	FilePath string
-	File     *os.File
-}
-
-func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
-	file, err := os.Create(name)
-	myFile := new(MyFile)
-	myFile.File = file
-	return myFile, err
-
-}
-func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
-	var (
-		err error
-	)
-	if name == "" {
-		name = self.FilePath
-	}
-
-	myFile := new(MyFile)
-	myFile.FilePath = name
-	myFile.File, err = os.Open(name)
-	return myFile, err
-}
-func (self *MyFile) Seek(offset int, pos int) (int64, error) {
-	return self.File.Seek(int64(offset), pos)
-}
-
-func (self *MyFile) Read(b []byte) (n int, err error) {
-	return self.File.Read(b)
-}
-
-func (self *MyFile) Write(b []byte) (n int, err error) {
-	return self.File.Write(b)
-}
-
-func (self *MyFile) Close() {
-	self.File.Close()
-}
-
 func main() {
-	var f ParquetFile.ParquetFile
-	f = &MyFile{}
-
 	//write flat
-	f, _ = f.Create("type.parquet")
-	pw, _ := ParquetWriter.NewParquetWriter(f, new(TypeList), 4)
+	fw, _ := ParquetFile.NewLocalFileWriter("type.parquet")
+	pw, _ := ParquetWriter.NewParquetWriter(fw, new(TypeList), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		tp := TypeList{
@@ -119,11 +74,11 @@ func main() {
 	pw.Flush(true)
 	pw.WriteStop()
 	log.Println("Write Finished")
-	f.Close()
+	fw.Close()
 
 	///read flat
-	f, _ = f.Open("type.parquet")
-	pr, _ := ParquetReader.NewParquetReader(f, 10)
+	fr, _ := ParquetFile.NewLocalFileReader("type.parquet")
+	pr, _ := ParquetReader.NewParquetReader(fr, 10)
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		tps := make([]TypeList, 1)
@@ -131,6 +86,6 @@ func main() {
 		log.Println(tps)
 	}
 
-	f.Close()
+	fr.Close()
 
 }

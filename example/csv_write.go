@@ -6,50 +6,7 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/Plugin/CSVWriter"
 	"log"
-	"os"
 )
-
-type MyFile struct {
-	FilePath string
-	File     *os.File
-}
-
-func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
-	file, err := os.Create(name)
-	myFile := new(MyFile)
-	myFile.File = file
-	return myFile, err
-
-}
-func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
-	var (
-		err error
-	)
-	if name == "" {
-		name = self.FilePath
-	}
-
-	myFile := new(MyFile)
-	myFile.FilePath = name
-	myFile.File, err = os.Open(name)
-	return myFile, err
-}
-
-func (self *MyFile) Seek(offset int, pos int) (int64, error) {
-	return self.File.Seek(int64(offset), pos)
-}
-
-func (self *MyFile) Read(b []byte) (n int, err error) {
-	return self.File.Read(b)
-}
-
-func (self *MyFile) Write(b []byte) (n int, err error) {
-	return self.File.Write(b)
-}
-
-func (self *MyFile) Close() {
-	self.File.Close()
-}
 
 func main() {
 	md := []CSVWriter.MetadataType{
@@ -60,12 +17,9 @@ func main() {
 		{Type: "BOOLEAN", Name: "Sex"},
 	}
 
-	var f ParquetFile.ParquetFile
-	f = &MyFile{}
-
 	//write flat
-	f, _ = f.Create("csv.parquet")
-	pw, _ := CSVWriter.NewCSVWriter(md, f, 4)
+	fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
+	pw, _ := CSVWriter.NewCSVWriter(md, fw, 4)
 
 	num := 10
 	for i := 0; i < num; i++ {
@@ -94,6 +48,6 @@ func main() {
 	pw.Flush(true)
 	pw.WriteStop()
 	log.Println("Write Finished")
-	f.Close()
+	fw.Close()
 
 }

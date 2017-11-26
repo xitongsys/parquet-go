@@ -9,11 +9,11 @@ type LocalFile struct {
 	File     *os.File
 }
 
-func CreateLocalFile(name string) (ParquetFile, error) {
+func NewLocalFileWriter(name string) (ParquetFile, error) {
 	return (&LocalFile{}).Create(name)
 }
 
-func OpenLocalFile(name string) (ParquetFile, error) {
+func NewLocalFileReader(name string) (ParquetFile, error) {
 	return (&LocalFile{}).Open(name)
 }
 
