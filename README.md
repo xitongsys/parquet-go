@@ -258,7 +258,7 @@ pw.Flush(true)
 pw.NameToLower()// convert the field name to lowercase
 pw.WriteStop()
 log.Println("Write Finished")
-f.Close()
+fw.Close()
 ```
 
 It is a problem in reading parquet file and it's solved in the following way:  
