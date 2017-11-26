@@ -9,6 +9,7 @@ import (
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -153,7 +154,7 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]inte
 
 	if len(pathStr) <= 0 {
 		return
-	} else if len(pathStr) < len(rootName) || pathStr[:len(rootName)] != rootName {
+	} else if !strings.HasPrefix(pathStr, rootName) {
 		pathStr = rootName + "." + pathStr
 	}
 
