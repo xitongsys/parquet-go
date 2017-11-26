@@ -45,7 +45,7 @@ func (self *HdfsFile) Create(name string) (ParquetFile, error) {
 	if err != nil {
 		return hf, err
 	}
-	hf.FileWriter, err = self.Client.Create(name)
+	hf.FileWriter, err = hf.Client.Create(name)
 	return hf, err
 
 }

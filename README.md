@@ -1,4 +1,4 @@
-# parquet-go v0.9.6
+# parquet-go v0.9.8
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -114,25 +114,20 @@ type ParquetFile interface {
 }
 ```
 Using this interface, parquet-go can read/write parquet file on any plantform(local/hdfs/s3...)
-### Note:
-* Open(name string) (ParquetFile, error) is used for read parquet. If name is "", it should return a new file handler of the same file.
-
-
-The read and unmarshal processes can be separated and an example is shown in example/benchmark/ReadParquet.go  
-In reading process, Unmarshal is a very time-consuming function. If this process is not needed, you can just get the table map and values by yourself.   
 
 The following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```
 package main
+
 import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
-	"os"
 	"time"
 )
+
 type Student struct {
 	Name   ParquetType.UTF8
 	Age    ParquetType.INT32
@@ -141,45 +136,12 @@ type Student struct {
 	Sex    ParquetType.BOOLEAN
 	Day    ParquetType.DATE
 }
-type MyFile struct {
-	FilePath string
-	File     *os.File
-}
-func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
-	file, err := os.Create(name)
-	myFile := new(MyFile)
-	myFile.File = file
-	return myFile, err
-}
-func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
-	var err error
-	if name == "" {
-		name = self.FilePath
-	}
-	myFile := new(MyFile)
-	myFile.FilePath = name
-	myFile.File, err = os.Open(name)
-	return myFile, err
-}
-func (self *MyFile) Seek(offset int, pos int) (int64, error) {
-	return self.File.Seek(int64(offset), pos)
-}
-func (self *MyFile) Read(b []byte) (n int, err error) {
-	return self.File.Read(b)
-}
-func (self *MyFile) Write(b []byte) (n int, err error) {
-	return self.File.Write(b)
-}
-func (self *MyFile) Close() {
-	self.File.Close()
-}
 
 func main() {
-	var f ParquetFile.ParquetFile
-	f = &MyFile{}
+	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
+
 	//write flat
-	f, _ = f.Create("flat.parquet")
-	pw,_ := ParquetWriter.NewParquetWriter(f, new(Student), 4)
+	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -196,11 +158,11 @@ func main() {
 	//pw.NameToLower()// convert the field name to lowercase
 	pw.WriteStop()
 	log.Println("Write Finished")
-	f.Close()
+	fw.Close()
 
 	///read flat
-	f, _ = f.Open("flat.parquet")
-	pr, err := ParquetReader.NewParquetReader(f, 4)
+	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
+	pr, err := ParquetReader.NewParquetReader(fr, 4)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
@@ -210,7 +172,9 @@ func main() {
 		pr.Read(&stus)
 		log.Println(stus)
 	}
-	f.Close()
+
+	fr.Close()
+
 }
 
 ```
@@ -235,11 +199,10 @@ func main() {
 		{Type: "FLOAT", Name: "Weight"},
 		{Type: "BOOLEAN", Name: "Sex"},
 	}
-	var f ParquetFile.ParquetFile
-	f = &MyFile{}
+
 	//write flat
-	f, _ = f.Create("csv.parquet")
-	pw,_ := CSVWriter.NewCSVWriter(md, f, 4)
+	fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
+	pw, _ := CSVWriter.NewCSVWriter(md, fw, 1)
 
 	num := 10
 	for i := 0; i < num; i++ {
@@ -268,7 +231,7 @@ func main() {
 	pw.Flush(true)
 	pw.WriteStop()
 	log.Println("Write Finished")
-	f.Close()
+	fw.Close()
 }
 
 ```

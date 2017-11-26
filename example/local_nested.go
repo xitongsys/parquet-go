@@ -7,49 +7,7 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
-	"os"
 )
-
-type MyFile struct {
-	FilePath string
-	File     *os.File
-}
-
-func (self *MyFile) Create(name string) (ParquetFile.ParquetFile, error) {
-	file, err := os.Create(name)
-	myFile := new(MyFile)
-	myFile.File = file
-	return myFile, err
-
-}
-func (self *MyFile) Open(name string) (ParquetFile.ParquetFile, error) {
-	var (
-		err error
-	)
-	if name == "" {
-		name = self.FilePath
-	}
-
-	myFile := new(MyFile)
-	myFile.FilePath = name
-	myFile.File, err = os.Open(name)
-	return myFile, err
-}
-func (self *MyFile) Seek(offset int, pos int) (int64, error) {
-	return self.File.Seek(int64(offset), pos)
-}
-
-func (self *MyFile) Read(b []byte) (n int, err error) {
-	return self.File.Read(b)
-}
-
-func (self *MyFile) Write(b []byte) (n int, err error) {
-	return self.File.Write(b)
-}
-
-func (self *MyFile) Close() {
-	self.File.Close()
-}
 
 type Student struct {
 	Name    ParquetType.UTF8
@@ -140,30 +98,27 @@ func writeNested() {
 	stus := make([]Student, 0)
 	stus = append(stus, stu01, stu02)
 
-	var f ParquetFile.ParquetFile
-	f = &MyFile{}
-
 	//write nested
-	f, _ = f.Create("nested.parquet")
-	pw, _ := ParquetWriter.NewParquetWriter(f, new(Student), 4)
+	fw, _ := ParquetFile.NewLocalFileWriter("nested.parquet")
+	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 	for _, stu := range stus {
 		pw.Write(stu)
 	}
 	pw.Flush(true)
 	pw.WriteStop()
-	f.Close()
+	fw.Close()
 	log.Println("Write Finished")
 
 	//read nested
-	f, _ = f.Open("nested.parquet")
-	pr, _ := ParquetReader.NewParquetReader(f, 4)
+	fr, _ := ParquetFile.NewLocalFileReader("nested.parquet")
+	pr, _ := ParquetReader.NewParquetReader(fr, 4)
 	num := int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)
 		pr.Read(&stus)
 		log.Println(stus)
 	}
-	f.Close()
+	fr.Close()
 }
 
 func main() {

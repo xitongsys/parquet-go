@@ -18,7 +18,7 @@ type Student struct {
 
 func main() {
 	//write flat
-	fw, _ := ParquetFile.NewHdfsFileWriter([]string{"localhost:9000"}, "", "/flat.parquet")
+	fw, _ := ParquetFile.NewHdfsFileWriter([]string{"localhost:9000"}, "root", "/flat.parquet")
 	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 
 	num := 10
