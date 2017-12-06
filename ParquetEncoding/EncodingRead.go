@@ -469,7 +469,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
 		}
 		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
 			cur := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
-			for j := 1; j < len(cur); j++ {
+			for j := 0; j < len(cur); j++ {
 				res = append(res, ParquetType.INT64(int64(res[len(res)-1].(ParquetType.INT64))+int64(cur[j].(ParquetType.INT64))+minDelta))
 			}
 		}
