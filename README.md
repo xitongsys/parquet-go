@@ -24,40 +24,37 @@ go run example/local_flat.go
 ```
 
 ## Types
-There are two Types in Parquet: Base Type and Logical Type
-They are defined in ParquetType.go as following:
-```
-//base type
-type BOOLEAN bool
-type INT32 int32
-type INT64 int64
-type INT96 string // length=96
-type FLOAT float32
-type DOUBLE float64
-type BYTE_ARRAY string
-type FIXED_LEN_BYTE_ARRAY string
+There are two Types in Parquet: Base Type and Logical Type. The type definitions is in ParquetType.go. The relationship between the parquet type and go type is shown in following table. OPTIONAL variables are declared as pointers.
 
-//logical type
-type UTF8 string
-type INT_8 int32
-type INT_16 int32
-type INT_32 int32
-type INT_64 int64
-type UINT_8 uint32
-type UINT_16 uint32
-type UINT_32 uint32
-type UINT_64 uint64
-type DATE int32
-type TIME_MILLIS int32
-type TIME_MICROS int64
-type TIMESTAMP_MILLIS int64
-type TIMESTAMP_MICROS int64
-type INTERVAL string // length=12
-type DECIMAL string
+|Parquet Type|Go Type|Example|
+|-|:-:|-:|
+|BOOLEAN|bool|`parquet:"name=name, type=BOOLEAN"`|
+|INT32|int32|`parquet:"name=name, type=INT32"`|
+|INT64|int64|`parquet:"name=name, type=INT64"`|
+|INT96|string|`parquet:"name=name, type=INT96"`|
+|FLOAT|float32|`parquet:"name=name, type=FLOAT"`|
+|DOUBLE|float64|`parquet:"name=name, type=DOUBLE"`|
+|BYTE_ARRAY|string|`parquet:"name=name, type=BYTE_ARRAY"`|
+|FIXED_LEN_BYTE_ARRAY|string|`parquet:"name=name, type=FIXED_LEN_BYTE_ARRAY, length=10"`|
+|UTF8|string|`parquet:"name=name, type=UTF8"`|
+|INT_8|int32|`parquet:"name=name, type=INT_8"`|
+|INT_16|int32|`parquet:"name=name, type=INT_16"`|
+|INT_32|int32|`parquet:"name=name, type=INT_32"`|
+|INT_64|int64|`parquet:"name=name, type=INT_64"`|
+|UINT_8|uint32|`parquet:"name=name, type=UINT_8"`|
+|UINT_16|uint32|`parquet:"name=name, type=UINT_16"`|
+|UINT_32|uint32|`parquet:"name=name, type=UINT_32"`|
+|UINT_64|uint64|`parquet:"name=name, type=UINT_64"`|
+|DATE|int32|`parquet:"name=name, type=DATE"`|
+|TIME_MILLIS|int32|`parquet:"name=name, type=TIME_MILLIS"`|
+|TIME_MICROS|int64|`parquet:"name=name, type=TIME_MICROS"`|
+|TIMESTAMP_MILLIS|int64|`parquet:"name=name, type=TIMESTAMP_MILLIS"`|
+|TIMESTAMP_MICROS|int64|`parquet:"name=name, type=TIMESTAMP_MICROS"`|
+|INTERVAL|string|`parquet:"name=name, type=INTERVAL"`|
+|DECIMAL|string|`parquet:"name=name, type=DECIMAL"`|
+|List|slice|`parquet:"name=name, type=INT64"`|
+|Map|map|`parquet:"name=name, type=INT64, keytype=INT64"`|
 
-```
-The variables which will read/write from/to a parquet file must be declared as these types.
-OPTIONAL variables are declared as pointers.
 
 ## Core Data Structure
 The core data structure named "Table":
@@ -118,39 +115,34 @@ Using this interface, parquet-go can read/write parquet file on any plantform(lo
 The following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```
 package main
-
 import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 	"time"
 )
-
 type Student struct {
-	Name   ParquetType.UTF8
-	Age    ParquetType.INT32
-	Id     ParquetType.INT64
-	Weight ParquetType.FLOAT
-	Sex    ParquetType.BOOLEAN
-	Day    ParquetType.DATE
+	Name   string  `parquet:"name=name, type=UTF8"`
+	Age    int32   `parquet:"name=age, type=INT32"`
+	Id     int64   `parquet:"name=id, type=INT64"`
+	Weight float32 `parquet:"name=weight, type=FLOAT"`
+	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
+	Day    int32   `parquet:"name=day, type=DATE"`
 }
-
 func main() {
 	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
-
 	//write flat
 	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
-			Name:   ParquetType.UTF8("StudentName"),
-			Age:    ParquetType.INT32(20 + i%5),
-			Id:     ParquetType.INT64(i),
-			Weight: ParquetType.FLOAT(50.0 + float32(i)*0.1),
-			Sex:    ParquetType.BOOLEAN(i%2 == 0),
-			Day:    ParquetType.DATE(time.Now().Unix() / 3600 / 24),
+			Name:   "StudentName",
+			Age:    int32(20 + i%5),
+			Id:     int64(i),
+			Weight: float32(50.0 + float32(i)*0.1),
+			Sex:    bool(i%2 == 0),
+			Day:    int32(time.Now().Unix() / 3600 / 24),
 		}
 		pw.Write(stu)
 	}
@@ -162,7 +154,7 @@ func main() {
 
 	///read flat
 	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
-	pr, err := ParquetReader.NewParquetReader(fr, 4)
+	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
@@ -174,15 +166,35 @@ func main() {
 	}
 	pr.ReadStop()
 	fr.Close()
-
 }
 
+```
+
+##Read Column
+If you just want to get some columns data, your can use column reader
+```
+///read flat
+fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
+pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
+if err != nil {
+	log.Println("Failed new reader", err)
+}
+num = int(pr.GetNumRows())
+names := make([]interface{}, num)
+pr.ReadColumnByPath("name", &names)
+log.Println(names)
+
+ids := make([]interface{}, num)
+pr.ReadColumnByIndex(2, &ids)
+log.Println(ids)
+pr.ReadStop()
+fr.Close()
 ```
 
 ## Parallel
 Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
 ```
-func NewParquetReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error)
+func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error)
 func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error)
 ```
 
@@ -199,7 +211,6 @@ func main() {
 		{Type: "FLOAT", Name: "Weight"},
 		{Type: "BOOLEAN", Name: "Sex"},
 	}
-
 	//write flat
 	fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
 	pw, _ := CSVWriter.NewCSVWriter(md, fw, 1)
@@ -232,44 +243,6 @@ func main() {
 	pw.WriteStop()
 	log.Println("Write Finished")
 	fw.Close()
-}
-
-```
-
-## Tips
-### Uppercase/Lowercase of field name
-In parquet-go the first letter of filed name must be uppercase. So the Marshal/Unmarshal functions can get the filed of the object. But there is no such restriction in other systems (e.g. Spark: support uppercase/lowercase; Hive: all the field names will convert to lowercase when load a parquet file, because Hive is not case sensitive).
-  
-Generally this isn't a problem in writing parquet, but I still provide a function 'NameToLower()' to convert the field names to lowercase when write parquet file. 
-```
-num := 10
-for i := 0; i < num; i++ {
-	stu := Student{
-		Name:   ParquetType.UTF8("StudentName"),
-		Age:    ParquetType.INT32(20 + i%5),
-		Id:     ParquetType.INT64(i),
-		Weight: ParquetType.FLOAT(50.0 + float32(i)*0.1),
-		Sex:    ParquetType.BOOLEAN(i%2 == 0),
-		Day:    ParquetType.DATE(time.Now().Unix() / 3600 / 24),
-	}
-	pw.Write(stu)
-}
-pw.Flush(true)
-pw.NameToLower()// convert the field name to lowercase
-pw.WriteStop()
-log.Println("Write Finished")
-fw.Close()
-```
-
-It is a problem in reading parquet file and it's solved in the following way:  
-If the first letter of some field names are lowercase, you just need define a variable with a capitilized first letter. e.g.  
-The field names in a parquet file is: nameofstudent, ageOfStudent, School_of_Student  
-You need to define a struct as following:
-```
-type Student struct{
-	 Nameofstudent UTF8 // nameofstudent
-	 AgeOfStudent INT32 // ageOfStudent
-	 School_of_Student UTF8 // School_of_Student
 }
 ```
 
