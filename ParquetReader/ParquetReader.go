@@ -23,6 +23,30 @@ type ParquetReader struct {
 	ColumnBuffers map[string]*ColumnBufferType
 }
 
+//Create a parquet column reader
+func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error) {
+	var err error
+	res := new(ParquetReader)
+	res.NP = np
+	res.PFile = pFile
+	res.ReadFooter()
+	res.ColumnBuffers = make(map[string]*ColumnBufferType)
+	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
+
+	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
+		schema := res.SchemaHandler.SchemaElements[i]
+		pathStr := res.SchemaHandler.IndexMap[int32(i)]
+		numChildren := schema.GetNumChildren()
+		if numChildren == 0 {
+			res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr)
+			if err != nil {
+				return res, err
+			}
+		}
+	}
+	return res, err
+}
+
 //Create a parquet reader
 func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error

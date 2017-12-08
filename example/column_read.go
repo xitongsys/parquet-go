@@ -3,19 +3,18 @@ package main
 import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 	"time"
 )
 
 type Student struct {
-	Name   ParquetType.UTF8
-	Age    ParquetType.INT32
-	Id     ParquetType.INT64
-	Weight ParquetType.FLOAT
-	Sex    ParquetType.BOOLEAN
-	Day    ParquetType.DATE
+	Name   string  `parquet:"name=name, type=UTF8"`
+	Age    int32   `parquet:"name=age, type=INT32"`
+	Id     int64   `parquet:"name=id, type=INT64"`
+	Weight float32 `parquet:"name=weight, type=FLOAT"`
+	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
+	Day    int32   `parquet:"name=day, type=DATE"`
 }
 
 func main() {
@@ -25,12 +24,12 @@ func main() {
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
-			Name:   ParquetType.UTF8("StudentName"),
-			Age:    ParquetType.INT32(20 + i%5),
-			Id:     ParquetType.INT64(i),
-			Weight: ParquetType.FLOAT(50.0 + float32(i)*0.1),
-			Sex:    ParquetType.BOOLEAN(i%2 == 0),
-			Day:    ParquetType.DATE(time.Now().Unix() / 3600 / 24),
+			Name:   "StudentName",
+			Age:    int32(20 + i%5),
+			Id:     int64(i),
+			Weight: float32(50.0 + float32(i)*0.1),
+			Sex:    bool(i%2 == 0),
+			Day:    int32(time.Now().Unix() / 3600 / 24),
 		}
 		pw.Write(stu)
 	}
@@ -42,13 +41,13 @@ func main() {
 
 	///read flat
 	fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
-	pr, err := ParquetReader.NewParquetReader(fr, 4)
+	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
 	num = int(pr.GetNumRows())
 	names := make([]interface{}, num)
-	pr.ReadColumnByPath("Name", &names)
+	pr.ReadColumnByPath("name", &names)
 	log.Println(names)
 
 	ids := make([]interface{}, num)
