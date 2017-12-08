@@ -2,22 +2,21 @@ package Marshal
 
 import (
 	"fmt"
-	. "github.com/xitongsys/parquet-go/ParquetType"
 	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"testing"
 )
 
 type Student struct {
-	Name    UTF8
-	Age     INT32
-	Weight  *INT32
-	Classes *map[UTF8][]*Class
+	Name    string               `parquet:"name=name, type=UTF8"`
+	Age     int32                `parquet:"name=age, type=INT32"`
+	Weight  *int32               `parquet:"name=weight, type=INT32"`
+	Classes *map[string][]*Class `parquet:"name=classes, keytype=UTF8"`
 }
 
 type Class struct {
-	Name     UTF8
-	ID       *INT64
-	Required []UTF8
+	Name     string   `parquet:"name=name, type=UTF8"`
+	ID       *int64   `parquet:"name=id, type=INT64"`
+	Required []string `parquet:"name=required, type=UTF8"`
 }
 
 func (c Class) String() string {
@@ -53,30 +52,30 @@ func TestMarshalUnmarshal(t *testing.T) {
 	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
 	fmt.Println("SchemaHandler Finished")
 
-	math01ID := INT64(1)
+	math01ID := int64(1)
 	math01 := Class{
 		Name:     "Math1",
 		ID:       &math01ID,
-		Required: make([]UTF8, 0),
+		Required: make([]string, 0),
 	}
 
-	math02ID := INT64(2)
+	math02ID := int64(2)
 	math02 := Class{
 		Name:     "Math2",
 		ID:       &math02ID,
-		Required: make([]UTF8, 0),
+		Required: make([]string, 0),
 	}
 	math02.Required = append(math02.Required, "Math01")
 
 	physics := Class{
 		Name:     "Physics",
 		ID:       nil,
-		Required: make([]UTF8, 0),
+		Required: make([]string, 0),
 	}
 	physics.Required = append(physics.Required, "Math01", "Math02")
 
-	weight01 := INT32(60)
-	stu01Class := make(map[UTF8][]*Class)
+	weight01 := int32(60)
+	stu01Class := make(map[string][]*Class)
 	stu01Class["Science"] = make([]*Class, 0)
 	stu01Class["Science"] = append(stu01Class["Science"], &math01, &math02)
 	stu01 := Student{
@@ -86,7 +85,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 		Classes: &stu01Class,
 	}
 
-	stu02Class := make(map[UTF8][]*Class)
+	stu02Class := make(map[string][]*Class)
 	stu02Class["Science"] = make([]*Class, 0)
 	stu02Class["Science"] = append(stu02Class["Science"], &physics)
 	stu02 := Student{

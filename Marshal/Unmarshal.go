@@ -1,8 +1,8 @@
 package Marshal
 
 import (
-	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"reflect"
 )
@@ -153,7 +153,7 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 									mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
 										KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
 								}
-								mapRecord[po].KeyValues[mapRecord[po].Index].Key = reflect.ValueOf(table.Values[tableIndex[name]])
+								mapRecord[po].KeyValues[mapRecord[po].Index].Key = reflect.ValueOf(ParquetType.ParquetTypeToGoType(table.Values[tableIndex[name]]))
 								break
 							}
 						} else {
@@ -171,7 +171,7 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 						po = po.Elem()
 
 					} else {
-						po.Set(reflect.ValueOf(table.Values[tableIndex[name]]))
+						po.Set(reflect.ValueOf(ParquetType.ParquetTypeToGoType(table.Values[tableIndex[name]])))
 						break
 					}
 				} //for pathIndex < len(path) {
