@@ -56,14 +56,18 @@ func PagesToChunk(pages []*Page) *Chunk {
 
 	tmpBufMax := ParquetEncoding.WritePlain([]interface{}{maxVal})
 	tmpBufMin := ParquetEncoding.WritePlain([]interface{}{minVal})
-	name := reflect.TypeOf(maxVal).Name()
 
-	if name == "UTF8" || name == "DECIMAL" {
-		tmpBufMax = tmpBufMax[4:]
-		tmpBufMin = tmpBufMin[4:]
+	if maxVal != nil && minVal != nil {
+
+		name := reflect.TypeOf(maxVal).Name()
+
+		if name == "UTF8" || name == "DECIMAL" {
+			tmpBufMax = tmpBufMax[4:]
+			tmpBufMin = tmpBufMin[4:]
+		}
+		metaData.Statistics.Max = tmpBufMax
+		metaData.Statistics.Min = tmpBufMin
 	}
-	metaData.Statistics.Max = tmpBufMax
-	metaData.Statistics.Min = tmpBufMin
 
 	chunk.ChunkHeader.MetaData = metaData
 	return chunk
