@@ -27,7 +27,7 @@ go run example/local_flat.go
 There are two Types in Parquet: Base Type and Logical Type. The type definitions is in ParquetType.go. The relationship between the parquet type and go type is shown in following table. OPTIONAL variables are declared as pointers.
 
 |Parquet Type|Go Type|Example|
-|-|:-:|-:|
+|-|-|-|
 |BOOLEAN|bool|`parquet:"name=name, type=BOOLEAN"`|
 |INT32|int32|`parquet:"name=name, type=INT32"`|
 |INT64|int64|`parquet:"name=name, type=INT64"`|
