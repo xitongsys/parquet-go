@@ -10,7 +10,6 @@ import (
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
-	"strings"
 )
 
 //Write handler for CSV data
@@ -55,17 +54,11 @@ func NewCSVWriter(md []MetadataType, pfile ParquetFile.ParquetFile, np int64) (*
 	return res, err
 }
 
-//Convert the column names to lowercase
-func (self *CSVWriter) NameToLower() {
-	for _, schema := range self.Footer.Schema {
-		schema.Name = strings.ToLower(schema.Name)
-	}
+//Rename schema name to exname
+func (self *CSVWriter) RenameSchema() {
 	for _, rowGroup := range self.Footer.RowGroups {
 		for _, chunk := range rowGroup.Columns {
-			ln := len(chunk.MetaData.PathInSchema)
-			for i := 0; i < ln; i++ {
-				chunk.MetaData.PathInSchema[i] = strings.ToLower(chunk.MetaData.PathInSchema[i])
-			}
+			chunk.MetaData.PathInSchema = chunk.MetaData.PathInSchema[1:]
 		}
 	}
 }
@@ -123,6 +116,7 @@ func (self *CSVWriter) WriteStop() {
 	//self.Flush()
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
+	self.RenameSchema()
 	footerBuf, _ := ts.Write(self.Footer)
 
 	self.PFile.Write(footerBuf)
