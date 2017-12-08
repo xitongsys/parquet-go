@@ -175,3 +175,12 @@ func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface *[]interfac
 	pathStr := self.SchemaHandler.ValueColumns[index]
 	self.ReadColumnByPath(pathStr, dstInterface)
 }
+
+//Stop Read
+func (self *ParquetReader) ReadStop() {
+	for _, cb := range self.ColumnBuffers {
+		if cb != nil {
+			cb.PFile.Close()
+		}
+	}
+}
