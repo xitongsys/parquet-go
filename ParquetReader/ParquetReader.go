@@ -3,6 +3,7 @@ package ParquetReader
 import (
 	"encoding/binary"
 	"git.apache.org/thrift.git/lib/go/thrift"
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
 	"github.com/xitongsys/parquet-go/ParquetFile"
@@ -20,20 +21,20 @@ type ParquetReader struct {
 	PFile         ParquetFile.ParquetFile
 
 	ColumnBuffers map[string]*ColumnBufferType
-
-	InExMapFlag bool
 }
 
 //Create a parquet reader
-func NewParquetReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error) {
+func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
 	res := new(ParquetReader)
 	res.NP = np
 	res.PFile = pFile
 	res.ReadFooter()
-	res.InExMapFlag = false
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
-	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
+	//res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
+	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+	res.RenameSchema()
+
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
 		schema := res.SchemaHandler.SchemaElements[i]
 		pathStr := res.SchemaHandler.IndexMap[int32(i)]
@@ -46,6 +47,25 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, 
 		}
 	}
 	return res, err
+}
+
+//Rename schema name to inname
+func (self *ParquetReader) RenameSchema() {
+	for i := 0; i < len(self.Footer.Schema); i++ {
+		self.Footer.Schema[i].Name = self.SchemaHandler.InNames[i]
+	}
+	for _, rowGroup := range self.Footer.RowGroups {
+		for _, chunk := range rowGroup.Columns {
+			exPath := make([]string, 0)
+			exPath = append(exPath, self.SchemaHandler.GetRootName())
+			exPath = append(exPath, chunk.MetaData.GetPathInSchema()...)
+			exPathStr := Common.PathToStr(exPath)
+
+			inPathStr := self.SchemaHandler.ExPathToInPath[exPathStr]
+			inPath := Common.StrToPath(inPathStr)[1:]
+			chunk.MetaData.PathInSchema = inPath
+		}
+	}
 }
 
 func (self *ParquetReader) GetNumRows() int64 {
@@ -79,11 +99,6 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 	num := reflect.ValueOf(dstInterface).Elem().Len()
 	if num <= 0 {
 		return
-	}
-
-	if !self.InExMapFlag {
-		self.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(reflect.New(ot).Interface())
-		self.InExMapFlag = true
 	}
 
 	doneChan := make(chan int, self.NP)

@@ -51,7 +51,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 	metaData.NumValues = numValues
 	metaData.TotalCompressedSize = totalCompressedSize
 	metaData.TotalUncompressedSize = totalUncompressedSize
-	metaData.PathInSchema = pages[0].Path[1:]
+	metaData.PathInSchema = pages[0].Path
 	metaData.Statistics = parquet.NewStatistics()
 
 	if maxVal != nil && minVal != nil {
