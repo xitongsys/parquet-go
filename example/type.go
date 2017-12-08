@@ -32,7 +32,7 @@ type TypeList struct {
 	TimestampMillis int64  `parquet:"name=timestampmillis, type=TIMESTAMP_MILLIS"`
 	TimestampMicros int64  `parquet:"name=timestampmicros, type=TIMESTAMP_MICROS"`
 	Interval        string `parquet:"name=interval, type=INTERVAL"`
-	Decimal         string `parquet:"name=decimal, type=DECIMAL, scale=2, precision=2`
+	Decimal         string `parquet:"name=decimal, type=DECIMAL, scale=2, precision=2"`
 }
 
 func main() {
