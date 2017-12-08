@@ -1,4 +1,4 @@
-# parquet-go v0.9.8
+# parquet-go v1.0.0
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -170,7 +170,7 @@ func main() {
 
 ```
 
-##Read Column
+## Read Columns
 If you just want to get some columns data, your can use column reader
 ```
 ///read flat
