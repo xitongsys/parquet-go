@@ -85,7 +85,7 @@ func main() {
 		pr.Read(&tps)
 		log.Println(tps)
 	}
-
+	pr.ReadStop()
 	fr.Close()
 
 }

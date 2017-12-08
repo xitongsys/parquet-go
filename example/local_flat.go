@@ -54,6 +54,7 @@ func main() {
 		log.Println(stus)
 	}
 
+	pr.ReadStop()
 	fr.Close()
 
 }

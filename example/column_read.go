@@ -54,6 +54,7 @@ func main() {
 	ids := make([]interface{}, num)
 	pr.ReadColumnByIndex(2, &ids)
 	log.Println(ids)
+	pr.ReadStop()
 	fr.Close()
 
 }
