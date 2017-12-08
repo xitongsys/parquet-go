@@ -172,7 +172,7 @@ func main() {
 		pr.Read(&stus)
 		log.Println(stus)
 	}
-
+	pr.ReadStop()
 	fr.Close()
 
 }
