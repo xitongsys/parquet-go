@@ -163,8 +163,42 @@ func (self *SchemaHandler) IndexFromDefinitionLevel(path []string, dl int32) (in
 	return int32(i), nil
 }
 
-func (self *SchemaHandler) ConvertToInternal() {
+func (self *SchemaHandler) CreateInExMap() {
+	//use DFS get path of schema
+	schemas := self.SchemaElements
+	ln := int32(len(schemas))
+	var pos int32 = 0
+	stack := make([][]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	for pos < ln || len(stack) > 0 {
+		if len(stack) == 0 {
+			item := make([]int32, 2)
+			item[0] = pos
+			item[1] = int32(*schemas[pos].NumChildren)
+			stack = append(stack, item)
+			pos++
+		} else {
+			top := stack[len(stack)-1]
+			if top[1] == 0 {
+				inPath, exPath := make([]string, 0), make([]string, 0)
+				for i := 0; i < len(stack); i++ {
+					inPath = append(inPath, self.InNames[stack[i][0]])
+					exPath = append(exPath, self.ExNames[stack[i][0]])
+				}
+				inPathStr, exPathStr := Common.PathToStr(inPath), Common.PathToStr(exPath)
+				self.ExPathToInPath[exPathStr] = inPathStr
+				self.InPathToExPath[inPathStr] = exPathStr
 
+				stack = stack[:len(stack)-1]
+			} else {
+				top[1]--
+				item := make([]int32, 2)
+				item[0] = pos
+				item[1] = schemas[pos].GetNumChildren()
+				stack = append(stack, item)
+				pos++
+			}
+		}
+	}
 }
 
 //Get root name from the schema handler
@@ -363,6 +397,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 	res := NewSchemaHandlerFromSchemaList(schemaElements)
 	res.InNames = inNames
 	res.ExNames = exNames
+	res.CreateInExMap()
 	return res
 }
 
@@ -371,6 +406,8 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	schemaHandler := new(SchemaHandler)
 	schemaHandler.MapIndex = make(map[string]int32)
 	schemaHandler.IndexMap = make(map[int32]string)
+	schemaHandler.InPathToExPath = make(map[string]string)
+	schemaHandler.ExPathToInPath = make(map[string]string)
 	schemaHandler.SchemaElements = schemas
 
 	//use DFS get path of schema
