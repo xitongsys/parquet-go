@@ -12,7 +12,7 @@ type Student struct {
 	Name    string               `parquet:"name=name, type=UTF8"`
 	Age     int32                `parquet:"name=age, type=INT32"`
 	Weight  *int32               `parquet:"name=weight, type=INT32"`
-	Classes *map[string][]*Class `parquet:"name=classes keytype=UTF8"`
+	Classes *map[string][]*Class `parquet:"name=classes, keytype=UTF8"`
 }
 
 type Class struct {
