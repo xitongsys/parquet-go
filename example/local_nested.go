@@ -4,22 +4,21 @@ import (
 	"fmt"
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 )
 
 type Student struct {
-	Name    ParquetType.UTF8
-	Age     ParquetType.INT32
-	Weight  *ParquetType.INT32
-	Classes *map[ParquetType.UTF8][]*Class
+	Name    string               `parquet:"name=name, type=UTF8"`
+	Age     int32                `parquet:"name=age, type=INT32"`
+	Weight  *int32               `parquet:"name=weight, type=INT32"`
+	Classes *map[string][]*Class `parquet:"name=classes keytype=UTF8"`
 }
 
 type Class struct {
-	Name     ParquetType.UTF8
-	Id       *ParquetType.INT32
-	Required []ParquetType.UTF8
+	Name     string   `parquet:"name=name, type=UTF8"`
+	Id       *int32   `parquet:"name=id, type=INT32"`
+	Required []string `parquet:"name=required, type=UTF8"`
 }
 
 func (c Class) String() string {
@@ -52,30 +51,30 @@ func (s Student) String() string {
 }
 
 func writeNested() {
-	math01ID := ParquetType.INT32(1)
+	math01ID := int32(1)
 	math01 := Class{
 		Name:     "Math1",
 		Id:       &math01ID,
-		Required: make([]ParquetType.UTF8, 0),
+		Required: make([]string, 0),
 	}
 
-	math02ID := ParquetType.INT32(2)
+	math02ID := int32(2)
 	math02 := Class{
 		Name:     "Math2",
 		Id:       &math02ID,
-		Required: make([]ParquetType.UTF8, 0),
+		Required: make([]string, 0),
 	}
 	math02.Required = append(math02.Required, "Math01")
 
 	physics := Class{
 		Name:     "Physics",
 		Id:       nil,
-		Required: make([]ParquetType.UTF8, 0),
+		Required: make([]string, 0),
 	}
 	physics.Required = append(physics.Required, "Math01", "Math02")
 
-	weight01 := ParquetType.INT32(60)
-	stu01Class := make(map[ParquetType.UTF8][]*Class)
+	weight01 := int32(60)
+	stu01Class := make(map[string][]*Class)
 	stu01Class["Science"] = make([]*Class, 0)
 	stu01Class["Science"] = append(stu01Class["Science"], &math01, &math02)
 	stu01 := Student{
@@ -85,7 +84,7 @@ func writeNested() {
 		Classes: &stu01Class,
 	}
 
-	stu02Class := make(map[ParquetType.UTF8][]*Class)
+	stu02Class := make(map[string][]*Class)
 	stu02Class["Science"] = make([]*Class, 0)
 	stu02Class["Science"] = append(stu02Class["Science"], &physics)
 	stu02 := Student{
@@ -111,7 +110,7 @@ func writeNested() {
 
 	//read nested
 	fr, _ := ParquetFile.NewLocalFileReader("nested.parquet")
-	pr, _ := ParquetReader.NewParquetReader(fr, 4)
+	pr, _ := ParquetReader.NewParquetReader(fr, new(Student), 4)
 	num := int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)
