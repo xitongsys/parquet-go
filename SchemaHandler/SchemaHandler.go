@@ -43,8 +43,10 @@ type SchemaHandler struct {
 	IndexMap       map[int32]string
 	PathMap        *PathMapType
 
-	InNames []string
-	ExNames []string
+	InNames        []string
+	ExNames        []string
+	InPathToExPath map[string]string
+	ExPathToInPath map[string]string
 
 	ValueColumns []string
 }
@@ -159,6 +161,10 @@ func (self *SchemaHandler) IndexFromDefinitionLevel(path []string, dl int32) (in
 		}
 	}
 	return int32(i), nil
+}
+
+func (self *SchemaHandler) ConvertToInternal() {
+
 }
 
 //Get root name from the schema handler
