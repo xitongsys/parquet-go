@@ -54,13 +54,10 @@ func PagesToChunk(pages []*Page) *Chunk {
 	metaData.PathInSchema = pages[0].Path[1:]
 	metaData.Statistics = parquet.NewStatistics()
 
-	tmpBufMax := ParquetEncoding.WritePlain([]interface{}{maxVal})
-	tmpBufMin := ParquetEncoding.WritePlain([]interface{}{minVal})
-
 	if maxVal != nil && minVal != nil {
-
+		tmpBufMax := ParquetEncoding.WritePlain([]interface{}{maxVal})
+		tmpBufMin := ParquetEncoding.WritePlain([]interface{}{minVal})
 		name := reflect.TypeOf(maxVal).Name()
-
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBufMax = tmpBufMax[4:]
 			tmpBufMin = tmpBufMin[4:]
