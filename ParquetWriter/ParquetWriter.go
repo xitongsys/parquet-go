@@ -57,7 +57,7 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	return res, err
 }
 
-//Convert the column names in schema to lowercases
+//Convert the column names in schema to lowercases(Deprecated)
 func (self *ParquetWriter) NameToLower() {
 	for _, schema := range self.Footer.Schema {
 		schema.Name = strings.ToLower(schema.Name)
@@ -72,11 +72,27 @@ func (self *ParquetWriter) NameToLower() {
 	}
 }
 
+//Rename schema name to exname in tags
+func (self *ParquetWriter) RenameSchema() {
+	for i := 0; i < len(self.Footer.Schema); i++ {
+		self.Footer.Schema[i].Name = self.SchemaHandler.ExNames[i]
+	}
+	for _, rowGroup := range self.Footer.RowGroups {
+		for _, chunk := range rowGroup.Columns {
+			inPathStr := Common.PathToStr(chunk.MetaData.PathInSchema)
+			exPathStr := self.SchemaHandler.InPathToExPath[inPathStr]
+			exPath := Common.StrToPath(exPathStr)[1:]
+			chunk.MetaData.PathInSchema = exPath
+		}
+	}
+}
+
 //Write the footer and stop writing
 func (self *ParquetWriter) WriteStop() {
 	//self.Flush()
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
+	self.RenameSchema()
 	footerBuf, _ := ts.Write(self.Footer)
 
 	self.PFile.Write(footerBuf)
