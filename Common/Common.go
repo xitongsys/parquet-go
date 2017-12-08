@@ -2,9 +2,80 @@ package Common
 
 import (
 	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
+	"strconv"
 	"strings"
 )
+
+//Parse the tag to map; tag format is:
+//`parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`
+func NewEmptyTagMap() map[string]interface{} {
+	return map[string]interface{}{
+		"inname":         "",
+		"exname":         "",
+		"type":           "",
+		"keytype":        "",
+		"length":         0,
+		"keylength":      0,
+		"scale":          0,
+		"keyscale":       0,
+		"precision":      0,
+		"keyprecision":   0,
+		"fieldid":        0,
+		"keyfieldid":     0,
+		"repetitiontype": parquet.FieldRepetitionType(0),
+	}
+}
+func TagToMap(tag string) map[string]interface{} {
+	mp := NewEmptyTagMap()
+	tagStr := strings.Replace(tag, " ", "", -1)
+	tagStr = strings.Replace(tagStr, "\t", "", -1)
+	tags := strings.Split(tagStr, ",")
+	for _, tag := range tags {
+		kv := strings.Split(tag, "=")
+		kv[0] = strings.ToLower(kv[0])
+		if kv[0] == "type" || kv[0] == "keytype" {
+			mp[kv[0]] = kv[1]
+		} else if kv[0] == "length" || kv[0] == "keylength" ||
+			kv[0] == "scale" || kv[0] == "keyscale" ||
+			kv[0] == "precision" || kv[0] == "keyprecision" ||
+			kv[0] == "fieldid" || kv[0] == "keyfieldid" {
+			val, _ := strconv.Atoi(kv[1])
+			mp[kv[0]] = int32(val)
+		} else if kv[0] == "name" {
+			mp["inname"] = kv[1]
+			mp["exname"] = kv[1]
+		}
+	}
+	return mp
+}
+
+//Get key tag map for map
+func GetKeyTagMap(src map[string]interface{}) map[string]interface{} {
+	res := NewEmptyTagMap()
+	res["inname"] = "key"
+	res["exname"] = "key"
+	res["type"] = src["keytype"]
+	res["length"] = src["keylength"]
+	res["scale"] = src["keyscale"]
+	res["precision"] = src["keyprecision"]
+	res["fieldid"] = src["keyfieldid"]
+	return res
+}
+
+//Get value tag map for map
+func GetValueTagMap(src map[string]interface{}) map[string]interface{} {
+	res := NewEmptyTagMap()
+	res["inname"] = "value"
+	res["exname"] = "value"
+	res["type"] = src["type"]
+	res["length"] = src["length"]
+	res["scale"] = src["scale"]
+	res["precision"] = src["precision"]
+	res["fieldid"] = src["fieldid"]
+	return res
+}
 
 //Convert the first letter of a string to uppercase
 func HeadToUpper(str string) string {

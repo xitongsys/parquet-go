@@ -2,22 +2,21 @@ package SchemaHandler
 
 import (
 	"fmt"
-	"github.com/xitongsys/parquet-go/ParquetType"
 	"testing"
 )
 
 type Class struct {
-	Name   ParquetType.UTF8
-	Number ParquetType.INT32
-	Score  ParquetType.DECIMAL `Scale:"3" Precision:"10" "BaseType":INT32`
+	Name   string `parquet:"name=name, type=UTF8"`
+	Number int    `parquet:"name=number, type=INT32"`
+	Score  string `parquet:"scale=3, precision=10, type=INT32"`
 }
 
 type Student struct {
-	Name    ParquetType.UTF8
-	Age     ParquetType.INT64
-	Classes []*Class
-	Info    *map[ParquetType.UTF8]*ParquetType.UTF8
-	Sex     *ParquetType.BOOLEAN
+	Name    string              `parquet:"name=name, type=UTF8"`
+	Age     int                 `parquet:"name=number, type=INT64"`
+	Classes []*Class            `parquet:"name=classes"`
+	Info    *map[string]*string `parquet:"name=info, type=UTF8, keytype=UTF8"`
+	Sex     *bool               `parquet:"name=sex, type=BOOLEAN"`
 }
 
 func TestNewSchemaHandlerFromStruct(t *testing.T) {
