@@ -20,6 +20,8 @@ type ParquetReader struct {
 	PFile         ParquetFile.ParquetFile
 
 	ColumnBuffers map[string]*ColumnBufferType
+
+	InExMapFlag bool
 }
 
 //Create a parquet reader
@@ -29,6 +31,7 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, 
 	res.NP = np
 	res.PFile = pFile
 	res.ReadFooter()
+	res.InExMapFlag = false
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
@@ -76,6 +79,11 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 	num := reflect.ValueOf(dstInterface).Elem().Len()
 	if num <= 0 {
 		return
+	}
+
+	if !self.InExMapFlag {
+		self.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(reflect.New(ot).Interface())
+		self.InExMapFlag = true
 	}
 
 	doneChan := make(chan int, self.NP)
