@@ -6,7 +6,7 @@
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Support all Types in Parquet
-* Very simple to use (like json marshal/unmarshal)
+* Very simple to use
 * High performance
 
 ## Required
@@ -51,7 +51,7 @@ There are two Types in Parquet: Base Type and Logical Type. The type definitions
 |TIMESTAMP_MILLIS|int64|`parquet:"name=name, type=TIMESTAMP_MILLIS"`|
 |TIMESTAMP_MICROS|int64|`parquet:"name=name, type=TIMESTAMP_MICROS"`|
 |INTERVAL|string|`parquet:"name=name, type=INTERVAL"`|
-|DECIMAL|string|`parquet:"name=name, type=DECIMAL"`|
+|DECIMAL|string|`parquet:"name=name, type=DECIMAL, scale=2, precision=2"`|
 |List|slice|`parquet:"name=name, type=INT64"`|
 |Map|map|`parquet:"name=name, type=INT64, keytype=INT64"`|
 
@@ -78,24 +78,6 @@ Table -> Page
 Pages -> Chunk
 Chunks -> RowGroup
 RowGroups -> ParquetFile
-```
-
-## Marshal/Unmarshal
-Marshal/Unmarshal functions are used to encode/decode the parquet file. 
-Marshl convert a struct slice to a ```*map[string]*Table```
-Unmarshal convert a ```*map[string]*Table``` to a struct slice
-
-### Marshal Example
-```
-stus := make([]Student, 0)
-stus = append(stus, stu01, stu02)
-src := Marshal(stus, 0, len(stus), schemaHandler)
-```
-
-### Unmarshal Example
-```
-dst := make([]Student, 0)
-Unmarshal(src, &dst, schemaHandler)
 ```
 
 ## Read/Write
