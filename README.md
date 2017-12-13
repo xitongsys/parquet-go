@@ -58,7 +58,7 @@ There are two Types in Parquet: Base Type and Logical Type. The type definitions
 
 ## Core Data Structure
 The core data structure named "Table":
-```
+```golang
 type Table struct {
 	RepetitionType    parquet.FieldRepetitionType
 	Type               parquet.Type
@@ -82,7 +82,7 @@ RowGroups -> ParquetFile
 
 ## Read/Write
 read/write a parquet file need a ParquetFile interface implemented
-```
+```golang
 type ParquetFile interface {
 	Seek(offset int, pos int) (int64, error)
 	Read(b []byte) (n int, err error)
@@ -95,7 +95,7 @@ type ParquetFile interface {
 Using this interface, parquet-go can read/write parquet file on any plantform(local/hdfs/s3...)
 
 The following is a simple example of read/write parquet file on local disk. It can be found in example directory:
-```
+```golang
 package main
 import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
@@ -154,7 +154,7 @@ func main() {
 
 ## Read Columns
 If you just want to get some columns data, your can use column reader
-```
+```golang
 ///read flat
 fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
 pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
@@ -175,7 +175,7 @@ fr.Close()
 
 ## Parallel
 Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
-```
+```golang
 func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error)
 func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error)
 ```
@@ -184,7 +184,7 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 Plugin is used for some special purpose and will be added gradually.
 ### CSVWriter Plugin
 This plugin is used for data format similar with CSV(not nested).
-```
+```golang
 func main() {
 	md := []CSVWriter.MetadataType{
 		{Type: "UTF8", Name: "Name"},
