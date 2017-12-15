@@ -57,6 +57,7 @@ There are two types in Parquet: Base Type and Logical Type. The type definitions
 
 ## Repetition Types
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
+
 |Repetition Type|Example|Description|
 |-|-|-|
 |REQUIRED|V1 int32 `parquet:"name=v1, type=INT32"`|No extra description|
