@@ -238,13 +238,3 @@ func main() {
 }
 ```
 
-## Performance
-A very simple performance test of writing/reading parquet did on Linux host (JRE 1.8.0, Golang 1.7.5, 23GB, 24 Cores). It is faster than java :)
-
-Write Test Results  
-![](https://github.com/xitongsys/parquet-go/blob/master/example/WriteRes.png)
-
-Read Test Results  
-![](https://github.com/xitongsys/parquet-go/blob/master/example/ReadRes.png)
-
-
