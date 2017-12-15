@@ -257,12 +257,10 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 				newItem := NewItem()
 				newItem.Info = Common.TagToMap(f.Tag.Get("parquet"))
 				newItem.Info["inname"] = f.Name
+				newItem.GoType = f.Type
 				if f.Type.Kind() == reflect.Ptr {
 					newItem.GoType = f.Type.Elem()
 					newItem.Info["repetitiontype"] = parquet.FieldRepetitionType_OPTIONAL
-				} else {
-					newItem.GoType = f.Type
-					newItem.Info["repetitiontype"] = parquet.FieldRepetitionType_REQUIRED
 				}
 				stack = append(stack, newItem)
 			}
