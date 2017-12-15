@@ -5,6 +5,7 @@ import (
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 )
 
@@ -115,7 +116,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					stack = append(stack, newNode)
 				}
 			} else if tk == reflect.Slice &&
-				schemaHandler.SchemaElements[schemaHandler.MapIndex[node.PathMap.Path]].RepetitionType != parquet.FieldRepetitionType_REPEATED {
+				*schemaHandler.SchemaElements[schemaHandler.MapIndex[node.PathMap.Path]].RepetitionType != parquet.FieldRepetitionType_REPEATED {
 
 				ln := node.Val.Len()
 				path := node.PathMap.Path + ".list" + ".element"
@@ -147,7 +148,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 				}
 
 			} else if tk == reflect.Slice &&
-				schemaHandler.SchemaElements[schemaHandler.MapIndex[node.PathMap.Path]].RepetitionType == parquet.FieldRepetitionType_REPEATED {
+				*schemaHandler.SchemaElements[schemaHandler.MapIndex[node.PathMap.Path]].RepetitionType == parquet.FieldRepetitionType_REPEATED {
 				ln := node.Val.Len()
 				path := node.PathMap.Path
 
