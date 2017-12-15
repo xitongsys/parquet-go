@@ -266,7 +266,9 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 				}
 				stack = append(stack, newItem)
 			}
-		} else if item.GoType.Kind() == reflect.Slice {
+		} else if item.GoType.Kind() == reflect.Slice &&
+			item.Info["repetitiontype"].(parquet.FieldRepetitionType) != parquet.FieldRepetitionType_REPEATED {
+
 			schema := parquet.NewSchemaElement()
 			schema.Name = item.Info["inname"].(string)
 			rt1 := item.Info["repetitiontype"].(parquet.FieldRepetitionType)
@@ -302,6 +304,13 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			} else {
 				newItem.Info["repetitiontype"] = parquet.FieldRepetitionType_REQUIRED
 			}
+			stack = append(stack, newItem)
+
+		} else if item.GoType.Kind() == reflect.Slice &&
+			item.Info["repetitiontype"].(parquet.FieldRepetitionType) == parquet.FieldRepetitionType_REPEATED {
+			newItem := NewItem()
+			newItem.Info = item.Info
+			newItem.GoType = item.GoType.Elem()
 			stack = append(stack, newItem)
 
 		} else if item.GoType.Kind() == reflect.Map {

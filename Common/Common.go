@@ -46,6 +46,16 @@ func TagToMap(tag string) map[string]interface{} {
 		} else if kv[0] == "name" {
 			mp["inname"] = kv[1]
 			mp["exname"] = kv[1]
+		} else if kv[0] == "repetitiontype" {
+			switch kv[1] {
+			case "repeated":
+				mp["repetitiontype"] = parquet.FieldRepetitionType_REPEATED
+			case "required":
+				mp["repetitiontype"] = parquet.FieldRepetitionType_REQUIRED
+			case "optional":
+				mp["repetitiontype"] = parquet.FieldRepetitionType_OPTIONAL
+			}
+
 		}
 	}
 	return mp
@@ -74,6 +84,7 @@ func GetValueTagMap(src map[string]interface{}) map[string]interface{} {
 	res["scale"] = src["scale"]
 	res["precision"] = src["precision"]
 	res["fieldid"] = src["fieldid"]
+	res["repetitiontype"] = src["repetitiontype"]
 	return res
 }
 

@@ -114,7 +114,9 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					newNode.DL = node.DL
 					stack = append(stack, newNode)
 				}
-			} else if tk == reflect.Slice {
+			} else if tk == reflect.Slice &&
+				schemaHandler.SchemaElements[schemaHandler.MapIndex[node.PathMap.Path]].RepetitionType != parquet.FieldRepetitionType_REPEATED {
+
 				ln := node.Val.Len()
 				path := node.PathMap.Path + ".list" + ".element"
 
@@ -143,6 +145,38 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 					newNode.DL = node.DL + 1 //list is repeated
 					stack = append(stack, newNode)
 				}
+
+			} else if tk == reflect.Slice &&
+				schemaHandler.SchemaElements[schemaHandler.MapIndex[node.PathMap.Path]].RepetitionType == parquet.FieldRepetitionType_REPEATED {
+				ln := node.Val.Len()
+				path := node.PathMap.Path
+
+				if ln <= 0 {
+					for key, table := range res {
+						if len(key) >= len(node.PathMap.Path) && key[:len(node.PathMap.Path)] == node.PathMap.Path {
+							table.Values = append(table.Values, nil)
+							table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+							table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+						}
+					}
+				}
+
+				rlNow, _ := schemaHandler.MaxRepetitionLevel(Common.StrToPath(path))
+
+				for j := ln - 1; j >= 0; j-- {
+					newNode := nodeBuf.GetNode()
+					newNode.PathMap = node.PathMap
+					newNode.Val = node.Val.Index(j)
+					if j == 0 {
+						newNode.RL = node.RL
+					} else {
+						//newNode.RL = node.RL + 1
+						newNode.RL = rlNow
+					}
+					newNode.DL = node.DL + 1
+					stack = append(stack, newNode)
+				}
+
 			} else if tk == reflect.Map {
 				path := node.PathMap.Path + ".key_value"
 				keys := node.Val.MapKeys()
