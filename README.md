@@ -140,7 +140,6 @@ func main() {
 		pw.Write(stu)
 	}
 	pw.Flush(true)
-	//pw.NameToLower()// convert the field name to lowercase
 	pw.WriteStop()
 	log.Println("Write Finished")
 	fw.Close()
