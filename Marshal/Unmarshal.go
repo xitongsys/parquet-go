@@ -1,9 +1,11 @@
 package Marshal
 
 import (
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 )
 
@@ -77,6 +79,8 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 				po := obj
 				pathIndex := 0
 				for pathIndex < len(path) {
+					curPathStr := Common.PathToStr(path[:pathIndex+1])
+
 					if po.Type().Kind() == reflect.Struct {
 						if (table.DefinitionLevels[tableIndex[name]] < table.MaxDefinitionLevel &&
 							table.DefinitionLevels[tableIndex[name]] > int32(dl)) ||
@@ -88,7 +92,8 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 							break
 						}
 
-					} else if po.Type().Kind() == reflect.Slice {
+					} else if po.Type().Kind() == reflect.Slice &&
+						*schemaHandler.SchemaElements[schemaHandler.MapIndex[curPathStr]].RepetitionType != parquet.FieldRepetitionType_REPEATED {
 						if po.IsNil() {
 							po.Set(reflect.MakeSlice(po.Type(), 0, 0))
 						}
@@ -115,6 +120,33 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 							break
 						}
 
+					} else if po.Type().Kind() == reflect.Slice &&
+						*schemaHandler.SchemaElements[schemaHandler.MapIndex[curPathStr]].RepetitionType == parquet.FieldRepetitionType_REPEATED {
+						if po.IsNil() {
+							po.Set(reflect.MakeSlice(po.Type(), 0, 0))
+						}
+						if _, ok := sliceRecord[po]; !ok {
+							sliceRecord[po] = -1
+						}
+
+						if table.DefinitionLevels[tableIndex[name]] > int32(dl) {
+							pathIndex += 0
+							dl += 1
+							rl += 1
+							if table.RepetitionLevels[tableIndex[name]] <= int32(rl) {
+								sliceRecord[po]++
+								if sliceRecord[po] >= po.Len() {
+									potmp := reflect.Append(po, reflect.New(po.Type().Elem()).Elem())
+									po.Set(potmp)
+								}
+								po = po.Index(sliceRecord[po])
+							} else {
+								po = po.Index(sliceRecord[po])
+							}
+
+						} else {
+							break
+						}
 					} else if po.Type().Kind() == reflect.Map {
 						if po.IsNil() {
 							po.Set(reflect.MakeMap(po.Type()))
@@ -174,7 +206,7 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 						po.Set(reflect.ValueOf(ParquetType.ParquetTypeToGoType(table.Values[tableIndex[name]])))
 						break
 					}
-				} //for pathIndex < len(path) {
+				} //for pathIndex < len(path)
 
 				tableIndex[name]++
 				if (tableIndex[name] < end && table.RepetitionLevels[tableIndex[name]] == 0) ||
