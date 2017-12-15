@@ -24,7 +24,7 @@ go run example/local_flat.go
 ```
 
 ## Types
-There are two Types in Parquet: Base Type and Logical Type. The type definitions is in ParquetType.go. The relationship between the parquet type and go type is shown in following table. OPTIONAL variables are declared as pointers.
+There are two types in Parquet: Base Type and Logical Type. The type definitions is in ParquetType.go. The relationship between the parquet type and go type is shown in following table. 
 
 |Parquet Type|Go Type|Example|
 |-|-|-|
@@ -55,6 +55,16 @@ There are two Types in Parquet: Base Type and Logical Type. The type definitions
 |List|slice|`parquet:"name=name, type=INT64"`|
 |Map|map|`parquet:"name=name, type=INT64, keytype=INT64"`|
 
+## Repetition Types
+There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
+|Repetition Type|Example|Description|
+|-|-|-|
+|REQUIRED|V1 int32 `parquet:"name=v1, type=INT32"`|No extra description|
+|OPTIONAL|V1 *int32 `parquet:"name=v1, type=INT32"`|Declare as pointer|
+|REPEATED|V1 []int32 `parquet:"name=v1, type=int32", repetitontype=repeated`|Add 'repetitiontype=repeated' in tags|
+
+### About List and REPEATED
+The different between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md).
 
 ## Core Data Structure
 The core data structure named "Table":
