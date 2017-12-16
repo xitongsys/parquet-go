@@ -85,7 +85,7 @@ type Table struct {
 Values is the column data; RepetitionLevels is the repetition levels of the values; DefinitionLevels is the definition levels of the values.
 The architecture of the data struct is following:
 ```
-Table -> Page
+Tables -> Page
 Pages -> Chunk
 Chunks -> RowGroup
 RowGroups -> ParquetFile
