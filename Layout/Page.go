@@ -32,6 +32,8 @@ type Page struct {
 	MaxVal interface{}
 	//Minimum of the values
 	MinVal interface{}
+	//Tag info
+	Info map[string]interface{}
 }
 
 //Create a new page

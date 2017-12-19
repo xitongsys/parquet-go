@@ -42,9 +42,8 @@ type SchemaHandler struct {
 	MapIndex       map[string]int32
 	IndexMap       map[int32]string
 	PathMap        *PathMapType
+	Infos          []map[string]interface{}
 
-	InNames        []string
-	ExNames        []string
 	InPathToExPath map[string]string
 	ExPathToInPath map[string]string
 
@@ -181,8 +180,8 @@ func (self *SchemaHandler) CreateInExMap() {
 			if top[1] == 0 {
 				inPath, exPath := make([]string, 0), make([]string, 0)
 				for i := 0; i < len(stack); i++ {
-					inPath = append(inPath, self.InNames[stack[i][0]])
-					exPath = append(exPath, self.ExNames[stack[i][0]])
+					inPath = append(inPath, self.Infos[stack[i][0]]["inname"].(string))
+					exPath = append(exPath, self.Infos[stack[i][0]]["exname"].(string))
 				}
 				inPathStr, exPathStr := Common.PathToStr(inPath), Common.PathToStr(exPath)
 				self.ExPathToInPath[exPathStr] = inPathStr
@@ -232,7 +231,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 	stack := make([]*Item, 0)
 	stack = append(stack, item)
 	schemaElements := make([]*parquet.SchemaElement, 0)
-	inNames, exNames := make([]string, 0), make([]string, 0)
+	infos := make([]map[string]interface{}, 0)
 
 	for len(stack) > 0 {
 		ln := len(stack)
@@ -249,8 +248,8 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schema.Type = nil
 			schemaElements = append(schemaElements, schema)
 
-			inNames = append(inNames, item.Info["inname"].(string))
-			exNames = append(exNames, item.Info["exname"].(string))
+			info := Common.NewTagMapFromCopy(item.Info)
+			infos = append(infos, info)
 
 			for i := int(numField - 1); i >= 0; i-- {
 				f := item.GoType.Field(i)
@@ -277,8 +276,8 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			ct1 := parquet.ConvertedType_LIST
 			schema.ConvertedType = &ct1
 			schemaElements = append(schemaElements, schema)
-			inNames = append(inNames, item.Info["inname"].(string))
-			exNames = append(exNames, item.Info["exname"].(string))
+			info := Common.NewTagMapFromCopy(item.Info)
+			infos = append(infos, item.Info)
 
 			schema = parquet.NewSchemaElement()
 			schema.Name = "list"
@@ -288,8 +287,9 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			var numField2 int32 = 1
 			schema.NumChildren = &numField2
 			schemaElements = append(schemaElements, schema)
-			inNames = append(inNames, "list")
-			exNames = append(exNames, "list")
+			info = Common.NewTagMapFromCopy(item.Info)
+			info["inname"], info["exname"] = "list", "list"
+			infos = append(infos, info)
 
 			newItem := NewItem()
 			newItem.Info = item.Info
@@ -322,8 +322,8 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			ct1 := parquet.ConvertedType_MAP
 			schema.ConvertedType = &ct1
 			schemaElements = append(schemaElements, schema)
-			inNames = append(inNames, item.Info["inname"].(string))
-			exNames = append(exNames, item.Info["exname"].(string))
+			info := Common.NewTagMapFromCopy(item.Info)
+			infos = append(infos, info)
 
 			schema = parquet.NewSchemaElement()
 			schema.Name = "key_value"
@@ -335,8 +335,9 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			ct2 := parquet.ConvertedType_MAP_KEY_VALUE
 			schema.ConvertedType = &ct2
 			schemaElements = append(schemaElements, schema)
-			inNames = append(inNames, "key_value")
-			exNames = append(exNames, "key_value")
+			info = Common.NewTagMapFromCopy(item.Info)
+			info["inname"], info["exname"] = "key_value", "key_value"
+			infos = append(infos, info)
 
 			newItem := NewItem()
 			newItem.Info = Common.GetValueTagMap(item.Info)
@@ -397,13 +398,12 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 				}
 			}
 			schemaElements = append(schemaElements, schema)
-			inNames = append(inNames, item.Info["inname"].(string))
-			exNames = append(exNames, item.Info["exname"].(string))
+			info := Common.NewTagMapFromCopy(item.Info)
+			infos = append(infos, info)
 		}
 	}
 	res := NewSchemaHandlerFromSchemaList(schemaElements)
-	res.InNames = inNames
-	res.ExNames = exNames
+	res.Infos = infos
 	res.CreateInExMap()
 	return res
 }

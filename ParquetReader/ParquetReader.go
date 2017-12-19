@@ -76,7 +76,7 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 //Rename schema name to inname
 func (self *ParquetReader) RenameSchema() {
 	for i := 0; i < len(self.Footer.Schema); i++ {
-		self.Footer.Schema[i].Name = self.SchemaHandler.InNames[i]
+		self.Footer.Schema[i].Name = self.SchemaHandler.Infos[i]["inname"].(string)
 	}
 	for _, rowGroup := range self.Footer.RowGroups {
 		for _, chunk := range rowGroup.Columns {

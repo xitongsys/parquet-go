@@ -75,7 +75,7 @@ func (self *ParquetWriter) NameToLower() {
 //Rename schema name to exname in tags
 func (self *ParquetWriter) RenameSchema() {
 	for i := 0; i < len(self.Footer.Schema); i++ {
-		self.Footer.Schema[i].Name = self.SchemaHandler.ExNames[i]
+		self.Footer.Schema[i].Name = self.SchemaHandler.Infos[i]["exname"].(string)
 	}
 	for _, rowGroup := range self.Footer.RowGroups {
 		for _, chunk := range rowGroup.Columns {

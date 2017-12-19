@@ -27,6 +27,15 @@ func NewEmptyTagMap() map[string]interface{} {
 		"repetitiontype": parquet.FieldRepetitionType(0),
 	}
 }
+
+func NewTagMapFromCopy(tagMap map[string]interface{}) map[string]interface{} {
+	res := make(map[string]interface{})
+	for key, val := range tagMap {
+		res[key] = val
+	}
+	return res
+}
+
 func TagToMap(tag string) map[string]interface{} {
 	mp := NewEmptyTagMap()
 	tagStr := strings.Replace(tag, " ", "", -1)
