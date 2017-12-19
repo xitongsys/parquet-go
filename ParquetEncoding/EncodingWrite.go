@@ -55,7 +55,7 @@ func WritePlain(src []interface{}) []byte {
 	} else if dataType.Name() == "FIXED_LEN_BYTE_ARRAY" {
 		return WritePlainFIXED_LEN_BYTE_ARRAY(src)
 	} else {
-		return nil
+		return []byte{}
 	}
 }
 

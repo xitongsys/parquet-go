@@ -135,7 +135,7 @@ func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 	}
 	if encoding == parquet.Encoding_RLE {
 		bitWidth := page.Info["bitwidth"].(int32)
-		return ParquetEncoding.WriteRLE(valuesBuf, bitWidth)
+		return ParquetEncoding.WriteRLEBitPackedHybrid(valuesBuf, bitWidth)
 
 	} else if encoding == parquet.Encoding_DELTA_BINARY_PACKED {
 		return ParquetEncoding.WriteDelta(valuesBuf)

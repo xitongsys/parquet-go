@@ -41,7 +41,7 @@ func main() {
 
 	///read flat
 	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 1)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
