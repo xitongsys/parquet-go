@@ -181,7 +181,7 @@ func BitNum(num uint64) uint64 {
 //a>b return 1
 //a<b return -1
 //a==b return 0
-func Cmp(ai interface{}, bi interface{}) int {
+func Cmp(ai interface{}, bi interface{}, name string) int {
 	if ai == nil && bi != nil {
 		return -1
 	} else if ai == nil && bi == nil {
@@ -190,7 +190,6 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 1
 	}
 
-	name := reflect.TypeOf(ai).Name()
 	switch name {
 	case "BOOLEAN":
 		a, b := 0, 0
@@ -274,7 +273,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UTF8":
-		a, b := ai.(ParquetType.UTF8), bi.(ParquetType.UTF8)
+		a, b := ai.(ParquetType.BYTE_ARRAY), bi.(ParquetType.BYTE_ARRAY)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -283,7 +282,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT_8":
-		a, b := ai.(ParquetType.INT_8), bi.(ParquetType.INT_8)
+		a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -292,7 +291,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT_16":
-		a, b := ai.(ParquetType.INT_16), bi.(ParquetType.INT_16)
+		a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -301,7 +300,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT_32":
-		a, b := ai.(ParquetType.INT_32), bi.(ParquetType.INT_32)
+		a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -310,7 +309,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INT_64":
-		a, b := ai.(ParquetType.INT_64), bi.(ParquetType.INT_64)
+		a, b := ai.(ParquetType.INT64), bi.(ParquetType.INT64)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -319,7 +318,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UINT_8":
-		a, b := ai.(ParquetType.UINT_8), bi.(ParquetType.UINT_8)
+		a, b := uint32(ai.(ParquetType.INT32)), uint32(bi.(ParquetType.INT32))
 		if a > b {
 			return 1
 		} else if a < b {
@@ -328,7 +327,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UINT_16":
-		a, b := ai.(ParquetType.UINT_16), bi.(ParquetType.UINT_16)
+		a, b := uint32(ai.(ParquetType.INT32)), uint32(bi.(ParquetType.INT32))
 		if a > b {
 			return 1
 		} else if a < b {
@@ -337,7 +336,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UINT_32":
-		a, b := ai.(ParquetType.UINT_32), bi.(ParquetType.UINT_32)
+		a, b := uint32(ai.(ParquetType.INT32)), uint32(bi.(ParquetType.INT32))
 		if a > b {
 			return 1
 		} else if a < b {
@@ -346,7 +345,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "UINT_64":
-		a, b := ai.(ParquetType.UINT_64), bi.(ParquetType.UINT_64)
+		a, b := uint64(ai.(ParquetType.INT64)), uint64(bi.(ParquetType.INT64))
 		if a > b {
 			return 1
 		} else if a < b {
@@ -355,7 +354,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "DATE":
-		a, b := ai.(ParquetType.DATE), bi.(ParquetType.DATE)
+		a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -364,7 +363,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "TIME_MILLIS":
-		a, b := ai.(ParquetType.TIME_MILLIS), bi.(ParquetType.TIME_MILLIS)
+		a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -373,7 +372,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "TIME_MICROS":
-		a, b := ai.(ParquetType.TIME_MICROS), bi.(ParquetType.TIME_MICROS)
+		a, b := ai.(ParquetType.INT64), bi.(ParquetType.INT64)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -382,7 +381,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "TIMESTAMP_MILLIS":
-		a, b := ai.(ParquetType.TIMESTAMP_MILLIS), bi.(ParquetType.TIMESTAMP_MILLIS)
+		a, b := ai.(ParquetType.INT64), bi.(ParquetType.INT64)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -391,7 +390,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "TIMESTAMP_MICROS":
-		a, b := ai.(ParquetType.TIMESTAMP_MICROS), bi.(ParquetType.TIMESTAMP_MICROS)
+		a, b := ai.(ParquetType.INT64), bi.(ParquetType.INT64)
 		if a > b {
 			return 1
 		} else if a < b {
@@ -400,7 +399,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "INTERVAL":
-		a, b := []byte(ai.(ParquetType.INTERVAL)), []byte(bi.(ParquetType.INTERVAL))
+		a, b := []byte(ai.(ParquetType.FIXED_LEN_BYTE_ARRAY)), []byte(bi.(ParquetType.FIXED_LEN_BYTE_ARRAY))
 		for i := 11; i >= 0; i-- {
 			if a[i] > b[i] {
 				return 1
@@ -411,7 +410,7 @@ func Cmp(ai interface{}, bi interface{}) int {
 		return 0
 
 	case "DECIMAL":
-		a, b := []byte(ai.(ParquetType.DECIMAL)), []byte(bi.(ParquetType.DECIMAL))
+		a, b := []byte(ai.(ParquetType.BYTE_ARRAY)), []byte(bi.(ParquetType.BYTE_ARRAY))
 		fa, fb := (a[0] >> 7), (b[0] >> 7)
 		la, lb := len(a), len(b)
 		if fa > fb {
@@ -443,28 +442,28 @@ func Cmp(ai interface{}, bi interface{}) int {
 }
 
 //Get the maximum of two parquet values
-func Max(a interface{}, b interface{}) interface{} {
+func Max(a interface{}, b interface{}, name string) interface{} {
 	if a == nil {
 		return b
 	}
 	if b == nil {
 		return a
 	}
-	if Cmp(a, b) > 0 {
+	if Cmp(a, b, name) > 0 {
 		return a
 	}
 	return b
 }
 
 //Get the minimum of two parquet values
-func Min(a interface{}, b interface{}) interface{} {
+func Min(a interface{}, b interface{}, name string) interface{} {
 	if a == nil {
 		return b
 	}
 	if b == nil {
 		return a
 	}
-	if Cmp(a, b) > 0 {
+	if Cmp(a, b, name) > 0 {
 		return b
 	}
 	return a

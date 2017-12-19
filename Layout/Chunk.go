@@ -34,8 +34,8 @@ func PagesToChunk(pages []*Page) *Chunk {
 		}
 		totalUncompressedSize += int64(pages[i].Header.UncompressedPageSize) + int64(len(pages[i].RawData)) - int64(pages[i].Header.CompressedPageSize)
 		totalCompressedSize += int64(len(pages[i].RawData))
-		maxVal = Common.Max(maxVal, pages[i].MaxVal)
-		minVal = Common.Min(minVal, pages[i].MinVal)
+		maxVal = Common.Max(maxVal, pages[i].MaxVal, pages[i].Info["type"].(string))
+		minVal = Common.Min(minVal, pages[i].MinVal, pages[i].Info["type"].(string))
 	}
 
 	chunk := new(Chunk)

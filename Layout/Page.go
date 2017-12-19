@@ -79,8 +79,8 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
 				size += int32(Common.SizeOf(reflect.ValueOf(table.Values[j])))
-				maxVal = Common.Max(maxVal, table.Values[j])
-				minVal = Common.Min(minVal, table.Values[j])
+				maxVal = Common.Max(maxVal, table.Values[j], table.Info["type"].(string))
+				minVal = Common.Min(minVal, table.Values[j], table.Info["type"].(string))
 			}
 			j++
 		}
