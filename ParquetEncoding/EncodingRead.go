@@ -7,79 +7,25 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) []interface{} {
-	if convertedType < 0 {
-		if dataType == parquet.Type_BOOLEAN {
-			return ReadPlainBOOLEAN(bytesReader, cnt)
-		} else if dataType == parquet.Type_INT32 {
-			return ReadPlainINT32(bytesReader, cnt)
-		} else if dataType == parquet.Type_INT64 {
-			return ReadPlainINT64(bytesReader, cnt)
-		} else if dataType == parquet.Type_INT96 {
-			return ReadPlainINT96(bytesReader, cnt)
-		} else if dataType == parquet.Type_FLOAT {
-			return ReadPlainFLOAT(bytesReader, cnt)
-		} else if dataType == parquet.Type_DOUBLE {
-			return ReadPlainDOUBLE(bytesReader, cnt)
-		} else if dataType == parquet.Type_BYTE_ARRAY {
-			return ReadPlainBYTE_ARRAY(bytesReader, cnt)
-		} else if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			return ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, cnt, bitWidth)
-		} else {
-			return nil
-		}
+func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt uint64, bitWidth uint64) []interface{} {
+	if dataType == parquet.Type_BOOLEAN {
+		return ReadPlainBOOLEAN(bytesReader, cnt)
+	} else if dataType == parquet.Type_INT32 {
+		return ReadPlainINT32(bytesReader, cnt)
+	} else if dataType == parquet.Type_INT64 {
+		return ReadPlainINT64(bytesReader, cnt)
+	} else if dataType == parquet.Type_INT96 {
+		return ReadPlainINT96(bytesReader, cnt)
+	} else if dataType == parquet.Type_FLOAT {
+		return ReadPlainFLOAT(bytesReader, cnt)
+	} else if dataType == parquet.Type_DOUBLE {
+		return ReadPlainDOUBLE(bytesReader, cnt)
+	} else if dataType == parquet.Type_BYTE_ARRAY {
+		return ReadPlainBYTE_ARRAY(bytesReader, cnt)
+	} else if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+		return ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, cnt, bitWidth)
 	} else {
-		switch convertedType {
-		case parquet.ConvertedType_INT_8:
-			return ReadPlainINT_8(bytesReader, cnt)
-
-		case parquet.ConvertedType_INT_16:
-			return ReadPlainINT_16(bytesReader, cnt)
-
-		case parquet.ConvertedType_INT_32:
-			return ReadPlainINT_32(bytesReader, cnt)
-
-		case parquet.ConvertedType_INT_64:
-			return ReadPlainINT_64(bytesReader, cnt)
-
-		case parquet.ConvertedType_UINT_8:
-			return ReadPlainUINT_8(bytesReader, cnt)
-
-		case parquet.ConvertedType_UINT_16:
-			return ReadPlainUINT_16(bytesReader, cnt)
-
-		case parquet.ConvertedType_UINT_32:
-			return ReadPlainUINT_32(bytesReader, cnt)
-
-		case parquet.ConvertedType_UINT_64:
-			return ReadPlainUINT_64(bytesReader, cnt)
-
-		case parquet.ConvertedType_DATE:
-			return ReadPlainDATE(bytesReader, cnt)
-
-		case parquet.ConvertedType_TIME_MILLIS:
-			return ReadPlainTIME_MILLIS(bytesReader, cnt)
-
-		case parquet.ConvertedType_TIME_MICROS:
-			return ReadPlainTIME_MICROS(bytesReader, cnt)
-
-		case parquet.ConvertedType_TIMESTAMP_MILLIS:
-			return ReadPlainTIMESTAMP_MILLIS(bytesReader, cnt)
-
-		case parquet.ConvertedType_TIMESTAMP_MICROS:
-			return ReadPlainTIMESTAMP_MICROS(bytesReader, cnt)
-
-		case parquet.ConvertedType_INTERVAL:
-			return ReadPlainINTERVAL(bytesReader, cnt)
-
-		case parquet.ConvertedType_DECIMAL:
-			return ReadPlainDECIMAL(bytesReader, cnt)
-
-		case parquet.ConvertedType_UTF8:
-			return ReadPlainUTF8(bytesReader, cnt)
-		default:
-			return nil
-		}
+		return nil
 	}
 }
 
@@ -126,86 +72,6 @@ func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	return res
 }
 
-func ReadPlainINT_8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.INT_8
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainINT_16(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.INT_16
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainINT_32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.INT_32
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainINT_64(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.INT_64
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainUINT_8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.UINT_8
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainUINT_16(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.UINT_16
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainUINT_32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.UINT_32
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainUINT_64(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.UINT_64
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
 func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
@@ -245,92 +111,6 @@ func ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64, fixedL
 		cur := make([]byte, fixedLength)
 		bytesReader.Read(cur)
 		res[i] = ParquetType.FIXED_LEN_BYTE_ARRAY(cur)
-	}
-	return res
-}
-
-func ReadPlainUTF8(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		buf := make([]byte, 4)
-		bytesReader.Read(buf)
-		ln := binary.LittleEndian.Uint32(buf)
-		cur := make([]byte, ln)
-		bytesReader.Read(cur)
-		res[i] = ParquetType.UTF8(cur)
-	}
-	return res
-}
-
-func ReadPlainDATE(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.DATE
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainTIME_MILLIS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.TIME_MILLIS
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainTIME_MICROS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.TIME_MICROS
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainTIMESTAMP_MILLIS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.TIMESTAMP_MILLIS
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainTIMESTAMP_MICROS(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.TIMESTAMP_MICROS
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
-		res[i] = cur
-	}
-	return res
-}
-
-func ReadPlainINTERVAL(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		cur := make([]byte, 12)
-		bytesReader.Read(cur)
-		res[i] = ParquetType.INTERVAL(cur)
-	}
-	return res
-}
-
-func ReadPlainDECIMAL(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		buf := make([]byte, 4)
-		bytesReader.Read(buf)
-		ln := binary.LittleEndian.Uint32(buf)
-		cur := make([]byte, ln)
-		bytesReader.Read(cur)
-		res[i] = ParquetType.DECIMAL(cur)
 	}
 	return res
 }

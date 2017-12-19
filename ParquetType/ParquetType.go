@@ -57,38 +57,6 @@ func ParquetTypeToGoType(value interface{}) interface{} {
 		return string(value.(BYTE_ARRAY))
 	case "FIXED_LEN_BYTE_ARRAY":
 		return string(value.(FIXED_LEN_BYTE_ARRAY))
-	case "UTF8":
-		return string(value.(UTF8))
-	case "INT_8":
-		return int32(value.(INT_8))
-	case "INT_16":
-		return int32(value.(INT_16))
-	case "INT_32":
-		return int32(value.(INT_32))
-	case "INT_64":
-		return int64(value.(INT_64))
-	case "UINT_8":
-		return uint32(value.(UINT_8))
-	case "UINT_16":
-		return uint32(value.(UINT_16))
-	case "UINT_32":
-		return uint32(value.(UINT_32))
-	case "UINT_64":
-		return uint64(value.(UINT_64))
-	case "DATE":
-		return int32(value.(DATE))
-	case "TIME_MILLIS":
-		return int32(value.(TIME_MILLIS))
-	case "TIME_MICROS":
-		return int64(value.(TIME_MICROS))
-	case "TIMESTAMP_MILLIS":
-		return int64(value.(TIMESTAMP_MILLIS))
-	case "TIMESTAMP_MICROS":
-		return int64(value.(TIMESTAMP_MICROS))
-	case "INTERVAL":
-		return string(value.(INTERVAL))
-	case "DECIMAL":
-		return string(value.(DECIMAL))
 	}
 	return nil
 
@@ -231,13 +199,13 @@ func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 	} else if *cT == parquet.ConvertedType_INT_64 {
 		return INT64(src.(int64))
 	} else if *cT == parquet.ConvertedType_UINT_8 {
-		return INT32(src.(uint32))
+		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_16 {
-		return INT32(src.(uint32))
+		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_32 {
-		return INT32(src.(uint32))
+		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_64 {
-		return INT64(src.(uint64))
+		return INT64(src.(int64))
 	} else if *cT == parquet.ConvertedType_DATE {
 		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_TIME_MILLIS {

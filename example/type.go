@@ -22,10 +22,10 @@ type TypeList struct {
 	Int_16          int32  `parquet:"name=int_16, type=INT_16"`
 	Int_32          int32  `parquet:"name=int_32, type=INT_32"`
 	Int_64          int64  `parquet:"name=int_64, type=INT_64"`
-	Uint_8          uint32 `parquet:"name=uint_8, type=UINT_8"`
-	Uint_16         uint32 `parquet:"name=uint_16, type=UINT_16"`
-	Uint_32         uint32 `parquet:"name=uint_32, type=UINT_32"`
-	Uint_64         uint64 `parquet:"name=uint_64, type=UINT_64"`
+	Uint_8          int32  `parquet:"name=uint_8, type=UINT_8"`
+	Uint_16         int32  `parquet:"name=uint_16, type=UINT_16"`
+	Uint_32         int32  `parquet:"name=uint_32, type=UINT_32"`
+	Uint_64         int64  `parquet:"name=uint_64, type=UINT_64"`
 	Date            int32  `parquet:"name=date, type=DATE"`
 	TimeMillis      int32  `parquet:"name=timemillis, type=TIME_MILLIS"`
 	TimeMicros      int64  `parquet:"name=timemicros, type=TIME_MICROS"`
@@ -56,10 +56,10 @@ func main() {
 			Int_16:          int32(i),
 			Int_32:          int32(i),
 			Int_64:          int64(i),
-			Uint_8:          uint32(i),
-			Uint_16:         uint32(i),
-			Uint_32:         uint32(i),
-			Uint_64:         uint64(i),
+			Uint_8:          int32(i),
+			Uint_16:         int32(i),
+			Uint_32:         int32(i),
+			Uint_64:         int64(i),
 			Date:            int32(i),
 			TimeMillis:      int32(i),
 			TimeMicros:      int64(i),

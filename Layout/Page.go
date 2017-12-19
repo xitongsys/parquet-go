@@ -347,7 +347,7 @@ func ReadPageHeader(thriftReader *thrift.TBufferedTransport) *parquet.PageHeader
 //Read data page values
 func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) []interface{} {
 	if encoding == parquet.Encoding_PLAIN {
-		return ParquetEncoding.ReadPlain(bytesReader, dataType, convertedType, cnt, bitWidth)
+		return ParquetEncoding.ReadPlain(bytesReader, dataType, cnt, bitWidth)
 
 	} else if encoding == parquet.Encoding_PLAIN_DICTIONARY {
 		b, _ := bytesReader.ReadByte()
@@ -561,7 +561,6 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		table.Path = path
 		table.Values = ParquetEncoding.ReadPlain(bytesReader,
 			colMetaData.GetType(),
-			-1,
 			uint64(pageHeader.DictionaryPageHeader.GetNumValues()),
 			0)
 		page.DataTable = table
