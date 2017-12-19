@@ -102,6 +102,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.DataType = dataType
 		page.CompressType = compressType
 		page.Path = table.Path
+		page.Info = table.Info
 
 		page.DataPageCompress(compressType)
 
@@ -204,7 +205,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MaxVal})
-		name := reflect.TypeOf(page.MaxVal).Name()
+		name := page.Info["type"].(string)
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -212,7 +213,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	}
 	if page.MinVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MinVal})
-		name := reflect.TypeOf(page.MinVal).Name()
+		name := page.Info["type"].(string)
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -294,7 +295,8 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	page.Header.DataPageHeaderV2.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MaxVal})
-		name := reflect.TypeOf(page.MaxVal).Name()
+		//name := reflect.TypeOf(page.MaxVal).Name()
+		name := page.Info["type"]
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -302,7 +304,8 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	}
 	if page.MinVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MinVal})
-		name := reflect.TypeOf(page.MinVal).Name()
+		//name := reflect.TypeOf(page.MinVal).Name()
+		name := page.Info["type"]
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}

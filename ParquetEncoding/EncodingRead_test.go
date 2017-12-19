@@ -232,89 +232,6 @@ func TestReadPlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
 	}
 }
 
-func TestReadPlainUTF8(t *testing.T) {
-	testData := [][]interface{}{
-		{UTF8("hello"), UTF8("world")},
-		{UTF8("a"), UTF8("b"), UTF8("c"), UTF8("d")},
-	}
-	for _, data := range testData {
-		res := ReadPlainUTF8(bytes.NewReader(WritePlainUTF8(data)), uint64(len(data)))
-		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadPlainUTF8 err, %v", data)
-		}
-	}
-}
-
-func TestReadPlainDATE(t *testing.T) {
-	testData := [][]interface{}{
-		{DATE(0), DATE(1), DATE(2)},
-		{DATE(0), DATE(0), DATE(0)},
-	}
-
-	for _, data := range testData {
-		res := ReadPlainDATE(bytes.NewReader(WritePlainDATE(data)), uint64(len(data)))
-		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadPlainDATE err, %v", data)
-		}
-	}
-}
-
-func TestReadPlainTIME_MILLIS(t *testing.T) {
-	testData := [][]interface{}{
-		{TIME_MILLIS(0), TIME_MILLIS(1), TIME_MILLIS(2)},
-		{TIME_MILLIS(0), TIME_MILLIS(0), TIME_MILLIS(0)},
-	}
-
-	for _, data := range testData {
-		res := ReadPlainTIME_MILLIS(bytes.NewReader(WritePlainTIME_MILLIS(data)), uint64(len(data)))
-		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadPlainTIME_MILLIS err, %v", data)
-		}
-	}
-}
-
-func TestReadPlainTIME_MICROS(t *testing.T) {
-	testData := [][]interface{}{
-		{TIME_MICROS(0), TIME_MICROS(1), TIME_MICROS(2)},
-		{TIME_MICROS(0), TIME_MICROS(0), TIME_MICROS(0)},
-	}
-
-	for _, data := range testData {
-		res := ReadPlainTIME_MICROS(bytes.NewReader(WritePlainTIME_MICROS(data)), uint64(len(data)))
-		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadPlainTIME_MICROS err, %v", data)
-		}
-	}
-}
-
-func TestReadPlainTIMESTAMP_MILLIS(t *testing.T) {
-	testData := [][]interface{}{
-		{TIMESTAMP_MILLIS(0), TIMESTAMP_MILLIS(1), TIMESTAMP_MILLIS(2)},
-		{TIMESTAMP_MILLIS(0), TIMESTAMP_MILLIS(0), TIMESTAMP_MILLIS(0)},
-	}
-
-	for _, data := range testData {
-		res := ReadPlainTIMESTAMP_MILLIS(bytes.NewReader(WritePlainTIMESTAMP_MILLIS(data)), uint64(len(data)))
-		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadPlainTIMESTAMP_MILLIS err, %v", data)
-		}
-	}
-}
-
-func TestReadPlainTIMESTAMP_MICROS(t *testing.T) {
-	testData := [][]interface{}{
-		{TIMESTAMP_MICROS(0), TIMESTAMP_MICROS(1), TIMESTAMP_MICROS(2)},
-		{TIMESTAMP_MICROS(0), TIMESTAMP_MICROS(0), TIMESTAMP_MICROS(0)},
-	}
-
-	for _, data := range testData {
-		res := ReadPlainTIMESTAMP_MICROS(bytes.NewReader(WritePlainTIMESTAMP_MICROS(data)), uint64(len(data)))
-		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadPlainTIMESTAMP_MICROS err, %v", data)
-		}
-	}
-}
-
 func TestReadPlainFLOAT(t *testing.T) {
 	testData := [][]interface{}{
 		{FLOAT(0), FLOAT(1), FLOAT(2)},
@@ -339,30 +256,6 @@ func TestReadPlainDOUBLE(t *testing.T) {
 		res := ReadPlainDOUBLE(bytes.NewReader(WritePlainDOUBLE(data)), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainDOUBLE err, %v", data)
-		}
-	}
-}
-
-func TestReadPlainINTERVAL(t *testing.T) {
-	testData := [][]interface{}{
-		{INTERVAL("0123456789ab"), INTERVAL("0123456789ab"), INTERVAL("0123456789ab")},
-	}
-	for _, data := range testData {
-		res := ReadPlainINTERVAL(bytes.NewReader(WritePlainINTERVAL(data)), uint64(len(data)))
-		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadPlainINTERVAL err, %v", data)
-		}
-	}
-}
-
-func TestReadPlainDECIMAL(t *testing.T) {
-	testData := [][]interface{}{
-		{DECIMAL("0123456789ab"), DECIMAL("0123456789ab"), DECIMAL("0123456789ab")},
-	}
-	for _, data := range testData {
-		res := ReadPlainDECIMAL(bytes.NewReader(WritePlainDECIMAL(data)), uint64(len(data)))
-		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadPlainDECIMAL err, %v", data)
 		}
 	}
 }

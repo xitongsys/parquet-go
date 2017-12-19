@@ -46,36 +46,6 @@ func WritePlain(src []interface{}) []byte {
 		return WritePlainINT64(src)
 	} else if dataType.Name() == "INT96" {
 		return WritePlainINT96(src)
-	} else if dataType.Name() == "INT_8" {
-		return WritePlainINT_8(src)
-	} else if dataType.Name() == "INT_16" {
-		return WritePlainINT_16(src)
-	} else if dataType.Name() == "INT_32" {
-		return WritePlainINT_32(src)
-	} else if dataType.Name() == "INT_64" {
-		return WritePlainINT_64(src)
-	} else if dataType.Name() == "UINT_8" {
-		return WritePlainUINT_8(src)
-	} else if dataType.Name() == "UINT_16" {
-		return WritePlainUINT_16(src)
-	} else if dataType.Name() == "UINT_32" {
-		return WritePlainUINT_32(src)
-	} else if dataType.Name() == "UINT_64" {
-		return WritePlainUINT_64(src)
-	} else if dataType.Name() == "DATE" {
-		return WritePlainDATE(src)
-	} else if dataType.Name() == "TIME_MILLIS" {
-		return WritePlainTIME_MILLIS(src)
-	} else if dataType.Name() == "TIME_MICROS" {
-		return WritePlainTIME_MICROS(src)
-	} else if dataType.Name() == "TIMESTAMP_MILLIS" {
-		return WritePlainTIMESTAMP_MILLIS(src)
-	} else if dataType.Name() == "TIMESTAMP_MICROS" {
-		return WritePlainTIMESTAMP_MICROS(src)
-	} else if dataType.Name() == "INTERVAL" {
-		return WritePlainINTERVAL(src)
-	} else if dataType.Name() == "DECIMAL" {
-		return WritePlainDECIMAL(src)
 	} else if dataType.Name() == "FLOAT" {
 		return WritePlainFLOAT(src)
 	} else if dataType.Name() == "DOUBLE" {
@@ -84,8 +54,6 @@ func WritePlain(src []interface{}) []byte {
 		return WritePlainBYTE_ARRAY(src)
 	} else if dataType.Name() == "FIXED_LEN_BYTE_ARRAY" {
 		return WritePlainFIXED_LEN_BYTE_ARRAY(src)
-	} else if dataType.Name() == "UTF8" {
-		return WritePlainUTF8(src)
 	} else {
 		return nil
 	}
@@ -132,78 +100,6 @@ func WritePlainINT96(nums []interface{}) []byte {
 	return bufWriter.Bytes()
 }
 
-func WritePlainINT_8(nums []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		var num ParquetType.INT_8 = nums[i].(ParquetType.INT_8)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainINT_16(nums []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		var num ParquetType.INT_16 = nums[i].(ParquetType.INT_16)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainINT_32(nums []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		var num ParquetType.INT_32 = nums[i].(ParquetType.INT_32)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainINT_64(nums []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		var num ParquetType.INT_64 = nums[i].(ParquetType.INT_64)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainUINT_8(nums []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		var num ParquetType.UINT_8 = nums[i].(ParquetType.UINT_8)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainUINT_16(nums []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		var num ParquetType.UINT_16 = nums[i].(ParquetType.UINT_16)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainUINT_32(nums []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		var num ParquetType.UINT_32 = nums[i].(ParquetType.UINT_32)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainUINT_64(nums []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		var num ParquetType.UINT_64 = nums[i].(ParquetType.UINT_64)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
 func WritePlainFLOAT(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
@@ -218,84 +114,6 @@ func WritePlainDOUBLE(nums []interface{}) []byte {
 	for i := 0; i < len(nums); i++ {
 		var num ParquetType.DOUBLE = nums[i].(ParquetType.DOUBLE)
 		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainUTF8(utf8s []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	var size uint32 = 0
-	cnt := len(utf8s)
-	for i := 0; i < int(cnt); i++ {
-		ln := uint32(len(utf8s[i].(ParquetType.UTF8)))
-		binary.Write(bufWriter, binary.LittleEndian, &ln)
-		bufWriter.Write([]byte(utf8s[i].(ParquetType.UTF8)))
-		size += 4 + ln
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainDATE(dates []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(dates); i++ {
-		var num ParquetType.DATE = dates[i].(ParquetType.DATE)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainTIME_MILLIS(times []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(times); i++ {
-		var num ParquetType.TIME_MILLIS = times[i].(ParquetType.TIME_MILLIS)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainTIME_MICROS(times []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(times); i++ {
-		var num ParquetType.TIME_MICROS = times[i].(ParquetType.TIME_MICROS)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainTIMESTAMP_MILLIS(times []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(times); i++ {
-		var num ParquetType.TIMESTAMP_MILLIS = times[i].(ParquetType.TIMESTAMP_MILLIS)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainTIMESTAMP_MICROS(times []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(times); i++ {
-		var num ParquetType.TIMESTAMP_MICROS = times[i].(ParquetType.TIMESTAMP_MICROS)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainINTERVAL(intervals []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	cnt := len(intervals)
-	for i := 0; i < int(cnt); i++ {
-		bufWriter.Write([]byte(intervals[i].(ParquetType.INTERVAL)))
-	}
-	return bufWriter.Bytes()
-}
-
-func WritePlainDECIMAL(decimals []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	cnt := len(decimals)
-	for i := 0; i < int(cnt); i++ {
-		ln := uint32(len(decimals[i].(ParquetType.DECIMAL)))
-		binary.Write(bufWriter, binary.LittleEndian, &ln)
-		bufWriter.Write([]byte(decimals[i].(ParquetType.DECIMAL)))
 	}
 	return bufWriter.Bytes()
 }

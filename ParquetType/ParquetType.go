@@ -221,37 +221,37 @@ func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 	}
 
 	if *cT == parquet.ConvertedType_UTF8 {
-		return UTF8(src.(string))
+		return BYTE_ARRAY(src.(string))
 	} else if *cT == parquet.ConvertedType_INT_8 {
-		return INT_8(src.(int32))
+		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_INT_16 {
-		return INT_16(src.(int32))
+		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_INT_32 {
-		return INT_32(src.(int32))
+		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_INT_64 {
-		return INT_64(src.(int64))
+		return INT64(src.(int64))
 	} else if *cT == parquet.ConvertedType_UINT_8 {
-		return UINT_8(src.(uint32))
+		return INT32(src.(uint32))
 	} else if *cT == parquet.ConvertedType_UINT_16 {
-		return UINT_16(src.(uint32))
+		return INT32(src.(uint32))
 	} else if *cT == parquet.ConvertedType_UINT_32 {
-		return UINT_32(src.(uint32))
+		return INT32(src.(uint32))
 	} else if *cT == parquet.ConvertedType_UINT_64 {
-		return UINT_64(src.(uint64))
+		return INT64(src.(uint64))
 	} else if *cT == parquet.ConvertedType_DATE {
-		return DATE(src.(int32))
+		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_TIME_MILLIS {
-		return TIME_MILLIS(src.(int32))
+		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_TIME_MICROS {
-		return TIME_MICROS(src.(int64))
+		return INT64(src.(int64))
 	} else if *cT == parquet.ConvertedType_TIMESTAMP_MILLIS {
-		return TIMESTAMP_MILLIS(src.(int64))
+		return INT64(src.(int64))
 	} else if *cT == parquet.ConvertedType_TIMESTAMP_MICROS {
-		return TIMESTAMP_MICROS(src.(int64))
+		return INT64(src.(int64))
 	} else if *cT == parquet.ConvertedType_INTERVAL {
-		return INTERVAL(src.(string))
+		return FIXED_LEN_BYTE_ARRAY(src.(string))
 	} else if *cT == parquet.ConvertedType_DECIMAL {
-		return DECIMAL(src.(string))
+		return BYTE_ARRAY(src.(string))
 	} else {
 		return nil
 	}

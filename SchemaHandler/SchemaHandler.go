@@ -363,7 +363,6 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schema.RepetitionType = &rt
 			schema.NumChildren = nil
 
-			//name := item.GoType.Name()
 			name := item.Info["type"].(string)
 			if t, err := parquet.TypeFromString(name); err == nil {
 				schema.Type = &t
