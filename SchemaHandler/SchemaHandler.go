@@ -277,7 +277,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			schema.ConvertedType = &ct1
 			schemaElements = append(schemaElements, schema)
 			info := Common.NewTagMapFromCopy(item.Info)
-			infos = append(infos, item.Info)
+			infos = append(infos, info)
 
 			schema = parquet.NewSchemaElement()
 			schema.Name = "list"
