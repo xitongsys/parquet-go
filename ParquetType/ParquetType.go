@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/xitongsys/parquet-go/parquet"
 	"log"
-	"reflect"
 )
 
 //base type
@@ -35,30 +34,66 @@ type TIMESTAMP_MICROS int64
 type INTERVAL string // length=12
 type DECIMAL string
 
-func ParquetTypeToGoType(value interface{}) interface{} {
-	if value == nil {
+func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
+	if src == nil {
 		return nil
 	}
-	typeName := reflect.TypeOf(value).Name()
-	switch typeName {
-	case "BOOLEAN":
-		return bool(value.(BOOLEAN))
-	case "INT32":
-		return int32(value.(INT32))
-	case "INT64":
-		return int64(value.(INT64))
-	case "INT96":
-		return string(value.(INT96))
-	case "FLOAT":
-		return float32(value.(FLOAT))
-	case "DOUBLE":
-		return float64(value.(DOUBLE))
-	case "BYTE_ARRAY":
-		return string(value.(BYTE_ARRAY))
-	case "FIXED_LEN_BYTE_ARRAY":
-		return string(value.(FIXED_LEN_BYTE_ARRAY))
+	if cT == nil {
+		if *pT == parquet.Type_BOOLEAN {
+			return bool(src.(BOOLEAN))
+		} else if *pT == parquet.Type_INT32 {
+			return int32(src.(INT32))
+		} else if *pT == parquet.Type_INT64 {
+			return int64(src.(INT64))
+		} else if *pT == parquet.Type_INT96 {
+			return string(src.(INT96))
+		} else if *pT == parquet.Type_FLOAT {
+			return float32(src.(FLOAT))
+		} else if *pT == parquet.Type_DOUBLE {
+			return float64(src.(DOUBLE))
+		} else if *pT == parquet.Type_BYTE_ARRAY {
+			return string(src.(BYTE_ARRAY))
+		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			return string(src.(FIXED_LEN_BYTE_ARRAY))
+		}
+		return nil
 	}
-	return nil
+
+	if *cT == parquet.ConvertedType_UTF8 {
+		return string(src.(BYTE_ARRAY))
+	} else if *cT == parquet.ConvertedType_INT_8 {
+		return int32(src.(INT32))
+	} else if *cT == parquet.ConvertedType_INT_16 {
+		return int32(src.(INT32))
+	} else if *cT == parquet.ConvertedType_INT_32 {
+		return int32(src.(INT32))
+	} else if *cT == parquet.ConvertedType_INT_64 {
+		return int64(src.(INT64))
+	} else if *cT == parquet.ConvertedType_UINT_8 {
+		return uint32(src.(INT32))
+	} else if *cT == parquet.ConvertedType_UINT_16 {
+		return uint32(src.(INT32))
+	} else if *cT == parquet.ConvertedType_UINT_32 {
+		return uint32(src.(INT32))
+	} else if *cT == parquet.ConvertedType_UINT_64 {
+		return uint64(src.(INT64))
+	} else if *cT == parquet.ConvertedType_DATE {
+		return int32(src.(INT32))
+	} else if *cT == parquet.ConvertedType_TIME_MILLIS {
+		return int32(src.(INT32))
+	} else if *cT == parquet.ConvertedType_TIME_MICROS {
+		return int64(src.(INT64))
+	} else if *cT == parquet.ConvertedType_TIMESTAMP_MILLIS {
+		return int64(src.(INT64))
+	} else if *cT == parquet.ConvertedType_TIMESTAMP_MICROS {
+		return int64(src.(INT64))
+	} else if *cT == parquet.ConvertedType_INTERVAL {
+		return string(src.(FIXED_LEN_BYTE_ARRAY))
+	} else if *cT == parquet.ConvertedType_DECIMAL {
+		return string(src.(BYTE_ARRAY))
+	} else {
+		return nil
+	}
 }
 
 //Scan a string to parquet value
@@ -139,13 +174,13 @@ func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 	} else if *cT == parquet.ConvertedType_INT_64 {
 		return INT64(src.(int64))
 	} else if *cT == parquet.ConvertedType_UINT_8 {
-		return INT32(src.(int32))
+		return INT32(src.(uint32))
 	} else if *cT == parquet.ConvertedType_UINT_16 {
-		return INT32(src.(int32))
+		return INT32(src.(uint32))
 	} else if *cT == parquet.ConvertedType_UINT_32 {
-		return INT32(src.(int32))
+		return INT32(src.(uint32))
 	} else if *cT == parquet.ConvertedType_UINT_64 {
-		return INT64(src.(int64))
+		return INT64(src.(uint64))
 	} else if *cT == parquet.ConvertedType_DATE {
 		return INT32(src.(int32))
 	} else if *cT == parquet.ConvertedType_TIME_MILLIS {

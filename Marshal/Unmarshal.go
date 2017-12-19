@@ -62,6 +62,8 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 		for name, table := range *tableMap {
 			path := table.Path
 			end := tableEnd[name]
+			schemaIndex := schemaHandler.MapIndex[Common.PathToStr(path)]
+			pT, cT := schemaHandler.SchemaElements[schemaIndex].Type, schemaHandler.SchemaElements[schemaIndex].ConvertedType
 
 			if tableIndex[name] >= end {
 				continue
@@ -185,7 +187,7 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 									mapRecord[po].KeyValues = append(mapRecord[po].KeyValues,
 										KeyValue{Key: reflect.ValueOf(nil), Value: reflect.ValueOf(nil)})
 								}
-								mapRecord[po].KeyValues[mapRecord[po].Index].Key = reflect.ValueOf(ParquetType.ParquetTypeToGoType(table.Values[tableIndex[name]]))
+								mapRecord[po].KeyValues[mapRecord[po].Index].Key = reflect.ValueOf(ParquetType.ParquetTypeToGoType(table.Values[tableIndex[name]], pT, cT))
 								break
 							}
 						} else {
@@ -203,7 +205,7 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 						po = po.Elem()
 
 					} else {
-						po.Set(reflect.ValueOf(ParquetType.ParquetTypeToGoType(table.Values[tableIndex[name]])))
+						po.Set(reflect.ValueOf(ParquetType.ParquetTypeToGoType(table.Values[tableIndex[name]], pT, cT)))
 						break
 					}
 				} //for pathIndex < len(path)
