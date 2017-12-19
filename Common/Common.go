@@ -25,6 +25,8 @@ func NewEmptyTagMap() map[string]interface{} {
 		"fieldid":        0,
 		"keyfieldid":     0,
 		"repetitiontype": parquet.FieldRepetitionType(0),
+		"encoding":       parquet.Encoding_PLAIN,
+		"keyencoding":    parquet.Encoding_PLAIN,
 	}
 }
 
@@ -64,7 +66,19 @@ func TagToMap(tag string) map[string]interface{} {
 			case "optional":
 				mp["repetitiontype"] = parquet.FieldRepetitionType_OPTIONAL
 			}
-
+		} else if kv[0] == "encoding" || kv[0] == "keyencoding" {
+			ens := strings.ToLower(kv[1])
+			if ens == "rle" {
+				mp[kv[0]] = parquet.Encoding_RLE
+			} else if ens == "delta_binary_packed" {
+				mp[kv[0]] = parquet.Encoding_DELTA_BINARY_PACKED
+			} else if ens == "delta_length_byte_array" {
+				mp[kv[0]] = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
+			} else if ens == "delta_byte_array" {
+				mp[kv[0]] = parquet.Encoding_DELTA_BYTE_ARRAY
+			} else {
+				mp[kv[0]] = parquet.Encoding_PLAIN
+			}
 		}
 	}
 	return mp
@@ -80,6 +94,7 @@ func GetKeyTagMap(src map[string]interface{}) map[string]interface{} {
 	res["scale"] = src["keyscale"]
 	res["precision"] = src["keyprecision"]
 	res["fieldid"] = src["keyfieldid"]
+	res["encoding"] = src["keyencoding"]
 	return res
 }
 
@@ -94,6 +109,7 @@ func GetValueTagMap(src map[string]interface{}) map[string]interface{} {
 	res["precision"] = src["precision"]
 	res["fieldid"] = src["fieldid"]
 	res["repetitiontype"] = src["repetitiontype"]
+	res["encoding"] = src["encoding"]
 	return res
 }
 

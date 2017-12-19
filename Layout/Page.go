@@ -41,6 +41,7 @@ func NewPage() *Page {
 	page := new(Page)
 	page.DataTable = nil
 	page.Header = parquet.NewPageHeader()
+	page.Info = make(map[string]interface{})
 	return page
 }
 
@@ -111,7 +112,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	return res, totSize
 }
 
-//
+//Decode dict page
 func (page *Page) Decode(dictPage *Page) {
 	if dictPage == nil {
 		return
@@ -123,6 +124,22 @@ func (page *Page) Decode(dictPage *Page) {
 			page.DataTable.Values[i] = dictPage.DataTable.Values[index]
 		}
 	}
+}
+
+//Encoding values
+func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
+	encoding := parquet.Encoding_PLAIN
+	if _, ok := page.Info["encoding"]; ok {
+		encoding = page.Info["encoding"].(parquet.Encoding)
+	}
+	if encoding == parquet.Encoding_RLE {
+	} else if encoding == parquet.Encoding_DELTA_BINARY_PACKED {
+	} else if encoding == parquet.Encoding_DELTA_BYTE_ARRAY {
+	} else if encoding == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
+	} else {
+		return ParquetEncoding.WritePlain(valuesBuf)
+	}
+	return []byte{}
 }
 
 //Compress the data page to parquet file

@@ -11,6 +11,13 @@ func NewTableFromTable(src *Table) *Table {
 	table.Path = append(table.Path, src.Path...)
 	table.MaxDefinitionLevel = 0
 	table.MaxRepetitionLevel = 0
+	table.Info = src.Info
+	return table
+}
+
+func NewEmptyTable() *Table {
+	table := new(Table)
+	table.Info = make(map[string]interface{})
 	return table
 }
 
@@ -33,6 +40,9 @@ type Table struct {
 	DefinitionLevels []int32
 	//Repetition Levels slice
 	RepetitionLevels []int32
+
+	//Tag info
+	Info map[string]interface{}
 }
 
 //Merge several tables to one table(the first table)
