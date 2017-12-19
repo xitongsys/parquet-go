@@ -211,9 +211,9 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 			a, b := []byte(ai.(ParquetType.INT96)), []byte(bi.(ParquetType.INT96))
 			fa, fb := a[11]>>7, b[11]>>7
 			if fa > fb {
-				return false
-			} else if fa < fb {
 				return true
+			} else if fa < fb {
+				return false
 			}
 			for i := 11; i >= 0; i-- {
 				if a[i] < b[i] {
@@ -272,9 +272,9 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 			fa, fb := (a[0] >> 7), (b[0] >> 7)
 			la, lb := len(a), len(b)
 			if fa > fb {
-				return false
-			} else if fa < fb {
 				return true
+			} else if fa < fb {
+				return false
 			} else {
 				i, j := 0, 0
 				for i < la || j < lb {
@@ -300,9 +300,9 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 			fa, fb := (a[0] >> 7), (b[0] >> 7)
 			la, lb := len(a), len(b)
 			if fa > fb {
-				return false
-			} else if fa < fb {
 				return true
+			} else if fa < fb {
+				return false
 			} else {
 				i, j := 0, 0
 				for i < la || j < lb {
