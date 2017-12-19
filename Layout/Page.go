@@ -210,7 +210,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.DataPageHeader.NumValues = int32(len(page.DataTable.Values))
 	page.Header.DataPageHeader.DefinitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
-	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN
+	page.Header.DataPageHeader.Encoding = page.Info["encoding"].(parquet.Encoding)
 
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
@@ -298,7 +298,9 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	page.Header.DataPageHeaderV2.NumValues = int32(len(page.DataTable.Values))
 	page.Header.DataPageHeaderV2.NumNulls = page.Header.DataPageHeaderV2.NumValues - int32(len(valuesBuf))
 	page.Header.DataPageHeaderV2.NumRows = r0Num
-	page.Header.DataPageHeaderV2.Encoding = parquet.Encoding_PLAIN
+	//page.Header.DataPageHeaderV2.Encoding = parquet.Encoding_PLAIN
+	page.Header.DataPageHeaderV2.Encoding = page.Info["encoding"].(parquet.Encoding)
+
 	page.Header.DataPageHeaderV2.DefinitionLevelsByteLength = int32(len(definitionLevelBuf))
 	page.Header.DataPageHeaderV2.RepetitionLevelsByteLength = int32(len(repetitionLevelBuf))
 	page.Header.DataPageHeaderV2.IsCompressed = true
