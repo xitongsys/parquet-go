@@ -27,6 +27,7 @@ func NewEmptyTagMap() map[string]interface{} {
 		"repetitiontype": parquet.FieldRepetitionType(0),
 		"encoding":       parquet.Encoding_PLAIN,
 		"keyencoding":    parquet.Encoding_PLAIN,
+		"bitwidth":       int32(0),
 	}
 }
 
@@ -95,7 +96,9 @@ func TagToMap(tag string) map[string]interface{} {
 		} else if kv[0] == "length" || kv[0] == "keylength" ||
 			kv[0] == "scale" || kv[0] == "keyscale" ||
 			kv[0] == "precision" || kv[0] == "keyprecision" ||
-			kv[0] == "fieldid" || kv[0] == "keyfieldid" {
+			kv[0] == "fieldid" || kv[0] == "keyfieldid" ||
+			kv[0] == "bitwidth" {
+
 			val, _ := strconv.Atoi(kv[1])
 			mp[kv[0]] = int32(val)
 		} else if kv[0] == "name" {
