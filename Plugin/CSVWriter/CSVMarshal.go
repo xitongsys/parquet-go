@@ -8,16 +8,21 @@ import (
 )
 
 //Marshal function for CSV like data
-func MarshalCSV(records [][]interface{}, bgn int, end int, md []MetadataType, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
+func MarshalCSV(records [][]interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
 	res := make(map[string]*Layout.Table)
-	for i := 0; i < len(md); i++ {
-		pathStr := schemaHandler.GetRootName() + "." + md[i].Name
-		res[pathStr] = new(Layout.Table)
+	if ln := len(records); ln <= 0 {
+		return &res
+	}
+
+	for i := 0; i < len(records[0]); i++ {
+		pathStr := schemaHandler.GetRootName() + "." + schemaHandler.Infos[i]["exname"].(string)
+		res[pathStr] = Layout.NewEmptyTable()
 		res[pathStr].Path = Common.StrToPath(pathStr)
 		res[pathStr].MaxDefinitionLevel = 1
 		res[pathStr].MaxRepetitionLevel = 0
 		res[pathStr].RepetitionType = parquet.FieldRepetitionType_OPTIONAL
 		res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].GetType()
+		res[pathStr].Info = schemaHandler.Infos[i]
 
 		for j := bgn; j < end; j++ {
 			rec := records[j][i]

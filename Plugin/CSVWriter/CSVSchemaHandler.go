@@ -1,22 +1,16 @@
 package CSVWriter
 
 import (
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-//CSV metadata
-type MetadataType struct {
-	Type       string
-	Name       string
-	TypeLength int32
-	Scale      int32
-	Precision  int32
-}
-
 //Create a schema handler from CSV metadata
-func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler.SchemaHandler {
+func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
 	schemaList := make([]*parquet.SchemaElement, 0)
+
+	infos := make([]map[string]interface{}, 0)
 
 	rootSchema := parquet.NewSchemaElement()
 	rootSchema.Name = "parquet_go_root"
@@ -27,22 +21,26 @@ func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler.SchemaHandl
 	schemaList = append(schemaList, rootSchema)
 
 	for _, md := range mds {
+		info := Common.TagToMap(md)
+		infos = append(infos, info)
+
 		schema := parquet.NewSchemaElement()
-		schema.Name = md.Name
+		schema.Name = info["exname"].(string)
 		numChildren := int32(0)
 		schema.NumChildren = &numChildren
 		rt := parquet.FieldRepetitionType(1)
 		schema.RepetitionType = &rt
 
-		if t, err := parquet.TypeFromString(md.Type); err == nil {
+		if t, err := parquet.TypeFromString(info["type"].(string)); err == nil {
 			schema.Type = &t
-			if md.Type == "FIXED_LEN_BYTE_ARRAY" {
-				schema.TypeLength = &md.TypeLength
+			if info["type"].(string) == "FIXED_LEN_BYTE_ARRAY" {
+				ln := info["length"].(int32)
+				schema.TypeLength = &ln
 			}
 
 		} else {
-			name := md.Type
-			ct, _ := parquet.ConvertedTypeFromString(name)
+			name := info["type"].(string)
+			ct, _ := parquet.ConvertedTypeFromString(info["type"].(string))
 			schema.ConvertedType = &ct
 			if name == "INT_8" || name == "INT_16" || name == "INT_32" ||
 				name == "UINT_8" || name == "UINT_16" || name == "UINT_32" ||
@@ -58,8 +56,8 @@ func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler.SchemaHandl
 				var ln int32 = 12
 				schema.TypeLength = &ln
 			} else if name == "DECIMAL" {
-				scale := md.Scale
-				precision := md.Precision
+				scale := info["scale"].(int32)
+				precision := info["precision"].(int32)
 				schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
 				schema.Scale = &scale
 				schema.Precision = &precision
@@ -70,6 +68,8 @@ func NewSchemaHandlerFromMetadata(mds []MetadataType) *SchemaHandler.SchemaHandl
 		schemaList = append(schemaList, schema)
 	}
 
-	return SchemaHandler.NewSchemaHandlerFromSchemaList(schemaList)
+	res := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaList)
+	res.Infos = infos
+	return res
 
 }

@@ -18,6 +18,7 @@ type CSVWriter struct {
 	NP            int64
 	Footer        *parquet.FileMetaData
 	RowGroups     []*Layout.RowGroup
+	Metadata      []string
 
 	PFile ParquetFile.ParquetFile
 
@@ -29,7 +30,6 @@ type CSVWriter struct {
 	ObjsSize          int64
 	ObjSize           int64
 	CheckSizeCritical int64
-	Metadata          []MetadataType
 
 	PagesMapBuf map[string][]*Layout.Page
 	Size        int64
@@ -37,7 +37,7 @@ type CSVWriter struct {
 }
 
 //Create CSV writer
-func NewCSVWriter(md []MetadataType, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error) {
+func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error) {
 	res := new(CSVWriter)
 	res.SchemaHandler = NewSchemaHandlerFromMetadata(md)
 	res.Metadata = md
@@ -70,7 +70,7 @@ func (self *CSVWriter) WriteString(recs []*string) {
 	for i := 0; i < lr; i++ {
 		rec[i] = nil
 		if recs[i] != nil {
-			rec[i] = ParquetType.StrToParquetType(*recs[i], self.Metadata[i].Type)
+			rec[i] = ParquetType.StrToParquetType(*recs[i], self.SchemaHandler.Infos[i]["type"].(string))
 		}
 	}
 
@@ -152,7 +152,7 @@ func (self *CSVWriter) Flush(flag bool) {
 				doneChan <- 0
 				return
 			}
-			tableMap := MarshalCSV(self.Objs, b, e, self.Metadata, self.SchemaHandler)
+			tableMap := MarshalCSV(self.Objs, b, e, self.SchemaHandler)
 			for name, table := range *tableMap {
 				pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
 					parquet.CompressionCodec_SNAPPY)

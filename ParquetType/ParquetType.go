@@ -59,7 +59,6 @@ func ParquetTypeToGoType(value interface{}) interface{} {
 		return string(value.(FIXED_LEN_BYTE_ARRAY))
 	}
 	return nil
-
 }
 
 //Scan a string to parquet value
@@ -68,11 +67,16 @@ func StrToParquetType(s string, typeName string) interface{} {
 		var v BOOLEAN
 		fmt.Sscanf(s, "%t", &v)
 		return v
-	} else if typeName == "INT32" {
+	} else if typeName == "INT32" ||
+		typeName == "INT_8" || typeName == "INT_16" || typeName == "INT_32" ||
+		typeName == "UINT_8" || typeName == "UINT_16" || typeName == "UINT_32" ||
+		typeName == "DATE" || typeName == "TIME_MILLIS" {
 		var v INT32
 		fmt.Sscanf(s, "%d", &v)
 		return v
-	} else if typeName == "INT64" {
+	} else if typeName == "INT64" ||
+		typeName == "INT_64" || typeName == "UINT_64" ||
+		typeName == "TIME_MICROS" || typeName == "TIMESTAMP_MILLIS" || typeName == "TIMESTAMP_MICROS" {
 		var v INT64
 		fmt.Sscanf(s, "%d", &v)
 		return v
@@ -88,77 +92,13 @@ func StrToParquetType(s string, typeName string) interface{} {
 		var v DOUBLE
 		fmt.Sscanf(s, "%f", &v)
 		return v
-	} else if typeName == "BYTE_ARRAY" {
+	} else if typeName == "BYTE_ARRAY" || typeName == "UTF8" || typeName == "INTERVAL" || typeName == "DECIMAL" {
 		var v BYTE_ARRAY
 		v = BYTE_ARRAY(s)
 		return v
 	} else if typeName == "FIXED_LEN_BYTE_ARRAY" {
 		var v FIXED_LEN_BYTE_ARRAY
 		v = FIXED_LEN_BYTE_ARRAY(s)
-		return v
-	} else if typeName == "UTF8" {
-		var v UTF8
-		v = UTF8(s)
-		return v
-	} else if typeName == "INT_8" {
-		var v INT_8
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "INT_16" {
-		var v INT_16
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "INT_32" {
-		var v INT_32
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "INT_64" {
-		var v INT_64
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "UINT_8" {
-		var v UINT_8
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "UINT_16" {
-		var v UINT_16
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "UINT_32" {
-		var v UINT_32
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "UINT_64" {
-		var v UINT_64
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "DATE" {
-		var v DATE
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "TIME_MILLIS" {
-		var v TIME_MILLIS
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "TIME_MICROS" {
-		var v TIME_MICROS
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "TIMESTAMP_MILLIS" {
-		var v TIMESTAMP_MILLIS
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "TIMESTAMP_MICROS" {
-		var v TIMESTAMP_MICROS
-		fmt.Sscanf(s, "%d", &v)
-		return v
-	} else if typeName == "INTERVAL" {
-		var v INTERVAL
-		v = INTERVAL(s)
-		return v
-	} else if typeName == "DECIMAL" {
-		var v DECIMAL
-		v = DECIMAL(s)
 		return v
 	} else {
 		log.Printf("Type Error: %v ", typeName)

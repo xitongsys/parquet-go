@@ -9,12 +9,12 @@ import (
 )
 
 func main() {
-	md := []CSVWriter.MetadataType{
-		{Type: "UTF8", Name: "Name"},
-		{Type: "INT32", Name: "Age"},
-		{Type: "INT64", Name: "Id"},
-		{Type: "FLOAT", Name: "Weight"},
-		{Type: "BOOLEAN", Name: "Sex"},
+	md := []string{
+		"name=Name, type=UTF8",
+		"name=Age, type=INT32",
+		"name=Id, type=INT64",
+		"name=Weight, type=FLOAT",
+		"name=Sex, type=BOOLEAN",
 	}
 
 	//write flat
@@ -37,7 +37,7 @@ func main() {
 		pw.WriteString(rec)
 
 		data2 := []interface{}{
-			ParquetType.UTF8("Student Name"),
+			ParquetType.BYTE_ARRAY("Student Name"),
 			ParquetType.INT32(20 + i*5),
 			ParquetType.INT64(i),
 			ParquetType.FLOAT(50.0 + float32(i)*0.1),
