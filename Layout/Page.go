@@ -163,7 +163,8 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
 		}
 	}
-	valuesRawBuf := ParquetEncoding.WritePlain(valuesBuf)
+	//valuesRawBuf := ParquetEncoding.WritePlain(valuesBuf)
+	valuesRawBuf := page.EncodingValues(valuesBuf)
 
 	//definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
@@ -252,7 +253,8 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
 		}
 	}
-	valuesRawBuf := ParquetEncoding.WritePlain(valuesBuf)
+	//valuesRawBuf := ParquetEncoding.WritePlain(valuesBuf)
+	valuesRawBuf := page.EncodingValues(valuesBuf)
 
 	//definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
