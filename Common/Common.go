@@ -96,8 +96,7 @@ func TagToMap(tag string) map[string]interface{} {
 		} else if kv[0] == "length" || kv[0] == "keylength" ||
 			kv[0] == "scale" || kv[0] == "keyscale" ||
 			kv[0] == "precision" || kv[0] == "keyprecision" ||
-			kv[0] == "fieldid" || kv[0] == "keyfieldid" ||
-			kv[0] == "bitwidth" {
+			kv[0] == "fieldid" || kv[0] == "keyfieldid" {
 
 			val, _ := strconv.Atoi(kv[1])
 			mp[kv[0]] = int32(val)
