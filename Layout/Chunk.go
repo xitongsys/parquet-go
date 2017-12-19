@@ -25,6 +25,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[0].MaxVal
 	var minVal interface{} = pages[0].MinVal
+	pT, cT := ParquetType.TypeNameToParquetType(pages[0].Info["type"].(string), pages[0].Info["basetype"].(string))
 
 	for i := 0; i < ln; i++ {
 		if pages[i].Header.DataPageHeader != nil {
@@ -34,8 +35,8 @@ func PagesToChunk(pages []*Page) *Chunk {
 		}
 		totalUncompressedSize += int64(pages[i].Header.UncompressedPageSize) + int64(len(pages[i].RawData)) - int64(pages[i].Header.CompressedPageSize)
 		totalCompressedSize += int64(len(pages[i].RawData))
-		maxVal = Common.Max(maxVal, pages[i].MaxVal, pages[i].Info["type"].(string))
-		minVal = Common.Min(minVal, pages[i].MinVal, pages[i].Info["type"].(string))
+		maxVal = Common.Max(maxVal, pages[i].MaxVal, pT, cT)
+		minVal = Common.Min(minVal, pages[i].MinVal, pT, cT)
 	}
 
 	chunk := new(Chunk)

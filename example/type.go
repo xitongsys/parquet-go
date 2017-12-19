@@ -22,17 +22,17 @@ type TypeList struct {
 	Int_16          int32  `parquet:"name=int_16, type=INT_16"`
 	Int_32          int32  `parquet:"name=int_32, type=INT_32"`
 	Int_64          int64  `parquet:"name=int_64, type=INT_64"`
-	Uint_8          uint32  `parquet:"name=uint_8, type=UINT_8"`
-	Uint_16         uint32  `parquet:"name=uint_16, type=UINT_16"`
-	Uint_32         uint32  `parquet:"name=uint_32, type=UINT_32"`
-	Uint_64         uint64  `parquet:"name=uint_64, type=UINT_64"`
+	Uint_8          uint32 `parquet:"name=uint_8, type=UINT_8"`
+	Uint_16         uint32 `parquet:"name=uint_16, type=UINT_16"`
+	Uint_32         uint32 `parquet:"name=uint_32, type=UINT_32"`
+	Uint_64         uint64 `parquet:"name=uint_64, type=UINT_64"`
 	Date            int32  `parquet:"name=date, type=DATE"`
 	TimeMillis      int32  `parquet:"name=timemillis, type=TIME_MILLIS"`
 	TimeMicros      int64  `parquet:"name=timemicros, type=TIME_MICROS"`
 	TimestampMillis int64  `parquet:"name=timestampmillis, type=TIMESTAMP_MILLIS"`
 	TimestampMicros int64  `parquet:"name=timestampmicros, type=TIMESTAMP_MICROS"`
 	Interval        string `parquet:"name=interval, type=INTERVAL"`
-	Decimal         string `parquet:"name=decimal, type=DECIMAL, scale=2, precision=2"`
+	Decimal         int32  `parquet:"name=decimal, type=DECIMAL, scale=2, precision=2, basetype=INT32"`
 }
 
 func main() {
@@ -66,7 +66,7 @@ func main() {
 			TimestampMillis: int64(i),
 			TimestampMicros: int64(i),
 			Interval:        "012345678912",
-			Decimal:         "12345",
+			Decimal:         12,
 		}
 		pw.Write(tp)
 	}
