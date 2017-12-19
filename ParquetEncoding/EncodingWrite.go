@@ -74,8 +74,7 @@ func WritePlainBOOLEAN(nums []interface{}) []byte {
 func WritePlainINT32(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
-		var num ParquetType.INT32 = nums[i].(ParquetType.INT32)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
+		binary.Write(bufWriter, binary.LittleEndian, nums[i])
 	}
 	return bufWriter.Bytes()
 }
@@ -83,8 +82,7 @@ func WritePlainINT32(nums []interface{}) []byte {
 func WritePlainINT64(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
-		var num ParquetType.INT64 = nums[i].(ParquetType.INT64)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
+		binary.Write(bufWriter, binary.LittleEndian, nums[i])
 	}
 	return bufWriter.Bytes()
 }
@@ -93,8 +91,7 @@ func WritePlainINT96(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
 		for j := 0; j < len(nums[i].(ParquetType.INT96)); j++ {
-			b := nums[i].(ParquetType.INT96)[j]
-			binary.Write(bufWriter, binary.LittleEndian, &b)
+			binary.Write(bufWriter, binary.LittleEndian, nums[i].(ParquetType.INT96)[j])
 		}
 	}
 	return bufWriter.Bytes()
@@ -103,8 +100,7 @@ func WritePlainINT96(nums []interface{}) []byte {
 func WritePlainFLOAT(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
-		var num ParquetType.FLOAT = nums[i].(ParquetType.FLOAT)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
+		binary.Write(bufWriter, binary.LittleEndian, nums[i])
 	}
 	return bufWriter.Bytes()
 }
@@ -112,8 +108,7 @@ func WritePlainFLOAT(nums []interface{}) []byte {
 func WritePlainDOUBLE(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
-		var num ParquetType.DOUBLE = nums[i].(ParquetType.DOUBLE)
-		binary.Write(bufWriter, binary.LittleEndian, &num)
+		binary.Write(bufWriter, binary.LittleEndian, nums[i])
 	}
 	return bufWriter.Bytes()
 }
@@ -123,7 +118,7 @@ func WritePlainBYTE_ARRAY(arrays []interface{}) []byte {
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
 		ln := uint32(len(arrays[i].(ParquetType.BYTE_ARRAY)))
-		binary.Write(bufWriter, binary.LittleEndian, &ln)
+		binary.Write(bufWriter, binary.LittleEndian, ln)
 		bufWriter.Write([]byte(arrays[i].(ParquetType.BYTE_ARRAY)))
 	}
 	return bufWriter.Bytes()
@@ -169,7 +164,7 @@ func WriteRLE(vals []interface{}, bitWidth int32) []byte {
 		byteNum := (bitWidth + 7) / 8
 		headerBuf := WriteUnsignedVarInt(uint64(header))
 
-		valBuf := WritePlainINT64([]interface{}{vals[i]})
+		valBuf := WritePlain([]interface{}{vals[i]})
 
 		rleBuf := make([]byte, int64(len(headerBuf))+int64(byteNum))
 		copy(rleBuf[0:], headerBuf)
@@ -183,7 +178,7 @@ func WriteRLE(vals []interface{}, bitWidth int32) []byte {
 func WriteRLEBitPackedHybrid(vals []interface{}, bitWidths int32) []byte {
 	rleBuf := WriteRLE(vals, bitWidths)
 	res := make([]byte, 0)
-	lenBuf := WritePlainINT32([]interface{}{ParquetType.INT32(len(rleBuf))})
+	lenBuf := WritePlain([]interface{}{ParquetType.INT32(len(rleBuf))})
 	res = append(res, lenBuf...)
 	res = append(res, rleBuf...)
 	return res
@@ -243,6 +238,24 @@ func WriteBitPacked(vals []interface{}, bitWidth int64, ifHeader bool) []byte {
 	}
 	res = append(res, valBuf...)
 	return res
+}
+
+func WriteDelta(nums []interface{}) []byte {
+	ln := len(nums)
+	if ln <= 0 {
+		return []byte{}
+	}
+	dataType := reflect.TypeOf(nums[0])
+	if dataType == nil {
+		return []byte{}
+	}
+	if dataType.Name() == "INT32" {
+		return WriteDeltaINT32(nums)
+	} else if dataType.Name() == "INT64" {
+		return WriteDeltaINT64(nums)
+	} else {
+		return []byte{}
+	}
 }
 
 func WriteDeltaINT32(nums []interface{}) []byte {

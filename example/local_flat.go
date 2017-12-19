@@ -21,7 +21,7 @@ func main() {
 	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
 
 	//write flat
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 10)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{

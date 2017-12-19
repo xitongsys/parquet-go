@@ -134,9 +134,18 @@ func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 		encoding = page.Info["encoding"].(parquet.Encoding)
 	}
 	if encoding == parquet.Encoding_RLE {
+		bitWidth := page.Info["bitwidth"].(int32)
+		return ParquetEncoding.WriteRLE(valuesBuf, bitWidth)
+
 	} else if encoding == parquet.Encoding_DELTA_BINARY_PACKED {
+		return ParquetEncoding.WriteDelta(valuesBuf)
+
 	} else if encoding == parquet.Encoding_DELTA_BYTE_ARRAY {
+		return ParquetEncoding.WriteDeltaByteArray(valuesBuf)
+
 	} else if encoding == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
+		return ParquetEncoding.WriteDeltaLengthByteArray(valuesBuf)
+
 	} else {
 		return ParquetEncoding.WritePlain(valuesBuf)
 	}
