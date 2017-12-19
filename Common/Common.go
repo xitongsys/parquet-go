@@ -27,8 +27,51 @@ func NewEmptyTagMap() map[string]interface{} {
 		"repetitiontype": parquet.FieldRepetitionType(0),
 		"encoding":       parquet.Encoding_PLAIN,
 		"keyencoding":    parquet.Encoding_PLAIN,
-		"bitwidth":       int32(0),
 	}
+}
+
+func NewSchemaElementFromTagMap(info map[string]interface{}) *parquet.SchemaElement {
+	schema := parquet.NewSchemaElement()
+
+	inname := info["inname"].(string)
+	length := info["length"].(int32)
+	scale := info["scale"].(int32)
+	precision := info["precision"].(int32)
+	fieldid := info["fieldid"].(int32)
+	repetitiontype := info["repetitiontype"].(parquet.FieldRepetitionType)
+
+	schema.Name = inname
+	schema.TypeLength = &length
+	schema.Scale = &scale
+	schema.Precision = &precision
+	schema.FieldID = &fieldid
+	schema.RepetitionType = &repetitiontype
+	schema.NumChildren = nil
+
+	typeName := info["type"].(string)
+	if t, err := parquet.TypeFromString(typeName); err == nil {
+		schema.Type = &t
+	} else {
+		ct, _ := parquet.ConvertedTypeFromString(typeName)
+		schema.ConvertedType = &ct
+		if typeName == "INT_8" || typeName == "INT_16" || typeName == "INT_32" ||
+			typeName == "UINT_8" || typeName == "UINT_16" || typeName == "UINT_32" ||
+			typeName == "DATE" || typeName == "TIME_MILLIS" {
+			schema.Type = parquet.TypePtr(parquet.Type_INT32)
+		} else if typeName == "INT_64" || typeName == "UINT_64" ||
+			typeName == "TIME_MICROS" || typeName == "TIMESTAMP_MICROS" || typeName == "TIMESTAMP_MILLIS" {
+			schema.Type = parquet.TypePtr(parquet.Type_INT64)
+		} else if typeName == "UTF8" {
+			schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
+		} else if typeName == "INTERVAL" {
+			schema.Type = parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY)
+			var ln int32 = 12
+			schema.TypeLength = &ln
+		} else if typeName == "DECIMAL" {
+			schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
+		}
+	}
+	return schema
 }
 
 func NewTagMapFromCopy(tagMap map[string]interface{}) map[string]interface{} {
@@ -52,8 +95,7 @@ func TagToMap(tag string) map[string]interface{} {
 		} else if kv[0] == "length" || kv[0] == "keylength" ||
 			kv[0] == "scale" || kv[0] == "keyscale" ||
 			kv[0] == "precision" || kv[0] == "keyprecision" ||
-			kv[0] == "fieldid" || kv[0] == "keyfieldid" ||
-			kv[0] == "bitwidth" {
+			kv[0] == "fieldid" || kv[0] == "keyfieldid" {
 			val, _ := strconv.Atoi(kv[1])
 			mp[kv[0]] = int32(val)
 		} else if kv[0] == "name" {

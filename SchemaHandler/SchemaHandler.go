@@ -357,45 +357,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			stack = append(stack, newItem)
 
 		} else {
-			schema := parquet.NewSchemaElement()
-			schema.Name = item.Info["inname"].(string)
-			rt := item.Info["repetitiontype"].(parquet.FieldRepetitionType)
-			schema.RepetitionType = &rt
-			schema.NumChildren = nil
-
-			name := item.Info["type"].(string)
-			if t, err := parquet.TypeFromString(name); err == nil {
-				schema.Type = &t
-				if name == "FIXED_LEN_BYTE_ARRAY" {
-					ln := item.Info["length"].(int32)
-					schema.TypeLength = &ln
-				}
-			} else {
-				ct, _ := parquet.ConvertedTypeFromString(name)
-				schema.ConvertedType = &ct
-				if name == "INT_8" || name == "INT_16" || name == "INT_32" ||
-					name == "UINT_8" || name == "UINT_16" || name == "UINT_32" ||
-					name == "DATE" || name == "TIME_MILLIS" {
-					schema.Type = parquet.TypePtr(parquet.Type_INT32)
-				} else if name == "INT_64" || name == "UINT_64" ||
-					name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" || name == "TIMESTAMP_MILLIS" {
-					schema.Type = parquet.TypePtr(parquet.Type_INT64)
-				} else if name == "UTF8" {
-					schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
-				} else if name == "INTERVAL" {
-					schema.Type = parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY)
-					var ln int32 = 12
-					schema.TypeLength = &ln
-				} else if name == "DECIMAL" {
-					t, _ := parquet.TypeFromString("BYTE_ARRAY")
-					scale := item.Info["scale"].(int32)
-					precision := item.Info["precision"].(int32)
-					schema.Type = &t
-					schema.Scale = &scale
-					schema.Precision = &precision
-
-				}
-			}
+			schema := Common.NewSchemaElementFromTagMap(item.Info)
 			schemaElements = append(schemaElements, schema)
 			info := Common.NewTagMapFromCopy(item.Info)
 			infos = append(infos, info)
