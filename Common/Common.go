@@ -183,157 +183,98 @@ func BitNum(num uint64) uint64 {
 }
 
 //Compare two values:
-//a>b return 1
-//a<b return -1
-//a==b return 0
-func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.ConvertedType) int {
+//a<b return true
+//a>=b return false
+func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.ConvertedType) bool {
 	if ai == nil && bi != nil {
-		return -1
+		return true
 	} else if ai == nil && bi == nil {
-		return 0
+		return false
 	} else if ai != nil && bi == nil {
-		return 1
+		return false
 	}
 
 	if cT == nil {
 		if *pT == parquet.Type_BOOLEAN {
 			a, b := ai.(ParquetType.BOOLEAN), bi.(ParquetType.BOOLEAN)
-			if a == b {
-				return 0
-			} else if a {
-				return 1
-			} else {
-				return -1
+			if !a && b {
+				return true
 			}
+			return false
 		} else if *pT == parquet.Type_INT32 {
-			a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
-			if a > b {
-				return 1
-			} else if a < b {
-				return -1
-			}
-			return 0
+			return ai.(ParquetType.INT32) < bi.(ParquetType.INT32)
+
 		} else if *pT == parquet.Type_INT64 {
-			a, b := ai.(ParquetType.INT64), bi.(ParquetType.INT64)
-			if a > b {
-				return 1
-			} else if a < b {
-				return -1
-			}
-			return 0
+			return ai.(ParquetType.INT64) < bi.(ParquetType.INT64)
+
 		} else if *pT == parquet.Type_INT96 {
 			a, b := []byte(ai.(ParquetType.INT96)), []byte(bi.(ParquetType.INT96))
 			fa, fb := a[11]>>7, b[11]>>7
 			if fa > fb {
-				return -1
+				return false
 			} else if fa < fb {
-				return 1
+				return true
 			}
 			for i := 11; i >= 0; i-- {
-				if a[i] > b[i] {
-					return 1
-				} else if a[i] < b[i] {
-					return -1
+				if a[i] < b[i] {
+					return true
+				} else if a[i] > b[i] {
+					return false
 				}
 			}
-			return 0
+			return false
+
 		} else if *pT == parquet.Type_FLOAT {
-			a, b := ai.(ParquetType.FLOAT), bi.(ParquetType.FLOAT)
-			if a > b {
-				return 1
-			} else if a < b {
-				return -1
-			}
-			return 0
+			return ai.(ParquetType.FLOAT) < bi.(ParquetType.FLOAT)
 
 		} else if *pT == parquet.Type_DOUBLE {
-			a, b := ai.(ParquetType.DOUBLE), bi.(ParquetType.DOUBLE)
-			if a > b {
-				return 1
-			} else if a < b {
-				return -1
-			}
-			return 0
+			return ai.(ParquetType.DOUBLE) < bi.(ParquetType.DOUBLE)
+
 		} else if *pT == parquet.Type_BYTE_ARRAY {
-			a, b := ai.(ParquetType.BYTE_ARRAY), bi.(ParquetType.BYTE_ARRAY)
-			if a > b {
-				return 1
-			} else if a < b {
-				return -1
-			}
-			return 0
+			return ai.(ParquetType.BYTE_ARRAY) < bi.(ParquetType.BYTE_ARRAY)
+
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			a, b := ai.(ParquetType.FIXED_LEN_BYTE_ARRAY), bi.(ParquetType.FIXED_LEN_BYTE_ARRAY)
-			if a > b {
-				return 1
-			} else if a < b {
-				return -1
-			}
-			return 0
+			return ai.(ParquetType.FIXED_LEN_BYTE_ARRAY) < bi.(ParquetType.FIXED_LEN_BYTE_ARRAY)
 		}
 	}
 
 	if *cT == parquet.ConvertedType_UTF8 {
-		a, b := ai.(ParquetType.BYTE_ARRAY), bi.(ParquetType.BYTE_ARRAY)
-		if a > b {
-			return 1
-		} else if a < b {
-			return -1
-		}
-		return 0
+		return ai.(ParquetType.BYTE_ARRAY) < bi.(ParquetType.BYTE_ARRAY)
+
 	} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
 		*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
-		a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
-		if a > b {
-			return 1
-		} else if a < b {
-			return -1
-		}
-		return 0
+		return ai.(ParquetType.INT32) < bi.(ParquetType.INT32)
+
 	} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
-		a, b := uint32(ai.(ParquetType.INT32)), uint32(bi.(ParquetType.INT32))
-		if a > b {
-			return 1
-		} else if a < b {
-			return -1
-		}
-		return 0
+		return uint32(ai.(ParquetType.INT32)) < uint32(bi.(ParquetType.INT32))
+
 	} else if *cT == parquet.ConvertedType_INT_64 || *cT == parquet.ConvertedType_TIME_MICROS ||
 		*cT == parquet.ConvertedType_TIMESTAMP_MILLIS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS {
-		a, b := ai.(ParquetType.INT64), bi.(ParquetType.INT64)
-		if a > b {
-			return 1
-		} else if a < b {
-			return -1
-		}
-		return 0
+		return ai.(ParquetType.INT64) < bi.(ParquetType.INT64)
+
 	} else if *cT == parquet.ConvertedType_UINT_64 {
-		a, b := uint64(ai.(ParquetType.INT64)), uint64(bi.(ParquetType.INT64))
-		if a > b {
-			return 1
-		} else if a < b {
-			return -1
-		}
-		return 0
+		return uint64(ai.(ParquetType.INT64)) < uint64(bi.(ParquetType.INT64))
+
 	} else if *cT == parquet.ConvertedType_INTERVAL {
 		a, b := []byte(ai.(ParquetType.FIXED_LEN_BYTE_ARRAY)), []byte(bi.(ParquetType.FIXED_LEN_BYTE_ARRAY))
 		for i := 11; i >= 0; i-- {
 			if a[i] > b[i] {
-				return 1
+				return false
 			} else if a[i] < b[i] {
-				return -1
+				return true
 			}
 		}
-		return 0
+		return false
+
 	} else if *cT == parquet.ConvertedType_DECIMAL {
 		if *pT == parquet.Type_BYTE_ARRAY {
 			a, b := []byte(ai.(ParquetType.BYTE_ARRAY)), []byte(bi.(ParquetType.BYTE_ARRAY))
 			fa, fb := (a[0] >> 7), (b[0] >> 7)
 			la, lb := len(a), len(b)
 			if fa > fb {
-				return -1
+				return false
 			} else if fa < fb {
-				return 1
+				return true
 			} else {
 				i, j := 0, 0
 				for i < la || j < lb {
@@ -347,21 +288,21 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 						j++
 					}
 					if ba > bb {
-						return 1
+						return false
 					} else if ba < bb {
-						return -1
+						return true
 					}
 				}
-				return 0
+				return false
 			}
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			a, b := []byte(ai.(ParquetType.FIXED_LEN_BYTE_ARRAY)), []byte(bi.(ParquetType.FIXED_LEN_BYTE_ARRAY))
 			fa, fb := (a[0] >> 7), (b[0] >> 7)
 			la, lb := len(a), len(b)
 			if fa > fb {
-				return -1
+				return false
 			} else if fa < fb {
-				return 1
+				return true
 			} else {
 				i, j := 0, 0
 				for i < la || j < lb {
@@ -375,32 +316,22 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 						j++
 					}
 					if ba > bb {
-						return 1
+						return false
 					} else if ba < bb {
-						return -1
+						return true
 					}
 				}
-				return 0
+				return false
 			}
 		} else if *pT == parquet.Type_INT32 {
-			a, b := ai.(ParquetType.INT32), bi.(ParquetType.INT32)
-			if a > b {
-				return 1
-			} else if a < b {
-				return -1
-			}
-			return 0
+			return ai.(ParquetType.INT32) < bi.(ParquetType.INT32)
+
 		} else if *pT == parquet.Type_INT64 {
-			a, b := ai.(ParquetType.INT64), bi.(ParquetType.INT64)
-			if a > b {
-				return 1
-			} else if a < b {
-				return -1
-			}
-			return 0
+			return ai.(ParquetType.INT64) < bi.(ParquetType.INT64)
+
 		}
 	}
-	return 0
+	return false
 }
 
 //Get the maximum of two parquet values
@@ -411,10 +342,10 @@ func Max(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedTy
 	if b == nil {
 		return a
 	}
-	if Cmp(a, b, pT, cT) > 0 {
-		return a
+	if Cmp(a, b, pT, cT) {
+		return b
 	}
-	return b
+	return a
 }
 
 //Get the minimum of two parquet values
@@ -425,10 +356,10 @@ func Min(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedTy
 	if b == nil {
 		return a
 	}
-	if Cmp(a, b, pT, cT) > 0 {
-		return b
+	if Cmp(a, b, pT, cT) {
+		return a
 	}
-	return a
+	return b
 }
 
 //Get the size of a parquet value
