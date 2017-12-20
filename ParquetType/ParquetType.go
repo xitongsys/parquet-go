@@ -286,7 +286,9 @@ func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 func StrIntToBinary(num string, order string, length int32, signed bool) string {
 	bigNum := new(big.Int)
 	bigNum.SetString(num, 10)
-	b := bigNum.Bytes()
+	b := make([]byte, 1) // used for signed symbol
+	b = append(b, bigNum.Bytes()...)
+
 	var zeros int
 	if int(length)-len(b) > 0 {
 		zeros = int(length) - len(b)
@@ -310,6 +312,10 @@ func StrIntToBinary(num string, order string, length int32, signed bool) string 
 			i++
 			j--
 		}
+	}
+	// trim when length set
+	if length > 0 {
+		return string(a[len(a)-int(length):])
 	}
 	return string(a)
 }
