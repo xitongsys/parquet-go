@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"log"
 )
@@ -67,7 +67,7 @@ func main() {
 			TimestampMillis: int64(i),
 			TimestampMicros: int64(i),
 			Interval:        "012345678912",
-			Decimal:         Common.StrIntToBinary("12345", "BigEndian", 0, true),
+			Decimal:         ParquetType.StrIntToBinary("12345", "BigEndian", 0, true),
 		}
 		pw.Write(tp)
 	}
