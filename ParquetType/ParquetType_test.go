@@ -193,7 +193,7 @@ func TestStrIntToBinary(t *testing.T) {
 		num    int32
 		nums   string
 		order  string
-		length int32
+		length int
 		signed bool
 	}{
 		{0, "0", "LittleEndian", 4, true},
@@ -225,7 +225,7 @@ func TestStrIntToBinary(t *testing.T) {
 		res := StrIntToBinary(c.nums, c.order, c.length, c.signed)
 
 		if res != expect {
-			t.Errorf("StrIntToBinary error %b, expect %v, get %v", c.num, len(expect), len(res))
+			t.Errorf("StrIntToBinary error %b, expect %b, get %b", c.num, []byte(expect), []byte(res))
 		}
 	}
 }
