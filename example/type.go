@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
@@ -32,7 +33,7 @@ type TypeList struct {
 	TimestampMillis int64  `parquet:"name=timestampmillis, type=TIMESTAMP_MILLIS"`
 	TimestampMicros int64  `parquet:"name=timestampmicros, type=TIMESTAMP_MICROS"`
 	Interval        string `parquet:"name=interval, type=INTERVAL"`
-	Decimal         int32  `parquet:"name=decimal, type=DECIMAL, scale=2, precision=2, basetype=INT32"`
+	Decimal         string `parquet:"name=decimal, type=DECIMAL, scale=2, precision=2, basetype=BYTE_ARRAY"`
 }
 
 func main() {
@@ -66,7 +67,7 @@ func main() {
 			TimestampMillis: int64(i),
 			TimestampMicros: int64(i),
 			Interval:        "012345678912",
-			Decimal:         12,
+			Decimal:         Common.StrIntToBinary("12345", "BigEndian", 0, true),
 		}
 		pw.Write(tp)
 	}

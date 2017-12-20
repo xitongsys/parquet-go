@@ -1,8 +1,10 @@
 package Common
 
 import (
+	"fmt"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/parquet"
+	"math/big"
 	"reflect"
 	"strconv"
 	"strings"
@@ -459,4 +461,64 @@ func PathToStr(path []string) string {
 //Convert string to path slice
 func StrToPath(str string) []string {
 	return strings.Split(str, ".")
+}
+
+//order=LittleEndian or BigEndian; length is byte num
+func StrIntToBinary(num string, order string, length int32, signed bool) string {
+	bignum := new(big.Int)
+	bignum.SetString(num, 10)
+	binStr := fmt.Sprintf("%b", bignum)
+	flag := 1
+	if binStr[:1] == "-" {
+		flag = -1
+		binStr = binStr[1:]
+	}
+	for len(binStr)%8 != 0 {
+		binStr = "0" + binStr
+	}
+
+	for int32(len(binStr)/8) < length {
+		binStr = "00000000" + binStr
+	}
+
+	ln := len(binStr)
+	if flag < 0 {
+		tmp := "1"
+		for i := 0; i < ln; i++ {
+			tmp = tmp + "0"
+		}
+		bn1, bn2, bn3 := new(big.Int), new(big.Int), new(big.Int)
+		bn1.SetString(tmp, 2)
+		bn2.SetString(binStr, 2)
+		bn3.Sub(bn1, bn2)
+		binStr = fmt.Sprintf("%b", bn3)
+	}
+
+	numBytes := []string{}
+	for i := 8; i < len(binStr); i += 8 {
+		numBytes = append(numBytes, binStr[i:i+8])
+	}
+	resBytes := []byte{}
+	for i := 0; i < len(numBytes); i++ {
+		s := numBytes[i]
+		var b byte
+		for j := 0; j < 8; j++ {
+			if s[j] == 1 {
+				b = b | 1<<uint32(7-j)
+			}
+		}
+		resBytes = append(resBytes, b)
+	}
+	if order == "LittleEndian" {
+		i, j := 0, len(resBytes)-1
+		for i < j {
+			tmp := resBytes[i]
+			resBytes[i] = resBytes[j]
+			resBytes[j] = tmp
+			i++
+			j--
+		}
+	}
+
+	return string(resBytes)
 }
