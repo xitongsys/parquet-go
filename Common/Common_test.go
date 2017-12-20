@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/xitongsys/parquet-go/ParquetType"
+	. "github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/parquet"
+	"reflect"
 	"testing"
 )
 
@@ -93,8 +95,8 @@ func TestCmpIntBinary(t *testing.T) {
 	}
 
 	for _, c := range cases2 {
-		as := ParquetType.StrIntToBinary(c.numa, "LittleEndian", 0, true)
-		bs := ParquetType.StrIntToBinary(c.numb, "LittleEndian", 0, true)
+		as := StrIntToBinary(c.numa, "LittleEndian", 0, true)
+		bs := StrIntToBinary(c.numb, "LittleEndian", 0, true)
 		an, bn := 0, 0
 		fmt.Sscanf(c.numa, "%d", &an)
 		fmt.Sscanf(c.numb, "%d", &bn)
@@ -118,8 +120,8 @@ func TestCmpIntBinary(t *testing.T) {
 	}
 
 	for _, c := range cases3 {
-		as := ParquetType.StrIntToBinary(c.numa, "LittleEndian", 0, false)
-		bs := ParquetType.StrIntToBinary(c.numb, "LittleEndian", 0, false)
+		as := StrIntToBinary(c.numa, "LittleEndian", 0, false)
+		bs := StrIntToBinary(c.numb, "LittleEndian", 0, false)
 		an, bn := uint64(0), uint64(0)
 		fmt.Sscanf(c.numa, "%d", &an)
 		fmt.Sscanf(c.numb, "%d", &bn)
@@ -129,98 +131,102 @@ func TestCmpIntBinary(t *testing.T) {
 	}
 }
 
-/*
 func TestCmp(t *testing.T) {
-	testData := []struct {
-		Num1, Num2 interface{}
-		Expected   int
+	cases := []struct {
+		strdata string
+		numa    interface{}
+		numb    interface{}
+		PT      *parquet.Type
+		CT      *parquet.ConvertedType
+		expect  bool
 	}{
-		{nil, nil, 0},
-		{1, nil, 1},
-		{nil, 0, -1},
-		{BOOLEAN(true), BOOLEAN(false), 1},
-		{BOOLEAN(false), BOOLEAN(false), 0},
-		{BOOLEAN(true), BOOLEAN(true), 0},
-		{BOOLEAN(false), BOOLEAN(true), -1},
-		{INT32(2), INT32(1), 1},
-		{INT32(2), INT32(3), -1},
-		{INT32(2), INT32(2), 0},
-		{INT64(2), INT64(1), 1},
-		{INT64(2), INT64(3), -1},
-		{INT64(2), INT64(2), 0},
-		{INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0},
-		{INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), INT96([]byte{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}), -1},
-		{INT96([]byte{0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), INT96([]byte{0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), 1},
-		{FLOAT(-0.1), FLOAT(-0.1), 0},
-		{FLOAT(-0.1), FLOAT(-0.0), -1},
-		{FLOAT(-0.0), FLOAT(-0.1), 1},
-		{DOUBLE(-0.1), DOUBLE(-0.1), 0},
-		{DOUBLE(-0.1), DOUBLE(-0.0), -1},
-		{DOUBLE(-0.0), DOUBLE(-0.1), 1},
-		{BYTE_ARRAY("hello"), BYTE_ARRAY("hello"), 0},
-		{BYTE_ARRAY("hello"), BYTE_ARRAY("hell"), 1},
-		{BYTE_ARRAY(""), BYTE_ARRAY("hello"), -1},
-		{FIXED_LEN_BYTE_ARRAY("hello"), FIXED_LEN_BYTE_ARRAY("hello"), 0},
-		{FIXED_LEN_BYTE_ARRAY("hello"), FIXED_LEN_BYTE_ARRAY("hella"), 1},
-		{FIXED_LEN_BYTE_ARRAY("hella"), FIXED_LEN_BYTE_ARRAY("hello"), -1},
-		{UTF8("hello"), UTF8("hello"), 0},
-		{UTF8("hello"), UTF8("hell"), 1},
-		{UTF8(""), UTF8("hello"), -1},
-		{INT_8(2), INT_8(1), 1},
-		{INT_8(2), INT_8(3), -1},
-		{INT_8(2), INT_8(2), 0},
-		{INT_16(2), INT_16(1), 1},
-		{INT_16(2), INT_16(3), -1},
-		{INT_16(2), INT_16(2), 0},
-		{INT_32(2), INT_32(1), 1},
-		{INT_32(2), INT_32(3), -1},
-		{INT_32(2), INT_32(2), 0},
-		{INT_64(2), INT_64(1), 1},
-		{INT_64(2), INT_64(3), -1},
-		{INT_64(2), INT_64(2), 0},
-		{UINT_8(2), UINT_8(1), 1},
-		{UINT_8(2), UINT_8(3), -1},
-		{UINT_8(2), UINT_8(2), 0},
-		{UINT_16(2), UINT_16(1), 1},
-		{UINT_16(2), UINT_16(3), -1},
-		{UINT_16(2), UINT_16(2), 0},
-		{UINT_32(2), UINT_32(1), 1},
-		{UINT_32(2), UINT_32(3), -1},
-		{UINT_32(2), UINT_32(2), 0},
-		{UINT_64(2), UINT_64(1), 1},
-		{UINT_64(2), UINT_64(3), -1},
-		{UINT_64(2), UINT_64(2), 0},
-		{DATE(2), DATE(1), 1},
-		{DATE(2), DATE(3), -1},
-		{DATE(2), DATE(2), 0},
-		{TIME_MILLIS(2), TIME_MILLIS(1), 1},
-		{TIME_MILLIS(2), TIME_MILLIS(3), -1},
-		{TIME_MILLIS(2), TIME_MILLIS(2), 0},
-		{TIME_MICROS(2), TIME_MICROS(1), 1},
-		{TIME_MICROS(2), TIME_MICROS(3), -1},
-		{TIME_MICROS(2), TIME_MICROS(2), 0},
-		{TIMESTAMP_MILLIS(2), TIMESTAMP_MILLIS(1), 1},
-		{TIMESTAMP_MILLIS(2), TIMESTAMP_MILLIS(3), -1},
-		{TIMESTAMP_MILLIS(2), TIMESTAMP_MILLIS(2), 0},
-		{TIMESTAMP_MICROS(2), TIMESTAMP_MICROS(1), 1},
-		{TIMESTAMP_MICROS(2), TIMESTAMP_MICROS(3), -1},
-		{TIMESTAMP_MICROS(2), TIMESTAMP_MICROS(2), 0},
-		{INTERVAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), INTERVAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0},
-		{INTERVAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), INTERVAL([]byte{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}), 1},
-		{INTERVAL([]byte{0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), INTERVAL([]byte{0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF}), -1},
-		{DECIMAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), DECIMAL([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 0},
-		{DECIMAL([]byte{0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), DECIMAL([]byte{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}), -1},
-		{DECIMAL([]byte{0xFF, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), DECIMAL([]byte{0xFF, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}), 1},
+		{"false", BOOLEAN(false), BOOLEAN(true), parquet.TypePtr(parquet.Type_BOOLEAN), nil, true},
+		{"false", BOOLEAN(true), BOOLEAN(false), parquet.TypePtr(parquet.Type_BOOLEAN), nil, false},
+		{"false", BOOLEAN(true), BOOLEAN(true), parquet.TypePtr(parquet.Type_BOOLEAN), nil, false},
+
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), nil, true},
+		{"1", INT32(-1), INT32(2), parquet.TypePtr(parquet.Type_INT32), nil, true},
+
+		{"1", INT64(-1), INT64(-1), parquet.TypePtr(parquet.Type_INT64), nil, false},
+		{"1", INT64(-1), INT64(1), parquet.TypePtr(parquet.Type_INT64), nil, true},
+
+		{"012345678901", INT96(StrIntToBinary("2147483648", "LittleEndian", 12, true)),
+			INT96(StrIntToBinary("2147483647", "LittleEndian", 12, true)), parquet.TypePtr(parquet.Type_INT96), nil, false},
+		{"012345678901", INT96(StrIntToBinary("-2147483648", "LittleEndian", 12, true)),
+			INT96(StrIntToBinary("-2147483647", "LittleEndian", 12, true)), parquet.TypePtr(parquet.Type_INT96), nil, true},
+
+		{"0.1", FLOAT(0.1), FLOAT(0.2), parquet.TypePtr(parquet.Type_FLOAT), nil, true},
+		{"0.1", FLOAT(0.1), FLOAT(0.1), parquet.TypePtr(parquet.Type_FLOAT), nil, false},
+
+		{"0.1", DOUBLE(0.1), DOUBLE(0.2), parquet.TypePtr(parquet.Type_DOUBLE), nil, true},
+		{"0.1", DOUBLE(0.1), DOUBLE(0.1), parquet.TypePtr(parquet.Type_DOUBLE), nil, false},
+
+		{"abc bcd", BYTE_ARRAY("abc bcd"), BYTE_ARRAY("abc"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), nil, false},
+		{"abc bcd", BYTE_ARRAY("abc"), BYTE_ARRAY("abc bcd"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), nil, true},
+		{"abc bcd", BYTE_ARRAY("abc bcd"), BYTE_ARRAY("abc bcd"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), nil, false},
+
+		{"abc bcd", FIXED_LEN_BYTE_ARRAY("abc bcd"), FIXED_LEN_BYTE_ARRAY("abc aaa"), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), nil, false},
+		{"abc bcd", FIXED_LEN_BYTE_ARRAY("abc"), FIXED_LEN_BYTE_ARRAY("bcd"), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), nil, true},
+		{"abc bcd", FIXED_LEN_BYTE_ARRAY("abc bcd"), FIXED_LEN_BYTE_ARRAY("aac bcd"), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), nil, false},
+
+		{"abc bcd", BYTE_ARRAY("abc bcd"), BYTE_ARRAY("abc"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_UTF8), false},
+		{"abc bcd", BYTE_ARRAY("abc"), BYTE_ARRAY("abc"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_UTF8), false},
+		{"abc bcd", BYTE_ARRAY("abc"), BYTE_ARRAY("abc def"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_UTF8), true},
+
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_8), true},
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_16), true},
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_32), true},
+		{"1", INT64(1), INT64(2), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_64), true},
+
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), true},
+		{"1", INT32(1), INT32(-2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), true},
+		{"1", INT32(-1), INT32(-2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), true},
+		{"1", INT32(-2), INT32(-1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), false},
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_16), true},
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_32), true},
+		{"1", INT64(1), INT64(2), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_64), true},
+
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DATE), true},
+		{"1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MILLIS), true},
+		{"1", INT64(1), INT64(2), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MICROS), true},
+		{"1", INT64(1), INT64(2), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MICROS), true},
+		{"1", INT64(1), INT64(2), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MILLIS), true},
+
+		{"012345678901", FIXED_LEN_BYTE_ARRAY(StrIntToBinary("12345", "LittleEndian", 12, false)),
+			FIXED_LEN_BYTE_ARRAY(StrIntToBinary("123456", "LittleEndian", 12, false)),
+			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL), true},
+		{"012345678901", FIXED_LEN_BYTE_ARRAY(StrIntToBinary("123457", "LittleEndian", 12, false)),
+			FIXED_LEN_BYTE_ARRAY(StrIntToBinary("123456", "LittleEndian", 12, false)),
+			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL), false},
+
+		{"12345", INT32(12345), INT32(123), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), false},
+		{"12345", INT64(12345), INT64(12346), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), true},
+
+		{"12345", FIXED_LEN_BYTE_ARRAY(StrIntToBinary("12345", "BigEndian", 0, true)),
+			FIXED_LEN_BYTE_ARRAY(StrIntToBinary("12346", "BigEndian", 0, true)),
+			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), true},
+		{"12345", FIXED_LEN_BYTE_ARRAY(StrIntToBinary("-12345", "BigEndian", 0, true)),
+			FIXED_LEN_BYTE_ARRAY(StrIntToBinary("-12346", "BigEndian", 0, true)),
+			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), false},
+
+		{"12345", BYTE_ARRAY(StrIntToBinary("12345", "BigEndian", 0, true)),
+			BYTE_ARRAY(StrIntToBinary("12346", "BigEndian", 0, true)),
+			parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), true},
+		{"12345", BYTE_ARRAY(StrIntToBinary("-12345", "BigEndian", 0, true)),
+			BYTE_ARRAY(StrIntToBinary("-12346", "BigEndian", 0, true)),
+			parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), false},
 	}
 
-	for _, data := range testData {
-		res := Cmp(data.Num1, data.Num2)
-		if res != data.Expected {
-			t.Errorf("Cmp %v err, expect %v, get %v", reflect.TypeOf(data.Num1).Name(), data.Expected, res)
+	for _, c := range cases {
+		res := Cmp(c.numa, c.numb, c.PT, c.CT)
+		fmt.Println("====", c.PT, c.CT)
+		if res != c.expect {
+			t.Errorf("Cmp error %v-%v", c.numa, c.numa)
 		}
 	}
 }
 
+/*
 func TestMax(t *testing.T) {
 	testData := []struct {
 		Num1, Num2 interface{}
@@ -256,6 +262,7 @@ func TestMin(t *testing.T) {
 		}
 	}
 }
+*/
 
 func TestSizeOf(t *testing.T) {
 	testData := []struct {
@@ -349,5 +356,3 @@ func TestStrToPath(t *testing.T) {
 		}
 	}
 }
-
-*/

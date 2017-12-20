@@ -329,11 +329,11 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 	} else if *cT == parquet.ConvertedType_DECIMAL {
 		if *pT == parquet.Type_BYTE_ARRAY {
 			as, bs := string(ai.(ParquetType.BYTE_ARRAY)), string(bi.(ParquetType.BYTE_ARRAY))
-			return CmpIntBinary(as, bs, "LittleBinary", true)
+			return CmpIntBinary(as, bs, "BigEndian", true)
 
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			as, bs := string(ai.(ParquetType.FIXED_LEN_BYTE_ARRAY)), string(bi.(ParquetType.FIXED_LEN_BYTE_ARRAY))
-			return CmpIntBinary(as, bs, "LittleBinary", true)
+			return CmpIntBinary(as, bs, "BigEndian", true)
 
 		} else if *pT == parquet.Type_INT32 {
 			return ai.(ParquetType.INT32) < bi.(ParquetType.INT32)
