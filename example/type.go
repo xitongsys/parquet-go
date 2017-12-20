@@ -66,7 +66,7 @@ func main() {
 			TimeMicros:      int64(i),
 			TimestampMillis: int64(i),
 			TimestampMicros: int64(i),
-			Interval:        "012345678912",
+			Interval:        ParquetType.StrIntToBinary("12345", "LittleEndian", 12, true),
 			Decimal:         ParquetType.StrIntToBinary("12345", "BigEndian", 0, true),
 		}
 		pw.Write(tp)

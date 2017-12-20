@@ -314,7 +314,7 @@ func StrIntToBinary(num string, order string, length int32, signed bool) string 
 	}
 
 	numBytes := []string{}
-	for i := 8; i < len(binStr); i += 8 {
+	for i := 0; i < len(binStr); i += 8 {
 		numBytes = append(numBytes, binStr[i:i+8])
 	}
 	resBytes := []byte{}
