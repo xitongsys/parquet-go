@@ -33,7 +33,11 @@ type TypeList struct {
 	TimestampMillis int64  `parquet:"name=timestampmillis, type=TIMESTAMP_MILLIS"`
 	TimestampMicros int64  `parquet:"name=timestampmicros, type=TIMESTAMP_MICROS"`
 	Interval        string `parquet:"name=interval, type=INTERVAL"`
-	Decimal         string `parquet:"name=decimal, type=DECIMAL, scale=2, precision=2, basetype=BYTE_ARRAY"`
+
+	Decimal1 int32  `parquet:"name=decimal1, type=DECIMAL, scale=2, precision=9, basetype=INT32"`
+	Decimal2 int64  `parquet:"name=decimal2, type=DECIMAL, scale=2, precision=18, basetype=INT64"`
+	Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY"`
+	Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=10, basetype=BYTE_ARRAY"`
 }
 
 func main() {
@@ -66,8 +70,12 @@ func main() {
 			TimeMicros:      int64(i),
 			TimestampMillis: int64(i),
 			TimestampMicros: int64(i),
-			Interval:        ParquetType.StrIntToBinary("12345", "LittleEndian", 12, true),
-			Decimal:         ParquetType.StrIntToBinary("12345", "BigEndian", 0, true),
+			Interval:        ParquetType.StrIntToBinary("12345", "LittleEndian", 12, false),
+
+			Decimal1: int32(12345),
+			Decimal2: int64(12345),
+			Decimal3: ParquetType.StrIntToBinary("12345", "BigEndian", 12, true),
+			Decimal4: ParquetType.StrIntToBinary("12345", "BigEndian", 0, true),
 		}
 		pw.Write(tp)
 	}

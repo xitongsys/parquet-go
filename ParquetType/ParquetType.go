@@ -322,7 +322,7 @@ func StrIntToBinary(num string, order string, length int32, signed bool) string 
 		s := numBytes[i]
 		var b byte
 		for j := 0; j < 8; j++ {
-			if s[j] == 1 {
+			if s[j:j+1] == "1" {
 				b = b | 1<<uint32(7-j)
 			}
 		}

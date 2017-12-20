@@ -1,5 +1,6 @@
 package Common
 
+/*
 import (
 	"fmt"
 	. "github.com/xitongsys/parquet-go/ParquetType"
@@ -265,3 +266,5 @@ func TestStrToPath(t *testing.T) {
 		}
 	}
 }
+
+*/

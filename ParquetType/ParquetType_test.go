@@ -1,19 +1,20 @@
 package ParquetType
 
-/*
 import (
-	"fmt"
+	"bytes"
+	"encoding/binary"
 	"testing"
 )
 
-
+/*
 func TestStrToParquetType(t *testing.T) {
 	testData := []struct {
 		StrData     string
-		Type        string
+		PT          *parquet.Type
+		CT          *parquet.ConvertedType
 		ParquetData interface{}
 	}{
-		{"false", "BOOLEAN", BOOLEAN(false)},
+		{"false", parquet.TypePtr(parquet.Type_BOOLEAN), nil, BOOLEAN(false)},
 		{"1", "INT32", INT32(1)},
 		{"0", "INT64", INT64(0)},
 		{"012345678901", "INT96", INT96("012345678901")},
@@ -87,5 +88,46 @@ func TestParquetTypeToGoType(t *testing.T) {
 		}
 	}
 }
-
 */
+
+func TestStrIntToBinary(t *testing.T) {
+	cases := []struct {
+		num    int32
+		nums   string
+		order  string
+		length int32
+		signed bool
+	}{
+		{0, "0", "LittleEndian", 4, true},
+		{10, "10", "LittleEndian", 4, true},
+		{-10, "-10", "LittleEndian", 4, true},
+		{-111, "-111", "LittleEndian", 4, true},
+		{2147483647, "2147483647", "LittleEndian", 0, true},
+		{-2147483648, "-2147483648", "LittleEndian", 0, true},
+		{-2147483648, "2147483648", "LittleEndian", 0, false},
+
+		{0, "0", "BigEndian", 4, true},
+		{10, "10", "BigEndian", 4, true},
+		{-10, "-10", "BigEndian", 4, true},
+		{-111, "-111", "BigEndian", 4, true},
+		{2147483647, "2147483647", "BigEndian", 0, true},
+		{-2147483648, "-2147483648", "BigEndian", 0, true},
+		{-2147483648, "2147483648", "BigEndian", 0, false},
+	}
+
+	for _, c := range cases {
+		buf := new(bytes.Buffer)
+		if c.order == "LittleEndian" {
+			binary.Write(buf, binary.LittleEndian, c.num)
+		} else {
+			binary.Write(buf, binary.BigEndian, c.num)
+		}
+		expect := string(buf.Bytes())
+
+		res := StrIntToBinary(c.nums, c.order, c.length, c.signed)
+
+		if res != expect {
+			t.Errorf("StrIntToBinary error %b, expect %v, get %v", c.num, len(expect), len(res))
+		}
+	}
+}
