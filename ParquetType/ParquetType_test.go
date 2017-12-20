@@ -97,6 +97,51 @@ func TestParquetTypeToGoType(t *testing.T) {
 	}
 }
 
+func TestGoTypeToParquetType(t *testing.T) {
+	testData := []struct {
+		StrData string
+		GoData  interface{}
+		PT      *parquet.Type
+		CT      *parquet.ConvertedType
+	}{
+		{"false", bool(false), parquet.TypePtr(parquet.Type_BOOLEAN), nil},
+		{"1", int32(1), parquet.TypePtr(parquet.Type_INT32), nil},
+		{"0", int64(0), parquet.TypePtr(parquet.Type_INT64), nil},
+		{"012345678901", string("012345678901"), parquet.TypePtr(parquet.Type_INT96), nil},
+		{"0.1", float32(0.1), parquet.TypePtr(parquet.Type_FLOAT), nil},
+		{"0.1", float64(0.1), parquet.TypePtr(parquet.Type_DOUBLE), nil},
+		{"abc bcd", string("abc bcd"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), nil},
+		{"abc bcd", string("abc bcd"), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), nil},
+
+		{"abc bcd", string("abc bcd"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_UTF8)},
+		{"1", int32(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_8)},
+		{"1", int32(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_16)},
+		{"1", int32(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_32)},
+		{"1", int64(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_64)},
+		{"1", uint32(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8)},
+		{"1", uint32(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_16)},
+		{"1", uint32(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_32)},
+		{"1", uint64(1), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_64)},
+		{"1", int32(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DATE)},
+		{"1", int32(1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MILLIS)},
+		{"1", int64(1), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MICROS)},
+		{"1", int64(1), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MICROS)},
+		{"1", int64(1), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MILLIS)},
+		{"012345678901", string("012345678901"), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL)},
+		{"12345", int32(12345), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
+		{"12345", int64(12345), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
+		{"12345", string("12345"), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
+		{"12345", string("12345"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
+	}
+
+	for _, data := range testData {
+		res := fmt.Sprintf("%v", GoTypeToParquetType(data.GoData, data.PT, data.CT))
+		if res != data.StrData {
+			t.Errorf("GoTypeToParquetType err, expect %v, get %v", data.StrData, res)
+		}
+	}
+}
+
 func TestStrIntToBinary(t *testing.T) {
 	cases := []struct {
 		num    int32
