@@ -36,7 +36,7 @@ type TypeList struct {
 
 	Decimal1 int32  `parquet:"name=decimal1, type=DECIMAL, scale=2, precision=9, basetype=INT32"`
 	Decimal2 int64  `parquet:"name=decimal2, type=DECIMAL, scale=2, precision=18, basetype=INT64"`
-	Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY"`
+	Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY, length=12"`
 	Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=10, basetype=BYTE_ARRAY"`
 }
 
@@ -74,7 +74,7 @@ func main() {
 
 			Decimal1: int32(12345),
 			Decimal2: int64(12345),
-			Decimal3: ParquetType.StrIntToBinary("12345", "BigEndian", 12, true),
+			Decimal3: ParquetType.StrIntToBinary("-12345", "BigEndian", 12, true),
 			Decimal4: ParquetType.StrIntToBinary("12345", "BigEndian", 0, true),
 		}
 		pw.Write(tp)

@@ -324,60 +324,38 @@ func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 
 //order=LittleEndian or BigEndian; length is byte num
 func StrIntToBinary(num string, order string, length int32, signed bool) string {
-	bignum := new(big.Int)
-	bignum.SetString(num, 10)
-	binStr := fmt.Sprintf("%b", bignum)
-	flag := 1
-	if binStr[:1] == "-" {
-		flag = -1
-		binStr = binStr[1:]
-	}
-	for len(binStr)%8 != 0 {
-		binStr = "0" + binStr
-	}
+	bigNum := new(big.Int)
+	bigNum.SetString(num, 10)
+	b := make([]byte, 1) // used for signed symbol
+	b = append(b, bigNum.Bytes()...)
 
-	for int32(len(binStr)/8) < length {
-		binStr = "00000000" + binStr
+	var zeros int
+	if int(length)-len(b) > 0 {
+		zeros = int(length) - len(b)
 	}
-
-	ln := len(binStr)
-	if flag < 0 {
-		tmp := "1"
-		for i := 0; i < ln; i++ {
-			tmp = tmp + "0"
+	a := make([]byte, zeros)
+	a = append(a, b...)
+	if num[0] == '-' {
+		for i := 0; i < len(a); i++ {
+			a[i] = 255 - a[i]
 		}
-		bn1, bn2, bn3 := new(big.Int), new(big.Int), new(big.Int)
-		bn1.SetString(tmp, 2)
-		bn2.SetString(binStr, 2)
-		bn3.Sub(bn1, bn2)
-		binStr = fmt.Sprintf("%b", bn3)
-	}
-
-	numBytes := []string{}
-	for i := 0; i < len(binStr); i += 8 {
-		numBytes = append(numBytes, binStr[i:i+8])
-	}
-	resBytes := []byte{}
-	for i := 0; i < len(numBytes); i++ {
-		s := numBytes[i]
-		var b byte
-		for j := 0; j < 8; j++ {
-			if s[j:j+1] == "1" {
-				b = b | 1<<uint32(7-j)
-			}
-		}
-		resBytes = append(resBytes, b)
+		bigNum.SetBytes(a)
+		bigNum = bigNum.Add(bigNum, big.NewInt(1))
+		a = bigNum.Bytes()
 	}
 	if order == "LittleEndian" {
-		i, j := 0, len(resBytes)-1
+		i, j := 0, len(a)-1
 		for i < j {
-			tmp := resBytes[i]
-			resBytes[i] = resBytes[j]
-			resBytes[j] = tmp
+			tmp := a[i]
+			a[i] = a[j]
+			a[j] = tmp
 			i++
 			j--
 		}
 	}
-
-	return string(resBytes)
+	// trim when length set
+	if length > 0 {
+		return string(a[len(a)-int(length):])
+	}
+	return string(a)
 }
