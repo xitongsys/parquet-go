@@ -1,10 +1,8 @@
 package Common
 
-/*
 import (
-	"fmt"
-	. "github.com/xitongsys/parquet-go/ParquetType"
-	"reflect"
+	"bytes"
+	"encoding/binary"
 	"testing"
 )
 
@@ -47,6 +45,36 @@ func TestBitNum(t *testing.T) {
 	}
 }
 
+func TestCmpIntBinary(t *testing.T) {
+	cases := []struct {
+		numa int32
+		numb int32
+	}{
+		{-1, 0},
+		{1, 2},
+		{1, 1},
+		{1, 0},
+		{0, 0},
+		{-1, -2},
+		{-2, -1},
+		{-1, 1},
+		{2147483647, 2147483647},
+		{-2147483648, -2147483647},
+		{-2147483648, 2147483647},
+	}
+
+	for _, c := range cases {
+		abuf, bbuf := new(bytes.Buffer), new(bytes.Buffer)
+		binary.Write(abuf, binary.LittleEndian, c.numa)
+		binary.Write(bbuf, binary.LittleEndian, c.numb)
+		as, bs := string(abuf.Bytes()), string(bbuf.Bytes())
+		if (c.numa < c.numb) != (CmpIntBinary(as, bs, "LittleEndian", true)) {
+			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
+		}
+	}
+}
+
+/*
 func TestCmp(t *testing.T) {
 	testData := []struct {
 		Num1, Num2 interface{}

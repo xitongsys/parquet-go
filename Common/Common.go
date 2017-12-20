@@ -182,6 +182,66 @@ func BitNum(num uint64) uint64 {
 	return uint64(bitn + 1)
 }
 
+func CmpIntBinary(as string, bs string, order string, signed bool) bool {
+	abs, bbs := []byte(as), []byte(bs)
+	la, lb := len(abs), len(bbs)
+
+	if order == "LittleEndian" {
+		for i, j := 0, len(abs)-1; i < j; i, j = i+1, j-1 {
+			abs[i], abs[j] = abs[j], abs[i]
+		}
+		for i, j := 0, len(bbs)-1; i < j; i, j = i+1, j-1 {
+			bbs[i], bbs[j] = bbs[j], bbs[i]
+		}
+	}
+	if !signed {
+		if la < lb {
+			abs = append(make([]byte, lb-la), abs...)
+		} else if lb < la {
+			bbs = append(make([]byte, la-lb), bbs...)
+		}
+	} else {
+		if la < lb {
+			sb := (abs[0] >> 7) & 1
+			pre := make([]byte, lb-la)
+			if sb == 1 {
+				for i := 0; i < lb-la; i++ {
+					pre[i] = byte(0xFF)
+				}
+			}
+			abs = append(pre, abs...)
+
+		} else if la > lb {
+			sb := (bbs[0] >> 7) & 1
+			pre := make([]byte, la-lb)
+			if sb == 1 {
+				for i := 0; i < la-lb; i++ {
+					pre[i] = byte(0xFF)
+				}
+			}
+			bbs = append(pre, bbs...)
+		}
+
+		asb, bsb := (abs[0]>>7)&1, (bbs[0]>>7)&1
+
+		if asb < bsb {
+			return false
+		} else if asb > bsb {
+			return true
+		}
+
+	}
+
+	for i := 0; i < len(abs); i++ {
+		if abs[i] < bbs[i] {
+			return true
+		} else if abs[i] > bbs[i] {
+			return false
+		}
+	}
+	return false
+}
+
 //Compare two values:
 //a<b return true
 //a>=b return false
@@ -268,61 +328,13 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 
 	} else if *cT == parquet.ConvertedType_DECIMAL {
 		if *pT == parquet.Type_BYTE_ARRAY {
-			a, b := []byte(ai.(ParquetType.BYTE_ARRAY)), []byte(bi.(ParquetType.BYTE_ARRAY))
-			fa, fb := (a[0] >> 7), (b[0] >> 7)
-			la, lb := len(a), len(b)
-			if fa > fb {
-				return true
-			} else if fa < fb {
-				return false
-			} else {
-				i, j := 0, 0
-				for i < la || j < lb {
-					ba, bb := byte(0x0), byte(0x0)
-					if i < la {
-						ba = a[i]
-						i++
-					}
-					if j < lb {
-						bb = b[j]
-						j++
-					}
-					if ba > bb {
-						return false
-					} else if ba < bb {
-						return true
-					}
-				}
-				return false
-			}
+			as, bs := string(ai.(ParquetType.BYTE_ARRAY)), string(bi.(ParquetType.BYTE_ARRAY))
+			return CmpIntBinary(as, bs, "LittleBinary", true)
+
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			a, b := []byte(ai.(ParquetType.FIXED_LEN_BYTE_ARRAY)), []byte(bi.(ParquetType.FIXED_LEN_BYTE_ARRAY))
-			fa, fb := (a[0] >> 7), (b[0] >> 7)
-			la, lb := len(a), len(b)
-			if fa > fb {
-				return true
-			} else if fa < fb {
-				return false
-			} else {
-				i, j := 0, 0
-				for i < la || j < lb {
-					ba, bb := byte(0x0), byte(0x0)
-					if i < la {
-						ba = a[i]
-						i++
-					}
-					if j < lb {
-						bb = b[j]
-						j++
-					}
-					if ba > bb {
-						return false
-					} else if ba < bb {
-						return true
-					}
-				}
-				return false
-			}
+			as, bs := string(ai.(ParquetType.FIXED_LEN_BYTE_ARRAY)), string(bi.(ParquetType.FIXED_LEN_BYTE_ARRAY))
+			return CmpIntBinary(as, bs, "LittleBinary", true)
+
 		} else if *pT == parquet.Type_INT32 {
 			return ai.(ParquetType.INT32) < bi.(ParquetType.INT32)
 
