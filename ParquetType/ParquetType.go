@@ -1,8 +1,6 @@
 package ParquetType
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"github.com/xitongsys/parquet-go/parquet"
 	"math/big"
@@ -227,7 +225,7 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType) int
 		return INT64(vt)
 
 	} else if *cT == parquet.ConvertedType_INT_64 ||
-		*cT == parquet.ConvertedType_TIME_MICROS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS || *cT == parquet.ConvertedType_TIME_MILLIS {
+		*cT == parquet.ConvertedType_TIME_MICROS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS || *cT == parquet.ConvertedType_TIMESTAMP_MILLIS {
 		var v INT64
 		fmt.Sscanf(s, "%d", &v)
 		return v
@@ -238,14 +236,12 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType) int
 	} else if *cT == parquet.ConvertedType_DECIMAL {
 		if *pT == parquet.Type_INT32 {
 			var v INT32
-			buf := bytes.NewBufferString(s)
-			binary.Read(buf, binary.LittleEndian, &v)
+			fmt.Sscanf(s, "%d", &v)
 			return v
 
 		} else if *pT == parquet.Type_INT64 {
 			var v INT64
-			buf := bytes.NewBufferString(s)
-			binary.Read(buf, binary.LittleEndian, &v)
+			fmt.Sscanf(s, "%d", &v)
 			return v
 
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {

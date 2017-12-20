@@ -70,7 +70,9 @@ func (self *CSVWriter) WriteString(recs []*string) {
 	for i := 0; i < lr; i++ {
 		rec[i] = nil
 		if recs[i] != nil {
-			rec[i] = ParquetType.StrToParquetType(*recs[i], self.SchemaHandler.Infos[i]["type"].(string))
+			rec[i] = ParquetType.StrToParquetType(*recs[i],
+				self.SchemaHandler.SchemaElements[i+1].Type,
+				self.SchemaHandler.SchemaElements[i+1].ConvertedType)
 		}
 	}
 
