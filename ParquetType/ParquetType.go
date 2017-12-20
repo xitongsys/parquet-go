@@ -344,6 +344,9 @@ func StrIntToBinary(num string, order string, length int, signed bool) string {
 
 	flag := bigNum.Cmp(big.NewInt(0))
 	if flag == 0 {
+		if length <= 0 {
+			length = 1
+		}
 		return string(make([]byte, length))
 	}
 

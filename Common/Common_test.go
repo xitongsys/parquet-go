@@ -3,6 +3,8 @@ package Common
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"testing"
 )
 
@@ -69,6 +71,59 @@ func TestCmpIntBinary(t *testing.T) {
 		binary.Write(bbuf, binary.LittleEndian, c.numb)
 		as, bs := string(abuf.Bytes()), string(bbuf.Bytes())
 		if (c.numa < c.numb) != (CmpIntBinary(as, bs, "LittleEndian", true)) {
+			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
+		}
+	}
+
+	cases2 := []struct {
+		numa string
+		numb string
+	}{
+		{"-1", "0"},
+		{"1", "2"},
+		{"1", "1"},
+		{"1", "0"},
+		{"0", "0"},
+		{"-123", "-2"},
+		{"-2", "-1"},
+		{"-1344", "123"},
+		{"2147483647", "2147483647"},
+		{"-2147483648", "-2147483647"},
+		{"-2147483648", "2147483647"},
+	}
+
+	for _, c := range cases2 {
+		as := ParquetType.StrIntToBinary(c.numa, "LittleEndian", 0, true)
+		bs := ParquetType.StrIntToBinary(c.numb, "LittleEndian", 0, true)
+		an, bn := 0, 0
+		fmt.Sscanf(c.numa, "%d", &an)
+		fmt.Sscanf(c.numb, "%d", &bn)
+		if (an < bn) != (CmpIntBinary(as, bs, "LittleEndian", true)) {
+			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
+		}
+	}
+
+	cases3 := []struct {
+		numa string
+		numb string
+	}{
+		{"1", "2"},
+		{"1", "1"},
+		{"1", "0"},
+		{"0", "0"},
+		{"123", "2"},
+		{"1344", "123"},
+		{"2147483647", "2147483647"},
+		{"2147483648", "2147483647"},
+	}
+
+	for _, c := range cases3 {
+		as := ParquetType.StrIntToBinary(c.numa, "LittleEndian", 0, false)
+		bs := ParquetType.StrIntToBinary(c.numb, "LittleEndian", 0, false)
+		an, bn := uint64(0), uint64(0)
+		fmt.Sscanf(c.numa, "%d", &an)
+		fmt.Sscanf(c.numb, "%d", &bn)
+		if (an < bn) != (CmpIntBinary(as, bs, "LittleEndian", false)) {
 			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
 		}
 	}
