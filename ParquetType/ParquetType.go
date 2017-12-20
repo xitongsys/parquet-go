@@ -1,6 +1,8 @@
 package ParquetType
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"github.com/xitongsys/parquet-go/parquet"
 	"log"
@@ -167,50 +169,84 @@ func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 }
 
 //Scan a string to parquet value
-func StrToParquetType(s string, typeName string) interface{} {
-	if typeName == "BOOLEAN" {
-		var v BOOLEAN
-		fmt.Sscanf(s, "%t", &v)
-		return v
-	} else if typeName == "INT32" ||
-		typeName == "INT_8" || typeName == "INT_16" || typeName == "INT_32" ||
-		typeName == "UINT_8" || typeName == "UINT_16" || typeName == "UINT_32" ||
-		typeName == "DATE" || typeName == "TIME_MILLIS" {
+func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
+	if cT == nil {
+		if *pT == parquet.Type_BOOLEAN {
+			var v BOOLEAN
+			fmt.Sscanf(s, "%t", &v)
+			return v
+
+		} else if *pT == parquet.Type_INT32 {
+			var v INT32
+			fmt.Sscanf(s, "%d", &v)
+			return v
+
+		} else if *pT == parquet.Type_INT64 {
+			var v INT64
+			fmt.Sscanf(s, "%d", &v)
+			return v
+
+		} else if *pT == parquet.Type_INT96 {
+			return INT96(s)
+
+		} else if *pT == parquet.Type_FLOAT {
+			var v FLOAT
+			fmt.Sscanf(s, "%f", &v)
+			return v
+
+		} else if *pT == parquet.Type_DOUBLE {
+			var v DOUBLE
+			fmt.Sscanf(s, "%f", &v)
+			return v
+
+		} else if *pT == parquet.Type_BYTE_ARRAY {
+			return BYTE_ARRAY(s)
+
+		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			return FIXED_LEN_BYTE_ARRAY(s)
+		}
+		return nil
+	}
+
+	if *cT == parquet.ConvertedType_UTF8 {
+		return BYTE_ARRAY(s)
+
+	} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
+		*cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 ||
+		*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
 		var v INT32
 		fmt.Sscanf(s, "%d", &v)
 		return v
-	} else if typeName == "INT64" ||
-		typeName == "INT_64" || typeName == "UINT_64" ||
-		typeName == "TIME_MICROS" || typeName == "TIMESTAMP_MILLIS" || typeName == "TIMESTAMP_MICROS" {
+
+	} else if *cT == parquet.ConvertedType_INT_64 || *cT == parquet.ConvertedType_UINT_64 ||
+		*cT == parquet.ConvertedType_TIME_MICROS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS || *cT == parquet.ConvertedType_TIME_MILLIS {
 		var v INT64
 		fmt.Sscanf(s, "%d", &v)
 		return v
-	} else if typeName == "INT96" {
-		var v INT96
-		v = INT96(s)
-		return v
-	} else if typeName == "FLOAT" {
-		var v FLOAT
-		fmt.Sscanf(s, "%f", &v)
-		return v
-	} else if typeName == "DOUBLE" {
-		var v DOUBLE
-		fmt.Sscanf(s, "%f", &v)
-		return v
-	} else if typeName == "BYTE_ARRAY" || typeName == "UTF8" {
-		return BYTE_ARRAY(s)
 
-	} else if typeName == "FIXED_LEN_BYTE_ARRAY" {
+	} else if *cT == parquet.ConvertedType_INTERVAL {
 		return FIXED_LEN_BYTE_ARRAY(s)
 
-	} else if typeName == "INTERVAL" {
-		return FIXED_LEN_BYTE_ARRAY(StrIntToBinary(s, "LittleEndian", 12, false))
+	} else if *cT == parquet.ConvertedType_DECIMAL {
+		if *pT == parquet.Type_INT32 {
+			var v INT32
+			buf := bytes.NewBufferString(s)
+			binary.Read(buf, binary.LittleEndian, &v)
+			return v
 
-	} else if typeName == "DECIMAL" {
-		return BYTE_ARRAY(StrIntToBinary(s, "BigEndian", 0, true))
+		} else if *pT == parquet.Type_INT64 {
+			var v INT64
+			buf := bytes.NewBufferString(s)
+			binary.Read(buf, binary.LittleEndian, &v)
+			return v
 
+		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			return FIXED_LEN_BYTE_ARRAY(s)
+
+		} else {
+			return BYTE_ARRAY(s)
+		}
 	} else {
-		log.Printf("Type Error: %v ", typeName)
 		return nil
 	}
 }
