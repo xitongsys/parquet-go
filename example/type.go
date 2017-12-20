@@ -50,7 +50,7 @@ func main() {
 			Bool:              bool(i%2 == 0),
 			Int32:             int32(i),
 			Int64:             int64(i),
-			Int96:             "012345678912",
+			Int96:             ParquetType.StrIntToBinary("12345", "LittleEndian", 12, true),
 			Float:             float32(float32(i) * 0.5),
 			Double:            float64(float64(i) * 0.5),
 			ByteArray:         "ByteArray",
