@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/xitongsys/parquet-go/parquet"
-	"log"
 	"math/big"
 )
 
@@ -212,13 +211,22 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType) int
 		return BYTE_ARRAY(s)
 
 	} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
-		*cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 ||
 		*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
 		var v INT32
 		fmt.Sscanf(s, "%d", &v)
-		return v
+		return INT32(v)
 
-	} else if *cT == parquet.ConvertedType_INT_64 || *cT == parquet.ConvertedType_UINT_64 ||
+	} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
+		var vt uint32
+		fmt.Sscanf(s, "%d", &vt)
+		return INT32(vt)
+
+	} else if *cT == parquet.ConvertedType_UINT_64 {
+		var vt uint64
+		fmt.Sscanf(s, "%d", &vt)
+		return INT64(vt)
+
+	} else if *cT == parquet.ConvertedType_INT_64 ||
 		*cT == parquet.ConvertedType_TIME_MICROS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS || *cT == parquet.ConvertedType_TIME_MILLIS {
 		var v INT64
 		fmt.Sscanf(s, "%d", &v)
