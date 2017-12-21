@@ -138,6 +138,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 	l := int64(len(self.Objs))
 	var c int64 = 0
 	delta := (l + self.NP - 1) / self.NP
+	lock := new(sync.Mutex)
 	for c = 0; c < self.NP; c++ {
 		bgn := c * delta
 		end := bgn + delta
@@ -147,8 +148,6 @@ func (self *ParquetWriter) Flush(flag bool) {
 		if bgn >= l {
 			bgn, end = l, l
 		}
-
-		lock := new(sync.Mutex)
 
 		go func(b, e int, index int64) {
 			if e <= b {
@@ -207,9 +206,6 @@ func (self *ParquetWriter) Flush(flag bool) {
 				chunkMap[name] = Layout.PagesToDictChunk(tmp)
 			} else {
 				chunkMap[name] = Layout.PagesToChunk(pages)
-			}
-			for _, page := range pages {
-				page.DataTable = nil
 			}
 		}
 
