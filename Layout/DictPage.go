@@ -116,7 +116,7 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	page.Header.DataPageHeader.NumValues = int32(len(page.DataTable.Values))
 	page.Header.DataPageHeader.DefinitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
-	page.Header.DataPageHeader.Encoding = page.Info["encoding"].(parquet.Encoding)
+	page.Header.DataPageHeader.Encoding = parquet.Encoding_RLE
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
