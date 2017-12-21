@@ -148,7 +148,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 			bgn, end = l, l
 		}
 
-		var lock *sync.Mutex
+		lock := new(sync.Mutex)
 
 		go func(b, e int, index int64) {
 			if e <= b {

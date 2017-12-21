@@ -137,16 +137,10 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 //Compress the data page to parquet file
 func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bitWidth int32) []byte {
 	ln := len(page.DataTable.DefinitionLevels)
-
 	//values////////////////////////////////////////////
-	valuesBuf := make([]interface{}, 0)
-	for i := 0; i < ln; i++ {
-		if page.DataTable.DefinitionLevels[i] == page.DataTable.MaxDefinitionLevel {
-			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
-		}
-	}
+	//No nil in  page.DataTable.Values
 	valuesRawBuf := []byte{byte(bitWidth)}
-	valuesRawBuf = append(valuesRawBuf, ParquetEncoding.WriteRLE(valuesBuf, bitWidth)...)
+	valuesRawBuf = append(valuesRawBuf, ParquetEncoding.WriteRLE(page.DataTable.Values, bitWidth)...)
 
 	//definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
