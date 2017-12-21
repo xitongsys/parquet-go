@@ -82,7 +82,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	pT, cT := ParquetType.TypeNameToParquetType(table.Info["type"].(string), table.Info["basetype"].(string))
 
 	for i < totalLn {
-		j := i + 1
+		j := i
 		var size int32 = 0
 		var numValues int32 = 0
 
@@ -186,7 +186,7 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	page.Header.DataPageHeader.NumValues = int32(len(page.DataTable.Values))
 	page.Header.DataPageHeader.DefinitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
-	page.Header.DataPageHeader.Encoding = parquet.Encoding_RLE
+	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN_DICTIONARY
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
