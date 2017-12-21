@@ -29,7 +29,6 @@ func NewEmptyTagMap() map[string]interface{} {
 		"repetitiontype": parquet.FieldRepetitionType(0),
 		"encoding":       parquet.Encoding_PLAIN,
 		"keyencoding":    parquet.Encoding_PLAIN,
-		"bitwidth":       int32(0),
 	}
 }
 
