@@ -34,6 +34,8 @@ type Page struct {
 	MinVal interface{}
 	//Tag info
 	Info map[string]interface{}
+
+	PageSize int32
 }
 
 //Create a new page
@@ -42,6 +44,7 @@ func NewPage() *Page {
 	page.DataTable = nil
 	page.Header = parquet.NewPageHeader()
 	page.Info = make(map[string]interface{})
+	page.PageSize = 8 * 1024
 	return page
 }
 
@@ -49,6 +52,7 @@ func NewPage() *Page {
 func NewDictPage() *Page {
 	page := NewPage()
 	page.Header.DictionaryPageHeader = parquet.NewDictionaryPageHeader()
+	page.PageSize = 8 * 1024
 	return page
 }
 
@@ -56,6 +60,7 @@ func NewDictPage() *Page {
 func NewDataPage() *Page {
 	page := NewPage()
 	page.Header.DataPageHeader = parquet.NewDataPageHeader()
+	page.PageSize = 8 * 1024
 	return page
 }
 
@@ -87,6 +92,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		}
 
 		page := NewDataPage()
+		page.PageSize = pageSize
 		page.Header.DataPageHeader.NumValues = numValues
 		page.Header.Type = parquet.PageType_DATA_PAGE
 
@@ -338,16 +344,6 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	page.RawData = res
 
 	return res
-}
-
-//Convert table to dict data page. ToDo
-func TableToDictDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
-	return []*Page{}, 0
-}
-
-//Compress dict page. ToDo
-func (page *Page) DictPageCompress(compressType parquet.CompressionCodec) []byte {
-	return []byte{}
 }
 
 //Read page header

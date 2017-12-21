@@ -206,10 +206,17 @@ func (self *ParquetWriter) Flush(flag bool) {
 		self.NumRows = 0
 
 		for k := 0; k < len(rowGroup.Chunks); k++ {
-			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
+			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = -1
 			rowGroup.Chunks[k].ChunkHeader.FileOffset = self.Offset
 
 			for l := 0; l < len(rowGroup.Chunks[k].Pages); l++ {
+				if rowGroup.Chunks[k].Pages[l].Header.Type == parquet.PageType_DICTIONARY_PAGE {
+					tmp := self.Offset
+					rowGroup.Chunks[k].ChunkHeader.MetaData.DictionaryPageOffset = &tmp
+				} else if rowGroup.Chunk[k].ChunkHeader.MetaData.DataPageOffset <= 0 {
+					rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
+
+				}
 				data := rowGroup.Chunks[k].Pages[l].RawData
 				self.PFile.Write(data)
 				self.Offset += int64(len(data))
