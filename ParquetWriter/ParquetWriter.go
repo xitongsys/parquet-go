@@ -213,7 +213,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 				if rowGroup.Chunks[k].Pages[l].Header.Type == parquet.PageType_DICTIONARY_PAGE {
 					tmp := self.Offset
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DictionaryPageOffset = &tmp
-				} else if rowGroup.Chunk[k].ChunkHeader.MetaData.DataPageOffset <= 0 {
+				} else if rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset <= 0 {
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
 
 				}

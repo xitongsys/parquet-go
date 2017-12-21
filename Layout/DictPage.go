@@ -17,7 +17,6 @@ func TableToDictDataPages(table *Table, pageSize int32, bitWidth int32, compress
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
-	pT, cT := ParquetType.TypeNameToParquetType(table.Info["type"].(string), table.Info["basetype"].(string))
 
 	for i < totalLn {
 		j := i + 1
@@ -148,8 +147,8 @@ func TableToDictPage(table *Table, pageSize int32, compressType parquet.Compress
 	page.DataTable.MaxDefinitionLevel = table.MaxDefinitionLevel
 	page.DataTable.MaxRepetitionLevel = table.MaxRepetitionLevel
 	page.DataTable.Values = table.Values
-	page.DataTable.DefinitionLevels = table.DefinitionLevels[i:j]
-	page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
+	page.DataTable.DefinitionLevels = table.DefinitionLevels
+	page.DataTable.RepetitionLevels = table.RepetitionLevels
 	page.DataType = dataType
 	page.CompressType = compressType
 	page.Path = table.Path
@@ -177,9 +176,9 @@ func (page *Page) DictPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.Type = parquet.PageType_DICTIONARY_PAGE
 	page.Header.CompressedPageSize = int32(len(dataEncodeBuf))
 	page.Header.UncompressedPageSize = int32(len(dataBuf))
-	page.Header.DataPageHeader = parquet.NewDictionaryPageHeader()
-	page.Header.DataPageHeader.NumValues = int32(len(page.DataTable.Values))
-	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN
+	page.Header.DictionaryPageHeader = parquet.NewDictionaryPageHeader()
+	page.Header.DictionaryPageHeader.NumValues = int32(len(page.DataTable.Values))
+	page.Header.DictionaryPageHeader.Encoding = parquet.Encoding_PLAIN
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
