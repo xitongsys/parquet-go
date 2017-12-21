@@ -10,23 +10,97 @@ import (
 	"reflect"
 )
 
-//Convert a table to data pages
-func TableToDictDataPages(table *Table, pageSize int32, bitWidth int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+type DictRecType struct {
+	DictMap   map[interface{}]int32
+	DictSlice []interface{}
+}
+
+func NewDictRec() *DictRecType {
+	res := new(DictRecType)
+	res.DictMap = make(map[interface{}]int32)
+	return res
+}
+
+func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parquet.CompressionCodec) (*Page, int64) {
+	var totSize int64 = 0
+
+	page := NewDataPage()
+	page.PageSize = pageSize
+	page.Header.DataPageHeader.NumValues = int32(len(dictRec.DictSlice))
+	page.Header.Type = parquet.PageType_DICTIONARY_PAGE
+
+	page.DataTable = new(Table)
+	page.DataTable.Values = dictRec.DictSlice
+	page.DataType = parquet.Type_INT32
+	page.CompressType = compressType
+
+	page.DictPageCompress(compressType)
+	totSize += int64(len(page.RawData))
+	return page, totSize
+}
+
+//Compress the dict page to parquet file
+func (page *Page) DictPageCompress(compressType parquet.CompressionCodec) []byte {
+	dataBuf := ParquetEncoding.WritePlain(page.DataTable.Values)
+	var dataEncodeBuf []byte
+	if compressType == parquet.CompressionCodec_GZIP {
+		dataEncodeBuf = Compress.CompressGzip(dataBuf)
+	} else if compressType == parquet.CompressionCodec_SNAPPY {
+		dataEncodeBuf = Compress.CompressSnappy(dataBuf)
+	} else {
+		dataEncodeBuf = dataBuf
+	}
+
+	//pageHeader/////////////////////////////////////
+	page.Header = parquet.NewPageHeader()
+	page.Header.Type = parquet.PageType_DICTIONARY_PAGE
+	page.Header.CompressedPageSize = int32(len(dataEncodeBuf))
+	page.Header.UncompressedPageSize = int32(len(dataBuf))
+	page.Header.DictionaryPageHeader = parquet.NewDictionaryPageHeader()
+	page.Header.DictionaryPageHeader.NumValues = int32(len(page.DataTable.Values))
+	page.Header.DictionaryPageHeader.Encoding = parquet.Encoding_PLAIN
+
+	ts := thrift.NewTSerializer()
+	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
+	pageHeaderBuf, _ := ts.Write(page.Header)
+
+	var res []byte
+	res = append(res, pageHeaderBuf...)
+	res = append(res, dataEncodeBuf...)
+	page.RawData = res
+	return res
+}
+
+//Convert a table to dict data pages
+func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bitWidth int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
 
+	pT, cT := ParquetType.TypeNameToParquetType(table.Info["type"].(string), table.Info["basetype"].(string))
+
 	for i < totalLn {
 		j := i + 1
 		var size int32 = 0
 		var numValues int32 = 0
 
+		var maxVal interface{} = table.Values[i]
+		var minVal interface{} = table.Values[i]
+		values := make([]interface{}, 0)
+
 		for j < totalLn && size < pageSize {
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
 				size += int32(Common.SizeOf(reflect.ValueOf(table.Values[j])))
+				maxVal = Common.Max(maxVal, table.Values[j], pT, cT)
+				minVal = Common.Min(minVal, table.Values[j], pT, cT)
+				if _, ok := dictRec.DictMap[table.Values[j]]; !ok {
+					dictRec.DictSlice = append(dictRec.DictSlice, table.Values[j])
+					dictRec.DictMap[table.Values[j]] = int32(len(dictRec.DictSlice) - 1)
+				}
+				values = append(values, ParquetType.INT32(dictRec.DictMap[table.Values[j]]))
 			}
 			j++
 		}
@@ -41,10 +115,12 @@ func TableToDictDataPages(table *Table, pageSize int32, bitWidth int32, compress
 		page.DataTable.Path = table.Path
 		page.DataTable.MaxDefinitionLevel = table.MaxDefinitionLevel
 		page.DataTable.MaxRepetitionLevel = table.MaxRepetitionLevel
-		page.DataTable.Values = table.Values[i:j]
+		page.DataTable.Values = values
 		page.DataTable.DefinitionLevels = table.DefinitionLevels[i:j]
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
-		page.DataType = dataType
+		page.MaxVal = maxVal
+		page.MinVal = minVal
+		page.DataType = dataType //check !!!
 		page.CompressType = compressType
 		page.Path = table.Path
 		page.Info = table.Info
@@ -157,36 +233,4 @@ func TableToDictPage(table *Table, pageSize int32, compressType parquet.Compress
 	page.DictPageCompress(compressType)
 	totSize += int64(len(page.RawData))
 	return page, totSize
-}
-
-//Compress the dict page to parquet file
-func (page *Page) DictPageCompress(compressType parquet.CompressionCodec) []byte {
-	dataBuf := ParquetEncoding.WritePlain(page.DataTable.Values)
-	var dataEncodeBuf []byte
-	if compressType == parquet.CompressionCodec_GZIP {
-		dataEncodeBuf = Compress.CompressGzip(dataBuf)
-	} else if compressType == parquet.CompressionCodec_SNAPPY {
-		dataEncodeBuf = Compress.CompressSnappy(dataBuf)
-	} else {
-		dataEncodeBuf = dataBuf
-	}
-
-	//pageHeader/////////////////////////////////////
-	page.Header = parquet.NewPageHeader()
-	page.Header.Type = parquet.PageType_DICTIONARY_PAGE
-	page.Header.CompressedPageSize = int32(len(dataEncodeBuf))
-	page.Header.UncompressedPageSize = int32(len(dataBuf))
-	page.Header.DictionaryPageHeader = parquet.NewDictionaryPageHeader()
-	page.Header.DictionaryPageHeader.NumValues = int32(len(page.DataTable.Values))
-	page.Header.DictionaryPageHeader.Encoding = parquet.Encoding_PLAIN
-
-	ts := thrift.NewTSerializer()
-	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
-	pageHeaderBuf, _ := ts.Write(page.Header)
-
-	var res []byte
-	res = append(res, pageHeaderBuf...)
-	res = append(res, dataEncodeBuf...)
-	page.RawData = res
-	return res
 }

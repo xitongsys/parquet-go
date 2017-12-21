@@ -11,6 +11,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 	"strings"
+	"sync"
 )
 
 //ParquetWriter is a writer  parquet file
@@ -33,6 +34,8 @@ type ParquetWriter struct {
 	PagesMapBuf map[string][]*Layout.Page
 	Size        int64
 	NumRows     int64
+
+	DictRecs map[string]*Layout.DictRecType
 }
 
 //Create a parquet handler
@@ -48,6 +51,7 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.Offset = 4
 	res.PFile = pFile
 	res.PagesMapBuf = make(map[string][]*Layout.Page)
+	res.DictRecs = make(map[string]*Layout.DictRecType)
 	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
@@ -144,6 +148,8 @@ func (self *ParquetWriter) Flush(flag bool) {
 			bgn, end = l, l
 		}
 
+		var lock *sync.Mutex
+
 		go func(b, e int, index int64) {
 			if e <= b {
 				doneChan <- 0
@@ -152,8 +158,19 @@ func (self *ParquetWriter) Flush(flag bool) {
 
 			tableMap := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler)
 			for name, table := range *tableMap {
-				pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
-					parquet.CompressionCodec_SNAPPY)
+				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+					lock.Lock()
+					if _, ok := self.DictRecs[name]; !ok {
+						self.DictRecs[name] = Layout.NewDictRec()
+					}
+					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
+						table, int32(self.PageSize), 32, parquet.CompressionCodec_SNAPPY)
+					lock.Unlock()
+
+				} else {
+					pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
+						parquet.CompressionCodec_SNAPPY)
+				}
 			}
 
 			doneChan <- 0
@@ -173,7 +190,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 			}
 			for _, page := range pages {
 				self.Size += int64(len(page.RawData))
-				//page.DataTable = nil //release memory
+				page.DataTable = nil //release memory
 			}
 		}
 	}
@@ -185,7 +202,9 @@ func (self *ParquetWriter) Flush(flag bool) {
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
 			if len(pages) > 0 && pages[0].Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-				chunkMap[name] = Layout.PagesToChunkWithDictHead(pages)
+				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), parquet.CompressionCodec_SNAPPY)
+				tmp := append([]*Layout.Page{dictPage}, pages...)
+				chunkMap[name] = Layout.PagesToDictChunk(tmp)
 			} else {
 				chunkMap[name] = Layout.PagesToChunk(pages)
 			}
@@ -193,6 +212,8 @@ func (self *ParquetWriter) Flush(flag bool) {
 				page.DataTable = nil
 			}
 		}
+
+		self.DictRecs = make(map[string]*Layout.DictRecType) //clean records for next chunks
 
 		//chunks -> rowGroup
 		rowGroup := Layout.NewRowGroup()
