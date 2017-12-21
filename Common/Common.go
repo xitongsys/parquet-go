@@ -124,6 +124,8 @@ func TagToMap(tag string) map[string]interface{} {
 				mp[kv[0]] = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
 			} else if ens == "delta_byte_array" {
 				mp[kv[0]] = parquet.Encoding_DELTA_BYTE_ARRAY
+			} else if ens == "plain_dictionary" {
+				mp[kv[0]] = parquet.Encoding_PLAIN_DICTIONARY
 			} else {
 				mp[kv[0]] = parquet.Encoding_PLAIN
 			}

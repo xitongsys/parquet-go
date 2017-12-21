@@ -173,7 +173,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 			}
 			for _, page := range pages {
 				self.Size += int64(len(page.RawData))
-				page.DataTable = nil //release memory
+				//page.DataTable = nil //release memory
 			}
 		}
 	}
@@ -184,7 +184,14 @@ func (self *ParquetWriter) Flush(flag bool) {
 		//pages -> chunk
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
-			chunkMap[name] = Layout.PagesToChunk(pages)
+			if len(pages) > 0 && pages[0].Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+				chunkMap[name] = Layout.PagesToChunkWithDictHead(pages)
+			} else {
+				chunkMap[name] = Layout.PagesToChunk(pages)
+			}
+			for _, page := range pages {
+				page.DataTable = nil
+			}
 		}
 
 		//chunks -> rowGroup

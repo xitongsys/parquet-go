@@ -76,7 +76,7 @@ func PagesToChunkWithDictHead(pages []*Page) *Chunk {
 	if ln <= 0 {
 		return nil
 	}
-
+	pT, cT := ParquetType.TypeNameToParquetType(pages[0].Info["type"].(string), pages[0].Info["basetype"].(string))
 	table := NewTableFromTable(pages[0].DataTable)
 	table.Type = parquet.Type_INT32
 
@@ -119,9 +119,8 @@ func PagesToChunkWithDictHead(pages []*Page) *Chunk {
 	var totalUncompressedSize int64 = 0
 	var totalCompressedSize int64 = 0
 
-	var maxVal interface{} = pages[1].MaxVal
-	var minVal interface{} = pages[1].MinVal
-	pT, cT := ParquetType.TypeNameToParquetType(pages[1].Info["type"].(string), pages[1].Info["basetype"].(string))
+	var maxVal interface{} = pages[0].MaxVal
+	var minVal interface{} = pages[0].MinVal
 
 	for i := 0; i < ln; i++ {
 		if pages[i].Header.DataPageHeader != nil {
