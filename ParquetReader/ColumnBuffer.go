@@ -75,6 +75,9 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	}
 	//offset := columnChunks[i].FileOffset
 	offset := columnChunks[i].MetaData.DataPageOffset
+	if columnChunks[i].MetaData.DictionaryPageOffset != nil {
+		offset = *columnChunks[i].MetaData.DictionaryPageOffset
+	}
 	size := columnChunks[i].MetaData.GetTotalCompressedSize()
 	if self.ThriftReader != nil {
 		self.ThriftReader.Close()
