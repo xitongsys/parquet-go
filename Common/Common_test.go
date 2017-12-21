@@ -180,8 +180,8 @@ func TestCmp(t *testing.T) {
 
 		{"uint_8 1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), true},
 		{"uint_8 2", INT32(1), INT32(-2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), true},
-		{"uint_8 3", INT32(-1), INT32(-2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), true},
-		{"uint_8 4", INT32(-2), INT32(-1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), false},
+		{"uint_8 3", INT32(-1), INT32(-2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), false},
+		{"uint_8 4", INT32(-2), INT32(-1), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8), true},
 		{"uint_16 1", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_16), true},
 		{"uint_16 2", INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_32), true},
 		{"uint_16 3", INT64(1), INT64(2), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_64), true},
