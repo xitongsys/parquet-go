@@ -226,19 +226,20 @@ func TestCmp(t *testing.T) {
 	}
 }
 
-/*
 func TestMax(t *testing.T) {
 	testData := []struct {
 		Num1, Num2 interface{}
+		PT         *parquet.Type
+		CT         *parquet.ConvertedType
 		Expected   interface{}
 	}{
-		{nil, 1, 1},
-		{nil, nil, nil},
-		{1, nil, 1},
-		{1, 2, 2},
+		{nil, INT32(1), parquet.TypePtr(parquet.Type_INT32), nil, INT32(1)},
+		{nil, nil, parquet.TypePtr(parquet.Type_INT32), nil, nil},
+		{INT32(1), nil, parquet.TypePtr(parquet.Type_INT32), nil, INT32(1)},
+		{INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), nil, INT32(2)},
 	}
 	for _, data := range testData {
-		res := Max(data.Num1, data.Num2)
+		res := Max(data.Num1, data.Num2, data.PT, data.CT)
 		if res != data.Expected {
 			t.Errorf("Max err, expect %v, get %v", data.Expected, res)
 		}
@@ -248,21 +249,22 @@ func TestMax(t *testing.T) {
 func TestMin(t *testing.T) {
 	testData := []struct {
 		Num1, Num2 interface{}
+		PT         *parquet.Type
+		CT         *parquet.ConvertedType
 		Expected   interface{}
 	}{
-		{nil, 1, 1},
-		{nil, nil, nil},
-		{1, nil, 1},
-		{1, 2, 1},
+		{nil, INT32(1), parquet.TypePtr(parquet.Type_INT32), nil, INT32(1)},
+		{nil, nil, parquet.TypePtr(parquet.Type_INT32), nil, nil},
+		{INT32(1), nil, parquet.TypePtr(parquet.Type_INT32), nil, INT32(1)},
+		{INT32(1), INT32(2), parquet.TypePtr(parquet.Type_INT32), nil, INT32(1)},
 	}
 	for _, data := range testData {
-		res := Min(data.Num1, data.Num2)
+		res := Min(data.Num1, data.Num2, data.PT, data.CT)
 		if res != data.Expected {
 			t.Errorf("Min err, expect %v, get %v", data.Expected, res)
 		}
 	}
 }
-*/
 
 func TestSizeOf(t *testing.T) {
 	testData := []struct {
