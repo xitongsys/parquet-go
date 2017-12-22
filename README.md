@@ -55,7 +55,7 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 |Map||map||
 
 ### Tips
-* Although DCIMAL can be stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY. 
+* Although DECIMAL can be stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY. 
 
 ## Encodings
 
