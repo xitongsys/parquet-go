@@ -270,8 +270,10 @@ func main() {
 
 }
 ```
-
-## To Do
+## Status
+Here are a few todo items. Welcome any help!
 * JSONWriter(Issue17)
 * Performance Test(Issue14)
+* Test in different platforms
 
+Please start to use it and give feedback. Help is needed and anything is welcome.
