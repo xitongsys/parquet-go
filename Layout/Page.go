@@ -362,7 +362,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 	} else if encoding == parquet.Encoding_PLAIN_DICTIONARY {
 		b, _ := bytesReader.ReadByte()
 		bitWidth = uint64(b)
-		return ParquetEncoding.ReadRLEBitPackedHybrid(bytesReader, bitWidth, uint64(bytesReader.Len()))
+		return ParquetEncoding.ReadRLEBitPackedHybrid(bytesReader, bitWidth, uint64(bytesReader.Len()))[:cnt]
 
 	} else if encoding == parquet.Encoding_RLE {
 		values := ParquetEncoding.ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
@@ -371,7 +371,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 				values[i] = ParquetType.INT32(values[i].(ParquetType.INT64))
 			}
 		}
-		return values
+		return values[:cnt]
 
 	} else if encoding == parquet.Encoding_BIT_PACKED {
 		//deprecated
@@ -382,7 +382,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 				values[i] = ParquetType.INT32(values[i].(ParquetType.INT64))
 			}
 		}
-		return values
+		return values[:cnt]
 
 	} else if encoding == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
 		values := ParquetEncoding.ReadDeltaLengthByteArray(bytesReader)
@@ -391,7 +391,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 				values[i] = ParquetType.FIXED_LEN_BYTE_ARRAY(values[i].(ParquetType.BYTE_ARRAY))
 			}
 		}
-		return values
+		return values[:cnt]
 
 	} else if encoding == parquet.Encoding_DELTA_BYTE_ARRAY {
 		values := ParquetEncoding.ReadDeltaByteArray(bytesReader)
@@ -400,7 +400,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 				values[i] = ParquetType.FIXED_LEN_BYTE_ARRAY(values[i].(ParquetType.BYTE_ARRAY))
 			}
 		}
-		return values
+		return values[:cnt]
 
 	} else if encoding == parquet.Encoding_RLE_DICTIONARY {
 	} else {
