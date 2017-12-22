@@ -24,36 +24,36 @@ go run example/local_flat.go
 ```
 
 ## Types
-There are two types in Parquet: Base Type and Logical Type. The type definitions is in ParquetType.go. The relationship between the parquet type and go type is shown in following table. 
+There are two types in Parquet: Base Type and Logical Type. The following list is the currently implemented data types and encodings:
 
-|Parquet Type|Go Type|Example|
-|-|-|-|
-|BOOLEAN|bool|`parquet:"name=name, type=BOOLEAN"`|
-|INT32|int32|`parquet:"name=name, type=INT32"`|
-|INT64|int64|`parquet:"name=name, type=INT64"`|
-|INT96|string|`parquet:"name=name, type=INT96"`|
-|FLOAT|float32|`parquet:"name=name, type=FLOAT"`|
-|DOUBLE|float64|`parquet:"name=name, type=DOUBLE"`|
-|BYTE_ARRAY|string|`parquet:"name=name, type=BYTE_ARRAY"`|
-|FIXED_LEN_BYTE_ARRAY|string|`parquet:"name=name, type=FIXED_LEN_BYTE_ARRAY, length=10"`|
-|UTF8|string|`parquet:"name=name, type=UTF8"`|
-|INT_8|int32|`parquet:"name=name, type=INT_8"`|
-|INT_16|int32|`parquet:"name=name, type=INT_16"`|
-|INT_32|int32|`parquet:"name=name, type=INT_32"`|
-|INT_64|int64|`parquet:"name=name, type=INT_64"`|
-|UINT_8|uint32|`parquet:"name=name, type=UINT_8"`|
-|UINT_16|uint32|`parquet:"name=name, type=UINT_16"`|
-|UINT_32|uint32|`parquet:"name=name, type=UINT_32"`|
-|UINT_64|uint64|`parquet:"name=name, type=UINT_64"`|
-|DATE|int32|`parquet:"name=name, type=DATE"`|
-|TIME_MILLIS|int32|`parquet:"name=name, type=TIME_MILLIS"`|
-|TIME_MICROS|int64|`parquet:"name=name, type=TIME_MICROS"`|
-|TIMESTAMP_MILLIS|int64|`parquet:"name=name, type=TIMESTAMP_MILLIS"`|
-|TIMESTAMP_MICROS|int64|`parquet:"name=name, type=TIMESTAMP_MICROS"`|
-|INTERVAL|string|`parquet:"name=name, type=INTERVAL"`|
-|DECIMAL|string|`parquet:"name=name, type=DECIMAL, scale=2, precision=2"`|
-|List|slice|`parquet:"name=name, type=INT64"`|
-|Map|map|`parquet:"name=name, type=INT64, keytype=INT64"`|
+|Parquet Type|Primitive Type|Go Type|Encodings|Example|
+|-|-|-|-|-|
+|BOOLEAN|BOOLEAN|bool|PLAIN,PLAIN_DICTIONARY|`parquet:"name=name, type=BOOLEAN"`|
+|INT32|INT32|int32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=INT32"`|
+|INT64|INT64|int64|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=INT64"`|
+|INT96|INT96|string|PLAIN,PLAIN_DICTIONARY|`parquet:"name=name, type=INT96"`|
+|FLOAT|FLOAT|float32|PLAIN,PLAIN_DICTIONARY|`parquet:"name=name, type=FLOAT"`|
+|DOUBLE|DOUBLE|float64|PLAIN,PLAIN_DICTIONARY|`parquet:"name=name, type=DOUBLE"`|
+|BYTE_ARRAY|BYTE_ARRAY|string|PLAIN,PLAIN_DICTIONARY,DELTA_BYTE_ARRAY,DELTA_LENGTH_BYTE_ARRAY|`parquet:"name=name, type=BYTE_ARRAY"`|
+|FIXED_LEN_BYTE_ARRAY|FIXED_LEN_BYTE_ARRAY|string|PLAIN,PLAIN_DICTIONARY|`parquet:"name=name, type=FIXED_LEN_BYTE_ARRAY, length=10"`|
+|UTF8|BYTE_ARRAY|string|PLAIN,PLAIN_DICTIONARY,DELTA_BYTE_ARRAY,DELTA_LENGTH_BYTE_ARRAY|`parquet:"name=name, type=UTF8"`|
+|INT_8|INT32|int32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=INT_8"`|
+|INT_16|INT32|int32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=INT_16"`|
+|INT_32|INT32|int32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=INT_32"`|
+|INT_64|INT64|int64|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=INT_64"`|
+|UINT_8|INT32|uint32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=UINT_8"`|
+|UINT_16|INT32|uint32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=UINT_16"`|
+|UINT_32|INT32|uint32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=UINT_32"`|
+|UINT_64|INT64|uint64|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=UINT_64"`|
+|DATE|INT32|int32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=DATE"`|
+|TIME_MILLIS|INT32|int32|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=TIME_MILLIS"`|
+|TIME_MICROS|INT64|int64|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=TIME_MICROS"`|
+|TIMESTAMP_MILLIS|INT64|int64|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=TIMESTAMP_MILLIS"`|
+|TIMESTAMP_MICROS|INT64|int64|PLAIN,PLAIN_DICTIONARY,DELTA_BINARY_PACKED|`parquet:"name=name, type=TIMESTAMP_MICROS"`|
+|INTERVAL|FIXED_LEN_BYTE_ARRAY|string|PLAIN,PLAIN_DICTIONARY|`parquet:"name=name, type=INTERVAL"`|
+|DECIMAL|INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY|int32,int64,string,string|PLAIN,PLAIN_DICTIONARY|`parquet:"name=name, type=DECIMAL, scale=2, precision=2"`|
+|List||slice||`parquet:"name=name, type=INT64"`|
+|Map||map||`parquet:"name=name, type=INT64, keytype=INT64"`|
 
 ## Repetition Types
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
