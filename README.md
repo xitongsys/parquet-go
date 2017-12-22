@@ -54,8 +54,11 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 |List||slice||
 |Map||map||
 
+#### Tips
+* Although DCIMAL can stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY. 
+
 ## Encodings
-Currently implemented encodings:  
+Currently implemented encodings(Some platforms don't support all kinds of encodings. If you are not sure, just use PLAIN and PLAIN_DICTIONARY):  
 #### PLAIN:
 All types  
 #### PLAIN_DICTIONARY:
@@ -65,7 +68,7 @@ INT32, INT64, INT_8, INT_16, INT_32, INT_64, UINT_8, UINT_16, UINT_32, UINT_64, 
 #### DELTA_BYTE_ARRAY:
 BYTE_ARRAY, UTF8  
 #### DELTA_LENGTH_BYTE_ARRAY:
-BYTE_ARRAY, UTF8  
+BYTE_ARRAY, UTF8
 
 ## Repetition Types
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
@@ -76,7 +79,7 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 |OPTIONAL|```V1 *int32 `parquet:"name=v1, type=INT32"` ```|Declare as pointer|
 |REPEATED|```V1 []int32 `parquet:"name=v1, type=int32, repetitontype=repeated"` ```|Add 'repetitiontype=repeated' in tags|
 
-### List and REPEATED
+#### List and REPEATED
 The difference between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md).
 
 ## Examples of types
