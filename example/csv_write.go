@@ -10,16 +10,16 @@ import (
 
 func main() {
 	md := []string{
-		"name=Name, type=UTF8",
+		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
 		"name=Age, type=INT32",
 		"name=Id, type=INT64",
 		"name=Weight, type=FLOAT",
 		"name=Sex, type=BOOLEAN",
 	}
 
-	//write flat
+	//write
 	fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
-	pw, _ := CSVWriter.NewCSVWriter(md, fw, 1)
+	pw, _ := CSVWriter.NewCSVWriter(md, fw, 4)
 
 	num := 10
 	for i := 0; i < num; i++ {

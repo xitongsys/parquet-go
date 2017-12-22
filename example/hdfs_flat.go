@@ -16,7 +16,7 @@ type Student struct {
 }
 
 func main() {
-	//write flat
+	//write
 	fw, _ := ParquetFile.NewHdfsFileWriter([]string{"localhost:9000"}, "root", "/flat.parquet")
 	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 
@@ -36,7 +36,7 @@ func main() {
 	log.Println("Write Finished")
 	fw.Close()
 
-	///read flat
+	///read
 	fr, _ := ParquetFile.NewHdfsFileReader([]string{"localhost:9000"}, "", "/flat.parquet")
 	pr, _ := ParquetReader.NewParquetReader(fr, new(Student), 4)
 	num = int(pr.GetNumRows())

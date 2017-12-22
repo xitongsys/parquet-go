@@ -18,7 +18,7 @@ type TypeList struct {
 	ByteArray         string  `parquet:"name=bytearray, type=BYTE_ARRAY"`
 	FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
 
-	Utf8            string `parquet:"name=utf8, type=UTF8"`
+	Utf8            string `parquet:"name=utf8, type=UTF8, encoding=PLAIN_DICTIONARY"`
 	Int_8           int32  `parquet:"name=int_8, type=INT_8"`
 	Int_16          int32  `parquet:"name=int_16, type=INT_16"`
 	Int_32          int32  `parquet:"name=int_32, type=INT_32"`
@@ -41,7 +41,7 @@ type TypeList struct {
 }
 
 func main() {
-	//write flat
+	//write
 	fw, _ := ParquetFile.NewLocalFileWriter("type.parquet")
 	pw, _ := ParquetWriter.NewParquetWriter(fw, new(TypeList), 4)
 	num := 10
@@ -84,7 +84,7 @@ func main() {
 	log.Println("Write Finished")
 	fw.Close()
 
-	///read flat
+	///read
 	fr, _ := ParquetFile.NewLocalFileReader("type.parquet")
 	pr, _ := ParquetReader.NewParquetReader(fr, new(TypeList), 10)
 	num = int(pr.GetNumRows())

@@ -57,11 +57,16 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 
 ## Encodings
 Currently implemented encodings:  
-PLAIN: All types  
-PLAIN_DICTIONARY: All types  
-DELTA_BINARY_PACKED: INT32,INT64,INT_8,INT_16,INT_32,INT_64,UINT_8,UINT_16,UINT_32,UINT_64,TIME_MILLIS,TIME_MICROS,TIMESTAMP_MILLIS,TIMESTAMP_MICROS  
-DELTA_BYTE_ARRAY:BYTE_ARRAY,UTF8  
-DELTA_LENGTH_BYTE_ARRAY:BYTE_ARRAY,UTF8  
+#### PLAIN:
+All types  
+#### PLAIN_DICTIONARY:
+All types  
+#### DELTA_BINARY_PACKED:
+INT32,INT64,INT_8,INT_16,INT_32,INT_64,UINT_8,UINT_16,UINT_32,UINT_64,TIME_MILLIS,TIME_MICROS,TIMESTAMP_MILLIS,TIMESTAMP_MICROS  
+#### DELTA_BYTE_ARRAY:
+BYTE_ARRAY,UTF8  
+#### DELTA_LENGTH_BYTE_ARRAY:
+BYTE_ARRAY,UTF8  
 
 
 ## Repetition Types
@@ -74,30 +79,40 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 |REPEATED|```V1 []int32 `parquet:"name=v1, type=int32, repetitontype=repeated"` ```|Add 'repetitiontype=repeated' in tags|
 
 ### List and REPEATED
-The different between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md).
+The difference between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md).
 
-## Core Data Structure
-The core data structure named "Table":
+## Examples of types
 ```golang
-type Table struct {
-	RepetitionType    parquet.FieldRepetitionType
-	Type               parquet.Type
-	Path               []string
-	MaxDefinitionLevel int32
-	MaxRepetitionLevel int32
+	Bool              bool    `parquet:"name=bool, type=BOOLEAN"`
+	Int32             int32   `parquet:"name=int32, type=INT32"`
+	Int64             int64   `parquet:"name=int64, type=INT64"`
+	Int96             string  `parquet:"name=int96, type=INT96"`
+	Float             float32 `parquet:"name=float, type=FLOAT"`
+	Double            float64 `parquet:"name=double, type=DOUBLE"`
+	ByteArray         string  `parquet:"name=bytearray, type=BYTE_ARRAY"`
+	FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
 
-	Values           []interface{}
-	DefinitionLevels []int32
-	RepetitionLevels []int32
-}
-```
-Values is the column data; RepetitionLevels is the repetition levels of the values; DefinitionLevels is the definition levels of the values.
-The architecture of the data struct is following:
-```
-Tables -> Page
-Pages -> Chunk
-Chunks -> RowGroup
-RowGroups -> ParquetFile
+	Utf8            string `parquet:"name=utf8, type=UTF8, encoding=PLAIN_DICTIONARY"`
+	Int_8           int32  `parquet:"name=int_8, type=INT_8"`
+	Int_16          int32  `parquet:"name=int_16, type=INT_16"`
+	Int_32          int32  `parquet:"name=int_32, type=INT_32"`
+	Int_64          int64  `parquet:"name=int_64, type=INT_64"`
+	Uint_8          uint32 `parquet:"name=uint_8, type=UINT_8"`
+	Uint_16         uint32 `parquet:"name=uint_16, type=UINT_16"`
+	Uint_32         uint32 `parquet:"name=uint_32, type=UINT_32"`
+	Uint_64         uint64 `parquet:"name=uint_64, type=UINT_64"`
+	Date            int32  `parquet:"name=date, type=DATE"`
+	TimeMillis      int32  `parquet:"name=timemillis, type=TIME_MILLIS"`
+	TimeMicros      int64  `parquet:"name=timemicros, type=TIME_MICROS"`
+	TimestampMillis int64  `parquet:"name=timestampmillis, type=TIMESTAMP_MILLIS"`
+	TimestampMicros int64  `parquet:"name=timestampmicros, type=TIMESTAMP_MICROS"`
+	Interval        string `parquet:"name=interval, type=INTERVAL"`
+
+	Decimal1 int32  `parquet:"name=decimal1, type=DECIMAL, scale=2, precision=9, basetype=INT32"`
+	Decimal2 int64  `parquet:"name=decimal2, type=DECIMAL, scale=2, precision=18, basetype=INT64"`
+	Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY, length=12"`
+	Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=20, basetype=BYTE_ARRAY"`
+
 ```
 
 ## Read/Write
@@ -112,9 +127,11 @@ type ParquetFile interface {
 	Create(name string) (ParquetFile, error)
 }
 ```
-Using this interface, parquet-go can read/write parquet file on any plantform(local/hdfs/s3...)
+Using this interface, parquet-go can read/write parquet file on different plantforms. Currently local and HDFS interfaces are implemented.(It's not possible for S3, because it doesn't support random access.)
 
-The following is a simple example of read/write parquet file on local disk. It can be found in example directory:
+
+
+Following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```golang
 package main
 import (
@@ -125,7 +142,7 @@ import (
 	"time"
 )
 type Student struct {
-	Name   string  `parquet:"name=name, type=UTF8"`
+	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
 	Age    int32   `parquet:"name=age, type=INT32"`
 	Id     int64   `parquet:"name=id, type=INT64"`
 	Weight float32 `parquet:"name=weight, type=FLOAT"`
@@ -134,8 +151,8 @@ type Student struct {
 }
 func main() {
 	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
-	//write flat
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	//write
+	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 10)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -153,9 +170,9 @@ func main() {
 	log.Println("Write Finished")
 	fw.Close()
 
-	///read flat
+	///read 
 	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 1)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
@@ -168,7 +185,6 @@ func main() {
 	pr.ReadStop()
 	fr.Close()
 }
-
 ```
 
 ## Read Columns
@@ -205,14 +221,15 @@ Plugin is used for some special purpose and will be added gradually.
 This plugin is used for data format similar with CSV(not nested).
 ```golang
 func main() {
-	md := []CSVWriter.MetadataType{
-		{Type: "UTF8", Name: "Name"},
-		{Type: "INT32", Name: "Age"},
-		{Type: "INT64", Name: "Id"},
-		{Type: "FLOAT", Name: "Weight"},
-		{Type: "BOOLEAN", Name: "Sex"},
+	md := []string{
+		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=Age, type=INT32",
+		"name=Id, type=INT64",
+		"name=Weight, type=FLOAT",
+		"name=Sex, type=BOOLEAN",
 	}
-	//write flat
+
+	//write
 	fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
 	pw, _ := CSVWriter.NewCSVWriter(md, fw, 1)
 
@@ -232,7 +249,7 @@ func main() {
 		pw.WriteString(rec)
 
 		data2 := []interface{}{
-			ParquetType.UTF8("Student Name"),
+			ParquetType.BYTE_ARRAY("Student Name"),
 			ParquetType.INT32(20 + i*5),
 			ParquetType.INT64(i),
 			ParquetType.FLOAT(50.0 + float32(i)*0.1),
@@ -244,6 +261,11 @@ func main() {
 	pw.WriteStop()
 	log.Println("Write Finished")
 	fw.Close()
+
 }
 ```
+
+## To Do
+* JSONWriter(Issue17)
+* Performance Test(Issue14)
 

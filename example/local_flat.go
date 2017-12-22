@@ -20,8 +20,8 @@ type Student struct {
 func main() {
 	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
 
-	//write flat
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 10)
+	//write
+	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -39,9 +39,9 @@ func main() {
 	log.Println("Write Finished")
 	fw.Close()
 
-	///read flat
+	///read
 	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 1)
+	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
