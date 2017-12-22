@@ -607,6 +607,9 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 				repetitionLevels[i] = ParquetType.INT64(0)
 			}
 		}
+		if len(repetitionLevels) > int(pageHeader.DataPageHeaderV2.GetNumValues()) {
+			repetitionLevels = repetitionLevels[:pageHeader.DataPageHeaderV2.GetNumValues()]
+		}
 
 		var definitionLevels []interface{}
 		if maxDefinitionLevel > 0 {
@@ -624,6 +627,9 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			for i := 0; i < len(definitionLevels); i++ {
 				definitionLevels[i] = ParquetType.INT64(0)
 			}
+		}
+		if len(definitionLevels) > int(pageHeader.DataPageHeaderV2.GetNumValues()) {
+			definitionLevels = definitionLevels[:pageHeader.DataPageHeaderV2.GetNumValues()]
 		}
 
 		var numNulls uint64 = 0
