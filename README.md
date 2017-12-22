@@ -5,8 +5,7 @@
 
 parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
-* Support all Types in Parquet
-* Very simple to use
+* Simple to use
 * High performance
 
 ## Required
@@ -24,7 +23,7 @@ go run example/local_flat.go
 ```
 
 ## Types
-There are two types in Parquet: Primitive Type and Logical Type. Logical types are stored as primitive types. The following lists is the currently implemented data types:
+There are two types in Parquet: Primitive Type and Logical Type. Logical types are stored as primitive types. The following list is the currently implemented data types:
 
 |Parquet Type|Primitive Type|Go Type|
 |-|-|-|
@@ -62,12 +61,11 @@ All types
 #### PLAIN_DICTIONARY:
 All types  
 #### DELTA_BINARY_PACKED:
-INT32,INT64,INT_8,INT_16,INT_32,INT_64,UINT_8,UINT_16,UINT_32,UINT_64,TIME_MILLIS,TIME_MICROS,TIMESTAMP_MILLIS,TIMESTAMP_MICROS  
+INT32, INT64, INT_8, INT_16, INT_32, INT_64, UINT_8, UINT_16, UINT_32, UINT_64, TIME_MILLIS, TIME_MICROS, TIMESTAMP_MILLIS, TIMESTAMP_MICROS  
 #### DELTA_BYTE_ARRAY:
-BYTE_ARRAY,UTF8  
+BYTE_ARRAY, UTF8  
 #### DELTA_LENGTH_BYTE_ARRAY:
-BYTE_ARRAY,UTF8  
-
+BYTE_ARRAY, UTF8  
 
 ## Repetition Types
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
@@ -83,40 +81,40 @@ The difference between a List and a REPEATED variable is the 'repetitiontype' in
 
 ## Examples of types
 ```golang
-	Bool              bool    `parquet:"name=bool, type=BOOLEAN"`
-	Int32             int32   `parquet:"name=int32, type=INT32"`
-	Int64             int64   `parquet:"name=int64, type=INT64"`
-	Int96             string  `parquet:"name=int96, type=INT96"`
-	Float             float32 `parquet:"name=float, type=FLOAT"`
-	Double            float64 `parquet:"name=double, type=DOUBLE"`
-	ByteArray         string  `parquet:"name=bytearray, type=BYTE_ARRAY"`
-	FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
+Bool              bool    `parquet:"name=bool, type=BOOLEAN"`
+Int32             int32   `parquet:"name=int32, type=INT32"`
+Int64             int64   `parquet:"name=int64, type=INT64"`
+Int96             string  `parquet:"name=int96, type=INT96"`
+Float             float32 `parquet:"name=float, type=FLOAT"`
+Double            float64 `parquet:"name=double, type=DOUBLE"`
+ByteArray         string  `parquet:"name=bytearray, type=BYTE_ARRAY"`
+FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
 
-	Utf8            string `parquet:"name=utf8, type=UTF8, encoding=PLAIN_DICTIONARY"`
-	Int_8           int32  `parquet:"name=int_8, type=INT_8"`
-	Int_16          int32  `parquet:"name=int_16, type=INT_16"`
-	Int_32          int32  `parquet:"name=int_32, type=INT_32"`
-	Int_64          int64  `parquet:"name=int_64, type=INT_64"`
-	Uint_8          uint32 `parquet:"name=uint_8, type=UINT_8"`
-	Uint_16         uint32 `parquet:"name=uint_16, type=UINT_16"`
-	Uint_32         uint32 `parquet:"name=uint_32, type=UINT_32"`
-	Uint_64         uint64 `parquet:"name=uint_64, type=UINT_64"`
-	Date            int32  `parquet:"name=date, type=DATE"`
-	TimeMillis      int32  `parquet:"name=timemillis, type=TIME_MILLIS"`
-	TimeMicros      int64  `parquet:"name=timemicros, type=TIME_MICROS"`
-	TimestampMillis int64  `parquet:"name=timestampmillis, type=TIMESTAMP_MILLIS"`
-	TimestampMicros int64  `parquet:"name=timestampmicros, type=TIMESTAMP_MICROS"`
-	Interval        string `parquet:"name=interval, type=INTERVAL"`
+Utf8            string `parquet:"name=utf8, type=UTF8, encoding=PLAIN_DICTIONARY"`
+Int_8           int32  `parquet:"name=int_8, type=INT_8"`
+Int_16          int32  `parquet:"name=int_16, type=INT_16"`
+Int_32          int32  `parquet:"name=int_32, type=INT_32"`
+Int_64          int64  `parquet:"name=int_64, type=INT_64"`
+Uint_8          uint32 `parquet:"name=uint_8, type=UINT_8"`
+Uint_16         uint32 `parquet:"name=uint_16, type=UINT_16"`
+Uint_32         uint32 `parquet:"name=uint_32, type=UINT_32"`
+Uint_64         uint64 `parquet:"name=uint_64, type=UINT_64"`
+Date            int32  `parquet:"name=date, type=DATE"`
+TimeMillis      int32  `parquet:"name=timemillis, type=TIME_MILLIS"`
+TimeMicros      int64  `parquet:"name=timemicros, type=TIME_MICROS"`
+TimestampMillis int64  `parquet:"name=timestampmillis, type=TIMESTAMP_MILLIS"`
+TimestampMicros int64  `parquet:"name=timestampmicros, type=TIMESTAMP_MICROS"`
+Interval        string `parquet:"name=interval, type=INTERVAL"`
 
-	Decimal1 int32  `parquet:"name=decimal1, type=DECIMAL, scale=2, precision=9, basetype=INT32"`
-	Decimal2 int64  `parquet:"name=decimal2, type=DECIMAL, scale=2, precision=18, basetype=INT64"`
-	Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY, length=12"`
-	Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=20, basetype=BYTE_ARRAY"`
+Decimal1 int32  `parquet:"name=decimal1, type=DECIMAL, scale=2, precision=9, basetype=INT32"`
+Decimal2 int64  `parquet:"name=decimal2, type=DECIMAL, scale=2, precision=18, basetype=INT64"`
+Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY, length=12"`
+Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=20, basetype=BYTE_ARRAY"`
 
 ```
 
 ## Read/Write
-read/write a parquet file need a ParquetFile interface implemented
+Read/Write a parquet file need a ParquetFile interface implemented
 ```golang
 type ParquetFile interface {
 	Seek(offset int, pos int) (int64, error)
