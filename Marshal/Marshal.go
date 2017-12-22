@@ -193,7 +193,7 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 				}
 
 				rlNow, _ := schemaHandler.MaxRepetitionLevel(Common.StrToPath(path))
-				rlNow += 1
+				//rlNow += 1
 
 				for j := len(keys) - 1; j >= 0; j-- {
 					key := keys[j]

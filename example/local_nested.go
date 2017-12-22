@@ -75,8 +75,10 @@ func writeNested() {
 
 	weight01 := int32(60)
 	stu01Class := make(map[string][]*Class)
-	stu01Class["Science"] = make([]*Class, 0)
-	stu01Class["Science"] = append(stu01Class["Science"], &math01, &math02)
+	stu01Class["Science1"] = make([]*Class, 0)
+	stu01Class["Science1"] = append(stu01Class["Science"], &math01, &math02)
+	stu01Class["Science2"] = make([]*Class, 0)
+	stu01Class["Science2"] = append(stu01Class["Science"], &math01, &math02)
 	stu01 := Student{
 		Name:    "zxt",
 		Age:     18,
