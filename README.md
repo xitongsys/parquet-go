@@ -73,6 +73,7 @@ BYTE_ARRAY, UTF8
 ### Tips
 * Some platforms don't support all kinds of encodings. If you are not sure, just use PLAIN and PLAIN_DICTIONARY.
 
+
 ## Repetition Types
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
 
@@ -85,7 +86,8 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 ### Tips
 * The difference between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md). I suggest just use a List.
 
-## Examples of types
+
+## Examples of Types and Encodings
 ```golang
 Bool              bool    `parquet:"name=bool, type=BOOLEAN"`
 Int32             int32   `parquet:"name=int32, type=INT32"`
