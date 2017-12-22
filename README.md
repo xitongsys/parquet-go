@@ -1,4 +1,4 @@
-# parquet-go v1.0.2
+# parquet-go v1.0.7
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -24,8 +24,8 @@ go run example/local_flat.go
 ```
 
 ## Types
-There are two types in Parquet: Base Type and Logical Type. The following list is the currently implemented data types and encodings:
-
+There are two types in Parquet: Base Type and Logical Type. The following lists is the currently implemented data types and encodings:
+<font size=1>
 |Parquet Type|Primitive Type|Go Type|Encodings|
 |-|-|-|-|
 |BOOLEAN|BOOLEAN|bool|PLAIN,PLAIN_DICTIONARY|
@@ -54,6 +54,7 @@ There are two types in Parquet: Base Type and Logical Type. The following list i
 |DECIMAL|INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY|int32,int64,string,string|PLAIN,PLAIN_DICTIONARY|
 |List||slice||
 |Map||map||
+</font>
 
 ## Repetition Types
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
