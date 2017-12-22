@@ -122,7 +122,9 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 
 //Decode dict page
 func (page *Page) Decode(dictPage *Page) {
-	if dictPage == nil {
+	if dictPage == nil || dictPage.Header.DataPageHeader == nil ||
+		(dictPage.Header.DataPageHeader.Encoding != parquet.Encoding_RLE_DICTIONARY &&
+			dictPage.Header.DataPageHeader.Encoding != parquet.Encoding_PLAIN_DICTIONARY) {
 		return
 	}
 	numValues := len(page.DataTable.Values)
