@@ -122,11 +122,16 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 
 //Decode dict page
 func (page *Page) Decode(dictPage *Page) {
-	if dictPage == nil || dictPage.Header.DataPageHeader == nil ||
-		(dictPage.Header.DataPageHeader.Encoding != parquet.Encoding_RLE_DICTIONARY &&
-			dictPage.Header.DataPageHeader.Encoding != parquet.Encoding_PLAIN_DICTIONARY) {
+	if dictPage == nil {
 		return
 	}
+
+	if page == nil || page.Header.DataPageHeader == nil ||
+		(page.Header.DataPageHeader.Encoding != parquet.Encoding_RLE_DICTIONARY &&
+			page.Header.DataPageHeader.Encoding != parquet.Encoding_PLAIN_DICTIONARY) {
+		return
+	}
+
 	numValues := len(page.DataTable.Values)
 	for i := 0; i < numValues; i++ {
 		if page.DataTable.Values[i] != nil {

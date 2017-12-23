@@ -126,14 +126,14 @@ func TagToMap(tag string) map[string]interface{} {
 			mp["inname"] = kv[1]
 			mp["exname"] = kv[1]
 
-		} else if kv[0] == "repetitiontype" {
+		} else if kv[0] == "repetitiontype" || kv[0] == "keyrepetitiontype" || kv[0] == "valuerepetitiontype" {
 			switch kv[1] {
 			case "repeated":
-				mp["repetitiontype"] = parquet.FieldRepetitionType_REPEATED
+				mp[kv[0]] = parquet.FieldRepetitionType_REPEATED
 			case "required":
-				mp["repetitiontype"] = parquet.FieldRepetitionType_REQUIRED
+				mp[kv[0]] = parquet.FieldRepetitionType_REQUIRED
 			case "optional":
-				mp["repetitiontype"] = parquet.FieldRepetitionType_OPTIONAL
+				mp[kv[0]] = parquet.FieldRepetitionType_OPTIONAL
 			}
 
 		} else if kv[0] == "encoding" || kv[0] == "keyencoding" || kv[0] == "valueencoding" {

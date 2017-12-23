@@ -20,6 +20,12 @@ func main() {
              "Fields":[
                   {"Tag":"name=element, type=UTF8"}
               ]
+            },
+            {"Tag":"name=scores, type=MAP",
+             "Fields":[
+                 {"Tag":"name=key, type=UTF8"},
+                 {"Tag":"name=value, type=INT32"},
+             ]
             }
         ]
 	}`
@@ -37,7 +43,12 @@ func main() {
                 "id":%d,
                 "weight":%f,
                 "sex":%t,
-                "classes":["Math", "Computer", "English"]
+                "classes":["Math", "Computer", "English"],
+                "scores":{
+                            "Math":99,
+                            "Computer":98,
+                            "English":100
+                         }
             }
         `
 

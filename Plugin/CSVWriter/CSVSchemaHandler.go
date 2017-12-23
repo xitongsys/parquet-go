@@ -4,7 +4,6 @@ import (
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"log"
 )
 
 //Create a schema handler from CSV metadata
@@ -69,7 +68,6 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
 		schemaList = append(schemaList, schema)
 	}
 
-	log.Println("=========", schemaList)
 	res := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaList)
 	res.Infos = infos
 	return res
