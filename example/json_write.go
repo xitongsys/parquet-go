@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	md := `{
+	md := `
+    {
         "Tag":"name=parquet-go-root",
         "Fields":[
 		    {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
@@ -24,11 +25,12 @@ func main() {
             {"Tag":"name=scores, type=MAP",
              "Fields":[
                  {"Tag":"name=key, type=UTF8"},
-                 {"Tag":"name=value, type=INT32"},
+                 {"Tag":"name=value, type=INT32"}
              ]
             }
         ]
-	}`
+	}
+`
 
 	//write
 	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
