@@ -43,7 +43,9 @@ func NewEmptyTagMap() map[string]interface{} {
 		"keyencoding":   parquet.Encoding_PLAIN,
 		"valueencoding": parquet.Encoding_PLAIN,
 
-		"repetitiontype": parquet.FieldRepetitionType(0),
+		"repetitiontype":      parquet.FieldRepetitionType_REQUIRED,
+		"keyrepetitiontype":   parquet.FieldRepetitionType_REQUIRED,
+		"valuerepetitiontype": parquet.FieldRepetitionType_REQUIRED,
 	}
 }
 
@@ -166,6 +168,7 @@ func GetKeyTagMap(src map[string]interface{}) map[string]interface{} {
 	res["precision"] = src["keyprecision"]
 	res["fieldid"] = src["keyfieldid"]
 	res["encoding"] = src["keyencoding"]
+	res["repetitiontype"] = parquet.FieldRepetitionType_REQUIRED
 	return res
 }
 
@@ -180,7 +183,7 @@ func GetValueTagMap(src map[string]interface{}) map[string]interface{} {
 	res["scale"] = src["valuescale"]
 	res["precision"] = src["valueprecision"]
 	res["fieldid"] = src["valuefieldid"]
-	res["repetitiontype"] = src["repetitiontype"]
+	res["repetitiontype"] = src["valuerepetitiontype"]
 	res["encoding"] = src["valueencoding"]
 	return res
 }

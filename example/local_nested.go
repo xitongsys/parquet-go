@@ -18,7 +18,7 @@ type Student struct {
 type Class struct {
 	Name     string   `parquet:"name=name, type=UTF8"`
 	Id       *int32   `parquet:"name=id, type=INT32"`
-	Required []string `parquet:"name=required, type=SLICE, valuetype=UTF8"`
+	Required []string `parquet:"name=required, type=LIST, valuetype=UTF8"`
 }
 
 func (c Class) String() string {
