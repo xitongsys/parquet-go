@@ -12,6 +12,7 @@ import (
 )
 
 func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
+
 	res := make(map[string]*Layout.Table)
 	pathMap := schemaHandler.PathMap
 	nodeBuf := Marshal.NewNodeBuf(1)
@@ -50,6 +51,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 			stack = stack[:ln-1]
 
 			tk := node.Val.Type().Kind()
+
 			pathStr := node.PathMap.Path
 			schemaIndex := schemaHandler.MapIndex[pathStr]
 			info := schemaHandler.Infos[schemaIndex]
@@ -82,7 +84,8 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 					rlNow, _ := schemaHandler.MaxRepetitionLevel(Common.StrToPath(pathStr))
 					for j := len(keys) - 1; j >= 0; j-- {
 						key := keys[j]
-						value := node.Val.MapIndex(key)
+						value := node.Val.MapIndex(key).Elem()
+
 						newNode := nodeBuf.GetNode()
 						newNode.PathMap = node.PathMap.Children["key_value"].Children["key"]
 						newNode.Val = key
@@ -111,7 +114,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 						key := keys[j]
 						newNode := nodeBuf.GetNode()
 						newNode.PathMap = node.PathMap.Children[key.String()]
-						newNode.Val = node.Val.MapIndex(key)
+						newNode.Val = node.Val.MapIndex(key).Elem()
 						newNode.RL = node.RL
 						newNode.DL = node.DL
 						stack = append(stack, newNode)
@@ -138,7 +141,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 					for j := ln - 1; j >= 0; j-- {
 						newNode := nodeBuf.GetNode()
 						newNode.PathMap = node.PathMap.Children["list"].Children["element"]
-						newNode.Val = node.Val.Index(j)
+						newNode.Val = node.Val.Index(j).Elem()
 						if j == 0 {
 							newNode.RL = node.RL
 						} else {
@@ -164,7 +167,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 					for j := ln - 1; j >= 0; j-- {
 						newNode := nodeBuf.GetNode()
 						newNode.PathMap = node.PathMap.Children["list"].Children["element"]
-						newNode.Val = node.Val.Index(j)
+						newNode.Val = node.Val.Index(j).Elem()
 						if j == 0 {
 							newNode.RL = node.RL
 						} else {

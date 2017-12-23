@@ -119,6 +119,7 @@ func NewSchemaHandlerFromJSON(str string) *SchemaHandler.SchemaHandler {
 	res := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaElements)
 	res.Infos = infos
 	res.CreateInExMap()
+
 	return res
 
 }

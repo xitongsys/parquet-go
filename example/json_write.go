@@ -11,11 +11,16 @@ func main() {
 	md := `{
         "Tag":"name=parquet-go-root",
         "Fields":[
-		    {"Tag":"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY"},
-		    {"Tag":"name=Age, type=INT32"},
-		    {"Tag":"name=Id, type=INT64"},
-		    {"Tag":"name=Weight, type=FLOAT"},
-		    {"Tag":"name=Sex, type=BOOLEAN"}
+		    {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
+		    {"Tag":"name=age, type=INT32"},
+		    {"Tag":"name=id, type=INT64"},
+		    {"Tag":"name=weight, type=FLOAT"},
+		    {"Tag":"name=sex, type=BOOLEAN"},
+            {"Tag":"name=classes, type=LIST",
+             "Fields":[
+                  {"Tag":"name=element, type=UTF8"}
+              ]
+            }
         ]
 	}`
 
@@ -27,11 +32,12 @@ func main() {
 	for i := 0; i < num; i++ {
 		rec := `
             {
-                "Name":"%s",
-                "Age":%d,
-                "Id":%d,
-                "Weight":%f,
-                "Sex":%t
+                "name":"%s",
+                "age":%d,
+                "id":%d,
+                "weight":%f,
+                "sex":%t,
+                "classes":["Math", "Computer", "English"]
             }
         `
 

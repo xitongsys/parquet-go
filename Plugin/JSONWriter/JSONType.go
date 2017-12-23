@@ -8,7 +8,7 @@ import (
 )
 
 func JSONTypeToParquetType(val reflect.Value, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
-	if val.IsNil() {
+	if val.Type().Kind() == reflect.Interface && val.IsNil() {
 		return nil
 	}
 	s := fmt.Sprintf("%v", val)
