@@ -10,7 +10,7 @@ import (
 	"reflect"
 )
 
-func JSONMarshal(ss []string, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
+func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
 	res := make(map[string]*Layout.Table)
 	pathMap := schemaHandler.PathMap
 	nodeBuf := Marshal.NewNodeBuf(1)
