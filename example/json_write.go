@@ -8,19 +8,20 @@ import (
 )
 
 func main() {
-	md := `
+	md := `{
         "Tag":"name=parquet-go-root",
         "Fields":[
 		    {"Tag":"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY"},
 		    {"Tag":"name=Age, type=INT32"},
 		    {"Tag":"name=Id, type=INT64"},
 		    {"Tag":"name=Weight, type=FLOAT"},
-		    {"Tag":"name=Sex, type=BOOLEAN"},
-	`
+		    {"Tag":"name=Sex, type=BOOLEAN"}
+        ]
+	}`
 
 	//write
-	fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
-	pw, _ := JSONWriter.NewJSONWriter(md, fw, 4)
+	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
+	pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
 
 	num := 10
 	for i := 0; i < num; i++ {
@@ -34,7 +35,7 @@ func main() {
             }
         `
 
-		rec = fmt.Sprint(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
+		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
 
 		pw.Write(rec)
 

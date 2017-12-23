@@ -7,6 +7,7 @@ import (
 	"github.com/xitongsys/parquet-go/Marshal"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
+	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 )
 
@@ -40,22 +41,24 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 		json.Unmarshal([]byte(ss[i]), &ui)
 		node.Val = reflect.ValueOf(ui)
 		node.PathMap = pathMap
+
 		stack = append(stack, node)
 
 		for len(stack) > 0 {
 			ln := len(stack)
-			node, stack := stack[ln-1], stack[:ln-1]
+			node = stack[ln-1]
+			stack = stack[:ln-1]
 
 			tk := node.Val.Type().Kind()
 			pathStr := node.PathMap.Path
 			schemaIndex := schemaHandler.MapIndex[pathStr]
 			info := schemaHandler.Infos[schemaIndex]
 
-			if info["repetitiontype"].(string) == "OPTIONAL" {
+			if info["repetitiontype"].(parquet.FieldRepetitionType) == parquet.FieldRepetitionType_OPTIONAL {
 				node.DL++
 			}
 
-			if info["repetitiontype"].(string) == "REPEATED" {
+			if info["repetitiontype"].(parquet.FieldRepetitionType) == parquet.FieldRepetitionType_REPEATED {
 				node.DL++
 				node.RL++
 			}

@@ -30,7 +30,6 @@ func NewSchemaHandlerFromJSON(str string) *SchemaHandler.SchemaHandler {
 		item := stack[ln-1]
 		stack = stack[:ln-1]
 		info := Common.TagToMap(item.Tag)
-		infos = append(infos, info)
 
 		if info["type"].(string) == "" {
 			schema := parquet.NewSchemaElement()
