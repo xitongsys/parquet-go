@@ -292,7 +292,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			infos = append(infos, info)
 
 			newItem := NewItem()
-			newItem.Info = item.Info
+			newItem.Info = Common.GetValueTagMap(item.Info)
 			newItem.Info["inname"] = "element"
 			newItem.Info["exname"] = "element"
 			newItem.GoType = item.GoType.Elem()

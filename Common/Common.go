@@ -12,23 +12,38 @@ import (
 //`parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`
 func NewEmptyTagMap() map[string]interface{} {
 	return map[string]interface{}{
-		"inname":         "",
-		"exname":         "",
-		"type":           "",
-		"basetype":       "", //only for decimal
-		"keytype":        "",
-		"basekeytype":    "", //only for decimal
-		"length":         int32(0),
-		"keylength":      int32(0),
-		"scale":          int32(0),
-		"keyscale":       int32(0),
+		"inname": "",
+		"exname": "",
+
+		"type":      "",
+		"keytype":   "",
+		"valuetype": "",
+
+		"basetype":      "", //only for decimal
+		"keybasetype":   "", //only for decimal
+		"valuebasetype": "", //only for decimal
+
+		"length":      int32(0),
+		"keylength":   int32(0),
+		"valuelength": int32(0),
+
+		"scale":      int32(0),
+		"keyscale":   int32(0),
+		"valuescale": int32(0),
+
 		"precision":      int32(0),
 		"keyprecision":   int32(0),
-		"fieldid":        int32(0),
-		"keyfieldid":     int32(0),
+		"valueprecision": int32(0),
+
+		"fieldid":      int32(0),
+		"keyfieldid":   int32(0),
+		"valuefieldid": int32(0),
+
+		"encoding":      parquet.Encoding_PLAIN,
+		"keyencoding":   parquet.Encoding_PLAIN,
+		"valueencoding": parquet.Encoding_PLAIN,
+
 		"repetitiontype": parquet.FieldRepetitionType(0),
-		"encoding":       parquet.Encoding_PLAIN,
-		"keyencoding":    parquet.Encoding_PLAIN,
 	}
 }
 
@@ -90,21 +105,25 @@ func TagToMap(tag string) map[string]interface{} {
 	tagStr := strings.Replace(tag, " ", "", -1)
 	tagStr = strings.Replace(tagStr, "\t", "", -1)
 	tags := strings.Split(tagStr, ",")
+
 	for _, tag := range tags {
 		kv := strings.Split(tag, "=")
 		kv[0] = strings.ToLower(kv[0])
-		if kv[0] == "type" || kv[0] == "keytype" || kv[0] == "basetype" || kv[0] == "basekeytype" {
+		if kv[0] == "type" || kv[0] == "keytype" || kv[0] == "valuetype" ||
+			kv[0] == "basetype" || kv[0] == "keybasetype" || kv[0] == "valuebasetype" {
 			mp[kv[0]] = kv[1]
-		} else if kv[0] == "length" || kv[0] == "keylength" ||
-			kv[0] == "scale" || kv[0] == "keyscale" ||
-			kv[0] == "precision" || kv[0] == "keyprecision" ||
-			kv[0] == "fieldid" || kv[0] == "keyfieldid" {
 
+		} else if kv[0] == "length" || kv[0] == "keylength" || kv[0] == "valuelength" ||
+			kv[0] == "scale" || kv[0] == "keyscale" || kv[0] == "valuescale" ||
+			kv[0] == "precision" || kv[0] == "keyprecision" || kv[0] == "valueprecision" ||
+			kv[0] == "fieldid" || kv[0] == "keyfieldid" || kv[0] == "valuefieldid" {
 			val, _ := strconv.Atoi(kv[1])
 			mp[kv[0]] = int32(val)
+
 		} else if kv[0] == "name" {
 			mp["inname"] = kv[1]
 			mp["exname"] = kv[1]
+
 		} else if kv[0] == "repetitiontype" {
 			switch kv[1] {
 			case "repeated":
@@ -114,7 +133,8 @@ func TagToMap(tag string) map[string]interface{} {
 			case "optional":
 				mp["repetitiontype"] = parquet.FieldRepetitionType_OPTIONAL
 			}
-		} else if kv[0] == "encoding" || kv[0] == "keyencoding" {
+
+		} else if kv[0] == "encoding" || kv[0] == "keyencoding" || kv[0] == "valueencoding" {
 			ens := strings.ToLower(kv[1])
 			if ens == "rle" {
 				mp[kv[0]] = parquet.Encoding_RLE
@@ -140,7 +160,7 @@ func GetKeyTagMap(src map[string]interface{}) map[string]interface{} {
 	res["inname"] = "key"
 	res["exname"] = "key"
 	res["type"] = src["keytype"]
-	res["basetype"] = src["basekeytype"]
+	res["basetype"] = src["keybasetype"]
 	res["length"] = src["keylength"]
 	res["scale"] = src["keyscale"]
 	res["precision"] = src["keyprecision"]
@@ -154,14 +174,14 @@ func GetValueTagMap(src map[string]interface{}) map[string]interface{} {
 	res := NewEmptyTagMap()
 	res["inname"] = "value"
 	res["exname"] = "value"
-	res["type"] = src["type"]
-	res["basetype"] = src["basetype"]
-	res["length"] = src["length"]
-	res["scale"] = src["scale"]
-	res["precision"] = src["precision"]
-	res["fieldid"] = src["fieldid"]
+	res["type"] = src["valuetype"]
+	res["basetype"] = src["valuebasetype"]
+	res["length"] = src["valuelength"]
+	res["scale"] = src["valuescale"]
+	res["precision"] = src["valueprecision"]
+	res["fieldid"] = src["valuefieldid"]
 	res["repetitiontype"] = src["repetitiontype"]
-	res["encoding"] = src["encoding"]
+	res["encoding"] = src["valueencoding"]
 	return res
 }
 

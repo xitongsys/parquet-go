@@ -12,13 +12,13 @@ type Student struct {
 	Name    string               `parquet:"name=name, type=UTF8"`
 	Age     int32                `parquet:"name=age, type=INT32"`
 	Weight  *int32               `parquet:"name=weight, type=INT32"`
-	Classes *map[string][]*Class `parquet:"name=classes, keytype=UTF8"`
+	Classes *map[string][]*Class `parquet:"name=classes, type=MAP, keytype=UTF8"`
 }
 
 type Class struct {
 	Name     string   `parquet:"name=name, type=UTF8"`
 	Id       *int32   `parquet:"name=id, type=INT32"`
-	Required []string `parquet:"name=required, type=UTF8"`
+	Required []string `parquet:"name=required, type=SLICE, valuetype=UTF8"`
 }
 
 func (c Class) String() string {
