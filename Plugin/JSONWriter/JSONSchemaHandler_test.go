@@ -5,4 +5,5 @@ import (
 )
 
 func TestNewSchemaHandlerFromJSON(t *testing.T) {
+
 }
