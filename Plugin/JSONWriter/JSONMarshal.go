@@ -179,7 +179,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 			} else {
 				table := res[node.PathMap.Path]
 				pT, cT := ParquetType.TypeNameToParquetType(info["type"].(string), info["basetype"].(string))
-				val := JSONTypeToParquetType(node.Val, pT, cT, int(info["length"].(int32)))
+				val := JSONTypeToParquetType(node.Val, pT, cT, int(info["length"].(int32)), int(info["scale"].(int32)))
 
 				table.Values = append(table.Values, val)
 				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)

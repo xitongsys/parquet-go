@@ -78,6 +78,7 @@ func (self *CSVWriter) WriteString(recs []*string) {
 				self.SchemaHandler.SchemaElements[i+1].Type,
 				self.SchemaHandler.SchemaElements[i+1].ConvertedType,
 				int(self.SchemaHandler.SchemaElements[i+1].GetTypeLength()),
+				int(self.SchemaHandler.SchemaElements[i+1].GetScale()),
 			)
 		}
 	}

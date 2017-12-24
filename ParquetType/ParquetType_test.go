@@ -18,7 +18,7 @@ func TestStrToParquetType(t *testing.T) {
 		{"false", bool(false), parquet.TypePtr(parquet.Type_BOOLEAN), nil},
 		{"1", int32(1), parquet.TypePtr(parquet.Type_INT32), nil},
 		{"0", int64(0), parquet.TypePtr(parquet.Type_INT64), nil},
-		{"012345678901", string("012345678901"), parquet.TypePtr(parquet.Type_INT96), nil},
+		{"12345", StrIntToBinary("12345", "LittleEndian", 12, true), parquet.TypePtr(parquet.Type_INT96), nil},
 		{"0.1", float32(0.1), parquet.TypePtr(parquet.Type_FLOAT), nil},
 		{"0.1", float64(0.1), parquet.TypePtr(parquet.Type_DOUBLE), nil},
 		{"abc bcd", string("abc bcd"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), nil},
@@ -38,17 +38,18 @@ func TestStrToParquetType(t *testing.T) {
 		{"1", int64(1), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MICROS)},
 		{"1", int64(1), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MICROS)},
 		{"1", int64(1), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MILLIS)},
-		{"012345678901", string("012345678901"), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL)},
-		{"12345", int32(12345), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
-		{"12345", int64(12345), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
-		{"12345", string("12345"), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
-		{StrIntToBinary("12345", "LittleEndian", 0, true), string("12345"), parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
+		{"123456789", StrIntToBinary("123456789", "LittleEndian", 12, false), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL)},
+		{"123.45", int32(12345), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
+		{"123.45", int64(12345), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
+		{"123.45", StrIntToBinary("12345", "BigEndian", 12, true), parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
+		{"123.45", StrIntToBinary("12345", "BigEndian", 0, true), parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
 	}
 
 	for _, data := range testData {
-		res := fmt.Sprintf("%v", StrToParquetType(data.StrData, data.PT, data.CT))
-		if res != data.StrData {
-			t.Errorf("StrToParquetType err %v-%v, expect %v, get %v", data.PT, data.CT, data.StrData, res)
+		res := fmt.Sprintf("%v", StrToParquetType(data.StrData, data.PT, data.CT, 12, 2))
+		expect := fmt.Sprintf("%v", data.GoData)
+		if res != expect {
+			t.Errorf("StrToParquetType err %v-%v, expect %v, get %v", data.PT, data.CT, expect, res)
 		}
 	}
 }
