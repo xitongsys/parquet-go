@@ -25,7 +25,9 @@ func main() {
             {"Tag":"name=scores, type=MAP",
              "Fields":[
                  {"Tag":"name=key, type=UTF8"},
-                 {"Tag":"name=value, type=INT32"}
+                 {"Tag":"name=value, type=LIST",
+                  "Fields":[{"Tag":"name=element, type=FLOAT"}]
+                 }
              ]
             },
             {"Tag":"name=friends, type=UTF8, repetitiontype=REPEATED"}
@@ -48,9 +50,9 @@ func main() {
                 "sex":%t,
                 "classes":["Math", "Computer", "English"],
                 "scores":{
-                            "Math":99,
-                            "Computer":98,
-                            "English":100
+                            "Math":[99.5, 98.5, 97],
+                            "Computer":[98,97.5],
+                            "English":[100]
                          },
                 "friends":["aa","bb"]
             }
