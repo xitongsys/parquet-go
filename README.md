@@ -51,8 +51,8 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 |TIMESTAMP_MICROS|INT64|int64|
 |INTERVAL|FIXED_LEN_BYTE_ARRAY|string|
 |DECIMAL|INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY|int32,int64,string,string|
-|List||slice||
-|Map||map||
+|LIST||slice||
+|MAP||map||
 
 ### Tips
 * Although DECIMAL can be stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY. 
@@ -118,6 +118,10 @@ Decimal1 int32  `parquet:"name=decimal1, type=DECIMAL, scale=2, precision=9, bas
 Decimal2 int64  `parquet:"name=decimal2, type=DECIMAL, scale=2, precision=18, basetype=INT64"`
 Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY, length=12"`
 Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=20, basetype=BYTE_ARRAY"`
+
+Map      map[string]int32 `parquet:"name=map, type=MAP, keytype=UTF8, valuetype=INT32"`
+List     []string         `parquet:"name=list, type=LIST, valuetype=UTF8"`
+Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=REPEATED"`
 
 ```
 
@@ -270,9 +274,71 @@ func main() {
 
 }
 ```
+
+### JSONWriter Plugin
+```golang
+func main() {
+	md := `
+    {
+        "Tag":"name=parquet-go-root",
+        "Fields":[
+		    {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
+		    {"Tag":"name=age, type=INT32"},
+		    {"Tag":"name=id, type=INT64"},
+		    {"Tag":"name=weight, type=FLOAT"},
+		    {"Tag":"name=sex, type=BOOLEAN"},
+            {"Tag":"name=classes, type=LIST",
+             "Fields":[
+                  {"Tag":"name=element, type=UTF8"}
+              ]
+            },
+            {"Tag":"name=scores, type=MAP",
+             "Fields":[
+                 {"Tag":"name=key, type=UTF8"},
+                 {"Tag":"name=value, type=LIST",
+                  "Fields":[{"Tag":"name=element, type=FLOAT"}]
+                 }
+             ]
+            },
+            {"Tag":"name=friends, type=UTF8, repetitiontype=REPEATED"}
+        ]
+	}
+`
+	//write
+	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
+	pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
+
+	num := 10
+	for i := 0; i < num; i++ {
+		rec := `
+            {
+                "name":"%s",
+                "age":%d,
+                "id":%d,
+                "weight":%f,
+                "sex":%t,
+                "classes":["Math", "Computer", "English"],
+                "scores":{
+                            "Math":[99.5, 98.5, 97],
+                            "Computer":[98,97.5],
+                            "English":[100]
+                         },
+                "friends":["aa","bb"]
+            }
+        `
+		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
+		pw.Write(rec)
+	}
+	pw.Flush(true)
+	pw.WriteStop()
+	log.Println("Write Finished")
+	fw.Close()
+}
+
+```
+
 ## Status
 Here are a few todo items. Welcome any help!
-* JSONWriter(Issue17)
 * Performance Test(Issue14)
 * Test in different platforms
 
