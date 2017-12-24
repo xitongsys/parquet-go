@@ -22,7 +22,7 @@ Look at a few examples in `example/`.
 go run example/local_flat.go
 ```
 
-## Types
+## Type
 There are two types in Parquet: Primitive Type and Logical Type. Logical types are stored as primitive types. The following list is the currently implemented data types:
 
 |Parquet Type|Primitive Type|Go Type|
@@ -57,7 +57,7 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 ### Tips
 * Although DECIMAL can be stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY. 
 
-## Encodings
+## Encoding
 
 #### PLAIN:
 All types  
@@ -74,7 +74,7 @@ BYTE_ARRAY, UTF8
 * Some platforms don't support all kinds of encodings. If you are not sure, just use PLAIN and PLAIN_DICTIONARY.
 
 
-## Repetition Types
+## Repetition Type
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
 
 |Repetition Type|Example|Description|
@@ -87,7 +87,7 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 * The difference between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md). I suggest just use a List.
 
 
-## Examples of Types and Encodings
+## Example of Type and Encoding
 ```golang
 Bool              bool    `parquet:"name=bool, type=BOOLEAN"`
 Int32             int32   `parquet:"name=int32, type=INT32"`
