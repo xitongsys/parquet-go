@@ -160,40 +160,40 @@ type Student struct {
 	Day    int32   `parquet:"name=day, type=DATE"`
 }
 func main() {
-	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
-	//write
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 10)
-	num := 10
-	for i := 0; i < num; i++ {
-		stu := Student{
-			Name:   "StudentName",
-			Age:    int32(20 + i%5),
-			Id:     int64(i),
-			Weight: float32(50.0 + float32(i)*0.1),
-			Sex:    bool(i%2 == 0),
-			Day:    int32(time.Now().Unix() / 3600 / 24),
-		}
-		pw.Write(stu)
-	}
-	pw.Flush(true)
-	pw.WriteStop()
-	log.Println("Write Finished")
-	fw.Close()
+    fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
+    //write
+    pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 10)
+    num := 10
+    for i := 0; i < num; i++ {
+        stu := Student{
+            Name:   "StudentName",
+            Age:    int32(20 + i%5),
+            Id:     int64(i),
+            Weight: float32(50.0 + float32(i)*0.1),
+            Sex:    bool(i%2 == 0),
+            Day:    int32(time.Now().Unix() / 3600 / 24),
+        }
+        pw.Write(stu)
+    }
+    pw.Flush(true)
+    pw.WriteStop()
+    log.Println("Write Finished")
+    fw.Close()
 
-	///read 
-	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 1)
-	if err != nil {
-		log.Println("Failed new reader", err)
-	}
-	num = int(pr.GetNumRows())
-	for i := 0; i < num; i++ {
-		stus := make([]Student, 1)
-		pr.Read(&stus)
-		log.Println(stus)
-	}
-	pr.ReadStop()
-	fr.Close()
+    ///read 
+    fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
+    pr, err := ParquetReader.NewParquetReader(fr, new(Student), 1)
+    if err != nil {
+        log.Println("Failed new reader", err)
+    }
+    num = int(pr.GetNumRows())
+    for i := 0; i < num; i++ {
+        stus := make([]Student, 1)
+        pr.Read(&stus)
+        log.Println(stus)
+    }
+    pr.ReadStop()
+    fr.Close()
 }
 ```
 
@@ -204,7 +204,7 @@ If you just want to get some columns data, your can use column reader
 fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
 pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
 if err != nil {
-	log.Println("Failed new reader", err)
+    log.Println("Failed new reader", err)
 }
 num = int(pr.GetNumRows())
 names := make([]interface{}, num)
@@ -234,46 +234,46 @@ This plugin is used for data format similar with CSV(not nested). The format of 
 #### Example
 ```golang
 func main() {
-	md := []string{
-		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
-		"name=Age, type=INT32",
-		"name=Id, type=INT64",
-		"name=Weight, type=FLOAT",
-		"name=Sex, type=BOOLEAN",
-	}
+    md := []string{
+        "name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
+        "name=Age, type=INT32",
+        "name=Id, type=INT64",
+        "name=Weight, type=FLOAT",
+        "name=Sex, type=BOOLEAN",
+    }
 
-	//write
-	fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
-	pw, _ := CSVWriter.NewCSVWriter(md, fw, 1)
+    //write
+    fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
+    pw, _ := CSVWriter.NewCSVWriter(md, fw, 1)
 
-	num := 10
-	for i := 0; i < num; i++ {
-		data := []string{
-			fmt.Sprintf("%s_%d", "Student Name", i),
-			fmt.Sprintf("%d", 20+i%5),
-			fmt.Sprintf("%d", i),
-			fmt.Sprintf("%f", 50.0+float32(i)*0.1),
-			fmt.Sprintf("%t", i%2 == 0),
-		}
-		rec := make([]*string, len(data))
-		for j := 0; j < len(data); j++ {
-			rec[j] = &data[j]
-		}
-		pw.WriteString(rec)
+    num := 10
+    for i := 0; i < num; i++ {
+        data := []string{
+            fmt.Sprintf("%s_%d", "Student Name", i),
+            fmt.Sprintf("%d", 20+i%5),
+            fmt.Sprintf("%d", i),
+            fmt.Sprintf("%f", 50.0+float32(i)*0.1),
+            fmt.Sprintf("%t", i%2 == 0),
+        }
+        rec := make([]*string, len(data))
+        for j := 0; j < len(data); j++ {
+            rec[j] = &data[j]
+        }
+        pw.WriteString(rec)
 
-		data2 := []interface{}{
-			ParquetType.BYTE_ARRAY("Student Name"),
-			ParquetType.INT32(20 + i*5),
-			ParquetType.INT64(i),
-			ParquetType.FLOAT(50.0 + float32(i)*0.1),
-			ParquetType.BOOLEAN(i%2 == 0),
-		}
-		pw.Write(data2)
-	}
-	pw.Flush(true)
-	pw.WriteStop()
-	log.Println("Write Finished")
-	fw.Close()
+        data2 := []interface{}{
+            ParquetType.BYTE_ARRAY("Student Name"),
+            ParquetType.INT32(20 + i*5),
+            ParquetType.INT64(i),
+            ParquetType.FLOAT(50.0 + float32(i)*0.1),
+            ParquetType.BOOLEAN(i%2 == 0),
+        }
+        pw.Write(data2)
+    }
+    pw.Flush(true)
+    pw.WriteStop()
+    log.Println("Write Finished")
+    fw.Close()
 
 }
 ```
@@ -317,13 +317,13 @@ func main() {
         ]
     }
 `
-	//write
-	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
-	pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
+    //write
+    fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
+    pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
 
-	num := 10
-	for i := 0; i < num; i++ {
-		rec := `
+    num := 10
+    for i := 0; i < num; i++ {
+        rec := `
             {
                 "name":"%s",
                 "age":%d,
@@ -339,13 +339,13 @@ func main() {
                 "friends":["aa","bb"]
             }
         `
-		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
-		pw.Write(rec)
-	}
-	pw.Flush(true)
-	pw.WriteStop()
-	log.Println("Write Finished")
-	fw.Close()
+        rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
+        pw.Write(rec)
+    }
+    pw.Flush(true)
+    pw.WriteStop()
+    log.Println("Write Finished")
+    fw.Close()
 }
 
 ```
