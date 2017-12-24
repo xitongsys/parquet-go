@@ -279,11 +279,11 @@ func main() {
 ```
 
 ### JSONWriter Plugin
-JSONWriter can convert JSON strings to parquet by the parquet schema, which is also a JSON stirng. The schema format is
+JSONWriter can convert JSON strings to parquet by the parquet schema, which is also a JSON string. The schema format is
 ```json
 {
     "Tag":"name=name, type=UTF8",
-	"Fields":[]
+    "Fields":[]
 }
 ```
 
@@ -295,11 +295,11 @@ func main() {
     {
         "Tag":"name=parquet-go-root",
         "Fields":[
-		    {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
-		    {"Tag":"name=age, type=INT32"},
-		    {"Tag":"name=id, type=INT64"},
-		    {"Tag":"name=weight, type=FLOAT"},
-		    {"Tag":"name=sex, type=BOOLEAN"},
+            {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
+            {"Tag":"name=age, type=INT32"},
+            {"Tag":"name=id, type=INT64"},
+            {"Tag":"name=weight, type=FLOAT"},
+            {"Tag":"name=sex, type=BOOLEAN"},
             {"Tag":"name=classes, type=LIST",
              "Fields":[
                   {"Tag":"name=element, type=UTF8"}
