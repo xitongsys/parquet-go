@@ -1,4 +1,4 @@
-# parquet-go v1.0.7
+# parquet-go v1.1.0
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -81,7 +81,7 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 |-|-|-|
 |REQUIRED|```V1 int32 `parquet:"name=v1, type=INT32"` ```|No extra description|
 |OPTIONAL|```V1 *int32 `parquet:"name=v1, type=INT32"` ```|Declare as pointer|
-|REPEATED|```V1 []int32 `parquet:"name=v1, type=int32, repetitontype=repeated"` ```|Add 'repetitiontype=repeated' in tags|
+|REPEATED|```V1 []int32 `parquet:"name=v1, type=INT32, repetitontype=REPEATED"` ```|Add 'repetitiontype=repeated' in tags|
 
 ### Tips
 * The difference between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md). I suggest just use a List.
@@ -227,8 +227,11 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 
 ## Plugin
 Plugin is used for some special purpose and will be added gradually.
+
 ### CSVWriter Plugin
-This plugin is used for data format similar with CSV(not nested).
+This plugin is used for data format similar with CSV(not nested). The format of the schema is same with before.
+
+#### Example
 ```golang
 func main() {
 	md := []string{
@@ -276,9 +279,19 @@ func main() {
 ```
 
 ### JSONWriter Plugin
+JSONWriter can convert JSON strings to parquet by the parquet schema, which is also a JSON stirng. The schema format is
+```json
+{
+    "Tag":"name=name, type=UTF8",
+	"Fields":[]
+}
+```
+
+#### Example
+
 ```golang
 func main() {
-	md := `
+    md := `
     {
         "Tag":"name=parquet-go-root",
         "Fields":[
@@ -302,7 +315,7 @@ func main() {
             },
             {"Tag":"name=friends, type=UTF8, repetitiontype=REPEATED"}
         ]
-	}
+    }
 `
 	//write
 	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
