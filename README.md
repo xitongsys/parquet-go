@@ -81,7 +81,7 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 |-|-|-|
 |REQUIRED|```V1 int32 `parquet:"name=v1, type=INT32"` ```|No extra description|
 |OPTIONAL|```V1 *int32 `parquet:"name=v1, type=INT32"` ```|Declare as pointer|
-|REPEATED|```V1 []int32 `parquet:"name=v1, type=INT32, repetitontype=REPEATED"` ```|Add 'repetitiontype=repeated' in tags|
+|REPEATED|```V1 []int32 `parquet:"name=v1, type=INT32, repetitontype=REPEATED"` ```|Add 'repetitiontype=REPEATED' in tags|
 
 ### Tips
 * The difference between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md). I suggest just use a List.
