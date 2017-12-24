@@ -7,10 +7,10 @@ import (
 	"reflect"
 )
 
-func JSONTypeToParquetType(val reflect.Value, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
+func JSONTypeToParquetType(val reflect.Value, pT *parquet.Type, cT *parquet.ConvertedType, length int) interface{} {
 	if val.Type().Kind() == reflect.Interface && val.IsNil() {
 		return nil
 	}
 	s := fmt.Sprintf("%v", val)
-	return ParquetType.StrToParquetType(s, pT, cT)
+	return ParquetType.StrToParquetType(s, pT, cT, length)
 }

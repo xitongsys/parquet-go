@@ -166,7 +166,7 @@ func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 }
 
 //Scan a string to parquet value
-func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
+func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, length int) interface{} {
 	if cT == nil {
 		if *pT == parquet.Type_BOOLEAN {
 			var v BOOLEAN
@@ -184,7 +184,8 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType) int
 			return v
 
 		} else if *pT == parquet.Type_INT96 {
-			return INT96(s)
+			res := StrIntToBinary(s, "LittleEndian", 12, true)
+			return INT96(res)
 
 		} else if *pT == parquet.Type_FLOAT {
 			var v FLOAT
@@ -231,7 +232,8 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType) int
 		return v
 
 	} else if *cT == parquet.ConvertedType_INTERVAL {
-		return FIXED_LEN_BYTE_ARRAY(s)
+		res := StrIntToBinary(s, "LittleEndian", 12, false)
+		return FIXED_LEN_BYTE_ARRAY(res)
 
 	} else if *cT == parquet.ConvertedType_DECIMAL {
 		if *pT == parquet.Type_INT32 {
@@ -245,10 +247,12 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType) int
 			return v
 
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			return FIXED_LEN_BYTE_ARRAY(s)
+			res := StrIntToBinary(s, "BigEndian", length, true)
+			return FIXED_LEN_BYTE_ARRAY(res)
 
 		} else {
-			return BYTE_ARRAY(s)
+			res := StrIntToBinary(s, "BigEndian", 0, true)
+			return BYTE_ARRAY(res)
 		}
 	} else {
 		return nil
