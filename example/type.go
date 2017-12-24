@@ -38,6 +38,10 @@ type TypeList struct {
 	Decimal2 int64  `parquet:"name=decimal2, type=DECIMAL, scale=2, precision=18, basetype=INT64"`
 	Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY, length=12"`
 	Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=20, basetype=BYTE_ARRAY"`
+
+	Map      map[string]int32 `parquet:"name=map, type=MAP, keytype=UTF8, valuetype=INT32"`
+	List     []string         `parquet:"name=list, type=LIST, valuetype=UTF8"`
+	Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=REPEATED"`
 }
 
 func main() {
@@ -76,6 +80,10 @@ func main() {
 			Decimal2: int64(12345),
 			Decimal3: ParquetType.StrIntToBinary("-12345", "BigEndian", 12, true),
 			Decimal4: ParquetType.StrIntToBinary("12345", "BigEndian", 0, true),
+
+			Map:      map[string]int32{"One": 1, "Two": 2},
+			List:     []string{"item1", "item2"},
+			Repeated: []int32{1, 2, 3},
 		}
 		pw.Write(tp)
 	}
