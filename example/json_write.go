@@ -27,7 +27,8 @@ func main() {
                  {"Tag":"name=key, type=UTF8"},
                  {"Tag":"name=value, type=INT32"}
              ]
-            }
+            },
+            {"Tag":"name=friends, type=UTF8, repetitiontype=REPEATED"}
         ]
 	}
 `
@@ -50,7 +51,8 @@ func main() {
                             "Math":99,
                             "Computer":98,
                             "English":100
-                         }
+                         },
+                "friends":["aa","bb"]
             }
         `
 

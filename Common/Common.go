@@ -127,6 +127,7 @@ func TagToMap(tag string) map[string]interface{} {
 			mp["exname"] = kv[1]
 
 		} else if kv[0] == "repetitiontype" || kv[0] == "keyrepetitiontype" || kv[0] == "valuerepetitiontype" {
+			kv[1] = strings.ToLower(kv[1])
 			switch kv[1] {
 			case "repeated":
 				mp[kv[0]] = parquet.FieldRepetitionType_REPEATED

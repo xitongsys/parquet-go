@@ -56,15 +56,6 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 			schemaIndex := schemaHandler.MapIndex[pathStr]
 			info := schemaHandler.Infos[schemaIndex]
 
-			if info["repetitiontype"].(parquet.FieldRepetitionType) == parquet.FieldRepetitionType_OPTIONAL {
-				node.DL++
-			}
-
-			if info["repetitiontype"].(parquet.FieldRepetitionType) == parquet.FieldRepetitionType_REPEATED {
-				node.DL++
-				node.RL++
-			}
-
 			if tk == reflect.Map {
 				keys := node.Val.MapKeys()
 
@@ -101,6 +92,13 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 						newNode.PathMap = node.PathMap.Children["key_value"].Children["value"]
 						newNode.Val = value
 						newNode.DL = node.DL + 1
+						newPathStr := node.PathMap.Path
+						newSchemaIndex := schemaHandler.MapIndex[newPathStr]
+						newInfo := schemaHandler.Infos[newSchemaIndex]
+						if newInfo["repetitiontype"] == parquet.FieldRepetitionType_OPTIONAL { //map value only be :optional or required
+							newNode.DL++
+						}
+
 						if j == 0 {
 							newNode.RL = node.RL
 						} else {
@@ -166,7 +164,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 
 					for j := ln - 1; j >= 0; j-- {
 						newNode := nodeBuf.GetNode()
-						newNode.PathMap = node.PathMap.Children["list"].Children["element"]
+						newNode.PathMap = node.PathMap
 						newNode.Val = node.Val.Index(j).Elem()
 						if j == 0 {
 							newNode.RL = node.RL

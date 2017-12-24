@@ -31,7 +31,7 @@ func NewSchemaHandlerFromJSON(str string) *SchemaHandler.SchemaHandler {
 		stack = stack[:ln-1]
 		info := Common.TagToMap(item.Tag)
 
-		if info["type"].(string) == "" {
+		if info["type"].(string) == "" { //struct
 			schema := parquet.NewSchemaElement()
 			schema.Name = info["inname"].(string)
 			rt := info["repetitiontype"].(parquet.FieldRepetitionType)
@@ -49,7 +49,7 @@ func NewSchemaHandlerFromJSON(str string) *SchemaHandler.SchemaHandler {
 				stack = append(stack, newItem)
 			}
 
-		} else if info["type"].(string) == "LIST" {
+		} else if info["type"].(string) == "LIST" { //list
 			schema := parquet.NewSchemaElement()
 			schema.Name = info["inname"].(string)
 			rt1 := info["repetitiontype"].(parquet.FieldRepetitionType)
@@ -77,7 +77,7 @@ func NewSchemaHandlerFromJSON(str string) *SchemaHandler.SchemaHandler {
 
 			stack = append(stack, item.Fields[0])
 
-		} else if info["type"].(string) == "MAP" {
+		} else if info["type"].(string) == "MAP" { //map
 			schema := parquet.NewSchemaElement()
 			schema.Name = info["inname"].(string)
 			rt1 := info["repetitiontype"].(parquet.FieldRepetitionType)
@@ -108,7 +108,7 @@ func NewSchemaHandlerFromJSON(str string) *SchemaHandler.SchemaHandler {
 			stack = append(stack, item.Fields[1]) //put value
 			stack = append(stack, item.Fields[0]) //put key
 
-		} else {
+		} else { //normal variable
 			schema := Common.NewSchemaElementFromTagMap(info)
 			schemaElements = append(schemaElements, schema)
 			info := Common.NewTagMapFromCopy(info)
