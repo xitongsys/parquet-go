@@ -10,20 +10,18 @@ type LocalFile struct {
 }
 
 func NewLocalFileWriter(name string) (ParquetFile, error) {
-	return (&LocalFile{}).Create(name)
+	file, err := os.Create(name)
+	myFile := &LocalFile{
+		FilePath: name,
+		File:     file,
+	}
+	return myFile, err
 }
 
 func NewLocalFileReader(name string) (ParquetFile, error) {
 	return (&LocalFile{}).Open(name)
 }
 
-func (self *LocalFile) Create(name string) (ParquetFile, error) {
-	file, err := os.Create(name)
-	myFile := new(LocalFile)
-	myFile.File = file
-	return myFile, err
-
-}
 func (self *LocalFile) Open(name string) (ParquetFile, error) {
 	var (
 		err error

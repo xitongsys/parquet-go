@@ -134,7 +134,6 @@ type ParquetFile interface {
 	Write(b []byte) (n int, err error)
 	Close()
 	Open(name string) (ParquetFile, error)
-	Create(name string) (ParquetFile, error)
 }
 ```
 Using this interface, parquet-go can read/write parquet file on different plantforms. Currently local and HDFS interfaces are implemented.(It's not possible for S3, because it doesn't support random access.)
