@@ -10,7 +10,6 @@ type ParquetFile interface {
 	Write(b []byte) (n int, err error)
 	Close()
 	Open(name string) (ParquetFile, error)
-	Create(name string) (ParquetFile, error)
 }
 
 //Convert a file reater to Thrift reader

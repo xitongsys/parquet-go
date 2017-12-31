@@ -15,12 +15,23 @@ type HdfsFile struct {
 }
 
 func NewHdfsFileWriter(hosts []string, user string, name string) (ParquetFile, error) {
+	var err error
 	res := &HdfsFile{
 		Hosts:    hosts,
 		User:     user,
 		FilePath: name,
 	}
-	return res.Create(name)
+
+	res.Client, err = hdfs.NewClient(hdfs.ClientOptions{
+		Addresses: hosts,
+		User:      user,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res.FileWriter, err = res.Client.Create(name)
+	return res, err
 }
 
 func NewHdfsFileReader(hosts []string, user string, name string) (ParquetFile, error) {
@@ -32,23 +43,6 @@ func NewHdfsFileReader(hosts []string, user string, name string) (ParquetFile, e
 	return res.Open(name)
 }
 
-func (self *HdfsFile) Create(name string) (ParquetFile, error) {
-	var err error
-	hf := new(HdfsFile)
-	hf.Hosts = self.Hosts
-	hf.User = self.User
-	hf.Client, err = hdfs.NewClient(hdfs.ClientOptions{
-		Addresses: hf.Hosts,
-		User:      hf.User,
-	})
-	hf.FilePath = name
-	if err != nil {
-		return hf, err
-	}
-	hf.FileWriter, err = hf.Client.Create(name)
-	return hf, err
-
-}
 func (self *HdfsFile) Open(name string) (ParquetFile, error) {
 	var (
 		err error
