@@ -1,4 +1,4 @@
-# parquet-go v1.1.0
+# parquet-go v1.1.1
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -198,24 +198,50 @@ func main() {
 ```
 
 ## Read Columns
-If you just want to get some columns data, your can use column reader
+If you just want to get some columns data, your can use column reader. The read function return a 3-elements slice([value, RepetitionLevel, DefinitionLevel]) of the record.  
 ```golang
-///read flat
-fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
-pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
-if err != nil {
-    log.Println("Failed new reader", err)
+/*
+type Student struct {
+	Name   string           `parquet:"name=name, type=UTF8"`
+	Age    int32            `parquet:"name=age, type=INT32"`
+	Id     int64            `parquet:"name=id, type=INT64"`
+	Weight float32          `parquet:"name=weight, type=FLOAT"`
+	Sex    bool             `parquet:"name=sex, type=BOOLEAN"`
+	Day    int32            `parquet:"name=day, type=DATE"`
+	Class  []string         `parquet:"name=class, type=SLICE, valuetype=UTF8"`
+	Score  map[string]int32 `parquet:"name=score, type=MAP, keytype=UTF8, valuetype=INT32"`
 }
-num = int(pr.GetNumRows())
-names := make([]interface{}, num)
-pr.ReadColumnByPath("name", &names)
-log.Println(names)
+*/
 
-ids := make([]interface{}, num)
-pr.ReadColumnByIndex(2, &ids)
-log.Println(ids)
-pr.ReadStop()
-fr.Close()
+func main() {
+	///read
+	fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
+	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
+	if err != nil {
+		log.Println("Failed new reader", err)
+	}
+	num = int(pr.GetNumRows())
+	names := make([]interface{}, num)
+	pr.ReadColumnByPath("name", &names)
+	log.Println("name", names)
+
+	classes := make([]interface{}, num)
+	pr.ReadColumnByPath("class.list.element", &classes)
+	log.Println("class", classes)
+
+	scores_key := make([]interface{}, num)
+	scores_value := make([]interface{}, num)
+	pr.ReadColumnByPath("score.key_value.key", &scores_key)
+	pr.ReadColumnByPath("score.key_value.value", &scores_value)
+	log.Println("scores_key", scores_key)
+	log.Println("scores_value", scores_value)
+
+	ids := make([]interface{}, num)
+	pr.ReadColumnByIndex(2, &ids)
+	log.Println(ids)
+	pr.ReadStop()
+	fr.Close()
+}
 ```
 
 ## Parallel
