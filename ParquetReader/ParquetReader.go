@@ -207,11 +207,24 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]inte
 
 	if cb, ok := self.ColumnBuffers[pathStr]; ok {
 		table, _ := cb.ReadRows(int64(num))
-		for i := 0; i < len(table.Values); i++ {
-			(*dstInterface)[i] = table.Values[i]
+		i, j, ln := 0, 0, len(table.Values)
+
+		numi := 0
+		for i < ln {
+			rec := [][]interface{}{}
+			j = i
+			for j < ln {
+				rec = append(rec, []interface{}{table.Values[j], table.RepetitionLevels[j], table.DefinitionLevels[j]})
+				j++
+				if j < ln && table.RepetitionLevels[j] == 0 {
+					break
+				}
+			}
+			(*dstInterface)[numi] = rec
+			numi++
+			i = j
 		}
 	}
-
 }
 
 //Read column by index. The index of first column is 0.

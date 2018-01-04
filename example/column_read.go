@@ -9,12 +9,14 @@ import (
 )
 
 type Student struct {
-	Name   string  `parquet:"name=name, type=UTF8"`
-	Age    int32   `parquet:"name=age, type=INT32"`
-	Id     int64   `parquet:"name=id, type=INT64"`
-	Weight float32 `parquet:"name=weight, type=FLOAT"`
-	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
-	Day    int32   `parquet:"name=day, type=DATE"`
+	Name   string           `parquet:"name=name, type=UTF8"`
+	Age    int32            `parquet:"name=age, type=INT32"`
+	Id     int64            `parquet:"name=id, type=INT64"`
+	Weight float32          `parquet:"name=weight, type=FLOAT"`
+	Sex    bool             `parquet:"name=sex, type=BOOLEAN"`
+	Day    int32            `parquet:"name=day, type=DATE"`
+	Class  []string         `parquet:"name=class, type=SLICE, valuetype=UTF8"`
+	Score  map[string]int32 `parquet:"name=score, type=MAP, keytype=UTF8, valuetype=INT32"`
 }
 
 func main() {
@@ -30,6 +32,8 @@ func main() {
 			Weight: float32(50.0 + float32(i)*0.1),
 			Sex:    bool(i%2 == 0),
 			Day:    int32(time.Now().Unix() / 3600 / 24),
+			Class:  []string{"Math", "Physics", "Algorithm"},
+			Score:  map[string]int32{"Math": int32(100 - i), "Physics": int32(100 - i), "Algorithm": int32(100 - i)},
 		}
 		pw.Write(stu)
 	}
@@ -47,7 +51,18 @@ func main() {
 	num = int(pr.GetNumRows())
 	names := make([]interface{}, num)
 	pr.ReadColumnByPath("name", &names)
-	log.Println(names)
+	log.Println("name", names)
+
+	classes := make([]interface{}, num)
+	pr.ReadColumnByPath("class.list.element", &classes)
+	log.Println("class", classes)
+
+	scores_key := make([]interface{}, num)
+	scores_value := make([]interface{}, num)
+	pr.ReadColumnByPath("score.key_value.key", &scores_key)
+	pr.ReadColumnByPath("score.key_value.value", &scores_value)
+	log.Println("scores_key", scores_key)
+	log.Println("scores_value", scores_value)
 
 	ids := make([]interface{}, num)
 	pr.ReadColumnByIndex(2, &ids)
