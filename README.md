@@ -378,6 +378,8 @@ func main() {
 
 ## Status
 Here are a few todo items. Welcome any help!
+* Add more error handlers
+* Add CLI schema tool
 * Performance Test(Issue14)
 * Test in different platforms
 
