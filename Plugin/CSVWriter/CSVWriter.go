@@ -125,7 +125,7 @@ func (self *CSVWriter) Write(rec []interface{}) {
 
 //Write footer to parquet file and stop writing
 func (self *CSVWriter) WriteStop() {
-	//self.Flush()
+	self.Flush(true)
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
