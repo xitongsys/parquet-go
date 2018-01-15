@@ -167,7 +167,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 					lock.Unlock()
 
 				} else {
-					pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
+					pagesMapList[index][name], _, _ = Layout.TableToDataPages(table, int32(self.PageSize),
 						parquet.CompressionCodec_SNAPPY)
 				}
 			}

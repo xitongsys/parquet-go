@@ -66,13 +66,16 @@ func NewDataPage() *Page {
 }
 
 //Convert a table to data pages
-func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64, error) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
 	pT, cT := ParquetType.TypeNameToParquetType(table.Info["type"].(string), table.Info["basetype"].(string))
+	if pT == nil {
+		return nil, 0, fmt.Errorf("Unknown parquet type name")
+	}
 
 	for i < totalLn {
 		j := i + 1
@@ -118,28 +121,33 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		res = append(res, page)
 		i = j
 	}
-	return res, totSize
+	return res, totSize, nil
 }
 
 //Decode dict page
-func (page *Page) Decode(dictPage *Page) {
+func (page *Page) Decode(dictPage *Page) error {
 	if dictPage == nil {
-		return
+		return nil
 	}
 
 	if page == nil || page.Header.DataPageHeader == nil ||
 		(page.Header.DataPageHeader.Encoding != parquet.Encoding_RLE_DICTIONARY &&
 			page.Header.DataPageHeader.Encoding != parquet.Encoding_PLAIN_DICTIONARY) {
-		return
+		return nil
 	}
 
 	numValues := len(page.DataTable.Values)
+	dictLen := len(dictPage.DataTable.Values)
 	for i := 0; i < numValues; i++ {
 		if page.DataTable.Values[i] != nil {
 			index := page.DataTable.Values[i].(ParquetType.INT64)
+			if int(index) >= dictLen {
+				return fmt.Errorf("Index out of DictPage values")
+			}
 			page.DataTable.Values[i] = dictPage.DataTable.Values[index]
 		}
 	}
+	return nil
 }
 
 //Encoding values
