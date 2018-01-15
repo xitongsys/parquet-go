@@ -71,7 +71,7 @@ func (self *CSVWriter) RenameSchema() {
 }
 
 //Write string values to parquet file
-func (self *CSVWriter) WriteString(recs []*string) {
+func (self *CSVWriter) WriteString(recs []*string) error {
 	lr := len(recs)
 	rec := make([]interface{}, lr)
 	for i := 0; i < lr; i++ {
@@ -96,15 +96,18 @@ func (self *CSVWriter) WriteString(recs []*string) {
 	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize > criSize {
-		self.Flush(false)
+		if err := self.Flush(false); err != nil {
+			return err
+		}
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
 	}
+	return nil
 }
 
 //Write parquet values to parquet file
-func (self *CSVWriter) Write(rec []interface{}) {
+func (self *CSVWriter) Write(rec []interface{}) error {
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
@@ -116,30 +119,53 @@ func (self *CSVWriter) Write(rec []interface{}) {
 	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize > criSize {
-		self.Flush(false)
+		if err := self.Flush(false); err != nil {
+			return err
+		}
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
 	}
+	return nil
 }
 
 //Write footer to parquet file and stop writing
-func (self *CSVWriter) WriteStop() {
-	self.Flush(true)
+func (self *CSVWriter) WriteStop() error {
+	var err error
+	if err = self.Flush(true); err != nil {
+		return err
+	}
+
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
-	footerBuf, _ := ts.Write(self.Footer)
+	var footerBuf []byte
+	if footerBuf, err = ts.Write(self.Footer); err != nil {
+		return err
+	}
 
-	self.PFile.Write(footerBuf)
+	if _, err = self.PFile.Write(footerBuf); err != nil {
+		return err
+	}
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
-	self.PFile.Write(footerSizeBuf)
-	self.PFile.Write([]byte("PAR1"))
+	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
+		return err
+	}
+	if _, err = self.PFile.Write([]byte("PAR1")); err != nil {
+		return err
+	}
+	return nil
 }
 
 //Flush the write buffer to parquet file
-func (self *CSVWriter) Flush(flag bool) {
+func (self *CSVWriter) Flush(flag bool) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
 		pagesMapList[i] = make(map[string][]*Layout.Page)
@@ -255,4 +281,5 @@ func (self *CSVWriter) Flush(flag bool) {
 	self.Footer.NumRows += int64(len(self.Objs))
 	self.Objs = self.Objs[:0]
 	self.ObjsSize = 0
+	return nil
 }
