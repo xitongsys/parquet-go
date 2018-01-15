@@ -48,7 +48,13 @@ func (self *NodeBufType) Reset() {
 ////////for improve performance///////////////////////////////////
 
 //Convert the objects to table map. srcInterface is a slice of objects
-func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
+func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	src := reflect.ValueOf(srcInterface)
 	res := make(map[string]*Layout.Table)
 	pathMap := schemaHandler.PathMap
@@ -235,5 +241,5 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 		}
 	}
 
-	return &res
+	return &res, nil
 }

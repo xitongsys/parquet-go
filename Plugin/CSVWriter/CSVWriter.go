@@ -41,8 +41,11 @@ type CSVWriter struct {
 
 //Create CSV writer
 func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error) {
+	var err error
 	res := new(CSVWriter)
-	res.SchemaHandler = NewSchemaHandlerFromMetadata(md)
+	if res.SchemaHandler, err = NewSchemaHandlerFromMetadata(md); err != nil {
+		return nil, err
+	}
 	res.Metadata = md
 	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
@@ -54,7 +57,7 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	res.Offset = 4
-	_, err := res.PFile.Write([]byte("PAR1"))
+	_, err = res.PFile.Write([]byte("PAR1"))
 	return res, err
 }
 

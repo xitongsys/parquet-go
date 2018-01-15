@@ -39,8 +39,11 @@ type JSONWriter struct {
 
 //Create JSON writer
 func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*JSONWriter, error) {
+	var err error
 	res := new(JSONWriter)
-	res.SchemaHandler = NewSchemaHandlerFromJSON(jsonSchema)
+	if res.SchemaHandler, err = NewSchemaHandlerFromJSON(jsonSchema); err != nil {
+		return res, err
+	}
 
 	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
@@ -52,7 +55,7 @@ func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	res.Offset = 4
-	_, err := res.PFile.Write([]byte("PAR1"))
+	_, err = res.PFile.Write([]byte("PAR1"))
 	return res, err
 }
 
@@ -127,19 +130,20 @@ func (self *JSONWriter) Flush(flag bool) {
 				doneChan <- 0
 				return
 			}
-			tableMap := MarshalJSON(self.Objs, b, e, self.SchemaHandler)
-			for name, table := range *tableMap {
-				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-					lock.Lock()
-					if _, ok := self.DictRecs[name]; !ok {
-						self.DictRecs[name] = Layout.NewDictRec()
+			if tableMap, err := MarshalJSON(self.Objs, b, e, self.SchemaHandler); err == nil {
+				for name, table := range *tableMap {
+					if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+						lock.Lock()
+						if _, ok := self.DictRecs[name]; !ok {
+							self.DictRecs[name] = Layout.NewDictRec()
+						}
+						pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
+							table, int32(self.PageSize), 32, parquet.CompressionCodec_SNAPPY)
+						lock.Unlock()
+					} else {
+						pagesMapList[index][name], _, _ = Layout.TableToDataPages(table, int32(self.PageSize),
+							parquet.CompressionCodec_SNAPPY)
 					}
-					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
-						table, int32(self.PageSize), 32, parquet.CompressionCodec_SNAPPY)
-					lock.Unlock()
-				} else {
-					pagesMapList[index][name], _, _ = Layout.TableToDataPages(table, int32(self.PageSize),
-						parquet.CompressionCodec_SNAPPY)
 				}
 			}
 

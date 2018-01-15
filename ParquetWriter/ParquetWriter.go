@@ -40,7 +40,11 @@ type ParquetWriter struct {
 
 //Create a parquet handler
 func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
+	var err error
 	res := new(ParquetWriter)
+	if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
+		return nil, err
+	}
 	res.NP = np
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
@@ -52,11 +56,11 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.PFile = pFile
 	res.PagesMapBuf = make(map[string][]*Layout.Page)
 	res.DictRecs = make(map[string]*Layout.DictRecType)
-	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
-	_, err := res.PFile.Write([]byte("PAR1"))
+	_, err = res.PFile.Write([]byte("PAR1"))
 
 	return res, err
 }
@@ -93,7 +97,7 @@ func (self *ParquetWriter) RenameSchema() {
 
 //Write the footer and stop writing
 func (self *ParquetWriter) WriteStop() {
-	//self.Flush()
+	self.Flush(true)
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
@@ -155,20 +159,21 @@ func (self *ParquetWriter) Flush(flag bool) {
 				return
 			}
 
-			tableMap := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler)
-			for name, table := range *tableMap {
-				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-					lock.Lock()
-					if _, ok := self.DictRecs[name]; !ok {
-						self.DictRecs[name] = Layout.NewDictRec()
-					}
-					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
-						table, int32(self.PageSize), 32, parquet.CompressionCodec_SNAPPY)
-					lock.Unlock()
+			if tableMap, err := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler); err == nil {
+				for name, table := range *tableMap {
+					if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+						lock.Lock()
+						if _, ok := self.DictRecs[name]; !ok {
+							self.DictRecs[name] = Layout.NewDictRec()
+						}
+						pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
+							table, int32(self.PageSize), 32, parquet.CompressionCodec_SNAPPY)
+						lock.Unlock()
 
-				} else {
-					pagesMapList[index][name], _, _ = Layout.TableToDataPages(table, int32(self.PageSize),
-						parquet.CompressionCodec_SNAPPY)
+					} else {
+						pagesMapList[index][name], _, _ = Layout.TableToDataPages(table, int32(self.PageSize),
+							parquet.CompressionCodec_SNAPPY)
+					}
 				}
 			}
 
