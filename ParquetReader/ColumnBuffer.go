@@ -121,17 +121,16 @@ func (self *ColumnBufferType) ReadPage() error {
 	return nil
 }
 
-func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
+func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64, error) {
 	var err error
 
 	for self.DataTableNumRows < num && err == nil {
 		err = self.ReadPage()
-
 	}
 	if num > self.DataTableNumRows {
 		num = self.DataTableNumRows
 	}
 	res := self.DataTable.Pop(num)
 	self.DataTableNumRows -= num
-	return res, num
+	return res, num, err
 }

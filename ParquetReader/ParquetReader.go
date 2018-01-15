@@ -101,26 +101,47 @@ func (self *ParquetReader) GetNumRows() int64 {
 }
 
 //Get the footer size
-func (self *ParquetReader) GetFooterSize() uint32 {
+func (self *ParquetReader) GetFooterSize() (uint32, error) {
 	buf := make([]byte, 4)
-	self.PFile.Seek(-8, 2)
-	self.PFile.Read(buf)
+	if _, err := self.PFile.Seek(-8, 2); err != nil {
+		return 0, err
+	}
+	if _, err := self.PFile.Read(buf); err != nil {
+		return 0, err
+	}
 	size := binary.LittleEndian.Uint32(buf)
-	return size
+	return size, nil
 }
 
 //Read footer from parquet file
-func (self *ParquetReader) ReadFooter() {
-	size := self.GetFooterSize()
-	self.PFile.Seek(int(-(int64)(8+size)), 2)
+func (self *ParquetReader) ReadFooter() error {
+	var (
+		size uint32
+		err  error
+	)
+	if size, err = self.GetFooterSize(); err != nil {
+		return err
+	}
+	if _, err = self.PFile.Seek(int(-(int64)(8+size)), 2); err != nil {
+		return err
+	}
 	self.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
 	protocol := pf.GetProtocol(thrift.NewStreamTransportR(self.PFile))
-	self.Footer.Read(protocol)
+	if err = self.Footer.Read(protocol); err != nil {
+		return err
+	}
+	return nil
 }
 
 //Read rows of parquet file
-func (self *ParquetReader) Read(dstInterface interface{}) {
+func (self *ParquetReader) Read(dstInterface interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	tmap := make(map[string]*Layout.Table)
 	locker := new(sync.Mutex)
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
@@ -141,7 +162,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 					return
 				case pathStr := <-taskChan:
 					cb := self.ColumnBuffers[pathStr]
-					table, _ := cb.ReadRows(int64(num))
+					table, _, _ := cb.ReadRows(int64(num))
 					locker.Lock()
 					if _, ok := tmap[pathStr]; ok {
 						tmap[pathStr].Merge(table)
@@ -193,10 +214,18 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 		resTmp = reflect.AppendSlice(resTmp, reflect.ValueOf(dst).Elem())
 	}
 	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
+
+	return nil
 }
 
 //Read column by path in schema.
-func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]interface{}) {
+func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	num := reflect.ValueOf(dstInterface).Elem().Len()
 	if num <= 0 {
 		return
@@ -210,7 +239,7 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]inte
 	}
 
 	if cb, ok := self.ColumnBuffers[pathStr]; ok {
-		table, _ := cb.ReadRows(int64(num))
+		table, _, _ := cb.ReadRows(int64(num))
 		i, j, ln := 0, 0, len(table.Values)
 
 		numi := 0
@@ -229,15 +258,17 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]inte
 			i = j
 		}
 	}
+	return nil
 }
 
 //Read column by index. The index of first column is 0.
-func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface *[]interface{}) {
+func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface *[]interface{}) error {
 	if index >= len(self.SchemaHandler.ValueColumns) {
-		return
+		return nil
 	}
 	pathStr := self.SchemaHandler.ValueColumns[index]
-	self.ReadColumnByPath(pathStr, dstInterface)
+	err := self.ReadColumnByPath(pathStr, dstInterface)
+	return err
 }
 
 //Stop Read
