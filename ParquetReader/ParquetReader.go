@@ -136,12 +136,6 @@ func (self *ParquetReader) ReadFooter() error {
 
 //Read rows of parquet file
 func (self *ParquetReader) Read(dstInterface interface{}) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
-
 	tmap := make(map[string]*Layout.Table)
 	locker := new(sync.Mutex)
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
@@ -201,7 +195,9 @@ func (self *ParquetReader) Read(dstInterface interface{}) (err error) {
 		}
 		go func(b, e, index int) {
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
-			Marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler)
+			if r := Marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler); r != nil {
+				err = r
+			}
 			doneChan <- 0
 		}(int(bgn), int(end), int(c))
 	}
