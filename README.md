@@ -15,7 +15,7 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 ## Install
 Add the parquet-go library to your $GOPATH/src:
 ```sh
-go get github.com/xitongsys/parquet-go
+go get github.com/xitongsys/parquet-go/...
 ```
 Look at a few examples in `example/`. 
 ```sh
