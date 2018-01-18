@@ -203,7 +203,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
 			if len(pages) > 0 && pages[0].Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), parquet.CompressionCodec_SNAPPY)
+				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressionType)
 				tmp := append([]*Layout.Page{dictPage}, pages...)
 				chunkMap[name] = Layout.PagesToDictChunk(tmp)
 			} else {
