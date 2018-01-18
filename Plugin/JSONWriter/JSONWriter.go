@@ -23,6 +23,7 @@ type JSONWriter struct {
 
 	PageSize     int64
 	RowGroupSize int64
+	CompressType parquet.CompressionCodec
 	Offset       int64
 
 	Objs              []string
@@ -48,6 +49,7 @@ func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (
 	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
+	res.CompressType = parquet.CompressionCodec_SNAPPY
 	res.PagesMapBuf = make(map[string][]*Layout.Page)
 	res.DictRecs = make(map[string]*Layout.DictRecType)
 	res.NP = np
@@ -134,6 +136,9 @@ func (self *JSONWriter) Flush(flag bool) (err error) {
 
 	doneChan := make(chan int)
 	l := int64(len(self.Objs))
+	if l <= 0 {
+		return
+	}
 	var c int64 = 0
 	delta := (l + self.NP - 1) / self.NP
 	lock := new(sync.Mutex)
@@ -160,11 +165,11 @@ func (self *JSONWriter) Flush(flag bool) (err error) {
 							self.DictRecs[name] = Layout.NewDictRec()
 						}
 						pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
-							table, int32(self.PageSize), 32, parquet.CompressionCodec_SNAPPY)
+							table, int32(self.PageSize), 32, self.CompressType)
 						lock.Unlock()
 					} else {
 						pagesMapList[index][name], _, _ = Layout.TableToDataPages(table, int32(self.PageSize),
-							parquet.CompressionCodec_SNAPPY)
+							self.CompressType)
 					}
 				}
 			}
@@ -198,7 +203,7 @@ func (self *JSONWriter) Flush(flag bool) (err error) {
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
 			if len(pages) > 0 && pages[0].Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), parquet.CompressionCodec_SNAPPY)
+				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressType)
 				tmp := append([]*Layout.Page{dictPage}, pages...)
 				chunkMap[name] = Layout.PagesToDictChunk(tmp)
 			} else {
