@@ -138,6 +138,10 @@ func (self *ParquetWriter) Flush(flag bool) {
 
 	doneChan := make(chan int)
 	l := int64(len(self.Objs))
+	if l <= 0 {
+		return
+	}
+
 	var c int64 = 0
 	delta := (l + self.NP - 1) / self.NP
 	lock := new(sync.Mutex)
@@ -208,6 +212,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 				chunkMap[name] = Layout.PagesToDictChunk(tmp)
 			} else {
 				chunkMap[name] = Layout.PagesToChunk(pages)
+
 			}
 		}
 
