@@ -148,6 +148,7 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/parquet"
 	"log"
 	"time"
 )
@@ -159,41 +160,44 @@ type Student struct {
 	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
 	Day    int32   `parquet:"name=day, type=DATE"`
 }
-func main() {
-    fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
-    //write
-    pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 10)
-    num := 10
-    for i := 0; i < num; i++ {
-        stu := Student{
-            Name:   "StudentName",
-            Age:    int32(20 + i%5),
-            Id:     int64(i),
-            Weight: float32(50.0 + float32(i)*0.1),
-            Sex:    bool(i%2 == 0),
-            Day:    int32(time.Now().Unix() / 3600 / 24),
-        }
-        pw.Write(stu)
-    }
-    pw.Flush(true)
-    pw.WriteStop()
-    log.Println("Write Finished")
-    fw.Close()
 
-    ///read 
-    fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
-    pr, err := ParquetReader.NewParquetReader(fr, new(Student), 1)
-    if err != nil {
-        log.Println("Failed new reader", err)
-    }
-    num = int(pr.GetNumRows())
-    for i := 0; i < num; i++ {
-        stus := make([]Student, 1)
-        pr.Read(&stus)
-        log.Println(stus)
-    }
-    pr.ReadStop()
-    fr.Close()
+func main() {
+	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
+	//write
+	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	//pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	//pw.CompressionType = parquet.CompressionCodec_SNAPPY
+	num := 10
+	for i := 0; i < num; i++ {
+		stu := Student{
+			Name:   "StudentName",
+			Age:    int32(20 + i%5),
+			Id:     int64(i),
+			Weight: float32(50.0 + float32(i)*0.1),
+			Sex:    bool(i%2 == 0),
+			Day:    int32(time.Now().Unix() / 3600 / 24),
+		}
+		pw.Write(stu)
+	}
+	pw.Flush(true)
+	pw.WriteStop()
+	log.Println("Write Finished")
+	fw.Close()
+
+	///read
+	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
+	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	if err != nil {
+		log.Println("Failed new reader", err)
+	}
+	num = int(pr.GetNumRows())
+	for i := 0; i < num; i++ {
+		stus := make([]Student, 1)
+		pr.Read(&stus)
+		log.Println(stus)
+	}
+	pr.ReadStop()
+	fr.Close()
 }
 ```
 

@@ -22,9 +22,10 @@ type ParquetWriter struct {
 	PFile         ParquetFile.ParquetFile
 
 	////write info/////
-	PageSize     int64
-	RowGroupSize int64
-	Offset       int64
+	PageSize        int64
+	RowGroupSize    int64
+	CompressionType parquet.CompressionCodec
+	Offset          int64
 
 	Objs              []interface{}
 	ObjsSize          int64
@@ -44,6 +45,7 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.NP = np
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
+	res.CompressionType = parquet.CompressionCodec_SNAPPY
 	res.ObjsSize = 0
 	res.CheckSizeCritical = 0
 	res.Size = 0
@@ -163,12 +165,12 @@ func (self *ParquetWriter) Flush(flag bool) {
 						self.DictRecs[name] = Layout.NewDictRec()
 					}
 					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
-						table, int32(self.PageSize), 32, parquet.CompressionCodec_SNAPPY)
+						table, int32(self.PageSize), 32, self.CompressionType)
 					lock.Unlock()
 
 				} else {
 					pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
-						parquet.CompressionCodec_SNAPPY)
+						self.CompressionType)
 				}
 			}
 
