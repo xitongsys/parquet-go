@@ -12,7 +12,7 @@ func main() {
     {
         "Tag":"name=parquet-go-root",
         "Fields":[
-		    {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
+		    {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY, repetitiontype=OPTIONAL"},
 		    {"Tag":"name=age, type=INT32"},
 		    {"Tag":"name=id, type=INT64"},
 		    {"Tag":"name=weight, type=FLOAT"},
