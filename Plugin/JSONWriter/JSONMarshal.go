@@ -113,7 +113,8 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 						keysMap[keys[j].String()] = true
 					}
 					for key, _ := range node.PathMap.Children {
-						if _, ok := keysMap[key]; ok {
+						_, ok := keysMap[key]
+						if ok && node.Val.MapIndex(reflect.ValueOf(key)).Elem().IsValid() {
 							newNode := nodeBuf.GetNode()
 							newNode.PathMap = node.PathMap.Children[key]
 							newNode.Val = node.Val.MapIndex(reflect.ValueOf(key)).Elem()
