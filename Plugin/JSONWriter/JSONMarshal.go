@@ -201,7 +201,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 						} else {
 							newNode.RL = rlNow
 						}
-						//newNode.DL = node.DL + 1
+						newNode.DL = node.DL + 1
 						stack = append(stack, newNode)
 					}
 				}

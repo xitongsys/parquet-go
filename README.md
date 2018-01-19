@@ -353,6 +353,12 @@ func main() {
                   ]
                  }
              ]
+            },
+            {"Tag":"name=teachers, repetitiontype=REPEATED",
+             "Fields":[
+                 {"Tag":"name=name, type=UTF8"},
+                 {"Tag":"name=id, type=INT64"}
+             ]
             }
         ]
 	}
@@ -376,8 +382,12 @@ func main() {
                             "English":[100]
                          },
                 "friends":[
-                    {"name":"aa", "id":1},
-                    {"name":"bb", "id":2}
+                    {"name":"friend1", "id":1},
+                    {"name":"friend2", "id":2}
+                ],
+                "teachers":[
+                    {"name":"teacher1", "id":1},
+                    {"name":"teacher2", "id":2}
                 ]
             }
         `
@@ -388,7 +398,6 @@ func main() {
 	pw.WriteStop()
 	log.Println("Write Finished")
 	fw.Close()
-
 }
 ```
 
