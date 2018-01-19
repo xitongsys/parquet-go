@@ -30,7 +30,16 @@ func main() {
                  }
              ]
             },
-            {"Tag":"name=friends, type=UTF8, repetitiontype=REPEATED"}
+            {"Tag":"name=friends, type=LIST",
+             "Fields":[
+                 {"Tag":"name=element",
+                  "Fields":[
+                      {"Tag":"name=name, type=UTF8"},
+                      {"Tag":"name=id, type=INT64"}
+                  ]
+                 }
+             ]
+            }
         ]
 	}
 `
@@ -54,7 +63,10 @@ func main() {
                             "Computer":[98,97.5],
                             "English":[100]
                          },
-                "friends":["aa","bb"]
+                "friends":[
+                    {"name":"aa", "id":1},
+                    {"name":"bb", "id":2}
+                ]
             }
         `
 
