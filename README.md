@@ -1,4 +1,4 @@
-# parquet-go v1.1.2
+# parquet-go v1.1.3
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -148,7 +148,6 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
-	"github.com/xitongsys/parquet-go/parquet"
 	"log"
 	"time"
 )
@@ -165,8 +164,11 @@ func main() {
 	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
 	//write
 	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
-	//pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	
+	//If you want to change the RowGroupSize or Compression method, you can set as following
+	//pw.RowGroupSize = 128 * 1024 * 1024 
 	//pw.CompressionType = parquet.CompressionCodec_SNAPPY
+	
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -318,18 +320,17 @@ JSONWriter can convert JSON strings to parquet by the parquet schema, which is a
 ```
 
 #### Example
-
 ```golang
 func main() {
-    md := `
+	md := `
     {
         "Tag":"name=parquet-go-root",
         "Fields":[
-            {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
-            {"Tag":"name=age, type=INT32"},
-            {"Tag":"name=id, type=INT64"},
-            {"Tag":"name=weight, type=FLOAT"},
-            {"Tag":"name=sex, type=BOOLEAN"},
+		    {"Tag":"name=name, type=UTF8, repetitiontype=OPTIONAL"},
+		    {"Tag":"name=age, type=INT32"},
+		    {"Tag":"name=id, type=INT64"},
+		    {"Tag":"name=weight, type=FLOAT"},
+		    {"Tag":"name=sex, type=BOOLEAN"},
             {"Tag":"name=classes, type=LIST",
              "Fields":[
                   {"Tag":"name=element, type=UTF8"}
@@ -343,17 +344,25 @@ func main() {
                  }
              ]
             },
-            {"Tag":"name=friends, type=UTF8, repetitiontype=REPEATED"}
+            {"Tag":"name=friends, type=LIST",
+             "Fields":[
+                 {"Tag":"name=element",
+                  "Fields":[
+                      {"Tag":"name=name, type=UTF8"},
+                      {"Tag":"name=id, type=INT64"}
+                  ]
+                 }
+             ]
+            }
         ]
-    }
+	}
 `
-    //write
-    fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
-    pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
-
-    num := 10
-    for i := 0; i < num; i++ {
-        rec := `
+	//write
+	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
+	pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
+	num := 10
+	for i := 0; i < num; i++ {
+		rec := `
             {
                 "name":"%s",
                 "age":%d,
@@ -366,18 +375,21 @@ func main() {
                             "Computer":[98,97.5],
                             "English":[100]
                          },
-                "friends":["aa","bb"]
+                "friends":[
+                    {"name":"aa", "id":1},
+                    {"name":"bb", "id":2}
+                ]
             }
         `
-        rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
-        pw.Write(rec)
-    }
-    pw.Flush(true)
-    pw.WriteStop()
-    log.Println("Write Finished")
-    fw.Close()
-}
+		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
+		pw.Write(rec)
+	}
+	pw.Flush(true)
+	pw.WriteStop()
+	log.Println("Write Finished")
+	fw.Close()
 
+}
 ```
 
 ## Status
