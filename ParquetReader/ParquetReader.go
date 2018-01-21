@@ -23,18 +23,20 @@ type ParquetReader struct {
 	ColumnBuffers map[string]*ColumnBufferType
 }
 
-//Create a parquet column reader
+// NewParquetColumnReader creates a parquet column reader
 func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error) {
 	var err error
-	res := new(ParquetReader)
-	res.NP = np
-	res.PFile = pFile
-	res.ReadFooter()
-	res.ColumnBuffers = make(map[string]*ColumnBufferType)
+	res := &ParquetReader{
+		NP:            np,
+		PFile:         pFile,
+		ColumnBuffers: make(map[string]*ColumnBufferType),
+	}
+	if err = res.ReadFooter(); err != nil {
+		return nil, err
+	}
 	if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema()); err != nil {
 		return nil, err
 	}
-
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
 		schema := res.SchemaHandler.SchemaElements[i]
 		pathStr := res.SchemaHandler.IndexMap[int32(i)]
@@ -46,18 +48,20 @@ func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetRe
 			}
 		}
 	}
-	return res, err
+	return res, nil
 }
 
-//Create a parquet reader
+// NewParquetColumnReader creates a parquet reader
 func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
-	res := new(ParquetReader)
-	res.NP = np
-	res.PFile = pFile
-	res.ReadFooter()
-	res.ColumnBuffers = make(map[string]*ColumnBufferType)
-	//res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
+	res := &ParquetReader{
+		NP:            np,
+		PFile:         pFile,
+		ColumnBuffers: make(map[string]*ColumnBufferType),
+	}
+	if err = res.ReadFooter(); err != nil {
+		return nil, err
+	}
 	if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
 		return nil, err
 	}
@@ -74,7 +78,7 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 			}
 		}
 	}
-	return res, err
+	return res, nil
 }
 
 //Rename schema name to inname
