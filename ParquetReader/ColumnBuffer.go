@@ -119,15 +119,34 @@ func (self *ColumnBufferType) ReadPage() error {
 
 func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 	var err error
+	var res *Layout.Table
+	var resNum int64
 
-	for self.DataTableNumRows < num && err == nil {
+	for self.DataTableNumRows < num && num > 0 && err == nil {
 		err = self.ReadPage()
+		if self.DataTableNumRows > num {
+			tmp := self.DataTable.Pop(num)
+			if res == nil {
+				res = Layout.NewTableFromTable(tmp)
+			}
+			res.Merge(tmp)
+			resNum += num
+			num = 0
+			self.DataTableNumRows -= num
+		} else {
+			if res == nil {
+				res = Layout.NewTableFromTable(self.DataTable)
+			}
+			res.Merge(self.DataTable)
+			resNum += self.DataTableNumRows
+			num -= self.DataTableNumRows
+			self.DataTable = nil
+			self.DataTableNumRows = 0
+		}
+	}
+	if err != nil {
+		self.DataTable = nil
+	}
 
-	}
-	if num > self.DataTableNumRows {
-		num = self.DataTableNumRows
-	}
-	res := self.DataTable.Pop(num)
-	self.DataTableNumRows -= num
-	return res, num
+	return res, resNum
 }

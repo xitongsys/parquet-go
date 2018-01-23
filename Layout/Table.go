@@ -52,6 +52,9 @@ func (self *Table) Merge(tables ...*Table) {
 		return
 	}
 	for i := 0; i < ln; i++ {
+		if tables[i] == nil {
+			continue
+		}
 		self.Values = append(self.Values, tables[i].Values...)
 		self.RepetitionLevels = append(self.RepetitionLevels, tables[i].RepetitionLevels...)
 		self.DefinitionLevels = append(self.DefinitionLevels, tables[i].DefinitionLevels...)
