@@ -46,6 +46,7 @@ func NewColumnBuffer(pFile ParquetFile.ParquetFile, footer *parquet.FileMetaData
 }
 
 func (self *ColumnBufferType) NextRowGroup() error {
+	var err error
 	rowGroups := self.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
 	if self.RowGroupIndex >= ln {
@@ -71,7 +72,9 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	self.ChunkHeader = columnChunks[i]
 	if columnChunks[i].FilePath != nil {
 		self.PFile.Close()
-		self.PFile, _ = self.PFile.Open(*columnChunks[i].FilePath)
+		if self.PFile, err = self.PFile.Open(*columnChunks[i].FilePath); err != nil {
+			return err
+		}
 	}
 	//offset := columnChunks[i].FileOffset
 	offset := columnChunks[i].MetaData.DataPageOffset
@@ -107,11 +110,10 @@ func (self *ColumnBufferType) ReadPage() error {
 		}
 		self.DataTableNumRows += numRows
 	} else {
-		err := self.NextRowGroup()
-		if err != nil {
+		if err := self.NextRowGroup(); err != nil {
 			return err
 		}
-		self.ReadPage()
+		return self.ReadPage()
 	}
 
 	return nil
@@ -121,31 +123,32 @@ func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 	var err error
 	var res *Layout.Table
 	var resNum int64
-
-	for self.DataTableNumRows < num && num > 0 && err == nil {
-		err = self.ReadPage()
-		if self.DataTableNumRows > num {
-			tmp := self.DataTable.Pop(num)
-			if res == nil {
-				res = Layout.NewTableFromTable(tmp)
-			}
-			res.Merge(tmp)
-			resNum += num
-			num = 0
-			self.DataTableNumRows -= num
-		} else {
-			if res == nil {
-				res = Layout.NewTableFromTable(self.DataTable)
-			}
-			res.Merge(self.DataTable)
-			resNum += self.DataTableNumRows
-			num -= self.DataTableNumRows
-			self.DataTable = nil
-			self.DataTableNumRows = 0
-		}
+	for self.DataTableNumRows <= 0 && err == nil {
+		self.ReadPage()
 	}
-	if err != nil {
-		self.DataTable = nil
+
+	for num > 0 && err == nil {
+		if self.DataTableNumRows < num {
+			if err = self.ReadPage(); err != nil {
+				break
+			}
+		}
+		var popNum int64
+		if self.DataTableNumRows >= num {
+			popNum = num
+		} else {
+			popNum = self.DataTableNumRows
+		}
+
+		tmp := self.DataTable.Pop(popNum)
+		if res == nil {
+			res = Layout.NewTableFromTable(tmp)
+		}
+		res.Merge(tmp)
+
+		self.DataTableNumRows -= popNum
+		num -= popNum
+		resNum += popNum
 	}
 
 	return res, resNum

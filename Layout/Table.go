@@ -5,6 +5,9 @@ import (
 )
 
 func NewTableFromTable(src *Table) *Table {
+	if src == nil {
+		return nil
+	}
 	table := new(Table)
 	table.RepetitionLevels = src.RepetitionLevels
 	table.Type = src.Type
