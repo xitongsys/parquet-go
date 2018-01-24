@@ -10,7 +10,6 @@ import (
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
-	"strings"
 	"sync"
 )
 
@@ -23,35 +22,7 @@ type ParquetReader struct {
 	ColumnBuffers map[string]*ColumnBufferType
 }
 
-// NewParquetColumnReader creates a parquet column reader
-func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error) {
-	var err error
-	res := &ParquetReader{
-		NP:            np,
-		PFile:         pFile,
-		ColumnBuffers: make(map[string]*ColumnBufferType),
-	}
-	if err = res.ReadFooter(); err != nil {
-		return nil, err
-	}
-	if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema()); err != nil {
-		return nil, err
-	}
-	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
-		schema := res.SchemaHandler.SchemaElements[i]
-		pathStr := res.SchemaHandler.IndexMap[int32(i)]
-		numChildren := schema.GetNumChildren()
-		if numChildren == 0 {
-			res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr)
-			if err != nil {
-				return res, err
-			}
-		}
-	}
-	return res, nil
-}
 
-// NewParquetColumnReader creates a parquet reader
 func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
 	res := &ParquetReader{
@@ -216,59 +187,6 @@ func (self *ParquetReader) Read(dstInterface interface{}) (err error) {
 	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
 
 	return nil
-}
-
-//Read column by path in schema.
-func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]interface{}) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
-
-	num := reflect.ValueOf(dstInterface).Elem().Len()
-	if num <= 0 {
-		return
-	}
-	rootName := self.SchemaHandler.GetRootName()
-
-	if len(pathStr) <= 0 {
-		return
-	} else if !strings.HasPrefix(pathStr, rootName) {
-		pathStr = rootName + "." + pathStr
-	}
-
-	if cb, ok := self.ColumnBuffers[pathStr]; ok {
-		table, _, _ := cb.ReadRows(int64(num))
-		i, j, ln := 0, 0, len(table.Values)
-
-		numi := 0
-		for i < ln {
-			rec := [][]interface{}{}
-			j = i
-			for j < ln {
-				rec = append(rec, []interface{}{table.Values[j], table.RepetitionLevels[j], table.DefinitionLevels[j]})
-				j++
-				if j < ln && table.RepetitionLevels[j] == 0 {
-					break
-				}
-			}
-			(*dstInterface)[numi] = rec
-			numi++
-			i = j
-		}
-	}
-	return nil
-}
-
-//Read column by index. The index of first column is 0.
-func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface *[]interface{}) error {
-	if index >= len(self.SchemaHandler.ValueColumns) {
-		return nil
-	}
-	pathStr := self.SchemaHandler.ValueColumns[index]
-	err := self.ReadColumnByPath(pathStr, dstInterface)
-	return err
 }
 
 //Stop Read

@@ -1,4 +1,4 @@
-# parquet-go v1.1.2
+# parquet-go v1.1.5
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -164,6 +164,11 @@ func main() {
 	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
 	//write
 	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	
+	//If you want to change the RowGroupSize or Compression method, you can set as following
+	//pw.RowGroupSize = 128 * 1024 * 1024 
+	//pw.CompressionType = parquet.CompressionCodec_SNAPPY
+
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -199,7 +204,7 @@ func main() {
 ```
 
 ## Read Columns
-If you just want to get some columns data, your can use column reader. The read function return a 3-elements slice([value, RepetitionLevel, DefinitionLevel]) of the record.  
+If you just want to get some columns data, your can use column reader. The read function return a 3 slices([value], [RepetitionLevel], [DefinitionLevel]) of the record.  
 ```golang
 /*
 type Student struct {
@@ -214,32 +219,30 @@ type Student struct {
 }
 */
 
-func main() {
+func main(){
+	var names, classes, scores_key, scores_value, ids []interface{}
+	var rls, dls []int32
 	///read
 	fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
 	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
-	num = int(pr.GetNumRows())
-	names := make([]interface{}, num)
-	pr.ReadColumnByPath("name", &names)
-	log.Println("name", names)
+	num := int(pr.GetNumRows())
+	names, rls, dls = pr.ReadColumnByPath("name", num)
+	log.Println("name", names, rls, dls)
 
-	classes := make([]interface{}, num)
-	pr.ReadColumnByPath("class.list.element", &classes)
-	log.Println("class", classes)
+	classes, rls, dls = pr.ReadColumnByPath("class.list.element", num)
+	log.Println("class", classes, rls, dls)
 
-	scores_key := make([]interface{}, num)
-	scores_value := make([]interface{}, num)
-	pr.ReadColumnByPath("score.key_value.key", &scores_key)
-	pr.ReadColumnByPath("score.key_value.value", &scores_value)
+	scores_key, rls, dls = pr.ReadColumnByPath("score.key_value.key", num)
+	scores_value, rls, dls = pr.ReadColumnByPath("score.key_value.value", num)
 	log.Println("scores_key", scores_key)
 	log.Println("scores_value", scores_value)
 
-	ids := make([]interface{}, num)
-	pr.ReadColumnByIndex(2, &ids)
+	ids, _, _ = pr.ReadColumnByIndex(2, num)
 	log.Println(ids)
+
 	pr.ReadStop()
 	fr.Close()
 }
@@ -315,18 +318,17 @@ JSONWriter can convert JSON strings to parquet by the parquet schema, which is a
 ```
 
 #### Example
-
 ```golang
 func main() {
-    md := `
+	md := `
     {
         "Tag":"name=parquet-go-root",
         "Fields":[
-            {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
-            {"Tag":"name=age, type=INT32"},
-            {"Tag":"name=id, type=INT64"},
-            {"Tag":"name=weight, type=FLOAT"},
-            {"Tag":"name=sex, type=BOOLEAN"},
+		    {"Tag":"name=name, type=UTF8, repetitiontype=OPTIONAL"},
+		    {"Tag":"name=age, type=INT32"},
+		    {"Tag":"name=id, type=INT64"},
+		    {"Tag":"name=weight, type=FLOAT"},
+		    {"Tag":"name=sex, type=BOOLEAN"},
             {"Tag":"name=classes, type=LIST",
              "Fields":[
                   {"Tag":"name=element, type=UTF8"}
@@ -340,17 +342,31 @@ func main() {
                  }
              ]
             },
-            {"Tag":"name=friends, type=UTF8, repetitiontype=REPEATED"}
+            {"Tag":"name=friends, type=LIST",
+             "Fields":[
+                 {"Tag":"name=element",
+                  "Fields":[
+                      {"Tag":"name=name, type=UTF8"},
+                      {"Tag":"name=id, type=INT64"}
+                  ]
+                 }
+             ]
+            },
+            {"Tag":"name=teachers, repetitiontype=REPEATED",
+             "Fields":[
+                 {"Tag":"name=name, type=UTF8"},
+                 {"Tag":"name=id, type=INT64"}
+             ]
+            }
         ]
-    }
+	}
 `
-    //write
-    fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
-    pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
-
-    num := 10
-    for i := 0; i < num; i++ {
-        rec := `
+	//write
+	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
+	pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
+	num := 10
+	for i := 0; i < num; i++ {
+		rec := `
             {
                 "name":"%s",
                 "age":%d,
@@ -363,18 +379,24 @@ func main() {
                             "Computer":[98,97.5],
                             "English":[100]
                          },
-                "friends":["aa","bb"]
+                "friends":[
+                    {"name":"friend1", "id":1},
+                    {"name":"friend2", "id":2}
+                ],
+                "teachers":[
+                    {"name":"teacher1", "id":1},
+                    {"name":"teacher2", "id":2}
+                ]
             }
         `
-        rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
-        pw.Write(rec)
-    }
-    pw.Flush(true)
-    pw.WriteStop()
-    log.Println("Write Finished")
-    fw.Close()
+		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
+		pw.Write(rec)
+	}
+	pw.Flush(true)
+	pw.WriteStop()
+	log.Println("Write Finished")
+	fw.Close()
 }
-
 ```
 
 ## Status

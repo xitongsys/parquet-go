@@ -12,7 +12,7 @@ func main() {
     {
         "Tag":"name=parquet-go-root",
         "Fields":[
-		    {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
+		    {"Tag":"name=name, type=UTF8, repetitiontype=OPTIONAL"},
 		    {"Tag":"name=age, type=INT32"},
 		    {"Tag":"name=id, type=INT64"},
 		    {"Tag":"name=weight, type=FLOAT"},
@@ -30,7 +30,22 @@ func main() {
                  }
              ]
             },
-            {"Tag":"name=friends, type=UTF8, repetitiontype=REPEATED"}
+            {"Tag":"name=friends, type=LIST",
+             "Fields":[
+                 {"Tag":"name=element",
+                  "Fields":[
+                      {"Tag":"name=name, type=UTF8"},
+                      {"Tag":"name=id, type=INT64"}
+                  ]
+                 }
+             ]
+            },
+            {"Tag":"name=teachers, repetitiontype=REPEATED",
+             "Fields":[
+                 {"Tag":"name=name, type=UTF8"},
+                 {"Tag":"name=id, type=INT64"}
+             ]
+            }
         ]
 	}
 `
@@ -54,7 +69,14 @@ func main() {
                             "Computer":[98,97.5],
                             "English":[100]
                          },
-                "friends":["aa","bb"]
+                "friends":[
+                    {"name":"friend1", "id":1},
+                    {"name":"friend2", "id":2}
+                ],
+                "teachers":[
+                    {"name":"teacher1", "id":1},
+                    {"name":"teacher2", "id":2}
+                ]
             }
         `
 
