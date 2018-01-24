@@ -40,11 +40,8 @@ type JSONWriter struct {
 
 //Create JSON writer
 func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*JSONWriter, error) {
-	var err error
 	res := new(JSONWriter)
-	if res.SchemaHandler, err = NewSchemaHandlerFromJSON(jsonSchema); err != nil {
-		return res, err
-	}
+	res.SchemaHandler = NewSchemaHandlerFromJSON(jsonSchema)
 
 	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
@@ -57,7 +54,7 @@ func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	res.Offset = 4
-	_, err = res.PFile.Write([]byte("PAR1"))
+	_, err := res.PFile.Write([]byte("PAR1"))
 	return res, err
 }
 
@@ -71,7 +68,7 @@ func (self *JSONWriter) RenameSchema() {
 }
 
 //Write parquet values to parquet file
-func (self *JSONWriter) Write(rec string) error {
+func (self *JSONWriter) Write(rec string) {
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
@@ -83,52 +80,30 @@ func (self *JSONWriter) Write(rec string) error {
 	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize > criSize {
-		if err := self.Flush(false); err != nil {
-			return err
-		}
+		self.Flush(false)
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
 	}
-	return nil
 }
 
 //Write footer to parquet file and stop writing
-func (self *JSONWriter) WriteStop() error {
-	var err error
-	if err = self.Flush(true); err != nil {
-		return err
-	}
+func (self *JSONWriter) WriteStop() {
+	//self.Flush()
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
-	var footerBuf []byte
-	if footerBuf, err = ts.Write(self.Footer); err != nil {
-		return err
-	}
+	footerBuf, _ := ts.Write(self.Footer)
 
-	if _, err = self.PFile.Write(footerBuf); err != nil {
-		return err
-	}
+	self.PFile.Write(footerBuf)
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
-	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
-		return err
-	}
-	if _, err = self.PFile.Write([]byte("PAR1")); err != nil {
-		return err
-	}
-	return nil
+	self.PFile.Write(footerSizeBuf)
+	self.PFile.Write([]byte("PAR1"))
 }
 
 //Flush the write buffer to parquet file
-func (self *JSONWriter) Flush(flag bool) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
-
+func (self *JSONWriter) Flush(flag bool) {
 	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
 		pagesMapList[i] = make(map[string][]*Layout.Page)
@@ -157,14 +132,13 @@ func (self *JSONWriter) Flush(flag bool) (err error) {
 				doneChan <- 0
 				return
 			}
-			if tableMap, err := MarshalJSON(self.Objs, b, e, self.SchemaHandler); err == nil {
-				for name, table := range *tableMap {
-					if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-						lock.Lock()
-						if _, ok := self.DictRecs[name]; !ok {
-							self.DictRecs[name] = Layout.NewDictRec()
-						}
-						
+			tableMap := MarshalJSON(self.Objs, b, e, self.SchemaHandler)
+			for name, table := range *tableMap {
+				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+					lock.Lock()
+					if _, ok := self.DictRecs[name]; !ok {
+						self.DictRecs[name] = Layout.NewDictRec()
+					}
 					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
 						table, int32(self.PageSize), 32, self.CompressType)
 					lock.Unlock()
@@ -248,6 +222,4 @@ func (self *JSONWriter) Flush(flag bool) (err error) {
 	self.Footer.NumRows += int64(len(self.Objs))
 	self.Objs = self.Objs[:0]
 	self.ObjsSize = 0
-
-	return nil
 }

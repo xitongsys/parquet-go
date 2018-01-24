@@ -20,6 +20,6 @@ type Student struct {
 }
 
 func TestNewSchemaHandlerFromStruct(t *testing.T) {
-	schemaMap, _ := NewSchemaHandlerFromStruct(new(Student))
+	schemaMap := NewSchemaHandlerFromStruct(new(Student))
 	fmt.Println(schemaMap)
 }

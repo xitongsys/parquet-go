@@ -87,6 +87,7 @@ func main() {
 		}
 		pw.Write(tp)
 	}
+	pw.Flush(true)
 	pw.WriteStop()
 	log.Println("Write Finished")
 	fw.Close()

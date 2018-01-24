@@ -11,12 +11,7 @@ import (
 	"reflect"
 )
 
-func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
+func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
 
 	res := make(map[string]*Layout.Table)
 	pathMap := schemaHandler.PathMap
@@ -223,6 +218,6 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 		}
 	}
 
-	return &res, nil
+	return &res
 
 }

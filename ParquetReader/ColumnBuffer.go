@@ -93,11 +93,7 @@ func (self *ColumnBufferType) NextRowGroup() error {
 
 func (self *ColumnBufferType) ReadPage() error {
 	if self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
-		page, numValues, numRows, err := Layout.ReadPage(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
-		if err != nil {
-			return err
-		}
-
+		page, numValues, numRows := Layout.ReadPage(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
 			self.DictPage = page
 			return nil
@@ -124,18 +120,18 @@ func (self *ColumnBufferType) ReadPage() error {
 	return nil
 }
 
-func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64, error) {
+func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 	var err error
 
 	for self.DataTableNumRows < num && err == nil {
 		err = self.ReadPage()
+
 	}
 	if num > self.DataTableNumRows {
 		num = self.DataTableNumRows
 	}
 	res := self.DataTable.Pop(num)
 	self.DataTableNumRows -= num
-
 
 	if self.DataTableNumRows <= 0 { //release previous slice memory
 		tmp := self.DataTable

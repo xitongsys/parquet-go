@@ -1,9 +1,11 @@
 package Layout
 
 import (
+	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/ParquetEncoding"
 	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -143,4 +145,23 @@ func DecodeDictChunk(chunk *Chunk) {
 		}
 	}
 	chunk.Pages = chunk.Pages[1:] // delete the head dict page
+}
+
+//Read one chunk from parquet file (Deprecated)
+func ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, chunkHeader *parquet.ColumnChunk) *Chunk {
+	chunk := new(Chunk)
+	chunk.ChunkHeader = chunkHeader
+
+	var readValues int64 = 0
+	var numValues int64 = chunkHeader.MetaData.GetNumValues()
+	for readValues < numValues {
+		page, cnt, _ := ReadPage(thriftReader, schemaHandler, chunkHeader.GetMetaData())
+		chunk.Pages = append(chunk.Pages, page)
+		readValues += cnt
+	}
+
+	if len(chunk.Pages) > 0 && chunk.Pages[0].Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
+		DecodeDictChunk(chunk)
+	}
+	return chunk
 }

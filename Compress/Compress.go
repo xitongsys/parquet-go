@@ -5,14 +5,15 @@ import (
 	"compress/gzip"
 	"github.com/golang/snappy"
 	"io/ioutil"
+	"log"
 )
 
 //Uncompress using Gzip
-func UncompressGzip(buf []byte) ([]byte, error) {
+func UncompressGzip(buf []byte) []byte {
 	rbuf := bytes.NewReader(buf)
 	gzipReader, _ := gzip.NewReader(rbuf)
-	res, err := ioutil.ReadAll(gzipReader)
-	return res, err
+	res, _ := ioutil.ReadAll(gzipReader)
+	return res
 }
 
 //Compress using Gzip
@@ -25,9 +26,12 @@ func CompressGzip(buf []byte) []byte {
 }
 
 //Uncompress using Snappy
-func UncompressSnappy(buf []byte) ([]byte, error) {
+func UncompressSnappy(buf []byte) []byte {
 	res, err := snappy.Decode(nil, buf)
-	return res, err
+	if err != nil {
+		log.Println("UncompressSnappy Error")
+	}
+	return res
 }
 
 //Compress using Snappy
