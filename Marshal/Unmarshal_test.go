@@ -49,7 +49,7 @@ func (s Student) String() string {
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
-	schemaHandler, _ := NewSchemaHandlerFromStruct(new(Student))
+	schemaHandler := NewSchemaHandlerFromStruct(new(Student))
 	fmt.Println("SchemaHandler Finished")
 
 	math01ID := int64(1)
