@@ -103,10 +103,6 @@ func (self *ColumnBufferType) ReadPage() error {
 		if self.DataTable == nil {
 			self.DataTable = Layout.NewTableFromTable(page.DataTable)
 		}
-
-		tmp := self.DataTable
-		self.DataTable = Layout.NewTableFromTable(self.DataTable)
-		self.DataTable.Merge(tmp)
 		self.DataTable.Merge(page.DataTable)
 
 		self.ChunkReadValues += numValues
@@ -126,35 +122,22 @@ func (self *ColumnBufferType) ReadPage() error {
 
 func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 	var err error
-	var res *Layout.Table
-	var resNum int64
-	for self.DataTableNumRows <= 0 && err == nil {
-		self.ReadPage()
+
+	for self.DataTableNumRows < num && err == nil {
+		err = self.ReadPage()
+
 	}
-
-	for num > 0 && err == nil {
-		if self.DataTableNumRows < num {
-			if err = self.ReadPage(); err != nil {
-				break
-			}
-		}
-		var popNum int64
-		if self.DataTableNumRows >= num {
-			popNum = num
-		} else {
-			popNum = self.DataTableNumRows
-		}
-
-		tmp := self.DataTable.Pop(popNum)
-		if res == nil {
-			res = Layout.NewTableFromTable(tmp)
-		}
-		res.Merge(tmp)
-
-		self.DataTableNumRows -= popNum
-		num -= popNum
-		resNum += popNum
+	if num > self.DataTableNumRows {
+		num = self.DataTableNumRows
 	}
+	res := self.DataTable.Pop(num)
+	self.DataTableNumRows -= num
 
-	return res, resNum
+	if self.DataTableNumRows <= 0 { //release previous slice memory
+		tmp := self.DataTable
+		self.DataTable = Layout.NewTableFromTable(tmp)
+		self.DataTable.Merge(tmp)
+	}
+	return res, num
+
 }
