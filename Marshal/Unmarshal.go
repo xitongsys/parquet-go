@@ -20,7 +20,13 @@ type MapRecord struct {
 }
 
 //Convert the table map to objects slice. desInterface is a slice of pointers of objects
-func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler.SchemaHandler) {
+func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler.SchemaHandler) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	tableIndex := make(map[string]int)
 	tableBgn, tableEnd := make(map[string]int), make(map[string]int)
@@ -232,5 +238,6 @@ func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterfac
 
 	}
 	reflect.ValueOf(dstInterface).Elem().Set(tmpRes)
+	return nil
 
 }

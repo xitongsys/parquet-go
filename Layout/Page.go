@@ -2,6 +2,7 @@ package Layout
 
 import (
 	"bytes"
+	"fmt"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Compress"
@@ -65,13 +66,16 @@ func NewDataPage() *Page {
 }
 
 //Convert a table to data pages
-func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64, error) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
 	pT, cT := ParquetType.TypeNameToParquetType(table.Info["type"].(string), table.Info["basetype"].(string))
+	if pT == nil {
+		return nil, 0, fmt.Errorf("Unknown parquet type name")
+	}
 
 	for i < totalLn {
 		j := i + 1
@@ -117,28 +121,33 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		res = append(res, page)
 		i = j
 	}
-	return res, totSize
+	return res, totSize, nil
 }
 
 //Decode dict page
-func (page *Page) Decode(dictPage *Page) {
+func (page *Page) Decode(dictPage *Page) error {
 	if dictPage == nil {
-		return
+		return nil
 	}
 
 	if page == nil || page.Header.DataPageHeader == nil ||
 		(page.Header.DataPageHeader.Encoding != parquet.Encoding_RLE_DICTIONARY &&
 			page.Header.DataPageHeader.Encoding != parquet.Encoding_PLAIN_DICTIONARY) {
-		return
+		return nil
 	}
 
 	numValues := len(page.DataTable.Values)
+	dictLen := len(dictPage.DataTable.Values)
 	for i := 0; i < numValues; i++ {
 		if page.DataTable.Values[i] != nil {
 			index := page.DataTable.Values[i].(ParquetType.INT64)
+			if int(index) >= dictLen {
+				return fmt.Errorf("Index out of DictPage values")
+			}
 			page.DataTable.Values[i] = dictPage.DataTable.Values[index]
 		}
 	}
+	return nil
 }
 
 //Encoding values
@@ -418,9 +427,9 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 }
 
 //Read page from parquet file
-func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64) {
+func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
+	var err error
 	pageHeader := ReadPageHeader(thriftReader)
-
 	buf := make([]byte, 0)
 
 	var page *Page
@@ -438,14 +447,22 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		thriftReader.Read(dataBuf)
 		codec := colMetaData.GetCodec()
 		if codec == parquet.CompressionCodec_GZIP {
-			dataBuf = Compress.UncompressGzip(dataBuf)
+			dataBuf, err = Compress.UncompressGzip(dataBuf)
+
 		} else if codec == parquet.CompressionCodec_SNAPPY {
-			dataBuf = Compress.UncompressSnappy(dataBuf)
+			dataBuf, err = Compress.UncompressSnappy(dataBuf)
+
 		} else if codec == parquet.CompressionCodec_UNCOMPRESSED {
 			dataBuf = dataBuf
+
 		} else {
-			log.Panicln("Unsupported Codec: ", codec)
+			return nil, 0, 0, fmt.Errorf("Unknown CompressType %v", codec)
 		}
+
+		if err != nil {
+			return nil, 0, 0, err
+		}
+
 		tmpBuf := make([]byte, 0)
 		if rll > 0 {
 			tmpBuf = ParquetEncoding.WritePlainINT32([]interface{}{ParquetType.INT32(rll)})
@@ -466,13 +483,19 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		thriftReader.Read(buf)
 		codec := colMetaData.GetCodec()
 		if codec == parquet.CompressionCodec_GZIP {
-			buf = Compress.UncompressGzip(buf)
+			buf, err = Compress.UncompressGzip(buf)
+
 		} else if codec == parquet.CompressionCodec_SNAPPY {
-			buf = Compress.UncompressSnappy(buf)
+			buf, err = Compress.UncompressSnappy(buf)
+
 		} else if codec == parquet.CompressionCodec_UNCOMPRESSED {
 			buf = buf
+
 		} else {
-			log.Panicln("Unsupported Codec: ", codec)
+			return nil, 0, 0, fmt.Errorf("Unknown CompressType %v", codec)
+		}
+		if err != nil {
+			return nil, 0, 0, err
 		}
 	}
 
@@ -575,7 +598,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		}
 		page.DataTable = table
 
-		return page, int64(len(definitionLevels)), numRows
+		return page, int64(len(definitionLevels)), numRows, nil
 
 	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		page = NewDictPage()
@@ -587,9 +610,10 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			uint64(pageHeader.DictionaryPageHeader.GetNumValues()),
 			0)
 		page.DataTable = table
-		return page, 0, 0
+		return page, 0, 0, nil
 
 	} else if pageHeader.GetType() == parquet.PageType_INDEX_PAGE {
+		return nil, 0, 0, fmt.Errorf("Unsupported page type INDEX_PAGE")
 
 	} else if pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
 		page = NewDataPage()
@@ -684,14 +708,9 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		}
 		page.DataTable = table
 
-		return page, int64(len(definitionLevels)), numRows
+		return page, int64(len(definitionLevels)), numRows, nil
 
-	} else {
-		log.Println("Error page type")
 	}
 
-	log.Println("Page Type Not Supported Yet")
-
-	return nil, 0, 0
-
+	return nil, 0, 0, fmt.Errorf("Unknown Page_Type")
 }

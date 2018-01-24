@@ -41,7 +41,11 @@ type ParquetWriter struct {
 
 //Create a parquet handler
 func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
+	var err error
 	res := new(ParquetWriter)
+	if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
+		return nil, err
+	}
 	res.NP = np
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
@@ -54,11 +58,11 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.PFile = pFile
 	res.PagesMapBuf = make(map[string][]*Layout.Page)
 	res.DictRecs = make(map[string]*Layout.DictRecType)
-	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
-	_, err := res.PFile.Write([]byte("PAR1"))
+	_, err = res.PFile.Write([]byte("PAR1"))
 
 	return res, err
 }
@@ -94,23 +98,34 @@ func (self *ParquetWriter) RenameSchema() {
 }
 
 //Write the footer and stop writing
-func (self *ParquetWriter) WriteStop() {
-	//self.Flush()
+func (self *ParquetWriter) WriteStop() error {
+	var err error
+	if err = self.Flush(true); err != nil {
+		return err
+	}
+
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
-	footerBuf, _ := ts.Write(self.Footer)
+	var footerBuf []byte
+	if footerBuf, err = ts.Write(self.Footer); err != nil {
+		return err
+	}
 
 	self.PFile.Write(footerBuf)
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
-	self.PFile.Write(footerSizeBuf)
-	self.PFile.Write([]byte("PAR1"))
-
+	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
+		return err
+	}
+	if _, err = self.PFile.Write([]byte("PAR1")); err != nil {
+		return err
+	}
+	return nil
 }
 
 //Write one object to parquet file
-func (self *ParquetWriter) Write(src interface{}) {
+func (self *ParquetWriter) Write(src interface{}) error {
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(src))
@@ -121,16 +136,26 @@ func (self *ParquetWriter) Write(src interface{}) {
 	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize >= criSize {
-		self.Flush(false)
+		if err := self.Flush(false); err != nil {
+			return err
+		}
+
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
 	}
+	return nil
 
 }
 
 //Flush the write buffer to parquet file
-func (self *ParquetWriter) Flush(flag bool) {
+func (self *ParquetWriter) Flush(flag bool) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
 		pagesMapList[i] = make(map[string][]*Layout.Page)
@@ -161,13 +186,14 @@ func (self *ParquetWriter) Flush(flag bool) {
 				return
 			}
 
-			tableMap := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler)
-			for name, table := range *tableMap {
-				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-					lock.Lock()
-					if _, ok := self.DictRecs[name]; !ok {
-						self.DictRecs[name] = Layout.NewDictRec()
-					}
+			if tableMap, err := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler); err == nil {
+				for name, table := range *tableMap {
+					if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+						lock.Lock()
+						if _, ok := self.DictRecs[name]; !ok {
+							self.DictRecs[name] = Layout.NewDictRec()
+						}
+						
 					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
 						table, int32(self.PageSize), 32, self.CompressionType)
 					lock.Unlock()
@@ -260,5 +286,7 @@ func (self *ParquetWriter) Flush(flag bool) {
 	self.Footer.NumRows += int64(len(self.Objs))
 	self.Objs = self.Objs[:0]
 	self.ObjsSize = 0
+
+	return nil
 
 }

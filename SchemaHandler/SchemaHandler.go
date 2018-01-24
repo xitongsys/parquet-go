@@ -220,7 +220,13 @@ func NewItem() *Item {
 }
 
 //Create schema handler from a object
-func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
+func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	ot := reflect.TypeOf(obj).Elem()
 	item := NewItem()
 	item.GoType = ot
@@ -363,14 +369,20 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 			infos = append(infos, info)
 		}
 	}
-	res := NewSchemaHandlerFromSchemaList(schemaElements)
+	res, err2 := NewSchemaHandlerFromSchemaList(schemaElements)
 	res.Infos = infos
 	res.CreateInExMap()
-	return res
+	return res, err2
 }
 
 //Create schema handler from schema list
-func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHandler {
+func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) (sh *SchemaHandler, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	schemaHandler := new(SchemaHandler)
 	schemaHandler.MapIndex = make(map[string]int32)
 	schemaHandler.IndexMap = make(map[int32]string)
@@ -412,5 +424,5 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	//	log.Println("NewSchemaHandlerFromSchemaList Finished")
 	schemaHandler.GetPathMap()
 	schemaHandler.GetValueColumns()
-	return schemaHandler
+	return schemaHandler, nil
 }
