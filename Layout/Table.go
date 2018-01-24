@@ -9,7 +9,6 @@ func NewTableFromTable(src *Table) *Table {
 		return nil
 	}
 	table := new(Table)
-	table.RepetitionLevels = src.RepetitionLevels
 	table.Type = src.Type
 	table.Path = append(table.Path, src.Path...)
 	table.MaxDefinitionLevel = 0

@@ -103,7 +103,12 @@ func (self *ColumnBufferType) ReadPage() error {
 		if self.DataTable == nil {
 			self.DataTable = Layout.NewTableFromTable(page.DataTable)
 		}
+
+		tmp := self.DataTable
+		self.DataTable = Layout.NewTableFromTable(self.DataTable)
+		self.DataTable.Merge(tmp)
 		self.DataTable.Merge(page.DataTable)
+
 		self.ChunkReadValues += numValues
 		if self.ChunkReadValues >= self.ChunkHeader.MetaData.NumValues {
 			numRows++
