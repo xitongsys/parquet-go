@@ -42,6 +42,9 @@ func main() {
 	log.Println("Write Finished")
 	fw.Close()
 
+	var names, classes, scores_key, scores_value, ids []interface{}
+	var rls, dls []int32
+
 	///read
 	fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
 	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
@@ -49,24 +52,21 @@ func main() {
 		log.Println("Failed new reader", err)
 	}
 	num = int(pr.GetNumRows())
-	names := make([]interface{}, num)
-	pr.ReadColumnByPath("name", &names)
-	log.Println("name", names)
 
-	classes := make([]interface{}, num)
-	pr.ReadColumnByPath("class.list.element", &classes)
-	log.Println("class", classes)
+	names, rls, dls = pr.ReadColumnByPath("name", num)
+	log.Println("name", names, rls, dls)
 
-	scores_key := make([]interface{}, num)
-	scores_value := make([]interface{}, num)
-	pr.ReadColumnByPath("score.key_value.key", &scores_key)
-	pr.ReadColumnByPath("score.key_value.value", &scores_value)
+	classes, rls, dls = pr.ReadColumnByPath("class.list.element", num)
+	log.Println("class", classes, rls, dls)
+
+	scores_key, rls, dls = pr.ReadColumnByPath("score.key_value.key", num)
+	scores_value, rls, dls = pr.ReadColumnByPath("score.key_value.value", num)
 	log.Println("scores_key", scores_key)
 	log.Println("scores_value", scores_value)
 
-	ids := make([]interface{}, num)
-	pr.ReadColumnByIndex(2, &ids)
+	ids, _, _ = pr.ReadColumnByIndex(2, num)
 	log.Println(ids)
+
 	pr.ReadStop()
 	fr.Close()
 
