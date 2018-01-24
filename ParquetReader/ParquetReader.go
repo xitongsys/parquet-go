@@ -22,16 +22,20 @@ type ParquetReader struct {
 	ColumnBuffers map[string]*ColumnBufferType
 }
 
-//Create a parquet reader
+
 func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
-	res := new(ParquetReader)
-	res.NP = np
-	res.PFile = pFile
-	res.ReadFooter()
-	res.ColumnBuffers = make(map[string]*ColumnBufferType)
-	//res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
-	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+	res := &ParquetReader{
+		NP:            np,
+		PFile:         pFile,
+		ColumnBuffers: make(map[string]*ColumnBufferType),
+	}
+	if err = res.ReadFooter(); err != nil {
+		return nil, err
+	}
+	if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
+		return nil, err
+	}
 	res.RenameSchema()
 
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
@@ -45,7 +49,7 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 			}
 		}
 	}
-	return res, err
+	return res, nil
 }
 
 //Rename schema name to inname
@@ -72,26 +76,41 @@ func (self *ParquetReader) GetNumRows() int64 {
 }
 
 //Get the footer size
-func (self *ParquetReader) GetFooterSize() uint32 {
+func (self *ParquetReader) GetFooterSize() (uint32, error) {
 	buf := make([]byte, 4)
-	self.PFile.Seek(-8, 2)
-	self.PFile.Read(buf)
+	if _, err := self.PFile.Seek(-8, 2); err != nil {
+		return 0, err
+	}
+	if _, err := self.PFile.Read(buf); err != nil {
+		return 0, err
+	}
 	size := binary.LittleEndian.Uint32(buf)
-	return size
+	return size, nil
 }
 
 //Read footer from parquet file
-func (self *ParquetReader) ReadFooter() {
-	size := self.GetFooterSize()
-	self.PFile.Seek(int(-(int64)(8+size)), 2)
+func (self *ParquetReader) ReadFooter() error {
+	var (
+		size uint32
+		err  error
+	)
+	if size, err = self.GetFooterSize(); err != nil {
+		return err
+	}
+	if _, err = self.PFile.Seek(int(-(int64)(8+size)), 2); err != nil {
+		return err
+	}
 	self.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
 	protocol := pf.GetProtocol(thrift.NewStreamTransportR(self.PFile))
-	self.Footer.Read(protocol)
+	if err = self.Footer.Read(protocol); err != nil {
+		return err
+	}
+	return nil
 }
 
 //Read rows of parquet file
-func (self *ParquetReader) Read(dstInterface interface{}) {
+func (self *ParquetReader) Read(dstInterface interface{}) (err error) {
 	tmap := make(map[string]*Layout.Table)
 	locker := new(sync.Mutex)
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
@@ -112,7 +131,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 					return
 				case pathStr := <-taskChan:
 					cb := self.ColumnBuffers[pathStr]
-					table, _ := cb.ReadRows(int64(num))
+					table, _, _ := cb.ReadRows(int64(num))
 					locker.Lock()
 					if _, ok := tmap[pathStr]; ok {
 						tmap[pathStr].Merge(table)
@@ -151,7 +170,9 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 		}
 		go func(b, e, index int) {
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
-			Marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler)
+			if r := Marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler); r != nil {
+				err = r
+			}
 			doneChan <- 0
 		}(int(bgn), int(end), int(c))
 	}
@@ -164,6 +185,8 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 		resTmp = reflect.AppendSlice(resTmp, reflect.ValueOf(dst).Elem())
 	}
 	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
+
+	return nil
 }
 
 //Stop Read

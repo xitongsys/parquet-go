@@ -16,7 +16,13 @@ func NewJSONSchemaItem() *JSONSchemaItemType {
 	return new(JSONSchemaItemType)
 }
 
-func NewSchemaHandlerFromJSON(str string) *SchemaHandler.SchemaHandler {
+func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler.SchemaHandler, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	schema := NewJSONSchemaItem()
 	json.Unmarshal([]byte(str), schema)
 
@@ -116,10 +122,13 @@ func NewSchemaHandlerFromJSON(str string) *SchemaHandler.SchemaHandler {
 		}
 	}
 
-	res := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaElements)
+	res, err2 := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaElements)
+	if err2 != nil {
+		return res, err2
+	}
 	res.Infos = infos
 	res.CreateInExMap()
 
-	return res
+	return res, err2
 
 }

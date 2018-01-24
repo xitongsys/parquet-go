@@ -105,7 +105,6 @@ func writeNested() {
 	for _, stu := range stus {
 		pw.Write(stu)
 	}
-	pw.Flush(true)
 	pw.WriteStop()
 	fw.Close()
 	log.Println("Write Finished")

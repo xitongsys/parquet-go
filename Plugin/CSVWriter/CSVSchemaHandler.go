@@ -7,7 +7,13 @@ import (
 )
 
 //Create a schema handler from CSV metadata
-func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
+func NewSchemaHandlerFromMetadata(mds []string) (sh *SchemaHandler.SchemaHandler, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	schemaList := make([]*parquet.SchemaElement, 0)
 
 	infos := make([]map[string]interface{}, 0)
@@ -68,8 +74,11 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
 		schemaList = append(schemaList, schema)
 	}
 
-	res := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaList)
+	res, err2 := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaList)
+	if err2 != nil {
+		return nil, err2
+	}
 	res.Infos = infos
-	return res
+	return res, err2
 
 }
