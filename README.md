@@ -1,4 +1,4 @@
-# parquet-go v1.1.3
+# parquet-go v1.1.5
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -204,7 +204,7 @@ func main() {
 ```
 
 ## Read Columns
-If you just want to get some columns data, your can use column reader. The read function return a 3-elements slice([value, RepetitionLevel, DefinitionLevel]) of the record.  
+If you just want to get some columns data, your can use column reader. The read function return a 3 slices([value], [RepetitionLevel], [DefinitionLevel]) of the record.  
 ```golang
 /*
 type Student struct {
@@ -219,32 +219,30 @@ type Student struct {
 }
 */
 
-func main() {
+func main(){
+	var names, classes, scores_key, scores_value, ids []interface{}
+	var rls, dls []int32
 	///read
 	fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
 	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
 	if err != nil {
 		log.Println("Failed new reader", err)
 	}
-	num = int(pr.GetNumRows())
-	names := make([]interface{}, num)
-	pr.ReadColumnByPath("name", &names)
-	log.Println("name", names)
+	num := int(pr.GetNumRows())
+	names, rls, dls = pr.ReadColumnByPath("name", num)
+	log.Println("name", names, rls, dls)
 
-	classes := make([]interface{}, num)
-	pr.ReadColumnByPath("class.list.element", &classes)
-	log.Println("class", classes)
+	classes, rls, dls = pr.ReadColumnByPath("class.list.element", num)
+	log.Println("class", classes, rls, dls)
 
-	scores_key := make([]interface{}, num)
-	scores_value := make([]interface{}, num)
-	pr.ReadColumnByPath("score.key_value.key", &scores_key)
-	pr.ReadColumnByPath("score.key_value.value", &scores_value)
+	scores_key, rls, dls = pr.ReadColumnByPath("score.key_value.key", num)
+	scores_value, rls, dls = pr.ReadColumnByPath("score.key_value.value", num)
 	log.Println("scores_key", scores_key)
 	log.Println("scores_value", scores_value)
 
-	ids := make([]interface{}, num)
-	pr.ReadColumnByIndex(2, &ids)
+	ids, _, _ = pr.ReadColumnByIndex(2, num)
 	log.Println(ids)
+
 	pr.ReadStop()
 	fr.Close()
 }
