@@ -5,8 +5,10 @@ import (
 )
 
 func NewTableFromTable(src *Table) *Table {
+	if src == nil {
+		return nil
+	}
 	table := new(Table)
-	table.RepetitionLevels = src.RepetitionLevels
 	table.Type = src.Type
 	table.Path = append(table.Path, src.Path...)
 	table.MaxDefinitionLevel = 0
@@ -52,6 +54,9 @@ func (self *Table) Merge(tables ...*Table) {
 		return
 	}
 	for i := 0; i < ln; i++ {
+		if tables[i] == nil {
+			continue
+		}
 		self.Values = append(self.Values, tables[i].Values...)
 		self.RepetitionLevels = append(self.RepetitionLevels, tables[i].RepetitionLevels...)
 		self.DefinitionLevels = append(self.DefinitionLevels, tables[i].DefinitionLevels...)

@@ -97,7 +97,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 						newNode.PathMap = node.PathMap.Children["key_value"].Children["value"]
 						newNode.Val = value
 						newNode.DL = node.DL + 1
-						newPathStr := node.PathMap.Path
+						newPathStr := newNode.PathMap.Path // check again
 						newSchemaIndex := schemaHandler.MapIndex[newPathStr]
 						newInfo := schemaHandler.Infos[newSchemaIndex]
 						if newInfo["repetitiontype"] == parquet.FieldRepetitionType_OPTIONAL { //map value only be :optional or required
@@ -113,14 +113,36 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 					}
 
 				} else { //struct
+					keysMap := make(map[string]bool)
 					for j := 0; j < len(keys); j++ {
-						key := keys[j]
-						newNode := nodeBuf.GetNode()
-						newNode.PathMap = node.PathMap.Children[key.String()]
-						newNode.Val = node.Val.MapIndex(key).Elem()
-						newNode.RL = node.RL
-						newNode.DL = node.DL
-						stack = append(stack, newNode)
+						keysMap[keys[j].String()] = true
+					}
+					for key, _ := range node.PathMap.Children {
+						_, ok := keysMap[key]
+						if ok && node.Val.MapIndex(reflect.ValueOf(key)).Elem().IsValid() {
+							newNode := nodeBuf.GetNode()
+							newNode.PathMap = node.PathMap.Children[key]
+							newNode.Val = node.Val.MapIndex(reflect.ValueOf(key)).Elem()
+							newNode.RL = node.RL
+							newNode.DL = node.DL
+							newPathStr := newNode.PathMap.Path
+							newSchemaIndex := schemaHandler.MapIndex[newPathStr]
+							newInfo := schemaHandler.Infos[newSchemaIndex]
+							if newInfo["repetitiontype"] == parquet.FieldRepetitionType_OPTIONAL {
+								newNode.DL++
+							}
+							stack = append(stack, newNode)
+
+						} else {
+							newPathStr := node.PathMap.Children[key].Path
+							for key, table := range res {
+								if len(key) >= len(newPathStr) && key[:len(newPathStr)] == newPathStr {
+									table.Values = append(table.Values, nil)
+									table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+									table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+								}
+							}
+						}
 					}
 				}
 
@@ -151,6 +173,14 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 							newNode.RL = rlNow
 						}
 						newNode.DL = node.DL + 1
+
+						newPathStr := newNode.PathMap.Path
+						newSchemaIndex := schemaHandler.MapIndex[newPathStr]
+						newInfo := schemaHandler.Infos[newSchemaIndex]
+						if newInfo["repetitiontype"] == parquet.FieldRepetitionType_OPTIONAL { //element of LIST can only be optional or required
+							newNode.DL++
+						}
+
 						stack = append(stack, newNode)
 					}
 
@@ -176,7 +206,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 						} else {
 							newNode.RL = rlNow
 						}
-						//newNode.DL = node.DL + 1
+						newNode.DL = node.DL + 1
 						stack = append(stack, newNode)
 					}
 				}

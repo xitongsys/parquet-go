@@ -46,6 +46,7 @@ func NewColumnBuffer(pFile ParquetFile.ParquetFile, footer *parquet.FileMetaData
 }
 
 func (self *ColumnBufferType) NextRowGroup() error {
+	var err error
 	rowGroups := self.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
 	if self.RowGroupIndex >= ln {
@@ -71,7 +72,9 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	self.ChunkHeader = columnChunks[i]
 	if columnChunks[i].FilePath != nil {
 		self.PFile.Close()
-		self.PFile, _ = self.PFile.Open(*columnChunks[i].FilePath)
+		if self.PFile, err = self.PFile.Open(*columnChunks[i].FilePath); err != nil {
+			return err
+		}
 	}
 	//offset := columnChunks[i].FileOffset
 	offset := columnChunks[i].MetaData.DataPageOffset
@@ -105,17 +108,17 @@ func (self *ColumnBufferType) ReadPage() error {
 			self.DataTable = Layout.NewTableFromTable(page.DataTable)
 		}
 		self.DataTable.Merge(page.DataTable)
+
 		self.ChunkReadValues += numValues
 		if self.ChunkReadValues >= self.ChunkHeader.MetaData.NumValues {
 			numRows++
 		}
 		self.DataTableNumRows += numRows
 	} else {
-		err := self.NextRowGroup()
-		if err != nil {
+		if err := self.NextRowGroup(); err != nil {
 			return err
 		}
-		self.ReadPage()
+		return self.ReadPage()
 	}
 
 	return nil
@@ -132,5 +135,13 @@ func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64, error) 
 	}
 	res := self.DataTable.Pop(num)
 	self.DataTableNumRows -= num
-	return res, num, err
+
+
+	if self.DataTableNumRows <= 0 { //release previous slice memory
+		tmp := self.DataTable
+		self.DataTable = Layout.NewTableFromTable(tmp)
+		self.DataTable.Merge(tmp)
+	}
+	return res, num
+
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/parquet"
 	"log"
 	"time"
 )
@@ -22,6 +23,8 @@ func main() {
 
 	//write
 	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
