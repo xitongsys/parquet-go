@@ -10,7 +10,6 @@ import (
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
-	"strings"
 	"sync"
 )
 
@@ -21,30 +20,6 @@ type ParquetReader struct {
 	PFile         ParquetFile.ParquetFile
 
 	ColumnBuffers map[string]*ColumnBufferType
-}
-
-//Create a parquet column reader
-func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error) {
-	var err error
-	res := new(ParquetReader)
-	res.NP = np
-	res.PFile = pFile
-	res.ReadFooter()
-	res.ColumnBuffers = make(map[string]*ColumnBufferType)
-	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
-
-	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
-		schema := res.SchemaHandler.SchemaElements[i]
-		pathStr := res.SchemaHandler.IndexMap[int32(i)]
-		numChildren := schema.GetNumChildren()
-		if numChildren == 0 {
-			res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr)
-			if err != nil {
-				return res, err
-			}
-		}
-	}
-	return res, err
 }
 
 //Create a parquet reader
@@ -189,51 +164,6 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 		resTmp = reflect.AppendSlice(resTmp, reflect.ValueOf(dst).Elem())
 	}
 	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
-}
-
-//Read column by path in schema.
-func (self *ParquetReader) ReadColumnByPath(pathStr string, dstInterface *[]interface{}) {
-	num := reflect.ValueOf(dstInterface).Elem().Len()
-	if num <= 0 {
-		return
-	}
-	rootName := self.SchemaHandler.GetRootName()
-
-	if len(pathStr) <= 0 {
-		return
-	} else if !strings.HasPrefix(pathStr, rootName) {
-		pathStr = rootName + "." + pathStr
-	}
-
-	if cb, ok := self.ColumnBuffers[pathStr]; ok {
-		table, _ := cb.ReadRows(int64(num))
-		i, j, ln := 0, 0, len(table.Values)
-
-		numi := 0
-		for i < ln {
-			rec := [][]interface{}{}
-			j = i
-			for j < ln {
-				rec = append(rec, []interface{}{table.Values[j], table.RepetitionLevels[j], table.DefinitionLevels[j]})
-				j++
-				if j < ln && table.RepetitionLevels[j] == 0 {
-					break
-				}
-			}
-			(*dstInterface)[numi] = rec
-			numi++
-			i = j
-		}
-	}
-}
-
-//Read column by index. The index of first column is 0.
-func (self *ParquetReader) ReadColumnByIndex(index int, dstInterface *[]interface{}) {
-	if index >= len(self.SchemaHandler.ValueColumns) {
-		return
-	}
-	pathStr := self.SchemaHandler.ValueColumns[index]
-	self.ReadColumnByPath(pathStr, dstInterface)
 }
 
 //Stop Read
