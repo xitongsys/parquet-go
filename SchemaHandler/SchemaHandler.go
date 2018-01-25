@@ -7,9 +7,16 @@ import (
 	"reflect"
 )
 
-//path is full path
+/*
+PathMap Example
+            root(a dummy root)  (Path: "root", Children: A)
+             |
+             A  (Path:"root/A", Childend: B,C)
+        /           \
+B(Path:"root/A/B")   C(Path:"root/A/C")
+*/
 
-//PathMap to record the path; This is used in Marshal for imporve performance
+// PathMapType records the path and its children; This is used in Marshal for improve performance.
 type PathMapType struct {
 	Path     string
 	Children map[string]*PathMapType
@@ -36,7 +43,7 @@ func (self *PathMapType) Add(path []string) {
 
 /////////////////pathMap///////////////////////////
 
-//Schema handler stores the schema data
+// SchemaHandler stores the schema data
 type SchemaHandler struct {
 	SchemaElements []*parquet.SchemaElement
 	MapIndex       map[string]int32
@@ -50,12 +57,13 @@ type SchemaHandler struct {
 	ValueColumns []string
 }
 
-func (self *SchemaHandler) GetValueColumns() {
+// setValueColumns collects leaf nodes' full path in SchemaHandler.ValueColumns
+func (self *SchemaHandler) setValueColumns() {
 	for i := 0; i < len(self.SchemaElements); i++ {
 		schema := self.SchemaElements[i]
-		pathStr := self.IndexMap[int32(i)]
 		numChildren := schema.GetNumChildren()
 		if numChildren == 0 {
+			pathStr := self.IndexMap[int32(i)]
 			self.ValueColumns = append(self.ValueColumns, pathStr)
 		}
 	}
@@ -65,20 +73,20 @@ func (self *SchemaHandler) GetColumnNum() int64 {
 	return int64(len(self.ValueColumns))
 }
 
-//Get the PathMap from SchemaHandler
-func (self *SchemaHandler) GetPathMap() {
+// setPathMap builds the PathMap from leaf SchemaElement
+func (self *SchemaHandler) setPathMap() {
 	self.PathMap = NewPathMap(self.GetRootName())
 	for i := 0; i < len(self.SchemaElements); i++ {
 		schema := self.SchemaElements[i]
-		pathStr := self.IndexMap[int32(i)]
 		numChildren := schema.GetNumChildren()
 		if numChildren == 0 {
+			pathStr := self.IndexMap[int32(i)]
 			self.PathMap.Add(Common.StrToPath(pathStr))
 		}
 	}
 }
 
-//Get the repetition type of a column by it's schema path
+// GetRepetitionType returns the repetition type of a column by it's schema path
 func (self *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepetitionType, error) {
 	pathStr := Common.PathToStr(path)
 	if index, ok := self.MapIndex[pathStr]; ok {
@@ -88,7 +96,7 @@ func (self *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepeti
 	}
 }
 
-//Get the max definition level type of a column by it's schema path
+// MaxDefinitionLevel returns the max definition level type of a column by it's schema path
 func (self *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
@@ -104,7 +112,7 @@ func (self *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 	return res, nil
 }
 
-//Get the max repetition level type of a column by it's schema path
+// MaxRepetitionLevel returns the max repetition level type of a column by it's schema path
 func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
@@ -120,82 +128,30 @@ func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	return res, nil
 }
 
-//Get the index from the repetition level
-func (self *SchemaHandler) IndexFromRepetitionLevel(path []string, rl int32) (int32, error) {
-	if rl <= 0 {
-		return 0, nil
-	}
-	ln := len(path)
-	i := 0
-	var cur int32 = 0
-	for cur < rl && i+1 < ln {
-		i++
-		t, err := self.GetRepetitionType(path[:i+1])
-		if err != nil {
-			return 0, err
-		}
-		if t == parquet.FieldRepetitionType_REPEATED {
-			cur++
-		}
-	}
-	return int32(i), nil
-}
-
-//Get the index from the definition level
-func (self *SchemaHandler) IndexFromDefinitionLevel(path []string, dl int32) (int32, error) {
-	if dl <= 0 {
-		return 0, nil
-	}
-	ln := len(path)
-	i := 0
-	var cur int32 = 0
-	for cur < dl && i+1 < ln {
-		i++
-		t, err := self.GetRepetitionType(path[:i+1])
-		if err != nil {
-			return 0, err
-		}
-		if t == parquet.FieldRepetitionType_REPEATED {
-			cur++
-		}
-	}
-	return int32(i), nil
-}
-
 func (self *SchemaHandler) CreateInExMap() {
 	//use DFS get path of schema
 	schemas := self.SchemaElements
 	ln := int32(len(schemas))
 	var pos int32 = 0
-	stack := make([][]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	stack := make([][2]int32, 0) // stack item[0]: index of schemas; item[1]: numChildren
 	for pos < ln || len(stack) > 0 {
-		if len(stack) == 0 {
-			item := make([]int32, 2)
-			item[0] = pos
-			item[1] = int32(*schemas[pos].NumChildren)
+		if len(stack) == 0 || stack[len(stack)-1][1] > 0 {
+			if len(stack) > 0 {
+				stack[len(stack)-1][1]--
+			}
+			item := [2]int32{pos, schemas[pos].GetNumChildren()}
 			stack = append(stack, item)
 			pos++
-		} else {
-			top := stack[len(stack)-1]
-			if top[1] == 0 {
-				inPath, exPath := make([]string, 0), make([]string, 0)
-				for i := 0; i < len(stack); i++ {
-					inPath = append(inPath, self.Infos[stack[i][0]]["inname"].(string))
-					exPath = append(exPath, self.Infos[stack[i][0]]["exname"].(string))
-				}
-				inPathStr, exPathStr := Common.PathToStr(inPath), Common.PathToStr(exPath)
-				self.ExPathToInPath[exPathStr] = inPathStr
-				self.InPathToExPath[inPathStr] = exPathStr
-
-				stack = stack[:len(stack)-1]
-			} else {
-				top[1]--
-				item := make([]int32, 2)
-				item[0] = pos
-				item[1] = schemas[pos].GetNumChildren()
-				stack = append(stack, item)
-				pos++
+		} else { // leaf node
+			inPath, exPath := make([]string, 0), make([]string, 0)
+			for i := 0; i < len(stack); i++ {
+				inPath = append(inPath, self.Infos[stack[i][0]]["inname"].(string))
+				exPath = append(exPath, self.Infos[stack[i][0]]["exname"].(string))
 			}
+			inPathStr, exPathStr := Common.PathToStr(inPath), Common.PathToStr(exPath)
+			self.ExPathToInPath[exPathStr] = inPathStr
+			self.InPathToExPath[inPathStr] = exPathStr
+			stack = stack[:len(stack)-1]
 		}
 	}
 }
@@ -234,8 +190,8 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 	item.Info["exname"] = "parquet_go_root"
 	item.Info["repetitiontype"] = parquet.FieldRepetitionType(-1)
 
-	stack := make([]*Item, 0)
-	stack = append(stack, item)
+	stack := make([]*Item, 1)
+	stack[0] = item
 	schemaElements := make([]*parquet.SchemaElement, 0)
 	infos := make([]map[string]interface{}, 0)
 
@@ -375,7 +331,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 	return res, nil
 }
 
-//Create schema handler from schema list
+// NewSchemaHandlerFromSchemaList creates schema handler from schema list
 func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHandler {
 	schemaHandler := new(SchemaHandler)
 	schemaHandler.MapIndex = make(map[string]int32)
@@ -387,36 +343,27 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	//use DFS get path of schema
 	ln := int32(len(schemas))
 	var pos int32 = 0
-	stack := make([][]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	stack := make([][2]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
 	for pos < ln || len(stack) > 0 {
-		if len(stack) == 0 {
-			item := make([]int32, 2)
-			item[0] = pos
-			item[1] = int32(*schemas[pos].NumChildren)
+		if len(stack) == 0 || stack[len(stack)-1][1] > 0 {
+			if len(stack) > 0 {
+				stack[len(stack)-1][1]--
+			}
+			item := [2]int32{pos, schemas[pos].GetNumChildren()}
 			stack = append(stack, item)
 			pos++
 		} else {
-			top := stack[len(stack)-1]
-			if top[1] == 0 {
-				path := make([]string, 0)
-				for i := 0; i < len(stack); i++ {
-					path = append(path, schemas[stack[i][0]].GetName())
-				}
-				schemaHandler.MapIndex[Common.PathToStr(path)] = top[0]
-				schemaHandler.IndexMap[top[0]] = Common.PathToStr(path)
-				stack = stack[:len(stack)-1]
-			} else {
-				top[1]--
-				item := make([]int32, 2)
-				item[0] = pos
-				item[1] = schemas[pos].GetNumChildren()
-				stack = append(stack, item)
-				pos++
+			path := make([]string, 0)
+			for i := 0; i < len(stack); i++ {
+				path = append(path, schemas[stack[i][0]].GetName())
 			}
+			topPos := stack[len(stack)-1][0]
+			schemaHandler.MapIndex[Common.PathToStr(path)] = topPos
+			schemaHandler.IndexMap[topPos] = Common.PathToStr(path)
+			stack = stack[:len(stack)-1]
 		}
 	}
-	//	log.Println("NewSchemaHandlerFromSchemaList Finished")
-	schemaHandler.GetPathMap()
-	schemaHandler.GetValueColumns()
+	schemaHandler.setPathMap()
+	schemaHandler.setValueColumns()
 	return schemaHandler
 }
