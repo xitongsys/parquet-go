@@ -40,8 +40,12 @@ type JSONWriter struct {
 
 //Create JSON writer
 func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*JSONWriter, error) {
+	var err error
 	res := new(JSONWriter)
-	res.SchemaHandler = NewSchemaHandlerFromJSON(jsonSchema)
+	res.SchemaHandler, err = NewSchemaHandlerFromJSON(jsonSchema)
+	if err != nil {
+		return res, err
+	}
 
 	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
@@ -54,7 +58,7 @@ func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	res.Offset = 4
-	_, err := res.PFile.Write([]byte("PAR1"))
+	_, err = res.PFile.Write([]byte("PAR1"))
 	return res, err
 }
 
