@@ -101,7 +101,7 @@ func (self *ParquetWriter) RenameSchema() {
 
 //Write the footer and stop writing
 func (self *ParquetWriter) WriteStop() {
-	//self.Flush()
+	self.Flush(true)
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()

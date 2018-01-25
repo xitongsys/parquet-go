@@ -93,7 +93,7 @@ func (self *JSONWriter) Write(rec string) {
 
 //Write footer to parquet file and stop writing
 func (self *JSONWriter) WriteStop() {
-	//self.Flush()
+	self.Flush(true)
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
