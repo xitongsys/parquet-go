@@ -31,7 +31,10 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.ReadFooter()
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	//res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
-	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+	res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+	if err != nil {
+		return res, err
+	}
 	res.RenameSchema()
 
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {

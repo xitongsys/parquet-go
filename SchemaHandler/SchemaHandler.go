@@ -220,7 +220,13 @@ func NewItem() *Item {
 }
 
 //Create schema handler from a object
-func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
+func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	ot := reflect.TypeOf(obj).Elem()
 	item := NewItem()
 	item.GoType = ot
@@ -366,7 +372,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) *SchemaHandler {
 	res := NewSchemaHandlerFromSchemaList(schemaElements)
 	res.Infos = infos
 	res.CreateInExMap()
-	return res
+	return res, nil
 }
 
 //Create schema handler from schema list

@@ -41,6 +41,8 @@ type ParquetWriter struct {
 
 //Create a parquet handler
 func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
+	var err error
+
 	res := new(ParquetWriter)
 	res.NP = np
 	res.PageSize = 8 * 1024              //8K
@@ -54,11 +56,15 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.PFile = pFile
 	res.PagesMapBuf = make(map[string][]*Layout.Page)
 	res.DictRecs = make(map[string]*Layout.DictRecType)
-	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+	res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj)
+	if err != nil {
+		return res, err
+	}
+
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
-	_, err := res.PFile.Write([]byte("PAR1"))
+	_, err = res.PFile.Write([]byte("PAR1"))
 
 	return res, err
 }
