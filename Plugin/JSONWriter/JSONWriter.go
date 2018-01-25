@@ -132,7 +132,7 @@ func (self *JSONWriter) Flush(flag bool) {
 				doneChan <- 0
 				return
 			}
-			tableMap := MarshalJSON(self.Objs, b, e, self.SchemaHandler)
+			tableMap, _ := MarshalJSON(self.Objs, b, e, self.SchemaHandler)
 			for name, table := range *tableMap {
 				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
 					lock.Lock()
