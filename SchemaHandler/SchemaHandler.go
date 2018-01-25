@@ -133,35 +133,25 @@ func (self *SchemaHandler) CreateInExMap() {
 	schemas := self.SchemaElements
 	ln := int32(len(schemas))
 	var pos int32 = 0
-	stack := make([][]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	stack := make([][2]int32, 0) // stack item[0]: index of schemas; item[1]: numChildren
 	for pos < ln || len(stack) > 0 {
-		if len(stack) == 0 {
-			item := make([]int32, 2)
-			item[0] = pos
-			item[1] = int32(*schemas[pos].NumChildren)
+		if len(stack) == 0 || stack[len(stack)-1][1] > 0 {
+			if len(stack) > 0 {
+				stack[len(stack)-1][1]--
+			}
+			item := [2]int32{pos, schemas[pos].GetNumChildren()}
 			stack = append(stack, item)
 			pos++
-		} else {
-			top := stack[len(stack)-1]
-			if top[1] == 0 {
-				inPath, exPath := make([]string, 0), make([]string, 0)
-				for i := 0; i < len(stack); i++ {
-					inPath = append(inPath, self.Infos[stack[i][0]]["inname"].(string))
-					exPath = append(exPath, self.Infos[stack[i][0]]["exname"].(string))
-				}
-				inPathStr, exPathStr := Common.PathToStr(inPath), Common.PathToStr(exPath)
-				self.ExPathToInPath[exPathStr] = inPathStr
-				self.InPathToExPath[inPathStr] = exPathStr
-
-				stack = stack[:len(stack)-1]
-			} else {
-				top[1]--
-				item := make([]int32, 2)
-				item[0] = pos
-				item[1] = schemas[pos].GetNumChildren()
-				stack = append(stack, item)
-				pos++
+		} else { // leaf node
+			inPath, exPath := make([]string, 0), make([]string, 0)
+			for i := 0; i < len(stack); i++ {
+				inPath = append(inPath, self.Infos[stack[i][0]]["inname"].(string))
+				exPath = append(exPath, self.Infos[stack[i][0]]["exname"].(string))
 			}
+			inPathStr, exPathStr := Common.PathToStr(inPath), Common.PathToStr(exPath)
+			self.ExPathToInPath[exPathStr] = inPathStr
+			self.InPathToExPath[inPathStr] = exPathStr
+			stack = stack[:len(stack)-1]
 		}
 	}
 }
@@ -341,7 +331,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 	return res, nil
 }
 
-//Create schema handler from schema list
+// NewSchemaHandlerFromSchemaList creates schema handler from schema list
 func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHandler {
 	schemaHandler := new(SchemaHandler)
 	schemaHandler.MapIndex = make(map[string]int32)
@@ -353,35 +343,26 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	//use DFS get path of schema
 	ln := int32(len(schemas))
 	var pos int32 = 0
-	stack := make([][]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	stack := make([][2]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
 	for pos < ln || len(stack) > 0 {
-		if len(stack) == 0 {
-			item := make([]int32, 2)
-			item[0] = pos
-			item[1] = int32(*schemas[pos].NumChildren)
+		if len(stack) == 0 || stack[len(stack)-1][1] > 0 {
+			if len(stack) > 0 {
+				stack[len(stack)-1][1]--
+			}
+			item := [2]int32{pos, schemas[pos].GetNumChildren()}
 			stack = append(stack, item)
 			pos++
 		} else {
-			top := stack[len(stack)-1]
-			if top[1] == 0 {
-				path := make([]string, 0)
-				for i := 0; i < len(stack); i++ {
-					path = append(path, schemas[stack[i][0]].GetName())
-				}
-				schemaHandler.MapIndex[Common.PathToStr(path)] = top[0]
-				schemaHandler.IndexMap[top[0]] = Common.PathToStr(path)
-				stack = stack[:len(stack)-1]
-			} else {
-				top[1]--
-				item := make([]int32, 2)
-				item[0] = pos
-				item[1] = schemas[pos].GetNumChildren()
-				stack = append(stack, item)
-				pos++
+			path := make([]string, 0)
+			for i := 0; i < len(stack); i++ {
+				path = append(path, schemas[stack[i][0]].GetName())
 			}
+			topPos := stack[len(stack)-1][0]
+			schemaHandler.MapIndex[Common.PathToStr(path)] = topPos
+			schemaHandler.IndexMap[topPos] = Common.PathToStr(path)
+			stack = stack[:len(stack)-1]
 		}
 	}
-	//	log.Println("NewSchemaHandlerFromSchemaList Finished")
 	schemaHandler.setPathMap()
 	schemaHandler.setValueColumns()
 	return schemaHandler
