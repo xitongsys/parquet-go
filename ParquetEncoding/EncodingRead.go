@@ -3,11 +3,13 @@ package ParquetEncoding
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
+
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt uint64, bitWidth uint64) []interface{} {
+func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt uint64, bitWidth uint64) ([]interface{}, error) {
 	if dataType == parquet.Type_BOOLEAN {
 		return ReadPlainBOOLEAN(bytesReader, cnt)
 	} else if dataType == parquet.Type_INT32 {
@@ -25,13 +27,22 @@ func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt uint64, bit
 	} else if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 		return ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, cnt, bitWidth)
 	} else {
-		return nil
+		return nil, fmt.Errorf("Unknown parquet type")
 	}
 }
 
-func ReadPlainBOOLEAN(bytesReader *bytes.Reader, cnt uint64) []interface{} {
-	res := make([]interface{}, cnt)
-	resInt := ReadBitPacked(bytesReader, uint64(cnt<<1), 1)
+func ReadPlainBOOLEAN(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+	var (
+		res []interface{}
+		err error
+	)
+
+	res = make([]interface{}, cnt)
+	resInt, err := ReadBitPacked(bytesReader, uint64(cnt<<1), 1)
+	if err != nil {
+		return res, err
+	}
+
 	for i := 0; i < int(cnt); i++ {
 		if resInt[i].(ParquetType.INT64) > 0 {
 			res[i] = ParquetType.BOOLEAN(true)
@@ -39,83 +50,105 @@ func ReadPlainBOOLEAN(bytesReader *bytes.Reader, cnt uint64) []interface{} {
 			res[i] = ParquetType.BOOLEAN(false)
 		}
 	}
-	return res
+	return res, err
 }
 
-func ReadPlainINT32(bytesReader *bytes.Reader, cnt uint64) []interface{} {
+func ReadPlainINT32(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
 		var cur ParquetType.INT32
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
+		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
+			break
+		}
 		res[i] = cur
 	}
-	return res
+	return res, err
 }
 
-func ReadPlainINT64(bytesReader *bytes.Reader, cnt uint64) []interface{} {
+func ReadPlainINT64(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
 		var cur ParquetType.INT64
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
+		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
+			break
+		}
 		res[i] = cur
 	}
-	return res
+	return res, err
 }
 
-func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) []interface{} {
+func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
 		var cur [12]byte
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
+		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
+			break
+		}
 		res[i] = ParquetType.INT96(cur[:12])
 	}
-	return res
+	return res, err
 }
 
-func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt uint64) []interface{} {
+func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
 		var cur ParquetType.FLOAT
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
+		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
+			break
+		}
 		res[i] = cur
 	}
-	return res
+	return res, err
 }
 
-func ReadPlainDOUBLE(bytesReader *bytes.Reader, cnt uint64) []interface{} {
+func ReadPlainDOUBLE(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
 		var cur ParquetType.DOUBLE
-		binary.Read(bytesReader, binary.LittleEndian, &cur)
+		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
+			break
+		}
 		res[i] = cur
 	}
-	return res
+	return res, err
 }
 
-func ReadPlainBYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64) []interface{} {
+func ReadPlainBYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
 		buf := make([]byte, 4)
-		bytesReader.Read(buf)
+		if _, err = bytesReader.Read(buf); err != nil {
+			break
+		}
 		ln := binary.LittleEndian.Uint32(buf)
 		cur := make([]byte, ln)
 		bytesReader.Read(cur)
 		res[i] = ParquetType.BYTE_ARRAY(cur)
 	}
-	return res
+	return res, err
 }
 
-func ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64, fixedLength uint64) []interface{} {
+func ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64, fixedLength uint64) ([]interface{}, error) {
+	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
 		cur := make([]byte, fixedLength)
-		bytesReader.Read(cur)
+		if _, err = bytesReader.Read(cur); err != nil {
+			break
+		}
 		res[i] = ParquetType.FIXED_LEN_BYTE_ARRAY(cur)
 	}
-	return res
+	return res, err
 }
 
-func ReadUnsignedVarInt(bytesReader *bytes.Reader) uint64 {
+func ReadUnsignedVarInt(bytesReader *bytes.Reader) (uint64, error) {
+	var err error
 	var res uint64 = 0
 	var shift uint64 = 0
 	for {
@@ -129,29 +162,36 @@ func ReadUnsignedVarInt(bytesReader *bytes.Reader) uint64 {
 		}
 		shift += 7
 	}
-	return res
+	return res, err
 }
 
 //RLE return res is []INT64
-func ReadRLE(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []interface{} {
+func ReadRLE(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([]interface{}, error) {
+	var err error
+	var res []interface{}
 	cnt := header >> 1
 	width := (bitWidth + 7) / 8
 	data := make([]byte, width)
-	bytesReader.Read(data)
+	if width > 0 {
+		if _, err = bytesReader.Read(data); err != nil {
+			return res, err
+		}
+	}
 	for len(data) < 4 {
 		data = append(data, byte(0))
 	}
 	val := ParquetType.INT64(binary.LittleEndian.Uint32(data))
-	res := make([]interface{}, cnt)
+	res = make([]interface{}, cnt)
 
 	for i := 0; i < int(cnt); i++ {
 		res[i] = val
 	}
-	return res
+	return res, err
 }
 
 //return res is []INT64
-func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []interface{} {
+func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([]interface{}, error) {
+	var err error
 	numGroup := (header >> 1)
 	cnt := numGroup * 8
 	byteCnt := cnt * bitWidth / 8
@@ -162,10 +202,12 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []
 		for i := 0; i < int(cnt); i++ {
 			res = append(res, ParquetType.INT64(0))
 		}
-		return res
+		return res, err
 	}
 	bytesBuf := make([]byte, byteCnt)
-	bytesReader.Read(bytesBuf)
+	if _, err = bytesReader.Read(bytesBuf); err != nil {
+		return res, err
+	}
 
 	i := 0
 	var resCur uint64 = 0
@@ -201,76 +243,141 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) []
 			used = 0
 		}
 	}
-	return res
+	return res, err
 }
 
 //res is INT64
-func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length uint64) []interface{} {
+func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length uint64) ([]interface{}, error) {
 	res := make([]interface{}, 0)
 	if length <= 0 {
-		length = uint64(ReadPlainINT32(bytesReader, 1)[0].(ParquetType.INT32))
+		lb, err := ReadPlainINT32(bytesReader, 1)
+		if err != nil {
+			return res, err
+		}
+		length = uint64(lb[0].(ParquetType.INT32))
 	}
-	//log.Println("ReadRLEBitPackedHybrid length =", length)
 
 	buf := make([]byte, length)
-	bytesReader.Read(buf)
+	if _, err := bytesReader.Read(buf); err != nil {
+		return res, err
+	}
+
 	newReader := bytes.NewReader(buf)
 	for newReader.Len() > 0 {
-		header := ReadUnsignedVarInt(newReader)
+		header, err := ReadUnsignedVarInt(newReader)
+		if err != nil {
+			return res, err
+		}
 		if header&1 == 0 {
-			res = append(res, ReadRLE(newReader, header, bitWidth)...)
+			buf, err := ReadRLE(newReader, header, bitWidth)
+			if err != nil {
+				return res, err
+			}
+			res = append(res, buf...)
+
 		} else {
-			res = append(res, ReadBitPacked(newReader, header, bitWidth)...)
+			buf, err := ReadBitPacked(newReader, header, bitWidth)
+			if err != nil {
+				return res, err
+			}
+			res = append(res, buf...)
 		}
 	}
-	return res
+	return res, nil
 }
 
 //res is INT64
-func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) []interface{} {
-	blockSize := ReadUnsignedVarInt(bytesReader)
-	numMiniblocksInBlock := ReadUnsignedVarInt(bytesReader)
-	numValues := ReadUnsignedVarInt(bytesReader)
-	firstValueZigZag := ReadUnsignedVarInt(bytesReader)
+func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) ([]interface{}, error) {
+	var (
+		err error
+		res []interface{}
+	)
+
+	blockSize, err := ReadUnsignedVarInt(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	numMiniblocksInBlock, err := ReadUnsignedVarInt(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	numValues, err := ReadUnsignedVarInt(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	firstValueZigZag, err := ReadUnsignedVarInt(bytesReader)
+	if err != nil {
+		return res, err
+	}
 	var firstValue int64 = int64(firstValueZigZag>>1) ^ (-int64(firstValueZigZag & 1))
 
-	//log.Println("====", blockSize, numMiniblocksInBlock, numValues, firstValue)
 	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
 
-	res := make([]interface{}, 0)
+	res = make([]interface{}, 0)
 	res = append(res, ParquetType.INT64(firstValue))
 	for uint64(len(res)) < numValues {
-		minDeltaZigZag := ReadUnsignedVarInt(bytesReader)
+		minDeltaZigZag, err := ReadUnsignedVarInt(bytesReader)
+		if err != nil {
+			return res, err
+		}
 		var minDelta int64 = int64(minDeltaZigZag>>1) ^ (-int64(minDeltaZigZag & 1))
 		var bitWidths = make([]uint64, numMiniblocksInBlock)
 		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
-			b, _ := bytesReader.ReadByte()
+			b, err := bytesReader.ReadByte()
+			if err != nil {
+				return res, err
+			}
 			bitWidths[i] = uint64(b)
 		}
 		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
-			cur := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
+			cur, err := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
+			if err != nil {
+				return res, err
+			}
 			for j := 0; j < len(cur); j++ {
 				res = append(res, ParquetType.INT64(int64(res[len(res)-1].(ParquetType.INT64))+int64(cur[j].(ParquetType.INT64))+minDelta))
 			}
 		}
 	}
-	return res[:numValues]
+	return res[:numValues], err
 }
 
-func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) []interface{} {
-	lengths := ReadDeltaBinaryPackedINT(bytesReader)
-	res := make([]interface{}, len(lengths))
+func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) ([]interface{}, error) {
+	var (
+		res []interface{}
+		err error
+	)
+
+	lengths, err := ReadDeltaBinaryPackedINT(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	res = make([]interface{}, len(lengths))
 	for i := 0; i < len(lengths); i++ {
-		cur := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(ParquetType.INT64)))
+		cur, err := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(ParquetType.INT64)))
+		if err != nil {
+			return res, err
+		}
 		res[i] = ParquetType.BYTE_ARRAY(cur[0].(ParquetType.FIXED_LEN_BYTE_ARRAY))
 	}
-	return res
+	return res, err
 }
 
-func ReadDeltaByteArray(bytesReader *bytes.Reader) []interface{} {
-	prefixLengths := ReadDeltaBinaryPackedINT(bytesReader)
-	suffixes := ReadDeltaLengthByteArray(bytesReader)
-	res := make([]interface{}, len(prefixLengths))
+func ReadDeltaByteArray(bytesReader *bytes.Reader) ([]interface{}, error) {
+	var (
+		res []interface{}
+		err error
+	)
+
+	prefixLengths, err := ReadDeltaBinaryPackedINT(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	suffixes, err := ReadDeltaLengthByteArray(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	res = make([]interface{}, len(prefixLengths))
 
 	res[0] = suffixes[0]
 	for i := 1; i < len(prefixLengths); i++ {
@@ -279,5 +386,5 @@ func ReadDeltaByteArray(bytesReader *bytes.Reader) []interface{} {
 		suffix := suffixes[i].(ParquetType.BYTE_ARRAY)
 		res[i] = prefix + suffix
 	}
-	return res
+	return res, err
 }

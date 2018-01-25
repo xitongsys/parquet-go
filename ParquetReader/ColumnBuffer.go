@@ -93,7 +93,10 @@ func (self *ColumnBufferType) NextRowGroup() error {
 
 func (self *ColumnBufferType) ReadPage() error {
 	if self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
-		page, numValues, numRows := Layout.ReadPage(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
+		page, numValues, numRows, err := Layout.ReadPage(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
+		if err != nil {
+			return err
+		}
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
 			self.DictPage = page
 			return nil

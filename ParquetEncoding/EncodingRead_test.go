@@ -17,7 +17,7 @@ func TestReadPlainBOOLEAN(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := ReadPlainBOOLEAN(bytes.NewReader(WritePlainBOOLEAN(data)), uint64(len(data)))
+		res, _ := ReadPlainBOOLEAN(bytes.NewReader(WritePlainBOOLEAN(data)), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainBOOLEAN err, expect %v, get %v", data, res)
 		}
@@ -35,7 +35,7 @@ func TestReadPlainINT32(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := ReadPlainINT32(data.byteReader, uint64(len(data.expected)))
+		res, _ := ReadPlainINT32(data.byteReader, uint64(len(data.expected)))
 		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", data.expected) {
 			t.Errorf("ReadPlainINT32 error, expect %v, get %v", data.expected, res)
 		}
@@ -48,12 +48,12 @@ func TestReadPlainINT64(t *testing.T) {
 		byteReader *bytes.Reader
 	}{
 		{[]interface{}{}, bytes.NewReader([]byte{})},
-		{[]interface{}{INT64(0)}, bytes.NewReader([]byte{0, 0, 0, 0})},
+		{[]interface{}{INT64(0)}, bytes.NewReader([]byte{0, 0, 0, 0, 0, 0, 0, 0})},
 		{[]interface{}{INT64(0), INT64(1), INT64(2)}, bytes.NewReader([]byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0})},
 	}
 
 	for _, data := range testData {
-		res := ReadPlainINT64(data.byteReader, uint64(len(data.expected)))
+		res, _ := ReadPlainINT64(data.byteReader, uint64(len(data.expected)))
 		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", data.expected) {
 			t.Errorf("ReadPlainINT64 error, expect %v, get %v", data.expected, res)
 		}
@@ -67,7 +67,7 @@ func TestReadPlainBYTE_ARRAY(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := ReadPlainBYTE_ARRAY(bytes.NewReader(WritePlainBYTE_ARRAY(data)), uint64(len(data)))
+		res, _ := ReadPlainBYTE_ARRAY(bytes.NewReader(WritePlainBYTE_ARRAY(data)), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainBYTE_ARRAY err, %v", data)
 		}
@@ -81,7 +81,7 @@ func TestReadPlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := ReadPlainFIXED_LEN_BYTE_ARRAY(bytes.NewReader(WritePlainFIXED_LEN_BYTE_ARRAY(data)), uint64(len(data)), uint64(len(data[0].(FIXED_LEN_BYTE_ARRAY))))
+		res, _ := ReadPlainFIXED_LEN_BYTE_ARRAY(bytes.NewReader(WritePlainFIXED_LEN_BYTE_ARRAY(data)), uint64(len(data)), uint64(len(data[0].(FIXED_LEN_BYTE_ARRAY))))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainFIXED_LEN_BYTE_ARRAY err, %v", data)
 		}
@@ -95,7 +95,7 @@ func TestReadPlainFLOAT(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := ReadPlainFLOAT(bytes.NewReader(WritePlainFLOAT(data)), uint64(len(data)))
+		res, _ := ReadPlainFLOAT(bytes.NewReader(WritePlainFLOAT(data)), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainFLOAT err, %v", data)
 		}
@@ -109,7 +109,7 @@ func TestReadPlainDOUBLE(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := ReadPlainDOUBLE(bytes.NewReader(WritePlainDOUBLE(data)), uint64(len(data)))
+		res, _ := ReadPlainDOUBLE(bytes.NewReader(WritePlainDOUBLE(data)), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainDOUBLE err, %v", data)
 		}
@@ -119,7 +119,7 @@ func TestReadPlainDOUBLE(t *testing.T) {
 func TestReadUnsignedVarInt(t *testing.T) {
 	testData := []uint64{1, 2, 3, 11, 22, 33, 111, 222, 333, 0}
 	for _, data := range testData {
-		res := ReadUnsignedVarInt(bytes.NewReader(WriteUnsignedVarInt(data)))
+		res, _ := ReadUnsignedVarInt(bytes.NewReader(WriteUnsignedVarInt(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadUnsignedVarInt err, %v", data)
 		}
@@ -133,9 +133,10 @@ func TestReadRLEBitPackedHybrid(t *testing.T) {
 	}
 	for _, data := range testData {
 		maxVal := uint64(data[len(data)-1].(INT64))
-		res := ReadRLEBitPackedHybrid(bytes.NewReader(WriteRLEBitPackedHybrid(data, int32(BitNum(maxVal)))), uint64(BitNum(maxVal)), 0)
+
+		res, err := ReadRLEBitPackedHybrid(bytes.NewReader(WriteRLEBitPackedHybrid(data, int32(BitNum(maxVal)))), uint64(BitNum(maxVal)), 0)
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadRLEBitpackedHybrid err, %v", data)
+			t.Errorf("ReadRLEBitpackedHybrid error, expect %v, get %v, err info:%v", data, res, err)
 		}
 	}
 }
@@ -146,9 +147,9 @@ func TestReadDeltaBinaryPackedINT(t *testing.T) {
 		[]interface{}{INT64(0), INT64(0), INT64(0), INT64(0), INT64(0)},
 	}
 	for _, data := range testData {
-		res := ReadDeltaBinaryPackedINT(bytes.NewReader(WriteDeltaINT64(data)))
+		res, _ := ReadDeltaBinaryPackedINT(bytes.NewReader(WriteDeltaINT64(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadRLEBitpackedHybrid err, expect %v, get %v", data, res)
+			t.Errorf("ReadRLEBitpackedHybrid error, expect %v, get %v", data, res)
 		}
 	}
 }
@@ -158,7 +159,7 @@ func TestReadDeltaByteArray(t *testing.T) {
 		[]interface{}{"Hello", "world"},
 	}
 	for _, data := range testData {
-		res := ReadDeltaByteArray(bytes.NewReader(WriteDeltaByteArray(data)))
+		res, _ := ReadDeltaByteArray(bytes.NewReader(WriteDeltaByteArray(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadDeltaByteArray err, expect %v, get %v", data, res)
 		}
@@ -170,7 +171,7 @@ func TestReadLengthDeltaByteArray(t *testing.T) {
 		[]interface{}{"Hello", "world"},
 	}
 	for _, data := range testData {
-		res := ReadDeltaLengthByteArray(bytes.NewReader(WriteDeltaLengthByteArray(data)))
+		res, _ := ReadDeltaLengthByteArray(bytes.NewReader(WriteDeltaLengthByteArray(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadDeltaByteArray err, expect %v, get %v", data, res)
 		}
@@ -186,7 +187,7 @@ func TestReadBitPacked(t *testing.T) {
 		ln := len(data)
 		header := ((ln/8)<<1 | 1)
 		bitWidth := BitNum(uint64(data[ln-1].(int)))
-		res := ReadBitPacked(bytes.NewReader(WriteBitPacked(data, int64(bitWidth), false)), uint64(header), bitWidth)
+		res, _ := ReadBitPacked(bytes.NewReader(WriteBitPacked(data, int64(bitWidth), false)), uint64(header), bitWidth)
 		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", data) {
 
 		}
