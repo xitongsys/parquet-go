@@ -181,7 +181,6 @@ func main() {
 		}
 		pw.Write(stu)
 	}
-	pw.Flush(true)
 	pw.WriteStop()
 	log.Println("Write Finished")
 	fw.Close()
@@ -300,7 +299,6 @@ func main() {
         }
         pw.Write(data2)
     }
-    pw.Flush(true)
     pw.WriteStop()
     log.Println("Write Finished")
     fw.Close()
@@ -392,7 +390,6 @@ func main() {
 		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
 		pw.Write(rec)
 	}
-	pw.Flush(true)
 	pw.WriteStop()
 	log.Println("Write Finished")
 	fw.Close()
