@@ -107,7 +107,8 @@ func (self *JSONWriter) WriteStop() {
 }
 
 //Flush the write buffer to parquet file
-func (self *JSONWriter) Flush(flag bool) {
+func (self *JSONWriter) Flush(flag bool) error {
+	var err error
 	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
 		pagesMapList[i] = make(map[string][]*Layout.Page)
@@ -115,66 +116,66 @@ func (self *JSONWriter) Flush(flag bool) {
 
 	doneChan := make(chan int)
 	l := int64(len(self.Objs))
-	if l <= 0 {
-		return
-	}
-	var c int64 = 0
-	delta := (l + self.NP - 1) / self.NP
-	lock := new(sync.Mutex)
-	for c = 0; c < self.NP; c++ {
-		bgn := c * delta
-		end := bgn + delta
-		if end > l {
-			end = l
-		}
-		if bgn >= l {
-			bgn, end = l, l
+
+	if l > 0 {
+		var c int64 = 0
+		delta := (l + self.NP - 1) / self.NP
+		lock := new(sync.Mutex)
+		for c = 0; c < self.NP; c++ {
+			bgn := c * delta
+			end := bgn + delta
+			if end > l {
+				end = l
+			}
+			if bgn >= l {
+				bgn, end = l, l
+			}
+
+			go func(b, e int, index int64) {
+				if e <= b {
+					doneChan <- 0
+					return
+				}
+				tableMap, _ := MarshalJSON(self.Objs, b, e, self.SchemaHandler)
+				for name, table := range *tableMap {
+					if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+						lock.Lock()
+						if _, ok := self.DictRecs[name]; !ok {
+							self.DictRecs[name] = Layout.NewDictRec()
+						}
+						pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
+							table, int32(self.PageSize), 32, self.CompressType)
+						lock.Unlock()
+					} else {
+						pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
+							self.CompressType)
+					}
+				}
+
+				doneChan <- 0
+			}(int(bgn), int(end), c)
 		}
 
-		go func(b, e int, index int64) {
-			if e <= b {
-				doneChan <- 0
-				return
-			}
-			tableMap, _ := MarshalJSON(self.Objs, b, e, self.SchemaHandler)
-			for name, table := range *tableMap {
-				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-					lock.Lock()
-					if _, ok := self.DictRecs[name]; !ok {
-						self.DictRecs[name] = Layout.NewDictRec()
-					}
-					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
-						table, int32(self.PageSize), 32, self.CompressType)
-					lock.Unlock()
+		for c = 0; c < self.NP; c++ {
+			<-doneChan
+		}
+
+		for _, pagesMap := range pagesMapList {
+			for name, pages := range pagesMap {
+				if _, ok := self.PagesMapBuf[name]; !ok {
+					self.PagesMapBuf[name] = pages
 				} else {
-					pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
-						self.CompressType)
+					self.PagesMapBuf[name] = append(self.PagesMapBuf[name], pages...)
+				}
+				for _, page := range pages {
+					self.Size += int64(len(page.RawData))
+					page.DataTable = nil
 				}
 			}
-
-			doneChan <- 0
-		}(int(bgn), int(end), c)
-	}
-
-	for c = 0; c < self.NP; c++ {
-		<-doneChan
-	}
-
-	for _, pagesMap := range pagesMapList {
-		for name, pages := range pagesMap {
-			if _, ok := self.PagesMapBuf[name]; !ok {
-				self.PagesMapBuf[name] = pages
-			} else {
-				self.PagesMapBuf[name] = append(self.PagesMapBuf[name], pages...)
-			}
-			for _, page := range pages {
-				self.Size += int64(len(page.RawData))
-				page.DataTable = nil
-			}
 		}
-	}
 
-	self.NumRows += int64(len(self.Objs))
+		self.NumRows += int64(len(self.Objs))
+	}
 
 	if self.Size+self.ObjsSize >= self.RowGroupSize || flag {
 		//pages -> chunk
@@ -215,7 +216,9 @@ func (self *JSONWriter) Flush(flag bool) {
 
 			for l := 0; l < len(rowGroup.Chunks[k].Pages); l++ {
 				data := rowGroup.Chunks[k].Pages[l].RawData
-				self.PFile.Write(data)
+				if _, err = self.PFile.Write(data); err != nil {
+					return err
+				}
 				self.Offset += int64(len(data))
 			}
 		}
@@ -226,4 +229,5 @@ func (self *JSONWriter) Flush(flag bool) {
 	self.Footer.NumRows += int64(len(self.Objs))
 	self.Objs = self.Objs[:0]
 	self.ObjsSize = 0
+	return nil
 }
