@@ -116,7 +116,8 @@ func (self *ParquetWriter) WriteStop() {
 }
 
 //Write one object to parquet file
-func (self *ParquetWriter) Write(src interface{}) {
+func (self *ParquetWriter) Write(src interface{}) error {
+	var err error
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(src))
@@ -127,11 +128,12 @@ func (self *ParquetWriter) Write(src interface{}) {
 	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize >= criSize {
-		self.Flush(false)
+		err = self.Flush(false)
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
 	}
+	return err
 
 }
 

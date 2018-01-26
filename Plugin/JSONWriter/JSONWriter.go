@@ -72,7 +72,8 @@ func (self *JSONWriter) RenameSchema() {
 }
 
 //Write parquet values to parquet file
-func (self *JSONWriter) Write(rec string) {
+func (self *JSONWriter) Write(rec string) error {
+	var err error
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
@@ -84,11 +85,12 @@ func (self *JSONWriter) Write(rec string) {
 	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize > criSize {
-		self.Flush(false)
+		err = self.Flush(false)
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
 	}
+	return err
 }
 
 //Write footer to parquet file and stop writing

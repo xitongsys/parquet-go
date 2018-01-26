@@ -75,32 +75,44 @@ func (self *ParquetReader) GetNumRows() int64 {
 }
 
 //Get the footer size
-func (self *ParquetReader) GetFooterSize() uint32 {
+func (self *ParquetReader) GetFooterSize() (uint32, error) {
+	var err error
 	buf := make([]byte, 4)
-	self.PFile.Seek(-8, 2)
-	self.PFile.Read(buf)
+	if _, err = self.PFile.Seek(-8, 2); err != nil {
+		return 0, err
+	}
+	if _, err = self.PFile.Read(buf); err != nil {
+		return 0, err
+	}
 	size := binary.LittleEndian.Uint32(buf)
-	return size
+	return size, err
 }
 
 //Read footer from parquet file
-func (self *ParquetReader) ReadFooter() {
-	size := self.GetFooterSize()
-	self.PFile.Seek(int(-(int64)(8+size)), 2)
+func (self *ParquetReader) ReadFooter() error {
+	size, err := self.GetFooterSize()
+	if err != nil {
+		return err
+	}
+	if _, err = self.PFile.Seek(int(-(int64)(8+size)), 2); err != nil {
+		return err
+	}
 	self.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
 	protocol := pf.GetProtocol(thrift.NewStreamTransportR(self.PFile))
-	self.Footer.Read(protocol)
+	err = self.Footer.Read(protocol)
+	return err
 }
 
 //Read rows of parquet file
-func (self *ParquetReader) Read(dstInterface interface{}) {
+func (self *ParquetReader) Read(dstInterface interface{}) error {
+	var err error
 	tmap := make(map[string]*Layout.Table)
 	locker := new(sync.Mutex)
 	ot := reflect.TypeOf(dstInterface).Elem().Elem()
 	num := reflect.ValueOf(dstInterface).Elem().Len()
 	if num <= 0 {
-		return
+		return nil
 	}
 
 	doneChan := make(chan int, self.NP)
@@ -154,7 +166,9 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 		}
 		go func(b, e, index int) {
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
-			Marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler)
+			if err2 := Marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler); err2 != nil {
+				err = err2
+			}
 			doneChan <- 0
 		}(int(bgn), int(end), int(c))
 	}
@@ -167,6 +181,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) {
 		resTmp = reflect.AppendSlice(resTmp, reflect.ValueOf(dst).Elem())
 	}
 	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
+	return err
 }
 
 //Stop Read

@@ -70,7 +70,8 @@ func (self *CSVWriter) RenameSchema() {
 }
 
 //Write string values to parquet file
-func (self *CSVWriter) WriteString(recs []*string) {
+func (self *CSVWriter) WriteString(recs []*string) error {
+	var err error
 	lr := len(recs)
 	rec := make([]interface{}, lr)
 	for i := 0; i < lr; i++ {
@@ -95,15 +96,17 @@ func (self *CSVWriter) WriteString(recs []*string) {
 	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize > criSize {
-		self.Flush(false)
+		err = self.Flush(false)
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
 	}
+	return err
 }
 
 //Write parquet values to parquet file
-func (self *CSVWriter) Write(rec []interface{}) {
+func (self *CSVWriter) Write(rec []interface{}) error {
+	var err error
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
@@ -115,11 +118,12 @@ func (self *CSVWriter) Write(rec []interface{}) {
 	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
 
 	if self.ObjsSize > criSize {
-		self.Flush(false)
+		err = self.Flush(false)
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
 	}
+	return err
 }
 
 //Write footer to parquet file and stop writing
