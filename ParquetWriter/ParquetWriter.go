@@ -87,7 +87,7 @@ func (self *ParquetWriter) NameToLower() {
 //Rename schema name to exname in tags
 func (self *ParquetWriter) RenameSchema() {
 	for i := 0; i < len(self.Footer.Schema); i++ {
-		self.Footer.Schema[i].Name = self.SchemaHandler.Infos[i]["exname"].(string)
+		self.Footer.Schema[i].Name = self.SchemaHandler.Infos[i].ExName
 	}
 	for _, rowGroup := range self.Footer.RowGroups {
 		for _, chunk := range rowGroup.Columns {
@@ -173,7 +173,7 @@ func (self *ParquetWriter) flushObjs() error {
 				err = err2
 			}
 			for name, table := range *tableMap {
-				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+				if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
 					lock.Lock()
 					if _, ok := self.DictRecs[name]; !ok {
 						self.DictRecs[name] = Layout.NewDictRec()
@@ -226,7 +226,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 		//pages -> chunk
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
-			if len(pages) > 0 && pages[0].Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+			if len(pages) > 0 && pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
 				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressionType)
 				tmp := append([]*Layout.Page{dictPage}, pages...)
 				chunkMap[name] = Layout.PagesToDictChunk(tmp)

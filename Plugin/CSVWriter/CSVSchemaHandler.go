@@ -9,8 +9,7 @@ import (
 //Create a schema handler from CSV metadata
 func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
 	schemaList := make([]*parquet.SchemaElement, 0)
-
-	infos := make([]map[string]interface{}, 0)
+	infos := make([]*Common.Tag, 0)
 
 	rootSchema := parquet.NewSchemaElement()
 	rootSchema.Name = "parquet_go_root"
@@ -21,26 +20,24 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
 	schemaList = append(schemaList, rootSchema)
 
 	for _, md := range mds {
-		info := Common.TagToMap(md)
+		info := Common.StringToTag(md)
 		infos = append(infos, info)
 
 		schema := parquet.NewSchemaElement()
-		schema.Name = info["exname"].(string)
+		schema.Name = info.ExName
 		numChildren := int32(0)
 		schema.NumChildren = &numChildren
 		rt := parquet.FieldRepetitionType(1)
 		schema.RepetitionType = &rt
 
-		if t, err := parquet.TypeFromString(info["type"].(string)); err == nil {
+		if t, err := parquet.TypeFromString(info.Type); err == nil {
 			schema.Type = &t
-			if info["type"].(string) == "FIXED_LEN_BYTE_ARRAY" {
-				ln := info["length"].(int32)
-				schema.TypeLength = &ln
+			if info.Type == "FIXED_LEN_BYTE_ARRAY" {
+				schema.TypeLength = &info.Length
 			}
-
 		} else {
-			name := info["type"].(string)
-			ct, _ := parquet.ConvertedTypeFromString(info["type"].(string))
+			name := info.Type
+			ct, _ := parquet.ConvertedTypeFromString(name)
 			schema.ConvertedType = &ct
 			if name == "INT_8" || name == "INT_16" || name == "INT_32" ||
 				name == "UINT_8" || name == "UINT_16" || name == "UINT_32" ||
@@ -56,20 +53,14 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
 				var ln int32 = 12
 				schema.TypeLength = &ln
 			} else if name == "DECIMAL" {
-				scale := info["scale"].(int32)
-				precision := info["precision"].(int32)
 				schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
-				schema.Scale = &scale
-				schema.Precision = &precision
-
+				schema.Scale = &info.Scale
+				schema.Precision = &info.Precision
 			}
 		}
-
 		schemaList = append(schemaList, schema)
 	}
-
 	res := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaList)
 	res.Infos = infos
 	return res
-
 }
