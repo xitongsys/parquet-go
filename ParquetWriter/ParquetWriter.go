@@ -249,6 +249,9 @@ func (self *ParquetWriter) Flush(flag bool) error {
 				continue
 			}
 			chunk := chunkMap[self.SchemaHandler.IndexMap[int32(k)]]
+			if chunk == nil {
+				continue
+			}
 			rowGroup.Chunks = append(rowGroup.Chunks, chunk)
 			rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
 			rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
