@@ -226,12 +226,23 @@ func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHa
 
 			nodes := m.Marshal(node, nodeBuf)
 			if len(nodes) == 0 {
-				for key, table := range res {
-					if len(key) >= len(node.PathMap.Path) && key[:len(node.PathMap.Path)] == node.PathMap.Path {
-						table.Values = append(table.Values, nil)
-						table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
-						table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+				path := node.PathMap.Path
+				index := schemaHandler.MapIndex[path]
+				numChildren := schemaHandler.SchemaElements[index].GetNumChildren()
+				if numChildren > int32(0) {
+					for key, table := range res {
+						if len(key) >= len(node.PathMap.Path) && key[:len(node.PathMap.Path)] == node.PathMap.Path {
+							table.Values = append(table.Values, nil)
+							table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+							table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+						}
 					}
+				} else {
+					table := res[path]
+					table.Values = append(table.Values, nil)
+					table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+					table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+
 				}
 			} else {
 				for _, node := range nodes {
