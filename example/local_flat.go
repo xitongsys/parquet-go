@@ -1,12 +1,13 @@
 package main
 
 import (
+	"log"
+	"time"
+
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 	"github.com/xitongsys/parquet-go/parquet"
-	"log"
-	"time"
 )
 
 type Student struct {
@@ -19,10 +20,20 @@ type Student struct {
 }
 
 func main() {
-	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
+	var err error
+	fw, err := ParquetFile.NewLocalFileWriter("flat.parquet")
+	if err != nil {
+		log.Println("Can't create local file", err)
+		return
+	}
 
 	//write
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	if err != nil {
+		log.Println("Can't create parquet writer", err)
+		return
+	}
+
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
@@ -35,22 +46,35 @@ func main() {
 			Sex:    bool(i%2 == 0),
 			Day:    int32(time.Now().Unix() / 3600 / 24),
 		}
-		pw.Write(stu)
+		if err = pw.Write(stu); err != nil {
+			log.Println("Write error", err)
+		}
 	}
-	pw.WriteStop()
+	if err = pw.WriteStop(); err != nil {
+		log.Println("WriteStop error", err)
+		return
+	}
 	log.Println("Write Finished")
 	fw.Close()
 
 	///read
-	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
+	fr, err := ParquetFile.NewLocalFileReader("flat.parquet")
+	if err != nil {
+		log.Println("Can't open file")
+		return
+	}
+
 	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
-		log.Println("Failed new reader", err)
+		log.Println("Can't create parquet reader", err)
+		return
 	}
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)
-		pr.Read(&stus)
+		if err = pr.Read(&stus); err != nil {
+			log.Println("Read error", err)
+		}
 		log.Println(stus)
 	}
 

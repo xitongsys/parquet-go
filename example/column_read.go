@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"time"
+
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
-	"log"
-	"time"
 )
 
 type Student struct {
@@ -20,9 +21,18 @@ type Student struct {
 }
 
 func main() {
+	var err error
 	//write
-	fw, _ := ParquetFile.NewLocalFileWriter("column.parquet")
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	fw, err := ParquetFile.NewLocalFileWriter("column.parquet")
+	if err != nil {
+		log.Println("Can't create file", err)
+		return
+	}
+	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	if err != nil {
+		log.Println("Can't create parquet writer")
+		return
+	}
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -35,9 +45,13 @@ func main() {
 			Class:  []string{"Math", "Physics", "Algorithm"},
 			Score:  map[string]int32{"Math": int32(100 - i), "Physics": int32(100 - i), "Algorithm": int32(100 - i)},
 		}
-		pw.Write(stu)
+		if err = pw.Write(stu); err != nil {
+			log.Println("Write error", err)
+		}
 	}
-	pw.WriteStop()
+	if err = pw.WriteStop(); err != nil {
+		log.Println("WriteStop error", err)
+	}
 	log.Println("Write Finished")
 	fw.Close()
 
@@ -45,10 +59,15 @@ func main() {
 	var rls, dls []int32
 
 	///read
-	fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
+	fr, err := ParquetFile.NewLocalFileReader("column.parquet")
+	if err != nil {
+		log.Println("Can't open file", err)
+		return
+	}
 	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
 	if err != nil {
-		log.Println("Failed new reader", err)
+		log.Println("Can't create column reader", err)
+		return
 	}
 	num = int(pr.GetNumRows())
 
