@@ -2,8 +2,9 @@ package Marshal
 
 import (
 	"fmt"
-	. "github.com/xitongsys/parquet-go/SchemaHandler"
 	"testing"
+
+	. "github.com/xitongsys/parquet-go/SchemaHandler"
 )
 
 type Student struct {

@@ -1,12 +1,13 @@
 package Marshal
 
 import (
+	"reflect"
+
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
 )
 
 type Node struct {

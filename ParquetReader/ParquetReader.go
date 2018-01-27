@@ -2,6 +2,9 @@ package ParquetReader
 
 import (
 	"encoding/binary"
+	"reflect"
+	"sync"
+
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
@@ -9,8 +12,6 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
-	"sync"
 )
 
 type ParquetReader struct {

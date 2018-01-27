@@ -3,8 +3,9 @@ package Compress
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/golang/snappy"
 	"io/ioutil"
+
+	"github.com/golang/snappy"
 )
 
 //Uncompress using Gzip

@@ -1,9 +1,10 @@
 package ParquetReader
 
 import (
+	"strings"
+
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
-	"strings"
 )
 
 //Create a parquet column reader

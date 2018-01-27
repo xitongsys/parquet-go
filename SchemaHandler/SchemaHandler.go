@@ -2,9 +2,10 @@ package SchemaHandler
 
 import (
 	"errors"
+	"reflect"
+
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
 )
 
 /*

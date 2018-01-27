@@ -3,9 +3,10 @@ package ParquetEncoding
 import (
 	"bytes"
 	"encoding/binary"
+	"reflect"
+
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/ParquetType"
-	"reflect"
 )
 
 func ToInt64(nums []interface{}) []int64 { //convert bool/int values to int64 values

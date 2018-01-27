@@ -1,11 +1,12 @@
 package Common
 
 import (
-	"github.com/xitongsys/parquet-go/ParquetType"
-	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //Parse the tag to map; tag format is:

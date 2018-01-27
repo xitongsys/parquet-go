@@ -2,13 +2,14 @@ package JSONWriter
 
 import (
 	"encoding/json"
+	"reflect"
+
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
 )
 
 func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
