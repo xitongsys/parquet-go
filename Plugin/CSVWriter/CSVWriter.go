@@ -127,18 +127,31 @@ func (self *CSVWriter) Write(rec []interface{}) error {
 }
 
 //Write footer to parquet file and stop writing
-func (self *CSVWriter) WriteStop() {
-	self.Flush(true)
+func (self *CSVWriter) WriteStop() error {
+	var err error
+	if err = self.Flush(true); err != nil {
+		return err
+	}
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
-	footerBuf, _ := ts.Write(self.Footer)
+	footerBuf, err := ts.Write(self.Footer)
+	if err != nil {
+		return err
+	}
 
-	self.PFile.Write(footerBuf)
+	if _, err = self.PFile.Write(footerBuf); err != nil {
+		return err
+	}
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
-	self.PFile.Write(footerSizeBuf)
-	self.PFile.Write([]byte("PAR1"))
+	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
+		return err
+	}
+	if _, err = self.PFile.Write([]byte("PAR1")); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (self *CSVWriter) flushObjs() error {

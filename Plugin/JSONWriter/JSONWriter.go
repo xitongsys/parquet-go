@@ -94,18 +94,31 @@ func (self *JSONWriter) Write(rec string) error {
 }
 
 //Write footer to parquet file and stop writing
-func (self *JSONWriter) WriteStop() {
-	self.Flush(true)
+func (self *JSONWriter) WriteStop() error {
+	var err error
+	if err = self.Flush(true); err != nil {
+		return err
+	}
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
-	footerBuf, _ := ts.Write(self.Footer)
+	footerBuf, err := ts.Write(self.Footer)
+	if err != nil {
+		return err
+	}
 
-	self.PFile.Write(footerBuf)
+	if _, err = self.PFile.Write(footerBuf); err != nil {
+		return err
+	}
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
-	self.PFile.Write(footerSizeBuf)
-	self.PFile.Write([]byte("PAR1"))
+	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
+		return err
+	}
+	if _, err = self.PFile.Write([]byte("PAR1")); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (self *JSONWriter) flushObjs() error {
@@ -140,22 +153,23 @@ func (self *JSONWriter) flushObjs() error {
 				return
 			}
 			tableMap, err2 := MarshalJSON(self.Objs, b, e, self.SchemaHandler)
-			if err2 != nil {
-				err = err2
-			}
-			for name, table := range *tableMap {
-				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
-					lock.Lock()
-					if _, ok := self.DictRecs[name]; !ok {
-						self.DictRecs[name] = Layout.NewDictRec()
+			if err2 == nil {
+				for name, table := range *tableMap {
+					if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+						lock.Lock()
+						if _, ok := self.DictRecs[name]; !ok {
+							self.DictRecs[name] = Layout.NewDictRec()
+						}
+						pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
+							table, int32(self.PageSize), 32, self.CompressType)
+						lock.Unlock()
+					} else {
+						pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
+							self.CompressType)
 					}
-					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
-						table, int32(self.PageSize), 32, self.CompressType)
-					lock.Unlock()
-				} else {
-					pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
-						self.CompressType)
 				}
+			} else {
+				err = err2
 			}
 
 			doneChan <- 0

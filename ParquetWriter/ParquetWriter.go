@@ -109,9 +109,9 @@ func (self *ParquetWriter) WriteStop() error {
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
-	footerBuf, err2 := ts.Write(self.Footer)
-	if err2 != nil {
-		return err2
+	footerBuf, err := ts.Write(self.Footer)
+	if err != nil {
+		return err
 	}
 
 	if _, err = self.PFile.Write(footerBuf); err != nil {
