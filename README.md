@@ -1,4 +1,4 @@
-# parquet-go v1.1.8
+# parquet-go v1.1.9
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -144,13 +144,17 @@ Using this interface, parquet-go can read/write parquet file on different plantf
 Following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```golang
 package main
+
 import (
+	"log"
+	"time"
+
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
-	"log"
-	"time"
+	"github.com/xitongsys/parquet-go/parquet"
 )
+
 type Student struct {
 	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
 	Age    int32   `parquet:"name=age, type=INT32"`
@@ -161,14 +165,20 @@ type Student struct {
 }
 
 func main() {
-	fw, _ := ParquetFile.NewLocalFileWriter("flat.parquet")
+	var err error
+	fw, err := ParquetFile.NewLocalFileWriter("flat.parquet")
+	if err != nil {
+		log.Println("Can't create local file", err)
+		return
+	}
 	//write
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
-	
-	//If you want to change the RowGroupSize or Compression method, you can set as following
-	//pw.RowGroupSize = 128 * 1024 * 1024 
-	//pw.CompressionType = parquet.CompressionCodec_SNAPPY
-
+	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	if err != nil {
+		log.Println("Can't create parquet writer", err)
+		return
+	}
+	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
@@ -179,27 +189,41 @@ func main() {
 			Sex:    bool(i%2 == 0),
 			Day:    int32(time.Now().Unix() / 3600 / 24),
 		}
-		pw.Write(stu)
+		if err = pw.Write(stu); err != nil {
+			log.Println("Write error", err)
+		}
 	}
-	pw.WriteStop()
+	if err = pw.WriteStop(); err != nil {
+		log.Println("WriteStop error", err)
+		return
+	}
 	log.Println("Write Finished")
 	fw.Close()
 
 	///read
-	fr, _ := ParquetFile.NewLocalFileReader("flat.parquet")
+	fr, err := ParquetFile.NewLocalFileReader("flat.parquet")
+	if err != nil {
+		log.Println("Can't open file")
+		return
+	}
+
 	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
-		log.Println("Failed new reader", err)
+		log.Println("Can't create parquet reader", err)
+		return
 	}
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)
-		pr.Read(&stus)
+		if err = pr.Read(&stus); err != nil {
+			log.Println("Read error", err)
+		}
 		log.Println(stus)
 	}
 	pr.ReadStop()
 	fr.Close()
 }
+
 ```
 
 ## Read Columns
@@ -222,10 +246,15 @@ func main(){
 	var names, classes, scores_key, scores_value, ids []interface{}
 	var rls, dls []int32
 	///read
-	fr, _ := ParquetFile.NewLocalFileReader("column.parquet")
+	fr, err := ParquetFile.NewLocalFileReader("column.parquet")
+	if err != nil {
+		log.Println("Can't open file", err)
+		return
+	}
 	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
 	if err != nil {
-		log.Println("Failed new reader", err)
+		log.Println("Can't create column reader", err)
+		return
 	}
 	num := int(pr.GetNumRows())
 	names, rls, dls = pr.ReadColumnByPath("name", num)
@@ -262,47 +291,69 @@ This plugin is used for data format similar with CSV(not nested). The format of 
 
 #### Example
 ```golang
+package main
+import (
+	"fmt"
+	"log"
+
+	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/Plugin/CSVWriter"
+)
 func main() {
-    md := []string{
-        "name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
-        "name=Age, type=INT32",
-        "name=Id, type=INT64",
-        "name=Weight, type=FLOAT",
-        "name=Sex, type=BOOLEAN",
-    }
+	var err error
+	md := []string{
+		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=Age, type=INT32",
+		"name=Id, type=INT64",
+		"name=Weight, type=FLOAT",
+		"name=Sex, type=BOOLEAN",
+	}
+	//write
+	fw, err := ParquetFile.NewLocalFileWriter("csv.parquet")
+	if err != nil {
+		log.Println("Can't open file", err)
+		return
+	}
+	pw, err := CSVWriter.NewCSVWriter(md, fw, 4)
+	if err != nil {
+		log.Println("Can't create csv writer", err)
+		return
+	}
 
-    //write
-    fw, _ := ParquetFile.NewLocalFileWriter("csv.parquet")
-    pw, _ := CSVWriter.NewCSVWriter(md, fw, 1)
+	num := 10
+	for i := 0; i < num; i++ {
+		data := []string{
+			fmt.Sprintf("%s_%d", "Student Name", i),
+			fmt.Sprintf("%d", 20+i%5),
+			fmt.Sprintf("%d", i),
+			fmt.Sprintf("%f", 50.0+float32(i)*0.1),
+			fmt.Sprintf("%t", i%2 == 0),
+		}
+		rec := make([]*string, len(data))
+		for j := 0; j < len(data); j++ {
+			rec[j] = &data[j]
+		}
+		if err = pw.WriteString(rec); err != nil {
+			log.Println("WriteString error", err)
+		}
 
-    num := 10
-    for i := 0; i < num; i++ {
-        data := []string{
-            fmt.Sprintf("%s_%d", "Student Name", i),
-            fmt.Sprintf("%d", 20+i%5),
-            fmt.Sprintf("%d", i),
-            fmt.Sprintf("%f", 50.0+float32(i)*0.1),
-            fmt.Sprintf("%t", i%2 == 0),
-        }
-        rec := make([]*string, len(data))
-        for j := 0; j < len(data); j++ {
-            rec[j] = &data[j]
-        }
-        pw.WriteString(rec)
-
-        data2 := []interface{}{
-            ParquetType.BYTE_ARRAY("Student Name"),
-            ParquetType.INT32(20 + i*5),
-            ParquetType.INT64(i),
-            ParquetType.FLOAT(50.0 + float32(i)*0.1),
-            ParquetType.BOOLEAN(i%2 == 0),
-        }
-        pw.Write(data2)
-    }
-    pw.WriteStop()
-    log.Println("Write Finished")
-    fw.Close()
-
+		data2 := []interface{}{
+			ParquetType.BYTE_ARRAY("Student Name"),
+			ParquetType.INT32(20 + i*5),
+			ParquetType.INT64(i),
+			ParquetType.FLOAT(50.0 + float32(i)*0.1),
+			ParquetType.BOOLEAN(i%2 == 0),
+		}
+		if err = pw.Write(data2); err != nil {
+			log.Println("Write error", err)
+		}
+	}
+	if err = pw.WriteStop(); err != nil {
+		log.Println("WriteStop error", err)
+	}
+	log.Println("Write Finished")
+	fw.Close()
 }
 ```
 
@@ -317,7 +368,17 @@ JSONWriter can convert JSON strings to parquet by the parquet schema, which is a
 
 #### Example
 ```golang
+package main
+import (
+	"fmt"
+	"log"
+
+	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/Plugin/JSONWriter"
+)
+
 func main() {
+	var err error
 	md := `
     {
         "Tag":"name=parquet-go-root",
@@ -360,8 +421,17 @@ func main() {
 	}
 `
 	//write
-	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
-	pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
+	fw, err := ParquetFile.NewLocalFileWriter("json.parquet")
+	if err != nil {
+		log.Println("Can't create file", err)
+		return
+	}
+	pw, err := JSONWriter.NewJSONWriter(md, fw, 1)
+	if err != nil {
+		log.Println("Can't create json writer", err)
+		return
+	}
+
 	num := 10
 	for i := 0; i < num; i++ {
 		rec := `
@@ -388,17 +458,21 @@ func main() {
             }
         `
 		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
-		pw.Write(rec)
+		if err = pw.Write(rec); err != nil {
+			log.Println("Write error", err)
+		}
 	}
-	pw.WriteStop()
+	if err = pw.WriteStop(); err != nil {
+		log.Println("WriteStop error", err)
+	}
 	log.Println("Write Finished")
 	fw.Close()
 }
+
 ```
 
 ## Status
 Here are a few todo items. Welcome any help!
-* Add more error handlers
 * Add CLI schema tool
 * Performance Test(Issue14)
 * Test in different platforms
