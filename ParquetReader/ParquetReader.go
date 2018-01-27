@@ -28,7 +28,9 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res := new(ParquetReader)
 	res.NP = np
 	res.PFile = pFile
-	res.ReadFooter()
+	if err = res.ReadFooter(); err != nil {
+		return nil, err
+	}
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	//res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
 	res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj)
