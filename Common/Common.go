@@ -456,45 +456,32 @@ func Max(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedTy
 
 //Get the minimum of two parquet values
 func Min(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
-	if a == nil {
+	if a == Max(a, b, pT, cT) {
 		return b
 	}
-	if b == nil {
-		return a
-	}
-	if Cmp(a, b, pT, cT) {
-		return a
-	}
-	return b
+	return a
 }
 
 //Get the size of a parquet value
 func SizeOf(val reflect.Value) int64 {
-	tk := val.Type().Kind()
-
-	if tk == reflect.Ptr {
+	var size int64
+	switch val.Type().Kind() {
+	case reflect.Ptr:
 		if val.IsNil() {
 			return 0
 		}
-		val = val.Elem()
-		return SizeOf(val)
-	}
-
-	if tk == reflect.Slice {
-		var size int64 = 0
+		return SizeOf(val.Elem())
+	case reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
 			size += SizeOf(val.Index(i))
 		}
 		return size
-	} else if tk == reflect.Struct {
-		var size int64 = 0
+	case reflect.Struct:
 		for i := 0; i < val.Type().NumField(); i++ {
 			size += SizeOf(val.Field(i))
 		}
 		return size
-
-	} else if tk == reflect.Map {
-		var size int64 = 0
+	case reflect.Map:
 		keys := val.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			size += SizeOf(keys[i])
@@ -502,58 +489,18 @@ func SizeOf(val reflect.Value) int64 {
 		}
 		return size
 	}
-
 	switch val.Type().Name() {
 	case "BOOLEAN":
 		return 1
-	case "INT32":
+	case "INT32", "INT_8", "INT_16", "INT_32", "UINT_8", "UINT_16", "UINT_32", "FLOAT", "DATE", "TIME_MILLIS":
 		return 4
-	case "INT64":
+	case "INT64", "INT_64", "UINT_64", "DOUBLE", "TIME_MICROS", "TIMESTAMP_MILLIS", "TIMESTAMP_MICROS":
 		return 8
-	case "INT96":
+	case "INT96", "INTERVAL":
 		return 12
-	case "FLOAT":
-		return 4
-	case "DOUBLE":
-		return 8
-	case "BYTE_ARRAY":
-		return int64(val.Len())
-	case "FIXED_LEN_BYTE_ARRAY":
-		return int64(val.Len())
-	case "UTF8":
-		return int64(val.Len())
-	case "INT_8":
-		return 4
-	case "INT_16":
-		return 4
-	case "INT_32":
-		return 4
-	case "INT_64":
-		return 8
-	case "UINT_8":
-		return 4
-	case "UINT_16":
-		return 4
-	case "UINT_32":
-		return 4
-	case "UINT_64":
-		return 8
-	case "DATE":
-		return 4
-	case "TIME_MILLIS":
-		return 4
-	case "TIME_MICROS":
-		return 8
-	case "TIMESTAMP_MILLIS":
-		return 8
-	case "TIMESTAMP_MICROS":
-		return 8
-	case "INTERVAL":
-		return 12
-	case "DECIMAL":
+	case "BYTE_ARRAY", "FIXED_LEN_BYTE_ARRAY", "UTF8", "DECIMAL":
 		return int64(val.Len())
 	}
-
 	return 4
 }
 
