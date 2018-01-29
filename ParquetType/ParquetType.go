@@ -2,8 +2,9 @@ package ParquetType
 
 import (
 	"fmt"
-	"github.com/xitongsys/parquet-go/parquet"
 	"math/big"
+
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //base type

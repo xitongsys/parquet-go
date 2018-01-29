@@ -2,8 +2,9 @@ package Layout
 
 import (
 	"fmt"
-	. "github.com/xitongsys/parquet-go/ParquetType"
 	"testing"
+
+	. "github.com/xitongsys/parquet-go/ParquetType"
 )
 
 func TestMergeTable(t *testing.T) {

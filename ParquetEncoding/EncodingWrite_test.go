@@ -2,9 +2,10 @@ package ParquetEncoding
 
 import (
 	"encoding/json"
+	"testing"
+
 	. "github.com/xitongsys/parquet-go/Common"
 	. "github.com/xitongsys/parquet-go/ParquetType"
-	"testing"
 )
 
 func TestToInt64(t *testing.T) {

@@ -2,9 +2,10 @@ package JSONWriter
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
 )
 
 func JSONTypeToParquetType(val reflect.Value, pT *parquet.Type, cT *parquet.ConvertedType, length int, scale int) interface{} {

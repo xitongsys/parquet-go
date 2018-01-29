@@ -2,6 +2,10 @@ package ParquetWriter
 
 import (
 	"encoding/binary"
+	"reflect"
+	"strings"
+	"sync"
+
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
@@ -9,9 +13,6 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
-	"strings"
-	"sync"
 )
 
 //ParquetWriter is a writer  parquet file
@@ -100,18 +101,32 @@ func (self *ParquetWriter) RenameSchema() {
 }
 
 //Write the footer and stop writing
-func (self *ParquetWriter) WriteStop() {
-	self.Flush(true)
+func (self *ParquetWriter) WriteStop() error {
+	var err error
+	if err = self.Flush(true); err != nil {
+		return err
+	}
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
-	footerBuf, _ := ts.Write(self.Footer)
+	footerBuf, err := ts.Write(self.Footer)
+	if err != nil {
+		return err
+	}
 
-	self.PFile.Write(footerBuf)
+	if _, err = self.PFile.Write(footerBuf); err != nil {
+		return err
+	}
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
-	self.PFile.Write(footerSizeBuf)
-	self.PFile.Write([]byte("PAR1"))
+
+	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
+		return err
+	}
+	if _, err = self.PFile.Write([]byte("PAR1")); err != nil {
+		return err
+	}
+	return nil
 
 }
 
@@ -129,6 +144,7 @@ func (self *ParquetWriter) Write(src interface{}) error {
 
 	if self.ObjsSize >= criSize {
 		err = self.Flush(false)
+
 	} else {
 		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
 		self.CheckSizeCritical = dln + ln
@@ -169,23 +185,25 @@ func (self *ParquetWriter) flushObjs() error {
 			}
 
 			tableMap, err2 := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler)
-			if err2 != nil {
-				err = err2
-			}
-			for name, table := range *tableMap {
-				if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
-					lock.Lock()
-					if _, ok := self.DictRecs[name]; !ok {
-						self.DictRecs[name] = Layout.NewDictRec()
-					}
-					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
-						table, int32(self.PageSize), 32, self.CompressionType)
-					lock.Unlock()
 
-				} else {
-					pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
-						self.CompressionType)
+			if err2 == nil {
+				for name, table := range *tableMap {
+					if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+						lock.Lock()
+						if _, ok := self.DictRecs[name]; !ok {
+							self.DictRecs[name] = Layout.NewDictRec()
+						}
+						pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
+							table, int32(self.PageSize), 32, self.CompressionType)
+						lock.Unlock()
+
+					} else {
+						pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
+							self.CompressionType)
+					}
 				}
+			} else {
+				err = err2
 			}
 
 			doneChan <- 0
@@ -219,7 +237,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 	var err error
 
 	if err = self.flushObjs(); err != nil {
-		return nil
+		return err
 	}
 
 	if self.Size+self.ObjsSize >= self.RowGroupSize || flag {

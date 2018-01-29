@@ -2,6 +2,7 @@ package JSONWriter
 
 import (
 	"encoding/json"
+
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"

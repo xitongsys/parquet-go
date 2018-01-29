@@ -2,6 +2,9 @@ package ParquetReader
 
 import (
 	"encoding/binary"
+	"reflect"
+	"sync"
+
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
@@ -9,8 +12,6 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"reflect"
-	"sync"
 )
 
 type ParquetReader struct {
@@ -28,7 +29,9 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res := new(ParquetReader)
 	res.NP = np
 	res.PFile = pFile
-	res.ReadFooter()
+	if err = res.ReadFooter(); err != nil {
+		return nil, err
+	}
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	//res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
 	res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj)

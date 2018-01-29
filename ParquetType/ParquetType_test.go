@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/xitongsys/parquet-go/parquet"
 	"testing"
+
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func TestStrToParquetType(t *testing.T) {

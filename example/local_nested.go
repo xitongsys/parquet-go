@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
-	"log"
 )
 
 type Student struct {
@@ -51,6 +52,7 @@ func (s Student) String() string {
 }
 
 func writeNested() {
+	var err error
 	math01ID := int32(1)
 	math01 := Class{
 		Name:     "Math1",
@@ -100,22 +102,45 @@ func writeNested() {
 	stus = append(stus, stu01, stu02)
 
 	//write nested
-	fw, _ := ParquetFile.NewLocalFileWriter("nested.parquet")
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
-	for _, stu := range stus {
-		pw.Write(stu)
+	fw, err := ParquetFile.NewLocalFileWriter("nested.parquet")
+	if err != nil {
+		log.Println("Can't create file", err)
+		return
 	}
-	pw.WriteStop()
+	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	if err != nil {
+		log.Println("Can't create parquet writer", err)
+		return
+	}
+	for _, stu := range stus {
+		if err = pw.Write(stu); err != nil {
+			log.Println("Write error", err)
+			return
+		}
+	}
+	if err = pw.WriteStop(); err != nil {
+		log.Println("WriteStop error", err)
+	}
 	fw.Close()
 	log.Println("Write Finished")
 
 	//read nested
-	fr, _ := ParquetFile.NewLocalFileReader("nested.parquet")
-	pr, _ := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	fr, err := ParquetFile.NewLocalFileReader("nested.parquet")
+	if err != nil {
+		log.Println("Can't open file", err)
+		return
+	}
+	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	if err != nil {
+		log.Println("Can't create parquet reader", err)
+		return
+	}
 	num := int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)
-		pr.Read(&stus)
+		if err = pr.Read(&stus); err != nil {
+			log.Println("Read error", err)
+		}
 		log.Println(stus)
 	}
 	pr.ReadStop()

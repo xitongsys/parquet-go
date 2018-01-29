@@ -1,13 +1,12 @@
 package Common
 
 import (
-	"bytes"
-	"encoding/gob"
-	"github.com/xitongsys/parquet-go/ParquetType"
-	"github.com/xitongsys/parquet-go/parquet"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 // `parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`

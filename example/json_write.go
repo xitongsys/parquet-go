@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/Plugin/JSONWriter"
-	"log"
 )
 
 func main() {
+	var err error
 	md := `
     {
         "Tag":"name=parquet-go-root",
@@ -51,8 +53,16 @@ func main() {
 `
 
 	//write
-	fw, _ := ParquetFile.NewLocalFileWriter("json.parquet")
-	pw, _ := JSONWriter.NewJSONWriter(md, fw, 1)
+	fw, err := ParquetFile.NewLocalFileWriter("json.parquet")
+	if err != nil {
+		log.Println("Can't create file", err)
+		return
+	}
+	pw, err := JSONWriter.NewJSONWriter(md, fw, 1)
+	if err != nil {
+		log.Println("Can't create json writer", err)
+		return
+	}
 
 	num := 10
 	for i := 0; i < num; i++ {
@@ -81,11 +91,14 @@ func main() {
         `
 
 		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
-
-		pw.Write(rec)
+		if err = pw.Write(rec); err != nil {
+			log.Println("Write error", err)
+		}
 
 	}
-	pw.WriteStop()
+	if err = pw.WriteStop(); err != nil {
+		log.Println("WriteStop error", err)
+	}
 	log.Println("Write Finished")
 	fw.Close()
 

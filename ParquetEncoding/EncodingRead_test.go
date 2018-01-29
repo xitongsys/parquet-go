@@ -3,9 +3,10 @@ package ParquetEncoding
 import (
 	"bytes"
 	"fmt"
+	"testing"
+
 	. "github.com/xitongsys/parquet-go/Common"
 	. "github.com/xitongsys/parquet-go/ParquetType"
-	"testing"
 )
 
 func TestReadPlainBOOLEAN(t *testing.T) {

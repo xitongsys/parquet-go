@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
-	"log"
 )
 
 type TypeList struct {
@@ -45,9 +46,18 @@ type TypeList struct {
 }
 
 func main() {
+	var err error
 	//write
-	fw, _ := ParquetFile.NewLocalFileWriter("type.parquet")
-	pw, _ := ParquetWriter.NewParquetWriter(fw, new(TypeList), 4)
+	fw, err := ParquetFile.NewLocalFileWriter("type.parquet")
+	if err != nil {
+		log.Println("Can't create file", err)
+		return
+	}
+	pw, err := ParquetWriter.NewParquetWriter(fw, new(TypeList), 4)
+	if err != nil {
+		log.Println("Can't create parquet writer", err)
+		return
+	}
 	num := 10
 	for i := 0; i < num; i++ {
 		tp := TypeList{
@@ -85,19 +95,33 @@ func main() {
 			List:     []string{"item1", "item2"},
 			Repeated: []int32{1, 2, 3},
 		}
-		pw.Write(tp)
+		if err = pw.Write(tp); err != nil {
+			log.Println("Write error", err)
+		}
 	}
-	pw.WriteStop()
+	if err = pw.WriteStop(); err != nil {
+		log.Println("WriteStop error", err)
+	}
 	log.Println("Write Finished")
 	fw.Close()
 
 	///read
-	fr, _ := ParquetFile.NewLocalFileReader("type.parquet")
-	pr, _ := ParquetReader.NewParquetReader(fr, new(TypeList), 10)
+	fr, err := ParquetFile.NewLocalFileReader("type.parquet")
+	if err != nil {
+		log.Println("Can't create file reader", err)
+		return
+	}
+	pr, err := ParquetReader.NewParquetReader(fr, new(TypeList), 10)
+	if err != nil {
+		log.Println("Can't create parquet reader", err)
+		return
+	}
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		tps := make([]TypeList, 1)
-		pr.Read(&tps)
+		if err = pr.Read(&tps); err != nil {
+			log.Println("Read error", err)
+		}
 		log.Println(tps)
 	}
 	pr.ReadStop()
