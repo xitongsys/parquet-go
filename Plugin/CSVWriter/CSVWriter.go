@@ -187,7 +187,7 @@ func (self *CSVWriter) flushObjs() error {
 			}
 			tableMap := MarshalCSV(self.Objs, b, e, self.SchemaHandler)
 			for name, table := range *tableMap {
-				if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+				if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
 					lock.Lock()
 					if _, ok := self.DictRecs[name]; !ok {
 						self.DictRecs[name] = Layout.NewDictRec()
@@ -237,7 +237,7 @@ func (self *CSVWriter) Flush(flag bool) error {
 		//pages -> chunk
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
-			if len(pages) > 0 && pages[0].Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+			if len(pages) > 0 && pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
 				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressType)
 				tmp := append([]*Layout.Page{dictPage}, pages...)
 				chunkMap[name] = Layout.PagesToDictChunk(tmp)

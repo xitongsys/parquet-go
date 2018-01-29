@@ -9,66 +9,189 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-//Parse the tag to map; tag format is:
-//`parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`
-func NewEmptyTagMap() map[string]interface{} {
-	return map[string]interface{}{
-		"inname": "",
-		"exname": "",
+// `parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`
+type Tag struct {
+	InName string
+	ExName string
 
-		"type":      "",
-		"keytype":   "",
-		"valuetype": "",
+	Type          string
+	KeyType       string
+	ValueType     string
+	BaseType      string
+	KeyBaseType   string
+	ValueBaseType string
 
-		"basetype":      "", //only for decimal
-		"keybasetype":   "", //only for decimal
-		"valuebasetype": "", //only for decimal
+	Length         int32
+	KeyLength      int32
+	ValueLength    int32
+	Scale          int32
+	KeyScale       int32
+	ValueScale     int32
+	Precision      int32
+	KeyPrecision   int32
+	ValuePrecision int32
+	FieldID        int32
+	KeyFieldID     int32
+	ValueFieldID   int32
 
-		"length":      int32(0),
-		"keylength":   int32(0),
-		"valuelength": int32(0),
-
-		"scale":      int32(0),
-		"keyscale":   int32(0),
-		"valuescale": int32(0),
-
-		"precision":      int32(0),
-		"keyprecision":   int32(0),
-		"valueprecision": int32(0),
-
-		"fieldid":      int32(0),
-		"keyfieldid":   int32(0),
-		"valuefieldid": int32(0),
-
-		"encoding":      parquet.Encoding_PLAIN,
-		"keyencoding":   parquet.Encoding_PLAIN,
-		"valueencoding": parquet.Encoding_PLAIN,
-
-		"repetitiontype":      parquet.FieldRepetitionType_REQUIRED,
-		"keyrepetitiontype":   parquet.FieldRepetitionType_REQUIRED,
-		"valuerepetitiontype": parquet.FieldRepetitionType_REQUIRED,
-	}
+	Encoding            parquet.Encoding
+	KeyEncoding         parquet.Encoding
+	ValueEncoding       parquet.Encoding
+	RepetitionType      parquet.FieldRepetitionType
+	KeyRepetitionType   parquet.FieldRepetitionType
+	ValueRepetitionType parquet.FieldRepetitionType
 }
 
-func NewSchemaElementFromTagMap(info map[string]interface{}) *parquet.SchemaElement {
+func NewTag() *Tag {
+	return &Tag{}
+}
+
+func StringToTag(tag string) *Tag {
+	mp := NewTag()
+	tagStr := strings.Replace(tag, " ", "", -1)
+	tagStr = strings.Replace(tagStr, "\t", "", -1)
+	tags := strings.Split(tagStr, ",")
+
+	for _, tag := range tags {
+		kv := strings.Split(tag, "=")
+		kv[0] = strings.ToLower(kv[0])
+		val := kv[1]
+		var valInt32 int32
+		if kv[0] == "length" || kv[0] == "keylength" || kv[0] == "valuelength" ||
+			kv[0] == "scale" || kv[0] == "keyscale" || kv[0] == "valuescale" ||
+			kv[0] == "precision" || kv[0] == "keyprecision" || kv[0] == "valueprecision" ||
+			kv[0] == "fieldid" || kv[0] == "keyfieldid" || kv[0] == "valuefieldid" {
+			valInt, _ := strconv.Atoi(kv[1])
+			valInt32 = int32(valInt)
+		}
+		switch kv[0] {
+		case "type":
+			mp.Type = val
+		case "keytype":
+			mp.KeyType = val
+		case "valuetype":
+			mp.ValueType = val
+		case "basetype":
+			mp.BaseType = val
+		case "keybasetype":
+			mp.KeyBaseType = val
+		case "valuebasetype":
+			mp.ValueBaseType = val
+		case "length":
+			mp.Length = valInt32
+		case "keylength":
+			mp.KeyLength = valInt32
+		case "valuelength":
+			mp.ValueLength = valInt32
+		case "scale":
+			mp.Scale = valInt32
+		case "keyscale":
+			mp.KeyScale = valInt32
+		case "valuescale":
+			mp.ValueScale = valInt32
+		case "precision":
+			mp.Precision = valInt32
+		case "keyprecision":
+			mp.KeyPrecision = valInt32
+		case "valueprecision":
+			mp.ValuePrecision = valInt32
+		case "fieldid":
+			mp.FieldID = valInt32
+		case "keyfieldid":
+			mp.KeyFieldID = valInt32
+		case "valuefieldid":
+			mp.ValueFieldID = valInt32
+		case "name":
+			mp.InName = val
+			mp.ExName = val
+		case "repetitiontype":
+			switch strings.ToLower(val) {
+			case "repeated":
+				mp.RepetitionType = parquet.FieldRepetitionType_REPEATED
+			case "required":
+				mp.RepetitionType = parquet.FieldRepetitionType_REQUIRED
+			case "optional":
+				mp.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
+			}
+		case "keyrepetitiontype":
+			switch strings.ToLower(val) {
+			case "repeated":
+				mp.KeyRepetitionType = parquet.FieldRepetitionType_REPEATED
+			case "required":
+				mp.KeyRepetitionType = parquet.FieldRepetitionType_REQUIRED
+			case "optional":
+				mp.KeyRepetitionType = parquet.FieldRepetitionType_OPTIONAL
+			}
+		case "valuerepetitiontype":
+			switch strings.ToLower(val) {
+			case "repeated":
+				mp.ValueRepetitionType = parquet.FieldRepetitionType_REPEATED
+			case "required":
+				mp.ValueRepetitionType = parquet.FieldRepetitionType_REQUIRED
+			case "optional":
+				mp.ValueRepetitionType = parquet.FieldRepetitionType_OPTIONAL
+			}
+		case "encoding":
+			switch strings.ToLower(val) {
+			case "rle":
+				mp.Encoding = parquet.Encoding_RLE
+			case "delta_binary_packed":
+				mp.Encoding = parquet.Encoding_DELTA_BINARY_PACKED
+			case "delta_length_byte_array":
+				mp.Encoding = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
+			case "delta_byte_array":
+				mp.Encoding = parquet.Encoding_DELTA_BYTE_ARRAY
+			case "plain_dictionary":
+				mp.Encoding = parquet.Encoding_PLAIN_DICTIONARY
+			default:
+				mp.Encoding = parquet.Encoding_PLAIN
+			}
+		case "keyencoding":
+			switch strings.ToLower(val) {
+			case "rle":
+				mp.KeyEncoding = parquet.Encoding_RLE
+			case "delta_binary_packed":
+				mp.KeyEncoding = parquet.Encoding_DELTA_BINARY_PACKED
+			case "delta_length_byte_array":
+				mp.KeyEncoding = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
+			case "delta_byte_array":
+				mp.KeyEncoding = parquet.Encoding_DELTA_BYTE_ARRAY
+			case "plain_dictionary":
+				mp.KeyEncoding = parquet.Encoding_PLAIN_DICTIONARY
+			default:
+				mp.KeyEncoding = parquet.Encoding_PLAIN
+			}
+		case "valueencoding":
+			switch strings.ToLower(val) {
+			case "rle":
+				mp.ValueEncoding = parquet.Encoding_RLE
+			case "delta_binary_packed":
+				mp.ValueEncoding = parquet.Encoding_DELTA_BINARY_PACKED
+			case "delta_length_byte_array":
+				mp.ValueEncoding = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
+			case "delta_byte_array":
+				mp.ValueEncoding = parquet.Encoding_DELTA_BYTE_ARRAY
+			case "plain_dictionary":
+				mp.ValueEncoding = parquet.Encoding_PLAIN_DICTIONARY
+			default:
+				mp.ValueEncoding = parquet.Encoding_PLAIN
+			}
+		}
+	}
+	return mp
+}
+
+func NewSchemaElementFromTagMap(info *Tag) *parquet.SchemaElement {
 	schema := parquet.NewSchemaElement()
-
-	inname := info["inname"].(string)
-	length := info["length"].(int32)
-	scale := info["scale"].(int32)
-	precision := info["precision"].(int32)
-	fieldid := info["fieldid"].(int32)
-	repetitiontype := info["repetitiontype"].(parquet.FieldRepetitionType)
-
-	schema.Name = inname
-	schema.TypeLength = &length
-	schema.Scale = &scale
-	schema.Precision = &precision
-	schema.FieldID = &fieldid
-	schema.RepetitionType = &repetitiontype
+	schema.Name = info.InName
+	schema.TypeLength = &info.Length
+	schema.Scale = &info.Scale
+	schema.Precision = &info.Precision
+	schema.FieldID = &info.FieldID
+	schema.RepetitionType = &info.RepetitionType
 	schema.NumChildren = nil
 
-	typeName := info["type"].(string)
+	typeName := info.Type
 	if t, err := parquet.TypeFromString(typeName); err == nil {
 		schema.Type = &t
 	} else {
@@ -88,105 +211,49 @@ func NewSchemaElementFromTagMap(info map[string]interface{}) *parquet.SchemaElem
 			var ln int32 = 12
 			schema.TypeLength = &ln
 		} else if typeName == "DECIMAL" {
-			t, _ = parquet.TypeFromString(info["basetype"].(string))
+			t, _ = parquet.TypeFromString(info.BaseType)
 			schema.Type = &t
 		}
 	}
 	return schema
 }
 
-func NewTagMapFromCopy(tagMap map[string]interface{}) map[string]interface{} {
-	res := make(map[string]interface{})
-	for key, val := range tagMap {
-		res[key] = val
-	}
-	return res
-}
-
-func TagToMap(tag string) map[string]interface{} {
-	mp := NewEmptyTagMap()
-	tagStr := strings.Replace(tag, " ", "", -1)
-	tagStr = strings.Replace(tagStr, "\t", "", -1)
-	tags := strings.Split(tagStr, ",")
-
-	for _, tag := range tags {
-		kv := strings.Split(tag, "=")
-		kv[0] = strings.ToLower(kv[0])
-		if kv[0] == "type" || kv[0] == "keytype" || kv[0] == "valuetype" ||
-			kv[0] == "basetype" || kv[0] == "keybasetype" || kv[0] == "valuebasetype" {
-			mp[kv[0]] = kv[1]
-
-		} else if kv[0] == "length" || kv[0] == "keylength" || kv[0] == "valuelength" ||
-			kv[0] == "scale" || kv[0] == "keyscale" || kv[0] == "valuescale" ||
-			kv[0] == "precision" || kv[0] == "keyprecision" || kv[0] == "valueprecision" ||
-			kv[0] == "fieldid" || kv[0] == "keyfieldid" || kv[0] == "valuefieldid" {
-			val, _ := strconv.Atoi(kv[1])
-			mp[kv[0]] = int32(val)
-
-		} else if kv[0] == "name" {
-			mp["inname"] = kv[1]
-			mp["exname"] = kv[1]
-
-		} else if kv[0] == "repetitiontype" || kv[0] == "keyrepetitiontype" || kv[0] == "valuerepetitiontype" {
-			kv[1] = strings.ToLower(kv[1])
-			switch kv[1] {
-			case "repeated":
-				mp[kv[0]] = parquet.FieldRepetitionType_REPEATED
-			case "required":
-				mp[kv[0]] = parquet.FieldRepetitionType_REQUIRED
-			case "optional":
-				mp[kv[0]] = parquet.FieldRepetitionType_OPTIONAL
-			}
-
-		} else if kv[0] == "encoding" || kv[0] == "keyencoding" || kv[0] == "valueencoding" {
-			ens := strings.ToLower(kv[1])
-			if ens == "rle" {
-				mp[kv[0]] = parquet.Encoding_RLE
-			} else if ens == "delta_binary_packed" {
-				mp[kv[0]] = parquet.Encoding_DELTA_BINARY_PACKED
-			} else if ens == "delta_length_byte_array" {
-				mp[kv[0]] = parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY
-			} else if ens == "delta_byte_array" {
-				mp[kv[0]] = parquet.Encoding_DELTA_BYTE_ARRAY
-			} else if ens == "plain_dictionary" {
-				mp[kv[0]] = parquet.Encoding_PLAIN_DICTIONARY
-			} else {
-				mp[kv[0]] = parquet.Encoding_PLAIN
-			}
-		}
-	}
-	return mp
+func DeepCopy(src, dst interface{}) {
+	var buf bytes.Buffer
+	gob.NewEncoder(&buf).Encode(src)
+	gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
+	return
 }
 
 //Get key tag map for map
-func GetKeyTagMap(src map[string]interface{}) map[string]interface{} {
-	res := NewEmptyTagMap()
-	res["inname"] = "key"
-	res["exname"] = "key"
-	res["type"] = src["keytype"]
-	res["basetype"] = src["keybasetype"]
-	res["length"] = src["keylength"]
-	res["scale"] = src["keyscale"]
-	res["precision"] = src["keyprecision"]
-	res["fieldid"] = src["keyfieldid"]
-	res["encoding"] = src["keyencoding"]
-	res["repetitiontype"] = parquet.FieldRepetitionType_REQUIRED
+func GetKeyTagMap(src *Tag) *Tag {
+	res := NewTag()
+	res.InName = "key"
+	res.ExName = "key"
+	res.Type = src.KeyType
+	res.BaseType = src.KeyBaseType
+	res.Length = src.KeyLength
+	res.Scale = src.KeyScale
+	res.Precision = src.KeyPrecision
+	res.FieldID = src.KeyFieldID
+	res.Encoding = src.KeyEncoding
+	res.RepetitionType = parquet.FieldRepetitionType_REQUIRED
 	return res
 }
 
 //Get value tag map for map
-func GetValueTagMap(src map[string]interface{}) map[string]interface{} {
-	res := NewEmptyTagMap()
-	res["inname"] = "value"
-	res["exname"] = "value"
-	res["type"] = src["valuetype"]
-	res["basetype"] = src["valuebasetype"]
-	res["length"] = src["valuelength"]
-	res["scale"] = src["valuescale"]
-	res["precision"] = src["valueprecision"]
-	res["fieldid"] = src["valuefieldid"]
-	res["repetitiontype"] = src["valuerepetitiontype"]
-	res["encoding"] = src["valueencoding"]
+func GetValueTagMap(src *Tag) *Tag {
+	res := NewTag()
+	res.InName = "value"
+	res.ExName = "value"
+	res.Type = src.ValueType
+	res.BaseType = src.ValueBaseType
+	res.Length = src.ValueLength
+	res.Scale = src.ValueScale
+	res.Precision = src.ValuePrecision
+	res.FieldID = src.ValueFieldID
+	res.Encoding = src.ValueEncoding
+	res.RepetitionType = src.ValueRepetitionType
 	return res
 }
 
@@ -388,45 +455,32 @@ func Max(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedTy
 
 //Get the minimum of two parquet values
 func Min(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
-	if a == nil {
+	if a == Max(a, b, pT, cT) {
 		return b
 	}
-	if b == nil {
-		return a
-	}
-	if Cmp(a, b, pT, cT) {
-		return a
-	}
-	return b
+	return a
 }
 
 //Get the size of a parquet value
 func SizeOf(val reflect.Value) int64 {
-	tk := val.Type().Kind()
-
-	if tk == reflect.Ptr {
+	var size int64
+	switch val.Type().Kind() {
+	case reflect.Ptr:
 		if val.IsNil() {
 			return 0
 		}
-		val = val.Elem()
-		return SizeOf(val)
-	}
-
-	if tk == reflect.Slice {
-		var size int64 = 0
+		return SizeOf(val.Elem())
+	case reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
 			size += SizeOf(val.Index(i))
 		}
 		return size
-	} else if tk == reflect.Struct {
-		var size int64 = 0
+	case reflect.Struct:
 		for i := 0; i < val.Type().NumField(); i++ {
 			size += SizeOf(val.Field(i))
 		}
 		return size
-
-	} else if tk == reflect.Map {
-		var size int64 = 0
+	case reflect.Map:
 		keys := val.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			size += SizeOf(keys[i])
@@ -434,58 +488,18 @@ func SizeOf(val reflect.Value) int64 {
 		}
 		return size
 	}
-
 	switch val.Type().Name() {
 	case "BOOLEAN":
 		return 1
-	case "INT32":
+	case "INT32", "INT_8", "INT_16", "INT_32", "UINT_8", "UINT_16", "UINT_32", "FLOAT", "DATE", "TIME_MILLIS":
 		return 4
-	case "INT64":
+	case "INT64", "INT_64", "UINT_64", "DOUBLE", "TIME_MICROS", "TIMESTAMP_MILLIS", "TIMESTAMP_MICROS":
 		return 8
-	case "INT96":
+	case "INT96", "INTERVAL":
 		return 12
-	case "FLOAT":
-		return 4
-	case "DOUBLE":
-		return 8
-	case "BYTE_ARRAY":
-		return int64(val.Len())
-	case "FIXED_LEN_BYTE_ARRAY":
-		return int64(val.Len())
-	case "UTF8":
-		return int64(val.Len())
-	case "INT_8":
-		return 4
-	case "INT_16":
-		return 4
-	case "INT_32":
-		return 4
-	case "INT_64":
-		return 8
-	case "UINT_8":
-		return 4
-	case "UINT_16":
-		return 4
-	case "UINT_32":
-		return 4
-	case "UINT_64":
-		return 8
-	case "DATE":
-		return 4
-	case "TIME_MILLIS":
-		return 4
-	case "TIME_MICROS":
-		return 8
-	case "TIMESTAMP_MILLIS":
-		return 8
-	case "TIMESTAMP_MICROS":
-		return 8
-	case "INTERVAL":
-		return 12
-	case "DECIMAL":
+	case "BYTE_ARRAY", "FIXED_LEN_BYTE_ARRAY", "UTF8", "DECIMAL":
 		return int64(val.Len())
 	}
-
 	return 4
 }
 

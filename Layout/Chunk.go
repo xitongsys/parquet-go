@@ -24,7 +24,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[0].MaxVal
 	var minVal interface{} = pages[0].MinVal
-	pT, cT := ParquetType.TypeNameToParquetType(pages[0].Info["type"].(string), pages[0].Info["basetype"].(string))
+	pT, cT := ParquetType.TypeNameToParquetType(pages[0].Info.Type, pages[0].Info.BaseType)
 
 	for i := 0; i < ln; i++ {
 		if pages[i].Header.DataPageHeader != nil {
@@ -81,8 +81,8 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[1].MaxVal
 	var minVal interface{} = pages[1].MinVal
-	pT, cT := ParquetType.TypeNameToParquetType(pages[1].Info["type"].(string),
-		pages[1].Info["basetype"].(string))
+	pT, cT := ParquetType.TypeNameToParquetType(pages[1].Info.Type,
+		pages[1].Info.BaseType)
 
 	for i := 0; i < len(pages); i++ {
 		if pages[i].Header.DataPageHeader != nil {

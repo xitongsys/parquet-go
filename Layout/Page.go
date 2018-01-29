@@ -34,7 +34,7 @@ type Page struct {
 	//Minimum of the values
 	MinVal interface{}
 	//Tag info
-	Info map[string]interface{}
+	Info *Common.Tag
 
 	PageSize int32
 }
@@ -44,7 +44,7 @@ func NewPage() *Page {
 	page := new(Page)
 	page.DataTable = nil
 	page.Header = parquet.NewPageHeader()
-	page.Info = make(map[string]interface{})
+	page.Info = Common.NewTag()
 	page.PageSize = 8 * 1024
 	return page
 }
@@ -72,7 +72,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
-	pT, cT := ParquetType.TypeNameToParquetType(table.Info["type"].(string), table.Info["basetype"].(string))
+	pT, cT := ParquetType.TypeNameToParquetType(table.Info.Type, table.Info.BaseType)
 
 	for i < totalLn {
 		j := i + 1
@@ -145,11 +145,11 @@ func (page *Page) Decode(dictPage *Page) {
 //Encoding values
 func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 	encoding := parquet.Encoding_PLAIN
-	if _, ok := page.Info["encoding"]; ok {
-		encoding = page.Info["encoding"].(parquet.Encoding)
+	if page.Info.Encoding != 0 {
+		encoding = page.Info.Encoding
 	}
 	if encoding == parquet.Encoding_RLE {
-		bitWidth := page.Info["length"].(int32)
+		bitWidth := page.Info.Length
 		return ParquetEncoding.WriteRLEBitPackedHybrid(valuesBuf, bitWidth)
 
 	} else if encoding == parquet.Encoding_DELTA_BINARY_PACKED {
@@ -225,12 +225,12 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.DataPageHeader.NumValues = int32(len(page.DataTable.Values))
 	page.Header.DataPageHeader.DefinitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
-	page.Header.DataPageHeader.Encoding = page.Info["encoding"].(parquet.Encoding)
+	page.Header.DataPageHeader.Encoding = page.Info.Encoding
 
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MaxVal})
-		name := page.Info["type"].(string)
+		name := page.Info.Type
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -238,7 +238,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	}
 	if page.MinVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MinVal})
-		name := page.Info["type"].(string)
+		name := page.Info.Type
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -314,7 +314,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	page.Header.DataPageHeaderV2.NumNulls = page.Header.DataPageHeaderV2.NumValues - int32(len(valuesBuf))
 	page.Header.DataPageHeaderV2.NumRows = r0Num
 	//page.Header.DataPageHeaderV2.Encoding = parquet.Encoding_PLAIN
-	page.Header.DataPageHeaderV2.Encoding = page.Info["encoding"].(parquet.Encoding)
+	page.Header.DataPageHeaderV2.Encoding = page.Info.Encoding
 
 	page.Header.DataPageHeaderV2.DefinitionLevelsByteLength = int32(len(definitionLevelBuf))
 	page.Header.DataPageHeaderV2.RepetitionLevelsByteLength = int32(len(repetitionLevelBuf))
@@ -324,7 +324,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.MaxVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MaxVal})
 		//name := reflect.TypeOf(page.MaxVal).Name()
-		name := page.Info["type"]
+		name := page.Info.Type
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -333,7 +333,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.MinVal != nil {
 		tmpBuf := ParquetEncoding.WritePlain([]interface{}{page.MinVal})
 		//name := reflect.TypeOf(page.MinVal).Name()
-		name := page.Info["type"]
+		name := page.Info.Type
 		if name == "UTF8" || name == "DECIMAL" {
 			tmpBuf = tmpBuf[4:]
 		}

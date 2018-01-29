@@ -65,7 +65,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 			if tk == reflect.Map {
 				keys := node.Val.MapKeys()
 
-				if info["type"] == "MAP" { //real map
+				if info.Type == "MAP" { //real map
 					pathStr = pathStr + ".key_value"
 					if len(keys) <= 0 {
 						for key, table := range res {
@@ -101,7 +101,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 						newPathStr := newNode.PathMap.Path // check again
 						newSchemaIndex := schemaHandler.MapIndex[newPathStr]
 						newInfo := schemaHandler.Infos[newSchemaIndex]
-						if newInfo["repetitiontype"] == parquet.FieldRepetitionType_OPTIONAL { //map value only be :optional or required
+						if newInfo.RepetitionType == parquet.FieldRepetitionType_OPTIONAL { //map value only be :optional or required
 							newNode.DL++
 						}
 
@@ -129,7 +129,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 							newPathStr := newNode.PathMap.Path
 							newSchemaIndex := schemaHandler.MapIndex[newPathStr]
 							newInfo := schemaHandler.Infos[newSchemaIndex]
-							if newInfo["repetitiontype"] == parquet.FieldRepetitionType_OPTIONAL {
+							if newInfo.RepetitionType == parquet.FieldRepetitionType_OPTIONAL {
 								newNode.DL++
 							}
 							stack = append(stack, newNode)
@@ -150,7 +150,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 			} else if tk == reflect.Slice {
 				ln := node.Val.Len()
 
-				if info["type"] == "LIST" { //real LIST
+				if info.Type == "LIST" { //real LIST
 					pathStr = pathStr + ".list" + ".element"
 					if ln <= 0 {
 						for key, table := range res {
@@ -178,7 +178,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 						newPathStr := newNode.PathMap.Path
 						newSchemaIndex := schemaHandler.MapIndex[newPathStr]
 						newInfo := schemaHandler.Infos[newSchemaIndex]
-						if newInfo["repetitiontype"] == parquet.FieldRepetitionType_OPTIONAL { //element of LIST can only be optional or required
+						if newInfo.RepetitionType == parquet.FieldRepetitionType_OPTIONAL { //element of LIST can only be optional or required
 							newNode.DL++
 						}
 
@@ -214,8 +214,8 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 
 			} else {
 				table := res[node.PathMap.Path]
-				pT, cT := ParquetType.TypeNameToParquetType(info["type"].(string), info["basetype"].(string))
-				val := JSONTypeToParquetType(node.Val, pT, cT, int(info["length"].(int32)), int(info["scale"].(int32)))
+				pT, cT := ParquetType.TypeNameToParquetType(info.Type, info.BaseType)
+				val := JSONTypeToParquetType(node.Val, pT, cT, int(info.Length), int(info.Scale))
 
 				table.Values = append(table.Values, val)
 				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)

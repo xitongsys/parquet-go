@@ -80,7 +80,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	i := 0
 	dataType := table.Type
 
-	pT, cT := ParquetType.TypeNameToParquetType(table.Info["type"].(string), table.Info["basetype"].(string))
+	pT, cT := ParquetType.TypeNameToParquetType(table.Info.Type, table.Info.BaseType)
 
 	for i < totalLn {
 		j := i

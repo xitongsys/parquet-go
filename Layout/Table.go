@@ -1,6 +1,7 @@
 package Layout
 
 import (
+	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -19,7 +20,7 @@ func NewTableFromTable(src *Table) *Table {
 
 func NewEmptyTable() *Table {
 	table := new(Table)
-	table.Info = make(map[string]interface{})
+	table.Info = Common.NewTag()
 	return table
 }
 
@@ -44,7 +45,7 @@ type Table struct {
 	RepetitionLevels []int32
 
 	//Tag info
-	Info map[string]interface{}
+	Info *Common.Tag
 }
 
 //Merge several tables to one table(the first table)
