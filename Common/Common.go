@@ -1,6 +1,8 @@
 package Common
 
 import (
+	"bytes"
+	"encoding/gob"
 	"reflect"
 	"strconv"
 	"strings"
@@ -455,10 +457,16 @@ func Max(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedTy
 
 //Get the minimum of two parquet values
 func Min(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
-	if a == Max(a, b, pT, cT) {
+	if a == nil {
 		return b
 	}
-	return a
+	if b == nil {
+		return a
+	}
+	if Cmp(a, b, pT, cT) {
+		return a
+	}
+	return b
 }
 
 //Get the size of a parquet value

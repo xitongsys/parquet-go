@@ -157,7 +157,7 @@ func (self *JSONWriter) flushObjs() error {
 
 			if err2 == nil {
 				for name, table := range *tableMap {
-					if table.Info["encoding"] == parquet.Encoding_PLAIN_DICTIONARY {
+					if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
 						lock.Lock()
 						if _, ok := self.DictRecs[name]; !ok {
 							self.DictRecs[name] = Layout.NewDictRec()
