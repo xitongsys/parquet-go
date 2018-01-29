@@ -75,7 +75,7 @@ func (p *ParquetStruct) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 		name := tf.Name
 		newNode := nodeBuf.GetNode()
 		newNode.PathMap = node.PathMap.Children[name]
-		newNode.Val = node.Val.FieldByName(name)
+		newNode.Val = node.Val.Field(j)
 		newNode.RL = node.RL
 		newNode.DL = node.DL
 		nodes[j] = newNode
