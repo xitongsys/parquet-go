@@ -34,24 +34,21 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	}
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	//res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
-	res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj)
-	if err != nil {
+	if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
 		return res, err
 	}
 	res.RenameSchema()
 
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
 		schema := res.SchemaHandler.SchemaElements[i]
-		pathStr := res.SchemaHandler.IndexMap[int32(i)]
-		numChildren := schema.GetNumChildren()
-		if numChildren == 0 {
-			res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr)
-			if err != nil {
+		if schema.GetNumChildren() == 0 {
+			pathStr := res.SchemaHandler.IndexMap[int32(i)]
+			if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
 				return res, err
 			}
 		}
 	}
-	return res, err
+	return res, nil
 }
 
 //Rename schema name to inname
@@ -103,8 +100,7 @@ func (self *ParquetReader) ReadFooter() error {
 	self.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
 	protocol := pf.GetProtocol(thrift.NewStreamTransportR(self.PFile))
-	err = self.Footer.Read(protocol)
-	return err
+	return self.Footer.Read(protocol)
 }
 
 //Read rows of parquet file

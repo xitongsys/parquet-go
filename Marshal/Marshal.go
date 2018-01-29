@@ -57,11 +57,10 @@ func (p *ParquetPtr) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 	nodes := make([]*Node, 0)
 	if node.Val.IsNil() {
 		return nodes
-	} else {
-		node.Val = node.Val.Elem()
-		node.DL++
-		nodes = append(nodes, node)
 	}
+	node.Val = node.Val.Elem()
+	node.DL++
+	nodes = append(nodes, node)
 	return nodes
 }
 
