@@ -1,13 +1,12 @@
 package ParquetReader
 
 import (
-	"strings"
-
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
+	"strings"
 )
 
-//Create a parquet column reader
+// NewParquetColumnReader creates a parquet column reader
 func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error) {
 	var err error
 	res := new(ParquetReader)
@@ -19,29 +18,23 @@ func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetRe
 
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
 		schema := res.SchemaHandler.SchemaElements[i]
-		pathStr := res.SchemaHandler.IndexMap[int32(i)]
-		numChildren := schema.GetNumChildren()
-		if numChildren == 0 {
-			res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr)
-			if err != nil {
+		if schema.GetNumChildren() == 0 {
+			pathStr := res.SchemaHandler.IndexMap[int32(i)]
+			if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
 				return res, err
 			}
 		}
 	}
-	return res, err
+	return res, nil
 }
 
-//Read column by path in schema.
+// ReadColumnByPath reads column by path in schema.
 func (self *ParquetReader) ReadColumnByPath(pathStr string, num int) (values []interface{}, rls []int32, dls []int32) {
-	if num <= 0 {
+	if num <= 0 || len(pathStr) <= 0 {
 		return []interface{}{}, []int32{}, []int32{}
 	}
-
 	rootName := self.SchemaHandler.GetRootName()
-
-	if len(pathStr) <= 0 {
-		return []interface{}{}, []int32{}, []int32{}
-	} else if !strings.HasPrefix(pathStr, rootName) {
+	if !strings.HasPrefix(pathStr, rootName) {
 		pathStr = rootName + "." + pathStr
 	}
 
@@ -52,7 +45,7 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, num int) (values []i
 	return []interface{}{}, []int32{}, []int32{}
 }
 
-//Read column by index. The index of first column is 0.
+// ReadColumnByIndex reads column by index. The index of first column is 0.
 func (self *ParquetReader) ReadColumnByIndex(index int, num int) (values []interface{}, rls []int32, dls []int32) {
 	if index >= len(self.SchemaHandler.ValueColumns) {
 		return
