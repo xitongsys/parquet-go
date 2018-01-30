@@ -54,24 +54,53 @@ func (self *Node) Output() string {
 		}
 
 	} else {
+		tagStr := "`parquet:\"name=%s, type=%s\"`"
 		switch cT {
 		case parquet.ConvertedType_UTF8:
-
+			res += " " + ptrStr + "string" + " " + fmt.Sprintf(tagStr, name, "UTF8")
 		case parquet.ConvertedType_INT_8:
+			res += " " + ptrStr + "int32" + " " + fmt.Sprintf(tagStr, name, "INT_8")
 		case parquet.ConvertedType_INT_16:
+			res += " " + ptrStr + "int32" + " " + fmt.Sprintf(tagStr, name, "INT_16")
 		case parquet.ConvertedType_INT_32:
+			res += " " + ptrStr + "int32" + " " + fmt.Sprintf(tagStr, name, "INT_32")
 		case parquet.ConvertedType_INT_64:
+			res += " " + ptrStr + "int64" + " " + fmt.Sprintf(tagStr, name, "INT_64")
 		case parquet.ConvertedType_UINT_8:
+			res += " " + ptrStr + "uint32" + " " + fmt.Sprintf(tagStr, name, "UINT_8")
 		case parquet.ConvertedType_UINT_16:
+			res += " " + ptrStr + "uint16" + " " + fmt.Sprintf(tagStr, name, "UINT_16")
 		case parquet.ConvertedType_UINT_32:
+			res += " " + ptrStr + "uint32" + " " + fmt.Sprintf(tagStr, name, "UINT_32")
 		case parquet.ConvertedType_UINT_64:
+			res += " " + ptrStr + "uint64" + " " + fmt.Sprintf(tagStr, name, "UINT_64")
 		case parquet.ConvertedType_DATE:
+			res += " " + ptrStr + "int32" + " " + fmt.Sprintf(tagStr, name, "DATE")
 		case parquet.ConvertedType_TIME_MILLIS:
+			res += " " + ptrStr + "int32" + " " + fmt.Sprintf(tagStr, name, "TIME_MILLIS")
 		case parquet.ConvertedType_TIME_MICROS:
+			res += " " + ptrStr + "int64" + " " + fmt.Sprintf(tagStr, name, "TIME_MICROS")
 		case parquet.ConvertedType_TIMESTAMP_MILLIS:
+			res += " " + ptrStr + "int64" + " " + fmt.Sprintf(tagStr, name, "TIMESTAMP_MILLIS")
 		case parquet.ConvertedType_TIMESTAMP_MICROS:
+			res += " " + ptrStr + "int64" + " " + fmt.Sprintf(tagStr, name, "TIMESTAMP_MICROS")
 		case parquet.ConvertedType_INTERVAL:
+			res += " " + ptrStr + "string" + " " + fmt.Sprintf(tagStr, name, "INTERVAL")
 		case parquet.ConvertedType_DECIMAL:
+			tagStr := "`parquet:\"name=%s, type=%s, scale=%d, precision=%d, basetype=%s\"`"
+			scale, precision := int(self.SE.GetScale()), int(self.SE.GetPrecision())
+			baseName := ""
+			if pT == parquet.Type_INT32 {
+				baseName = "INT32"
+			} else if pT == parquet.Type_INT64 {
+				baseName = "INT64"
+			} else if pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+				baseName = "FIXED_LEN_BYTE_ARRAY"
+			} else if pT == parquet.Type_BYTE_ARRAY {
+				baseName = "BYTE_ARRAY"
+			}
+
+			res += " " + ptrStr + "string" + " " + fmt.Sprintf(tagStr, name, "DECIMAL", scale, precision, baseName)
 		}
 	}
 	return res
