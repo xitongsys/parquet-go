@@ -101,6 +101,17 @@ func (self *Node) Output() string {
 			}
 
 			res += " " + ptrStr + "string" + " " + fmt.Sprintf(tagStr, name, "DECIMAL", scale, precision, baseName)
+
+		case parquet.ConvertedType_MAP:
+			keyNode := self.Children[0].Children[0]
+			keyStr := keyNode.Output()[4:]
+			if len(keyNode.Children) == 0 {
+
+			}
+			valNode := self.Children[0].Children[1]
+
+		case parquet.ConvertedType_LIST:
+
 		}
 	}
 	return res
