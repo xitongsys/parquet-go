@@ -115,6 +115,10 @@ func NewNode(schema *parquet.SchemaElement) *Node {
 	return node
 }
 
+func (self *Node) OutputJsonSchema() string {
+	return ""
+}
+
 func (self *Node) OutputStruct() string {
 	name := self.SE.GetName()
 	res := name
@@ -128,10 +132,18 @@ func (self *Node) OutputStruct() string {
 	}
 
 	if pT == nil && cT == nil {
+		res += " struct {\n"
+		for _, cNode := range self.Children {
+			res += "\t" + cNode.OutputStruct() + "\n"
+		}
+		res += "}"
 
 	} else if cT != nil && *cT == parquet.ConvertedType_MAP {
 		keyNode := self.Children[0].Children[0]
+		keyPT, keyCT := keyNode.SE.GetType(), keyNode.SE.GetConvertedType()
+		keyGoTypeStr := ParquetTypeToGoTypeStr(pT, cT)
 		valNode := self.Children[0].Children[1]
+		res += " " + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct()
 
 	} else if cT != nil && *cT == parquet.ConvertedType_LIST {
 		cNode := self.Children[0].Children[0]
