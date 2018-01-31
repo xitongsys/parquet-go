@@ -16,29 +16,34 @@ type Tag struct {
 	InName string
 	ExName string
 
-	Type          string
-	KeyType       string
-	ValueType     string
+	Type      string
+	KeyType   string
+	ValueType string
+
 	BaseType      string
 	KeyBaseType   string
 	ValueBaseType string
 
-	Length         int32
-	KeyLength      int32
-	ValueLength    int32
-	Scale          int32
-	KeyScale       int32
-	ValueScale     int32
+	Length      int32
+	KeyLength   int32
+	ValueLength int32
+
+	Scale      int32
+	KeyScale   int32
+	ValueScale int32
+
 	Precision      int32
 	KeyPrecision   int32
 	ValuePrecision int32
-	FieldID        int32
-	KeyFieldID     int32
-	ValueFieldID   int32
 
-	Encoding            parquet.Encoding
-	KeyEncoding         parquet.Encoding
-	ValueEncoding       parquet.Encoding
+	FieldID      int32
+	KeyFieldID   int32
+	ValueFieldID int32
+
+	Encoding      parquet.Encoding
+	KeyEncoding   parquet.Encoding
+	ValueEncoding parquet.Encoding
+
 	RepetitionType      parquet.FieldRepetitionType
 	KeyRepetitionType   parquet.FieldRepetitionType
 	ValueRepetitionType parquet.FieldRepetitionType
