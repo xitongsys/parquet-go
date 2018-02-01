@@ -233,7 +233,7 @@ func (self *CSVWriter) Flush(flag bool) error {
 		return err
 	}
 
-	if self.Size+self.ObjsSize >= self.RowGroupSize || flag {
+	if (self.Size+self.ObjsSize >= self.RowGroupSize || flag) && len(self.PagesMapBuf) > 0 {
 		//pages -> chunk
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
