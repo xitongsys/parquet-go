@@ -222,7 +222,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	page.Header.CompressedPageSize = int32(len(dataEncodeBuf))
 	page.Header.UncompressedPageSize = int32(len(dataBuf))
 	page.Header.DataPageHeader = parquet.NewDataPageHeader()
-	page.Header.DataPageHeader.NumValues = int32(len(page.DataTable.Values))
+	page.Header.DataPageHeader.NumValues = int32(len(page.DataTable.DefinitionLevels))
 	page.Header.DataPageHeader.DefinitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.Encoding = page.Info.Encoding
