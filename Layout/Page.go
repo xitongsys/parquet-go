@@ -595,14 +595,16 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
 			ct = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetConvertedType()
 		}
-		values, err = ReadDataPageValues(bytesReader,
-			pageHeader.DataPageHeader.GetEncoding(),
-			colMetaData.GetType(),
-			ct,
-			uint64(len(definitionLevels))-numNulls,
-			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
-		if err != nil {
-			return nil, 0, 0, err
+		if valuesNum := uint64(len(definitionLevels)) - numNulls; valuesNum > 0 {
+			values, err = ReadDataPageValues(bytesReader,
+				pageHeader.DataPageHeader.GetEncoding(),
+				colMetaData.GetType(),
+				ct,
+				valuesNum,
+				uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
+			if err != nil {
+				return nil, 0, 0, err
+			}
 		}
 
 		table := new(Table)
