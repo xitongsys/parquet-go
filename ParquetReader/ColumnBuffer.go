@@ -102,6 +102,7 @@ func (self *ColumnBufferType) ReadPage() error {
 			self.DictPage = page
 			return nil
 		}
+
 		page.Decode(self.DictPage)
 
 		if self.DataTable == nil {

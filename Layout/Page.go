@@ -646,6 +646,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			return nil, 0, 0, err
 		}
 		page.DataTable = table
+
 		return page, 0, 0, nil
 
 	} else if pageHeader.GetType() == parquet.PageType_INDEX_PAGE {

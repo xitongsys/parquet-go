@@ -135,7 +135,7 @@ func (self *ParquetWriter) Write(src interface{}) error {
 	var err error
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
-		self.ObjSize = Common.SizeOf(reflect.ValueOf(src))
+		self.ObjSize = Common.SizeOf(reflect.ValueOf(src)) + 1
 	}
 	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, src)
