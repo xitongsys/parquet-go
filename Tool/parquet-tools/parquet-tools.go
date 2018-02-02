@@ -24,6 +24,6 @@ func main() {
 
 	tree := SchemaOutput.CreateTree(pr.SchemaHandler.SchemaElements)
 	log.Println(tree)
-	log.Println(tree.OutputStruct())
+	log.Println(tree.OutputStruct(true))
 	log.Println(tree.OutputJsonSchema())
 }

@@ -190,9 +190,13 @@ func (self *Node) OutputJsonSchema() string {
 	return res
 }
 
-func (self *Node) OutputStruct() string {
+func (self *Node) OutputStruct(withName bool) string {
 	name := self.SE.GetName()
-	res := name
+	res := ""
+	if withName {
+		res += name
+	}
+
 	pT, cT := self.SE.Type, self.SE.ConvertedType
 	rTStr := " "
 	if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL {
@@ -200,11 +204,14 @@ func (self *Node) OutputStruct() string {
 	} else if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_REPEATED {
 		rTStr = " []"
 	}
+	if !withName {
+		rTStr = rTStr[1:]
+	}
 
 	if pT == nil && cT == nil {
 		res += rTStr + "struct {\n"
 		for _, cNode := range self.Children {
-			res += cNode.OutputStruct() + "\n"
+			res += cNode.OutputStruct(true) + "\n"
 		}
 		res += "}"
 
@@ -213,11 +220,11 @@ func (self *Node) OutputStruct() string {
 		keyPT, keyCT := keyNode.SE.Type, keyNode.SE.ConvertedType
 		keyGoTypeStr := ParquetTypeToGoTypeStr(keyPT, keyCT)
 		valNode := self.Children[0].Children[1]
-		res += rTStr + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct()[6:] //filter "value "
+		res += rTStr + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct(false)
 
 	} else if cT != nil && *cT == parquet.ConvertedType_LIST {
 		cNode := self.Children[0].Children[0]
-		res += rTStr + "[]" + cNode.OutputStruct()[8:] //filter "element "
+		res += rTStr + "[]" + cNode.OutputStruct(false)
 
 	} else {
 		goTypeStr := ParquetTypeToGoTypeStr(pT, cT)
