@@ -1,4 +1,4 @@
-package schema2struct
+package SchemaOutput
 
 import (
 	"fmt"
@@ -116,14 +116,70 @@ func NewNode(schema *parquet.SchemaElement) *Node {
 }
 
 func (self *Node) OutputJsonSchema() string {
-	return ""
+	res := "{\"Tag\":"
+	pT, cT := self.SE.GetType(), self.SE.GetConvertedType()
+	rTStr := "REQUIRED"
+	if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL {
+		rTStr = "OPTIONAL"
+	} else if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_REPEATED {
+		rTStr = "REPEATED"
+	}
+
+	pTStr, cTStr := ParquetTypeToParquetTypeStr(pT, cT)
+	tagStr := "\"name=%s, type=%s, repetitiontype=%s\""
+	name := self.SE.GetName()
+
+	if len(self.Children) == 0 {
+		if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY && cT == nil {
+			length := self.SE.GetTypeLength()
+			tagStr = "\"name=%s, type=%s, length=%d, repetitiontype=%s\""
+			res += fmt.Sprintf(tagStr, name, pTStr, length, rTStr) + "}"
+
+		} else if *cT == parquet.ConvertedType_DECIMAL {
+			scale, precision := self.SE.GetScale(), self.SE.GetPrecision()
+			if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+				length := self.SE.GetTypeLength()
+				tagStr = "\"name=%s, type=%s, basetype=%s, scale=%d, precision=%s, length=%d, repetitiontype=%s\""
+				res += fmt.Sprintf(tagStr, name, cTStr, pTStr, scale, precision, length, rTStr) + "}"
+			} else {
+				tagStr = "\"name=%s, type=%s, basetype=%s, scale=%d, precision=%s, repetitiontype\""
+				res += fmt.Sprintf(tagStr, name, cTStr, pTStr, scale, precision, rTStr) + "}"
+			}
+
+		} else {
+			typeStr := pTStr
+			if cT != nil {
+				typeStr = pTStr
+			}
+			res += fmt.Sprintf(tagStr, name, typeStr, rTStr) + "}"
+
+		}
+	} else {
+
+		if cT != nil {
+			tagStr = "\"name=%s, type=%s\""
+			res += fmt.Sprintf(tagStr, name, cTStr)
+		} else {
+			tagStr = "\"name=%s\""
+			res += fmt.Sprintf(tagStr, name)
+		}
+		res += ",\n"
+		res += "\"Fields\":[\n"
+		for _, cNode := range self.Children {
+			res += "\t" + cNode.OutputJsonSchema() + "\n"
+		}
+
+		res += "]\n"
+		res += "}"
+
+	}
+	return res
 }
 
 func (self *Node) OutputStruct() string {
 	name := self.SE.GetName()
 	res := name
 	pT, cT := self.SE.GetType(), self.SE.GetConvertedType()
-	pTStr, cTStr := ParquetTypeToParquetTypeStr(pT, cT)
 	rTStr := ""
 	if self.SE.GetRepetitionType == parquet.FieldRepetitionType_OPTIONAL {
 		rTStr = "*"
