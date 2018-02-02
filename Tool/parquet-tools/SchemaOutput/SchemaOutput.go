@@ -159,7 +159,7 @@ func (self *Node) OutputJsonSchema() string {
 		} else {
 			typeStr := pTStr
 			if cT != nil {
-				typeStr = pTStr
+				typeStr = cTStr
 			}
 			res += fmt.Sprintf(tagStr, name, typeStr, rTStr) + "}"
 
@@ -279,13 +279,15 @@ func CreateSchemaTree(schemas []*parquet.SchemaElement) *SchemaTree {
 	return st
 }
 
-func (tree *SchemaTree) OutputJsonSchema() {
-	jsonStr := root.Root.OutputJsonSchema()
+func (self *SchemaTree) OutputJsonSchema() string {
+	jsonStr := self.Root.OutputJsonSchema()
 	var obj interface{}
 	json.Unmarshal([]byte(jsonStr), &obj)
+	res, _ := json.MarshalIndent(&obj, "", "  ")
+	return string(res)
 
 }
 
-func (tree *SchemaTree) OutputStruct() {
-	return tree.Root.OutputStruct()
+func (self *SchemaTree) OutputStruct() string {
+	return self.Root.OutputStruct(true)
 }
