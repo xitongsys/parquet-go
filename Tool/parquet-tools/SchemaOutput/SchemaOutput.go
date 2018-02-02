@@ -2,6 +2,7 @@ package SchemaOutput
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -179,8 +180,13 @@ func (self *Node) OutputJsonSchema() string {
 			nodes = self.Children[0].Children
 		}
 
-		for _, cNode := range nodes {
-			res += cNode.OutputJsonSchema() + "\n"
+		for i := 0; i < len(nodes); i++ {
+			cNode := nodes[i]
+			if i == len(nodes)-1 {
+				res += cNode.OutputJsonSchema() + "\n"
+			} else {
+				res += cNode.OutputJsonSchema() + ",\n"
+			}
 		}
 
 		res += "]\n"
@@ -209,7 +215,7 @@ func (self *Node) OutputStruct(withName bool) string {
 	}
 
 	if pT == nil && cT == nil {
-		res += rTStr + "struct {\n"
+		res += rTStr + "struct{\n"
 		for _, cNode := range self.Children {
 			res += cNode.OutputStruct(true) + "\n"
 		}
@@ -230,6 +236,16 @@ func (self *Node) OutputStruct(withName bool) string {
 		goTypeStr := ParquetTypeToGoTypeStr(pT, cT)
 		res += rTStr + goTypeStr
 	}
+
+	ress := strings.Split(res, "\n")
+	for i := 0; i < len(ress); i++ {
+		if i > 0 || withName {
+			ress[i] = self.Indent + ress[i]
+		}
+	}
+
+	res = strings.Join(ress, "\n")
+
 	return res
 
 }
@@ -247,7 +263,7 @@ func CreateTree(schemas []*parquet.SchemaElement) *Node {
 		lc := len(node.Children)
 		if lc < numChildren {
 			newNode := NewNode(schemas[pos])
-			newNode.Indent += "\t"
+			newNode.Indent += "  "
 			node.Children = append(node.Children, newNode)
 			stack = append(stack, newNode)
 			pos++
