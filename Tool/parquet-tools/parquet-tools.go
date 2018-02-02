@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	fr, err := ParquetFile.NewLocalFileReader("flat.parquet")
+	fr, err := ParquetFile.NewLocalFileReader("a.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return

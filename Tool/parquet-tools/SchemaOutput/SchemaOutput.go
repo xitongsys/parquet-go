@@ -163,15 +163,21 @@ func (self *Node) OutputJsonSchema() string {
 	} else {
 
 		if cT != nil {
-			tagStr = "\"name=%s, type=%s\""
-			res += fmt.Sprintf(tagStr, name, cTStr)
+			tagStr = "\"name=%s, type=%s, repetitiontype=%s\""
+			res += fmt.Sprintf(tagStr, name, cTStr, rTStr)
 		} else {
-			tagStr = "\"name=%s\""
-			res += fmt.Sprintf(tagStr, name)
+			tagStr = "\"name=%s, repetitiontype=%s\""
+			res += fmt.Sprintf(tagStr, name, rTStr)
 		}
 		res += ",\n"
 		res += "\"Fields\":[\n"
-		for _, cNode := range self.Children {
+
+		nodes := self.Children
+		if cT != nil {
+			nodes = self.Children[0].Children
+		}
+
+		for _, cNode := range nodes {
 			res += "\t" + cNode.OutputJsonSchema() + "\n"
 		}
 
@@ -186,32 +192,34 @@ func (self *Node) OutputStruct() string {
 	name := self.SE.GetName()
 	res := name
 	pT, cT := self.SE.Type, self.SE.ConvertedType
-	rTStr := ""
+	rTStr := " "
 	if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL {
-		rTStr = "*"
+		rTStr = " *"
 	} else if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_REPEATED {
-		rTStr = "[]"
+		rTStr = " []"
 	}
 
 	if pT == nil && cT == nil {
-		res += " struct {\n"
+		res += rTStr + "struct {\n"
 		for _, cNode := range self.Children {
 			res += "\t" + cNode.OutputStruct() + "\n"
 		}
 		res += "}"
 
 	} else if cT != nil && *cT == parquet.ConvertedType_MAP {
-		keyGoTypeStr := ParquetTypeToGoTypeStr(pT, cT)
+		keyNode := self.Children[0].Children[0]
+		keyPT, keyCT := keyNode.SE.Type, keyNode.SE.ConvertedType
+		keyGoTypeStr := ParquetTypeToGoTypeStr(keyPT, keyCT)
 		valNode := self.Children[0].Children[1]
-		res += " " + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct()
+		res += rTStr + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct()[6:] //filter "value "
 
 	} else if cT != nil && *cT == parquet.ConvertedType_LIST {
 		cNode := self.Children[0].Children[0]
-		res += " " + rTStr + " " + cNode.OutputStruct()
+		res += rTStr + "[]" + cNode.OutputStruct()[8:] //filter "element "
 
 	} else {
 		goTypeStr := ParquetTypeToGoTypeStr(pT, cT)
-		res += " " + rTStr + " " + goTypeStr
+		res += rTStr + goTypeStr
 	}
 	return res
 
