@@ -1,6 +1,7 @@
 package SchemaOutput
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -164,7 +165,6 @@ func (self *Node) OutputJsonSchema() string {
 
 		}
 	} else {
-
 		if cT != nil {
 			tagStr = "\"name=%s, type=%s, repetitiontype=%s\""
 			res += fmt.Sprintf(tagStr, name, cTStr, rTStr)
@@ -245,12 +245,14 @@ func (self *Node) OutputStruct(withName bool) string {
 	}
 
 	res = strings.Join(ress, "\n")
-
 	return res
-
 }
 
-func CreateTree(schemas []*parquet.SchemaElement) *Node {
+type SchemaTree struct {
+	Root *Node
+}
+
+func CreateSchemaTree(schemas []*parquet.SchemaElement) *SchemaTree {
 	pos := 0
 	stack := make([]*Node, 0)
 	root := NewNode(schemas[0])
@@ -271,6 +273,19 @@ func CreateTree(schemas []*parquet.SchemaElement) *Node {
 			stack = stack[:len(stack)-1]
 		}
 	}
-	return root
 
+	st := new(SchemaTree)
+	st.Root = root
+	return st
+}
+
+func (tree *SchemaTree) OutputJsonSchema() {
+	jsonStr := root.Root.OutputJsonSchema()
+	var obj interface{}
+	json.Unmarshal([]byte(jsonStr), &obj)
+
+}
+
+func (tree *SchemaTree) OutputStruct() {
+	return tree.Root.OutputStruct()
 }
