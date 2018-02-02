@@ -2,91 +2,96 @@ package SchemaOutput
 
 import (
 	"fmt"
-	"string"
 
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-func ParquetTypeToParquetTypeStr(pT *parquet.ParquetType, cT *parquet.ConvertedType) (string, string) {
+func ParquetTypeToParquetTypeStr(pT *parquet.Type, cT *parquet.ConvertedType) (string, string) {
 	var pTStr, cTStr string
-	switch *pT {
-	case parquet.Type_BOOLEAN:
-		pTStr = "BOOLEAN"
-	case parquet.Type_INT32:
-		pTStr = "INT32"
-	case parquet.Type_INT64:
-		pTStr = "INT64"
-	case parquet.Type_INT96:
-		pTStr = "INT96"
-	case parquet.Type_FLOAT:
-		pTStr = "FLOAT"
-	case parquet.Type_DOUBLE:
-		pTStr = "DOUBLE"
-	case parquet.Type_BYTE_ARRAY:
-		pTStr = "BYTE_ARRAY"
-	case parquet.Type_FIXED_LEN_BYTE_ARRAY:
-		pTStr = "FIXED_LEN_BYTE_ARRAY"
+	if pT != nil {
+		switch *pT {
+		case parquet.Type_BOOLEAN:
+			pTStr = "BOOLEAN"
+		case parquet.Type_INT32:
+			pTStr = "INT32"
+		case parquet.Type_INT64:
+			pTStr = "INT64"
+		case parquet.Type_INT96:
+			pTStr = "INT96"
+		case parquet.Type_FLOAT:
+			pTStr = "FLOAT"
+		case parquet.Type_DOUBLE:
+			pTStr = "DOUBLE"
+		case parquet.Type_BYTE_ARRAY:
+			pTStr = "BYTE_ARRAY"
+		case parquet.Type_FIXED_LEN_BYTE_ARRAY:
+			pTStr = "FIXED_LEN_BYTE_ARRAY"
+		}
 	}
-	switch *cT {
-	case parquet.ConvertedType_UTF8:
-		cTStr = "UTF8"
-	case parquet.ConvertedType_INT_8:
-		cTStr = "INT_8"
-	case parquet.ConvertedType_INT_16:
-		cTStr = "INT_16"
-	case parquet.ConvertedType_INT_32:
-		cTStr = "INT_32"
-	case parquet.ConvertedType_INT_64:
-		cTStr = "INT_64"
-	case parquet.ConvertedType_UINT_8:
-		cTStr = "UINT_8"
-	case parquet.ConvertedType_UINT_16:
-		cTStr = "UINT_16"
-	case parquet.ConvertedType_UINT_32:
-		cTStr = "UINT_32"
-	case parquet.ConvertedType_UINT_64:
-		cTStr = "UINT_64"
-	case parquet.ConvertedType_DATE:
-		cTStr = "DATE"
-	case parquet.ConvertedType_TIME_MILLIS:
-		cTStr = "TIME_MILLIS"
-	case parquet.ConvertedType_TIME_MICROS:
-		cTStr = "TIME_MICROS"
-	case parquet.ConvertedType_TIMESTAMP_MILLIS:
-		cTStr = "TIMESTAMP_MILLIS"
-	case parquet.ConvertedType_TIMESTAMP_MICROS:
-		cTStr = "TIMESTAMP_MICROS"
-	case parquet.ConvertedType_INTERVAL:
-		cTStr = "INTERVAL"
-	case parquet.ConvertedType_DECIMAL:
-		cTStr = "DECIMAL"
-	case parquet.ConvertedType_MAP:
-		cTStr = "MAP"
-	case parquet.ConvertedType_LIST:
-		cTStr = "LIST"
+	if cT != nil {
+		switch *cT {
+		case parquet.ConvertedType_UTF8:
+			cTStr = "UTF8"
+		case parquet.ConvertedType_INT_8:
+			cTStr = "INT_8"
+		case parquet.ConvertedType_INT_16:
+			cTStr = "INT_16"
+		case parquet.ConvertedType_INT_32:
+			cTStr = "INT_32"
+		case parquet.ConvertedType_INT_64:
+			cTStr = "INT_64"
+		case parquet.ConvertedType_UINT_8:
+			cTStr = "UINT_8"
+		case parquet.ConvertedType_UINT_16:
+			cTStr = "UINT_16"
+		case parquet.ConvertedType_UINT_32:
+			cTStr = "UINT_32"
+		case parquet.ConvertedType_UINT_64:
+			cTStr = "UINT_64"
+		case parquet.ConvertedType_DATE:
+			cTStr = "DATE"
+		case parquet.ConvertedType_TIME_MILLIS:
+			cTStr = "TIME_MILLIS"
+		case parquet.ConvertedType_TIME_MICROS:
+			cTStr = "TIME_MICROS"
+		case parquet.ConvertedType_TIMESTAMP_MILLIS:
+			cTStr = "TIMESTAMP_MILLIS"
+		case parquet.ConvertedType_TIMESTAMP_MICROS:
+			cTStr = "TIMESTAMP_MICROS"
+		case parquet.ConvertedType_INTERVAL:
+			cTStr = "INTERVAL"
+		case parquet.ConvertedType_DECIMAL:
+			cTStr = "DECIMAL"
+		case parquet.ConvertedType_MAP:
+			cTStr = "MAP"
+		case parquet.ConvertedType_LIST:
+			cTStr = "LIST"
+		}
 	}
 	return pTStr, cTStr
 }
 
-func ParquetTypeToGoTypeStr(pT *parquet.ParquetType, cT *parquet.ConvertedType) string {
+func ParquetTypeToGoTypeStr(pT *parquet.Type, cT *parquet.ConvertedType) string {
 	res := ""
-	switch *pT {
-	case parquet.Type_BOOLEAN:
-		res = "bool"
-	case parquet.Type_INT32:
-		res = "int32"
-	case parquet.Type_INT64:
-		res = "int64"
-	case parquet.Type_INT96:
-		res = "string"
-	case parquet.Type_FLOAT:
-		res = "float32"
-	case parquet.Type_DOUBLE:
-		res = "float64"
-	case parquet.Type_BYTE_ARRAY:
-		res = "string"
-	case parquet.Type_FIXED_LEN_BYTE_ARRAY:
-		res = "string"
+	if pT != nil {
+		switch *pT {
+		case parquet.Type_BOOLEAN:
+			res = "bool"
+		case parquet.Type_INT32:
+			res = "int32"
+		case parquet.Type_INT64:
+			res = "int64"
+		case parquet.Type_INT96:
+			res = "string"
+		case parquet.Type_FLOAT:
+			res = "float32"
+		case parquet.Type_DOUBLE:
+			res = "float64"
+		case parquet.Type_BYTE_ARRAY:
+			res = "string"
+		case parquet.Type_FIXED_LEN_BYTE_ARRAY:
+			res = "string"
+		}
 	}
 	if cT != nil {
 		switch *cT {
@@ -100,6 +105,7 @@ func ParquetTypeToGoTypeStr(pT *parquet.ParquetType, cT *parquet.ConvertedType) 
 			res = "uint64"
 		}
 	}
+	return res
 }
 
 type Node struct {
@@ -117,7 +123,7 @@ func NewNode(schema *parquet.SchemaElement) *Node {
 
 func (self *Node) OutputJsonSchema() string {
 	res := "{\"Tag\":"
-	pT, cT := self.SE.GetType(), self.SE.GetConvertedType()
+	pT, cT := self.SE.Type, self.SE.ConvertedType
 	rTStr := "REQUIRED"
 	if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL {
 		rTStr = "OPTIONAL"
@@ -135,7 +141,7 @@ func (self *Node) OutputJsonSchema() string {
 			tagStr = "\"name=%s, type=%s, length=%d, repetitiontype=%s\""
 			res += fmt.Sprintf(tagStr, name, pTStr, length, rTStr) + "}"
 
-		} else if *cT == parquet.ConvertedType_DECIMAL {
+		} else if cT != nil && *cT == parquet.ConvertedType_DECIMAL {
 			scale, precision := self.SE.GetScale(), self.SE.GetPrecision()
 			if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 				length := self.SE.GetTypeLength()
@@ -179,11 +185,11 @@ func (self *Node) OutputJsonSchema() string {
 func (self *Node) OutputStruct() string {
 	name := self.SE.GetName()
 	res := name
-	pT, cT := self.SE.GetType(), self.SE.GetConvertedType()
+	pT, cT := self.SE.Type, self.SE.ConvertedType
 	rTStr := ""
-	if self.SE.GetRepetitionType == parquet.FieldRepetitionType_OPTIONAL {
+	if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL {
 		rTStr = "*"
-	} else if self.SE.GetConvertedType == parquet.FieldRepetitionType_REPEATED {
+	} else if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_REPEATED {
 		rTStr = "[]"
 	}
 
@@ -195,8 +201,6 @@ func (self *Node) OutputStruct() string {
 		res += "}"
 
 	} else if cT != nil && *cT == parquet.ConvertedType_MAP {
-		keyNode := self.Children[0].Children[0]
-		keyPT, keyCT := keyNode.SE.GetType(), keyNode.SE.GetConvertedType()
 		keyGoTypeStr := ParquetTypeToGoTypeStr(pT, cT)
 		valNode := self.Children[0].Children[1]
 		res += " " + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct()
@@ -214,7 +218,6 @@ func (self *Node) OutputStruct() string {
 }
 
 func CreateTree(schemas []*parquet.SchemaElement) *Node {
-	ln := len(schemas)
 	pos := 0
 	stack := make([]*Node, 0)
 	root := NewNode(schemas[0])
