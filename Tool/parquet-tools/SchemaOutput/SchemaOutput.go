@@ -109,12 +109,14 @@ func ParquetTypeToGoTypeStr(pT *parquet.Type, cT *parquet.ConvertedType) string 
 }
 
 type Node struct {
+	Indent   string
 	SE       *parquet.SchemaElement
 	Children []*Node
 }
 
 func NewNode(schema *parquet.SchemaElement) *Node {
 	node := &(Node{
+		Indent:   "",
 		SE:       schema,
 		Children: []*Node{},
 	})
@@ -178,7 +180,7 @@ func (self *Node) OutputJsonSchema() string {
 		}
 
 		for _, cNode := range nodes {
-			res += "\t" + cNode.OutputJsonSchema() + "\n"
+			res += cNode.OutputJsonSchema() + "\n"
 		}
 
 		res += "]\n"
@@ -202,7 +204,7 @@ func (self *Node) OutputStruct() string {
 	if pT == nil && cT == nil {
 		res += rTStr + "struct {\n"
 		for _, cNode := range self.Children {
-			res += "\t" + cNode.OutputStruct() + "\n"
+			res += cNode.OutputStruct() + "\n"
 		}
 		res += "}"
 
@@ -238,6 +240,7 @@ func CreateTree(schemas []*parquet.SchemaElement) *Node {
 		lc := len(node.Children)
 		if lc < numChildren {
 			newNode := NewNode(schemas[pos])
+			newNode.Indent += "\t"
 			node.Children = append(node.Children, newNode)
 			stack = append(stack, newNode)
 			pos++
