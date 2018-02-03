@@ -57,17 +57,28 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.PFile = pFile
 	res.PagesMapBuf = make(map[string][]*Layout.Page)
 	res.DictRecs = make(map[string]*Layout.DictRecType)
-	res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj)
-	if err != nil {
-		return res, err
-	}
-
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
-	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	_, err = res.PFile.Write([]byte("PAR1"))
 
+	if obj != nil {
+		if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
+			return res, err
+		}
+		res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
+	}
+
 	return res, err
+}
+
+func (self *ParquetWriter) SetSchemaHandlerFromJSON(jsonSchema string) error {
+	var err error
+	if self.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
+		return err
+	}
+	self.Footer.Schema = self.Footer.Schema[:0]
+	self.Footer.Schema = append(self.Footer.Schema, self.SchemaHandler.SchemaElements...)
+	return nil
 }
 
 //Convert the column names in schema to lowercases(Deprecated)
@@ -103,6 +114,7 @@ func (self *ParquetWriter) RenameSchema() {
 //Write the footer and stop writing
 func (self *ParquetWriter) WriteStop() error {
 	var err error
+
 	if err = self.Flush(true); err != nil {
 		return err
 	}
