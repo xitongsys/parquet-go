@@ -1,10 +1,9 @@
-package JSONWriter
+package SchemaHandler
 
 import (
 	"encoding/json"
 
 	"github.com/xitongsys/parquet-go/Common"
-	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -17,7 +16,7 @@ func NewJSONSchemaItem() *JSONSchemaItemType {
 	return new(JSONSchemaItemType)
 }
 
-func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler.SchemaHandler, err error) {
+func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
@@ -128,7 +127,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler.SchemaHandler, err 
 			infos = append(infos, newInfo)
 		}
 	}
-	res := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaElements)
+	res := NewSchemaHandlerFromSchemaList(schemaElements)
 	res.Infos = infos
 	res.CreateInExMap()
 	return res, nil

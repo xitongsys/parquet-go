@@ -1,13 +1,12 @@
-package CSVWriter
+package SchemaHandler
 
 import (
 	"github.com/xitongsys/parquet-go/Common"
-	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //Create a schema handler from CSV metadata
-func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
+func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 	schemaList := make([]*parquet.SchemaElement, 0)
 	infos := make([]*Common.Tag, 0)
 
@@ -60,7 +59,7 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler.SchemaHandler {
 		}
 		schemaList = append(schemaList, schema)
 	}
-	res := SchemaHandler.NewSchemaHandlerFromSchemaList(schemaList)
+	res := NewSchemaHandlerFromSchemaList(schemaList)
 	res.Infos = infos
 	return res
 }

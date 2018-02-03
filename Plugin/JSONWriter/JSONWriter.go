@@ -43,7 +43,7 @@ type JSONWriter struct {
 func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*JSONWriter, error) {
 	var err error
 	res := new(JSONWriter)
-	res.SchemaHandler, err = NewSchemaHandlerFromJSON(jsonSchema)
+	res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromJSON(jsonSchema)
 	if err != nil {
 		return res, err
 	}
