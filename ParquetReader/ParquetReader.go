@@ -33,22 +33,42 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 		return nil, err
 	}
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
-	//res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
-	if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
-		return res, err
-	}
-	res.RenameSchema()
 
-	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
-		schema := res.SchemaHandler.SchemaElements[i]
-		if schema.GetNumChildren() == 0 {
-			pathStr := res.SchemaHandler.IndexMap[int32(i)]
-			if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
-				return res, err
+	if obj != nil {
+		if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
+			return res, err
+		}
+		res.RenameSchema()
+
+		for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
+			schema := res.SchemaHandler.SchemaElements[i]
+			if schema.GetNumChildren() == 0 {
+				pathStr := res.SchemaHandler.IndexMap[int32(i)]
+				if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
+					return res, err
+				}
 			}
 		}
 	}
 	return res, nil
+}
+
+func (self *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
+	var err error
+	if self.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
+		return err
+	}
+	self.RenameSchema()
+	for i := 0; i < len(self.SchemaHandler.SchemaElements); i++ {
+		schema := self.SchemaHandler.SchemaElements[i]
+		if schema.GetNumChildren() == 0 {
+			pathStr := self.SchemaHandler.IndexMap[int32(i)]
+			if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.PFile, self.Footer, self.SchemaHandler, pathStr); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 //Rename schema name to inname

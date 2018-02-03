@@ -22,19 +22,19 @@ type Student struct {
 var jsonSchema string = `{
     "Tag":"name=parquet-go-root",
     "Fields":[
-        {"Tag":"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"},
-        {"Tag":"name=age, type=INT32"},
-        {"Tag":"name=id, type=INT64"},
-        {"Tag":"name=weight, type=FLOAT"},
-        {"Tag":"name=sex, type=BOOLEAN"},
-        {"Tag":"name=day, type=DATE"}
+        {"Tag":"name=name, inname=Name, type=UTF8, encoding=PLAIN_DICTIONARY"},
+        {"Tag":"name=age, inname=Age, type=INT32"},
+        {"Tag":"name=id, inname=Id, type=INT64"},
+        {"Tag":"name=weight, inname=Weight, type=FLOAT"},
+        {"Tag":"name=sex, inname=Sex, type=BOOLEAN"},
+        {"Tag":"name=day, inname=Day, type=DATE"}
     ]
 }
 `
 
 func main() {
 	var err error
-	fw, err := ParquetFile.NewLocalFileWriter("flat.parquet")
+	fw, err := ParquetFile.NewLocalFileWriter("json_schema.parquet")
 	if err != nil {
 		log.Println("Can't create local file", err)
 		return
@@ -75,17 +75,22 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := ParquetFile.NewLocalFileReader("flat.parquet")
+	fr, err := ParquetFile.NewLocalFileReader("json_schema.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
 	}
 
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	pr, err := ParquetReader.NewParquetReader(fr, nil, 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
 	}
+	if err = pr.SetSchemaHandlerFromJSON(jsonSchema); err != nil {
+		log.Println("Can't set schema from json", err)
+		return
+	}
+
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)

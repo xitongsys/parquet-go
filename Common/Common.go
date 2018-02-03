@@ -109,8 +109,12 @@ func StringToTag(tag string) *Tag {
 		case "valuefieldid":
 			mp.ValueFieldID = valInt32
 		case "name":
-			mp.InName = val
+			if mp.InName == "" {
+				mp.InName = val
+			}
 			mp.ExName = val
+		case "inname":
+			mp.InName = val
 		case "repetitiontype":
 			switch strings.ToLower(val) {
 			case "repeated":
