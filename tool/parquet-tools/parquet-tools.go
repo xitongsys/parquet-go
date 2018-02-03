@@ -5,12 +5,12 @@ import (
 
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/Tool/parquet-tools/SchemaOutput"
+	"github.com/xitongsys/parquet-go/tool/parquet-tools/SchemaTool"
 )
 
 func main() {
 
-	fr, err := ParquetFile.NewLocalFileReader("a.parquet")
+	fr, err := ParquetFile.NewLocalFileReader("/home/zxt/b.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
@@ -22,7 +22,7 @@ func main() {
 		return
 	}
 
-	tree := SchemaOutput.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
+	tree := SchemaTool.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
 	log.Println(tree)
 	log.Println("\n", tree.OutputStruct())
 	log.Println(tree.OutputJsonSchema())

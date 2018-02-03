@@ -1,4 +1,4 @@
-package SchemaOutput
+package SchemaTool
 
 import (
 	"encoding/json"
