@@ -37,7 +37,7 @@ type ParquetWriter struct {
 
 	DictRecs map[string]*Layout.DictRecType
 
-	MarshalFunc func(src interface{}, bgn int, end int, sh *SchemaHandler.SchemaHandler) (*map[string]*Layout.Table, error)
+	MarshalFunc func(src []interface{}, bgn int, end int, sh *SchemaHandler.SchemaHandler) (*map[string]*Layout.Table, error)
 }
 
 //Create a parquet handler

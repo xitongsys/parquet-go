@@ -157,7 +157,7 @@ func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 }
 
 //Convert the objects to table map. srcInterface is a slice of objects
-func Marshal(srcInterface interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
+func Marshal(srcInterface []interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
