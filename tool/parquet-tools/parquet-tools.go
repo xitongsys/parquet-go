@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"flag"
+	"fmt"
 
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
@@ -9,21 +10,31 @@ import (
 )
 
 func main() {
+	cmd := flag.String("cmd", "schema", "command")
+	fileName := flag.String("file", "", "file name")
 
-	fr, err := ParquetFile.NewLocalFileReader("/home/zxt/b.parquet")
+	flag.Parse()
+
+	fr, err := ParquetFile.NewLocalFileReader(*fileName)
 	if err != nil {
-		log.Println("Can't open file")
+		fmt.Println("Can't open file ", *fileName)
 		return
 	}
 
 	pr, err := ParquetReader.NewParquetColumnReader(fr, 1)
 	if err != nil {
-		log.Println("Can't create parquet reader", err)
+		fmt.Println("Can't create parquet reader ", err)
 		return
 	}
 
-	tree := SchemaTool.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
-	log.Println(tree)
-	log.Println("\n", tree.OutputStruct())
-	log.Println(tree.OutputJsonSchema())
+	if *cmd == "schema" {
+		tree := SchemaTool.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
+		fmt.Println("----- Go struct -----")
+		fmt.Printf("%s\n", tree.OutputStruct())
+		fmt.Println("----- Json schema -----")
+		fmt.Printf("%s\n", tree.OutputJsonSchema())
+	} else {
+		fmt.Println("Unknown command")
+	}
+
 }
