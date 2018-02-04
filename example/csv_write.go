@@ -25,7 +25,7 @@ func main() {
 		log.Println("Can't open file", err)
 		return
 	}
-	pw, err := ParquetWriter.NewCSVWriter(md, fw, 4)
+	pw, err := ParquetWriter.NewCSVWriter(md, fw, 1)
 	if err != nil {
 		log.Println("Can't create csv writer", err)
 		return

@@ -8,10 +8,14 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
+type JSONWriter struct {
+	ParquetWriter
+}
+
 //Create JSON writer
-func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*ParquetWriter, error) {
+func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*JSONWriter, error) {
 	var err error
-	res := new(ParquetWriter)
+	res := new(JSONWriter)
 	res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromJSON(jsonSchema)
 	if err != nil {
 		return res, err

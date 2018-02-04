@@ -15,14 +15,14 @@ func MarshalCSV(records []interface{}, bgn int, end int, schemaHandler *SchemaHa
 	}
 
 	for i := 0; i < len(records[0].([]interface{})); i++ {
-		pathStr := schemaHandler.GetRootName() + "." + schemaHandler.Infos[i].ExName
+		pathStr := schemaHandler.GetRootName() + "." + schemaHandler.Infos[i+1].ExName
 		res[pathStr] = Layout.NewEmptyTable()
 		res[pathStr].Path = Common.StrToPath(pathStr)
 		res[pathStr].MaxDefinitionLevel = 1
 		res[pathStr].MaxRepetitionLevel = 0
 		res[pathStr].RepetitionType = parquet.FieldRepetitionType_OPTIONAL
 		res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].GetType()
-		res[pathStr].Info = schemaHandler.Infos[i]
+		res[pathStr].Info = schemaHandler.Infos[i+1]
 
 		for j := bgn; j < end; j++ {
 			rec := records[j].([]interface{})[i]

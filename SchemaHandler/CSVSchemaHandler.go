@@ -18,6 +18,12 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 	rootSchema.RepetitionType = &rt
 	schemaList = append(schemaList, rootSchema)
 
+	rootInfo := Common.NewTag()
+	rootInfo.InName = "parquet_go_root"
+	rootInfo.ExName = "parquet_go_root"
+	rootInfo.RepetitionType = parquet.FieldRepetitionType(-1)
+	infos = append(infos, rootInfo)
+
 	for _, md := range mds {
 		info := Common.StringToTag(md)
 		infos = append(infos, info)
