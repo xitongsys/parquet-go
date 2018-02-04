@@ -6,7 +6,7 @@ import (
 
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetType"
-	"github.com/xitongsys/parquet-go/Plugin/CSVWriter"
+	"github.com/xitongsys/parquet-go/ParquetWriter"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 		log.Println("Can't open file", err)
 		return
 	}
-	pw, err := CSVWriter.NewCSVWriter(md, fw, 4)
+	pw, err := ParquetWriter.NewCSVWriter(md, fw, 4)
 	if err != nil {
 		log.Println("Can't create csv writer", err)
 		return

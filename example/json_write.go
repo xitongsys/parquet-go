@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/Plugin/JSONWriter"
+	"github.com/xitongsys/parquet-go/ParquetWriter"
 )
 
 func main() {
@@ -58,7 +58,7 @@ func main() {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err := JSONWriter.NewJSONWriter(md, fw, 1)
+	pw, err := ParquetWriter.NewJSONWriter(md, fw, 1)
 	if err != nil {
 		log.Println("Can't create json writer", err)
 		return

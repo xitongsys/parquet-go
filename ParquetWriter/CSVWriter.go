@@ -10,24 +10,27 @@ import (
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
 	"github.com/xitongsys/parquet-go/ParquetFile"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-//ParquetWriter is a writer  parquet file
-type ParquetWriter struct {
+//Write handler for CSV data
+type CSVWriter struct {
 	SchemaHandler *SchemaHandler.SchemaHandler
-	NP            int64 //parallel number
+	NP            int64
 	Footer        *parquet.FileMetaData
-	PFile         ParquetFile.ParquetFile
+	RowGroups     []*Layout.RowGroup
+	Metadata      []string
 
-	////write info/////
-	PageSize        int64
-	RowGroupSize    int64
-	CompressionType parquet.CompressionCodec
-	Offset          int64
+	PFile ParquetFile.ParquetFile
 
-	Objs              []interface{}
+	PageSize     int64
+	RowGroupSize int64
+	CompressType parquet.CompressionCodec
+	Offset       int64
+
+	Objs              [][]interface{}
 	ObjsSize          int64
 	ObjSize           int64
 	CheckSizeCritical int64
@@ -39,66 +42,97 @@ type ParquetWriter struct {
 	DictRecs map[string]*Layout.DictRecType
 }
 
-//Create a parquet handler
-func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
-	var err error
-
-	res := new(ParquetWriter)
-	res.NP = np
+//Create CSV writer
+func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error) {
+	res := new(CSVWriter)
+	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromMetadata(md)
+	res.Metadata = md
+	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
-	res.CompressionType = parquet.CompressionCodec_SNAPPY
-	res.ObjsSize = 0
-	res.CheckSizeCritical = 0
-	res.Size = 0
-	res.NumRows = 0
-	res.Offset = 4
-	res.PFile = pFile
+	res.CompressType = parquet.CompressionCodec_SNAPPY
 	res.PagesMapBuf = make(map[string][]*Layout.Page)
 	res.DictRecs = make(map[string]*Layout.DictRecType)
+	res.NP = np
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
-	_, err = res.PFile.Write([]byte("PAR1"))
-
-	if obj != nil {
-		if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
-			return res, err
-		}
-		res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
-	}
-
+	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
+	res.Offset = 4
+	_, err := res.PFile.Write([]byte("PAR1"))
 	return res, err
 }
 
-func (self *ParquetWriter) SetSchemaHandlerFromJSON(jsonSchema string) error {
-	var err error
-	if self.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
-		return err
-	}
-	self.Footer.Schema = self.Footer.Schema[:0]
-	self.Footer.Schema = append(self.Footer.Schema, self.SchemaHandler.SchemaElements...)
-	return nil
-}
-
-//Rename schema name to exname in tags
-func (self *ParquetWriter) RenameSchema() {
-	for i := 0; i < len(self.Footer.Schema); i++ {
-		self.Footer.Schema[i].Name = self.SchemaHandler.Infos[i].ExName
-	}
+//Rename schema name to exname
+func (self *CSVWriter) RenameSchema() {
 	for _, rowGroup := range self.Footer.RowGroups {
 		for _, chunk := range rowGroup.Columns {
-			inPathStr := Common.PathToStr(chunk.MetaData.PathInSchema)
-			exPathStr := self.SchemaHandler.InPathToExPath[inPathStr]
-			exPath := Common.StrToPath(exPathStr)[1:]
-			chunk.MetaData.PathInSchema = exPath
+			chunk.MetaData.PathInSchema = chunk.MetaData.PathInSchema[1:]
 		}
 	}
 }
 
-//Write the footer and stop writing
-func (self *ParquetWriter) WriteStop() error {
+//Write string values to parquet file
+func (self *CSVWriter) WriteString(recsi interface{}) error {
 	var err error
+	recs := recsi.([]*string)
+	lr := len(recs)
+	rec := make([]interface{}, lr)
+	for i := 0; i < lr; i++ {
+		rec[i] = nil
+		if recs[i] != nil {
+			rec[i] = ParquetType.StrToParquetType(*recs[i],
+				self.SchemaHandler.SchemaElements[i+1].Type,
+				self.SchemaHandler.SchemaElements[i+1].ConvertedType,
+				int(self.SchemaHandler.SchemaElements[i+1].GetTypeLength()),
+				int(self.SchemaHandler.SchemaElements[i+1].GetScale()),
+			)
+		}
+	}
 
+	ln := int64(len(self.Objs))
+	if self.CheckSizeCritical <= ln {
+		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
+	}
+	self.ObjsSize += self.ObjSize
+	self.Objs = append(self.Objs, rec)
+
+	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
+
+	if self.ObjsSize > criSize {
+		err = self.Flush(false)
+	} else {
+		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
+		self.CheckSizeCritical = dln + ln
+	}
+	return err
+}
+
+//Write parquet values to parquet file
+func (self *CSVWriter) Write(reci interface{}) error {
+	var err error
+	rec := reci.([]interface{})
+	ln := int64(len(self.Objs))
+	if self.CheckSizeCritical <= ln {
+		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
+	}
+
+	self.ObjsSize += self.ObjSize
+	self.Objs = append(self.Objs, rec)
+
+	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
+
+	if self.ObjsSize > criSize {
+		err = self.Flush(false)
+	} else {
+		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
+		self.CheckSizeCritical = dln + ln
+	}
+	return err
+}
+
+//Write footer to parquet file and stop writing
+func (self *CSVWriter) WriteStop() error {
+	var err error
 	if err = self.Flush(true); err != nil {
 		return err
 	}
@@ -115,7 +149,6 @@ func (self *ParquetWriter) WriteStop() error {
 	}
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
-
 	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
 		return err
 	}
@@ -123,38 +156,15 @@ func (self *ParquetWriter) WriteStop() error {
 		return err
 	}
 	return nil
-
 }
 
-//Write one object to parquet file
-func (self *ParquetWriter) Write(src interface{}) error {
-	var err error
-	ln := int64(len(self.Objs))
-	if self.CheckSizeCritical <= ln {
-		self.ObjSize = Common.SizeOf(reflect.ValueOf(src)) + 1
-	}
-	self.ObjsSize += self.ObjSize
-	self.Objs = append(self.Objs, src)
-
-	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
-
-	if self.ObjsSize >= criSize {
-		err = self.Flush(false)
-
-	} else {
-		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
-		self.CheckSizeCritical = dln + ln
-	}
-	return err
-
-}
-
-func (self *ParquetWriter) flushObjs() error {
+func (self *CSVWriter) flushObjs() error {
 	var err error
 	l := int64(len(self.Objs))
 	if l <= 0 {
 		return nil
 	}
+
 	pagesMapList := make([]map[string][]*Layout.Page, self.NP)
 	for i := 0; i < int(self.NP); i++ {
 		pagesMapList[i] = make(map[string][]*Layout.Page)
@@ -179,27 +189,20 @@ func (self *ParquetWriter) flushObjs() error {
 				doneChan <- 0
 				return
 			}
-
-			tableMap, err2 := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler)
-
-			if err2 == nil {
-				for name, table := range *tableMap {
-					if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
-						lock.Lock()
-						if _, ok := self.DictRecs[name]; !ok {
-							self.DictRecs[name] = Layout.NewDictRec()
-						}
-						pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
-							table, int32(self.PageSize), 32, self.CompressionType)
-						lock.Unlock()
-
-					} else {
-						pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
-							self.CompressionType)
+			tableMap := Marshal.MarshalCSV(self.Objs, b, e, self.SchemaHandler)
+			for name, table := range *tableMap {
+				if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
+					lock.Lock()
+					if _, ok := self.DictRecs[name]; !ok {
+						self.DictRecs[name] = Layout.NewDictRec()
 					}
+					pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
+						table, int32(self.PageSize), 32, self.CompressType)
+					lock.Unlock()
+				} else {
+					pagesMapList[index][name], _ = Layout.TableToDataPages(table, int32(self.PageSize),
+						self.CompressType)
 				}
-			} else {
-				err = err2
 			}
 
 			doneChan <- 0
@@ -219,19 +222,17 @@ func (self *ParquetWriter) flushObjs() error {
 			}
 			for _, page := range pages {
 				self.Size += int64(len(page.RawData))
-				page.DataTable = nil //release memory
+				page.DataTable = nil
 			}
 		}
 	}
-
 	self.NumRows += int64(len(self.Objs))
 	return err
 }
 
 //Flush the write buffer to parquet file
-func (self *ParquetWriter) Flush(flag bool) error {
+func (self *CSVWriter) Flush(flag bool) error {
 	var err error
-
 	if err = self.flushObjs(); err != nil {
 		return err
 	}
@@ -241,12 +242,11 @@ func (self *ParquetWriter) Flush(flag bool) error {
 		chunkMap := make(map[string]*Layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
 			if len(pages) > 0 && pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
-				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressionType)
+				dictPage, _ := Layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressType)
 				tmp := append([]*Layout.Page{dictPage}, pages...)
 				chunkMap[name] = Layout.PagesToDictChunk(tmp)
 			} else {
 				chunkMap[name] = Layout.PagesToChunk(pages)
-
 			}
 		}
 
@@ -274,17 +274,10 @@ func (self *ParquetWriter) Flush(flag bool) error {
 		self.NumRows = 0
 
 		for k := 0; k < len(rowGroup.Chunks); k++ {
-			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = -1
+			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
 			rowGroup.Chunks[k].ChunkHeader.FileOffset = self.Offset
 
 			for l := 0; l < len(rowGroup.Chunks[k].Pages); l++ {
-				if rowGroup.Chunks[k].Pages[l].Header.Type == parquet.PageType_DICTIONARY_PAGE {
-					tmp := self.Offset
-					rowGroup.Chunks[k].ChunkHeader.MetaData.DictionaryPageOffset = &tmp
-				} else if rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset <= 0 {
-					rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
-
-				}
 				data := rowGroup.Chunks[k].Pages[l].RawData
 				if _, err = self.PFile.Write(data); err != nil {
 					return err
@@ -299,6 +292,5 @@ func (self *ParquetWriter) Flush(flag bool) error {
 	self.Footer.NumRows += int64(len(self.Objs))
 	self.Objs = self.Objs[:0]
 	self.ObjsSize = 0
-	return nil
-
+	return err
 }

@@ -3,6 +3,7 @@ package ParquetType
 import (
 	"fmt"
 	"math/big"
+	"reflect"
 
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -397,7 +398,13 @@ func StrIntToBinary(num string, order string, length int, signed bool) string {
 			bs[i], bs[j] = bs[j], bs[i]
 		}
 	}
-
 	return string(bs)
+}
 
+func JSONTypeToParquetType(val reflect.Value, pT *parquet.Type, cT *parquet.ConvertedType, length int, scale int) interface{} {
+	if val.Type().Kind() == reflect.Interface && val.IsNil() {
+		return nil
+	}
+	s := fmt.Sprintf("%v", val)
+	return StrToParquetType(s, pT, cT, length, scale)
 }
