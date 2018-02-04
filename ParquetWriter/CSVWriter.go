@@ -1,9 +1,6 @@
 package ParquetWriter
 
 import (
-	"reflect"
-
-	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
 	"github.com/xitongsys/parquet-go/ParquetFile"
@@ -38,7 +35,6 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 
 //Write string values to parquet file
 func (self *CSVWriter) WriteString(recsi interface{}) error {
-	var err error
 	recs := recsi.([]*string)
 	lr := len(recs)
 	rec := make([]interface{}, lr)
@@ -54,20 +50,5 @@ func (self *CSVWriter) WriteString(recsi interface{}) error {
 		}
 	}
 
-	ln := int64(len(self.Objs))
-	if self.CheckSizeCritical <= ln {
-		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
-	}
-	self.ObjsSize += self.ObjSize
-	self.Objs = append(self.Objs, rec)
-
-	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
-
-	if self.ObjsSize > criSize {
-		err = self.Flush(false)
-	} else {
-		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
-		self.CheckSizeCritical = dln + ln
-	}
-	return err
+	return self.Write(rec)
 }
