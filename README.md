@@ -139,8 +139,85 @@ type ParquetFile interface {
 ```
 Using this interface, parquet-go can read/write parquet file on different plantforms. Currently local and HDFS interfaces are implemented.(It's not possible for S3, because it doesn't support random access.)
 
+## Writers
+Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
+* ParquetWriter is used to write predefined Golang structs.
+![Example of ParquetWriter](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
 
-## Read/Write
+* JSONWriter is used to write JSON strings
+![Example of JSONWriter](https://github.com/xitongsys/parquet-go/blob/master/example/json_write.go)
+
+* CSVWriter is used to write data format similar with CSV(not nested)
+![Example of CSVWriter](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
+
+## Readers
+Two Readers are supported: ParquetReader, ColumnReader
+* ParquetReader is used to read predefined Golang structs
+![Example of ParquetReader](https://github.com/xitongsys/parquet-go/blob/master/example/local_nested.go)
+
+* ColumnReader is used to read some columns. The read function return 3 slices([value], [RepetitionLevel], [DefinitionLevel]) of the records.
+![Example of ColumnReader](https://github.com/xitongsys/parquet-go/blob/master/example/column_read.go)
+
+
+
+## Schema
+There are three methods to define the schema:
+### Tag
+```golang
+type Student struct {
+	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
+	Age    int32   `parquet:"name=age, type=INT32"`
+	Id     int64   `parquet:"name=id, type=INT64"`
+	Weight float32 `parquet:"name=weight, type=FLOAT"`
+	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
+	Day    int32   `parquet:"name=day, type=DATE"`
+}
+```
+![Example of tags](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
+
+
+### JSON
+JSON schema can be used to define some complicated schema, which can't be defined by tag.
+```golang
+var jsonSchema string = `{
+    "Tag":"name=parquet-go-root",
+    "Fields":[
+        {"Tag":"name=name, inname=Name, type=UTF8, encoding=PLAIN_DICTIONARY"},
+        {"Tag":"name=age, inname=Age, type=INT32"},
+        {"Tag":"name=id, inname=Id, type=INT64"},
+        {"Tag":"name=weight, inname=Weight, type=FLOAT"},
+        {"Tag":"name=sex, inname=Sex, type=BOOLEAN"},
+        {"Tag":"name=day, inname=Day, type=DATE"}
+    ]
+}
+`
+```
+![Example of JSON schema](https://github.com/xitongsys/parquet-go/blob/master/example/json_schema.go)
+
+
+### CSV metadata
+```golang
+	md := []string{
+		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=Age, type=INT32",
+		"name=Id, type=INT64",
+		"name=Weight, type=FLOAT",
+		"name=Sex, type=BOOLEAN",
+	}
+```
+![Example of CSV metadata](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
+
+
+## Parallel
+Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
+```golang
+func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error)
+func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error)
+func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*JSONWriter, error)
+func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error)
+```
+
+## Read/Write Example
 Following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```golang
 package main
@@ -226,296 +303,9 @@ func main() {
 
 ```
 
-## Schema
-There are three methods to define the schema:
-### Tag
-```golang
-type Student struct {
-	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
-	Age    int32   `parquet:"name=age, type=INT32"`
-	Id     int64   `parquet:"name=id, type=INT64"`
-	Weight float32 `parquet:"name=weight, type=FLOAT"`
-	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
-	Day    int32   `parquet:"name=day, type=DATE"`
-}
-```
-![Example](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
+## Tool
+* ![parquet-tools](https://github.com/xitongsys/parquet-go/blob/master/tool/parquet-tools): Command line tools that aid in the inspection of Parquet files
 
-
-### Json
-```golang
-var jsonSchema string = `{
-    "Tag":"name=parquet-go-root",
-    "Fields":[
-        {"Tag":"name=name, inname=Name, type=UTF8, encoding=PLAIN_DICTIONARY"},
-        {"Tag":"name=age, inname=Age, type=INT32"},
-        {"Tag":"name=id, inname=Id, type=INT64"},
-        {"Tag":"name=weight, inname=Weight, type=FLOAT"},
-        {"Tag":"name=sex, inname=Sex, type=BOOLEAN"},
-        {"Tag":"name=day, inname=Day, type=DATE"}
-    ]
-}
-`
-```
-![Example](https://github.com/xitongsys/parquet-go/blob/master/example/json_schema.go)
-
-### CSV metadata
-```golang
-	md := []string{
-		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
-		"name=Age, type=INT32",
-		"name=Id, type=INT64",
-		"name=Weight, type=FLOAT",
-		"name=Sex, type=BOOLEAN",
-	}
-```
-![Example](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
-
-
-## Read Columns
-If you just want to get some columns data, your can use column reader. The read function return a 3 slices([value], [RepetitionLevel], [DefinitionLevel]) of the record.  
-```golang
-/*
-type Student struct {
-	Name   string           `parquet:"name=name, type=UTF8"`
-	Age    int32            `parquet:"name=age, type=INT32"`
-	Id     int64            `parquet:"name=id, type=INT64"`
-	Weight float32          `parquet:"name=weight, type=FLOAT"`
-	Sex    bool             `parquet:"name=sex, type=BOOLEAN"`
-	Day    int32            `parquet:"name=day, type=DATE"`
-	Class  []string         `parquet:"name=class, type=SLICE, valuetype=UTF8"`
-	Score  map[string]int32 `parquet:"name=score, type=MAP, keytype=UTF8, valuetype=INT32"`
-}
-*/
-
-func main(){
-	var names, classes, scores_key, scores_value, ids []interface{}
-	var rls, dls []int32
-	///read
-	fr, err := ParquetFile.NewLocalFileReader("column.parquet")
-	if err != nil {
-		log.Println("Can't open file", err)
-		return
-	}
-	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
-	if err != nil {
-		log.Println("Can't create column reader", err)
-		return
-	}
-	num := int(pr.GetNumRows())
-	names, rls, dls = pr.ReadColumnByPath("name", num)
-	log.Println("name", names, rls, dls)
-
-	classes, rls, dls = pr.ReadColumnByPath("class.list.element", num)
-	log.Println("class", classes, rls, dls)
-
-	scores_key, rls, dls = pr.ReadColumnByPath("score.key_value.key", num)
-	scores_value, rls, dls = pr.ReadColumnByPath("score.key_value.value", num)
-	log.Println("scores_key", scores_key)
-	log.Println("scores_value", scores_value)
-
-	ids, _, _ = pr.ReadColumnByIndex(2, num)
-	log.Println(ids)
-
-	pr.ReadStop()
-	fr.Close()
-}
-```
-
-## Parallel
-Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
-```golang
-func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error)
-func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error)
-```
-
-## Plugin
-Plugin is used for some special purpose and will be added gradually.
-
-### CSVWriter Plugin
-This plugin is used for data format similar with CSV(not nested). The format of the schema is same with before.
-
-#### Example
-```golang
-package main
-import (
-	"fmt"
-	"log"
-
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetType"
-	"github.com/xitongsys/parquet-go/Plugin/CSVWriter"
-)
-func main() {
-	var err error
-	md := []string{
-		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
-		"name=Age, type=INT32",
-		"name=Id, type=INT64",
-		"name=Weight, type=FLOAT",
-		"name=Sex, type=BOOLEAN",
-	}
-	//write
-	fw, err := ParquetFile.NewLocalFileWriter("csv.parquet")
-	if err != nil {
-		log.Println("Can't open file", err)
-		return
-	}
-	pw, err := CSVWriter.NewCSVWriter(md, fw, 4)
-	if err != nil {
-		log.Println("Can't create csv writer", err)
-		return
-	}
-
-	num := 10
-	for i := 0; i < num; i++ {
-		data := []string{
-			fmt.Sprintf("%s_%d", "Student Name", i),
-			fmt.Sprintf("%d", 20+i%5),
-			fmt.Sprintf("%d", i),
-			fmt.Sprintf("%f", 50.0+float32(i)*0.1),
-			fmt.Sprintf("%t", i%2 == 0),
-		}
-		rec := make([]*string, len(data))
-		for j := 0; j < len(data); j++ {
-			rec[j] = &data[j]
-		}
-		if err = pw.WriteString(rec); err != nil {
-			log.Println("WriteString error", err)
-		}
-
-		data2 := []interface{}{
-			ParquetType.BYTE_ARRAY("Student Name"),
-			ParquetType.INT32(20 + i*5),
-			ParquetType.INT64(i),
-			ParquetType.FLOAT(50.0 + float32(i)*0.1),
-			ParquetType.BOOLEAN(i%2 == 0),
-		}
-		if err = pw.Write(data2); err != nil {
-			log.Println("Write error", err)
-		}
-	}
-	if err = pw.WriteStop(); err != nil {
-		log.Println("WriteStop error", err)
-	}
-	log.Println("Write Finished")
-	fw.Close()
-}
-```
-
-### JSONWriter Plugin
-JSONWriter can convert JSON strings to parquet by the parquet schema, which is also a JSON string. The schema format is
-```json
-{
-    "Tag":"name=name, type=UTF8",
-    "Fields":[]
-}
-```
-
-#### Example
-```golang
-package main
-import (
-	"fmt"
-	"log"
-
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/Plugin/JSONWriter"
-)
-
-func main() {
-	var err error
-	md := `
-    {
-        "Tag":"name=parquet-go-root",
-        "Fields":[
-		    {"Tag":"name=name, type=UTF8, repetitiontype=OPTIONAL"},
-		    {"Tag":"name=age, type=INT32"},
-		    {"Tag":"name=id, type=INT64"},
-		    {"Tag":"name=weight, type=FLOAT"},
-		    {"Tag":"name=sex, type=BOOLEAN"},
-            {"Tag":"name=classes, type=LIST",
-             "Fields":[
-                  {"Tag":"name=element, type=UTF8"}
-              ]
-            },
-            {"Tag":"name=scores, type=MAP",
-             "Fields":[
-                 {"Tag":"name=key, type=UTF8"},
-                 {"Tag":"name=value, type=LIST",
-                  "Fields":[{"Tag":"name=element, type=FLOAT"}]
-                 }
-             ]
-            },
-            {"Tag":"name=friends, type=LIST",
-             "Fields":[
-                 {"Tag":"name=element",
-                  "Fields":[
-                      {"Tag":"name=name, type=UTF8"},
-                      {"Tag":"name=id, type=INT64"}
-                  ]
-                 }
-             ]
-            },
-            {"Tag":"name=teachers, repetitiontype=REPEATED",
-             "Fields":[
-                 {"Tag":"name=name, type=UTF8"},
-                 {"Tag":"name=id, type=INT64"}
-             ]
-            }
-        ]
-	}
-`
-	//write
-	fw, err := ParquetFile.NewLocalFileWriter("json.parquet")
-	if err != nil {
-		log.Println("Can't create file", err)
-		return
-	}
-	pw, err := JSONWriter.NewJSONWriter(md, fw, 1)
-	if err != nil {
-		log.Println("Can't create json writer", err)
-		return
-	}
-
-	num := 10
-	for i := 0; i < num; i++ {
-		rec := `
-            {
-                "name":"%s",
-                "age":%d,
-                "id":%d,
-                "weight":%f,
-                "sex":%t,
-                "classes":["Math", "Computer", "English"],
-                "scores":{
-                            "Math":[99.5, 98.5, 97],
-                            "Computer":[98,97.5],
-                            "English":[100]
-                         },
-                "friends":[
-                    {"name":"friend1", "id":1},
-                    {"name":"friend2", "id":2}
-                ],
-                "teachers":[
-                    {"name":"teacher1", "id":1},
-                    {"name":"teacher2", "id":2}
-                ]
-            }
-        `
-		rec = fmt.Sprintf(rec, "Student Name", 20+i%5, i, 50.0+float32(i)*0.1, i%2 == 0)
-		if err = pw.Write(rec); err != nil {
-			log.Println("Write error", err)
-		}
-	}
-	if err = pw.WriteStop(); err != nil {
-		log.Println("WriteStop error", err)
-	}
-	log.Println("Write Finished")
-	fw.Close()
-}
-
-```
 
 ## Status
 Here are a few todo items. Welcome any help!
