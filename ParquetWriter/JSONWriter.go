@@ -19,7 +19,6 @@ type JSONWriter struct {
 	SchemaHandler *SchemaHandler.SchemaHandler
 	NP            int64
 	Footer        *parquet.FileMetaData
-	RowGroups     []*Layout.RowGroup
 
 	PFile ParquetFile.ParquetFile
 
@@ -28,7 +27,7 @@ type JSONWriter struct {
 	CompressType parquet.CompressionCodec
 	Offset       int64
 
-	Objs              []string
+	Objs              []interface{}
 	ObjsSize          int64
 	ObjSize           int64
 	CheckSizeCritical int64

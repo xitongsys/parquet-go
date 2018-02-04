@@ -20,8 +20,6 @@ type CSVWriter struct {
 	SchemaHandler *SchemaHandler.SchemaHandler
 	NP            int64
 	Footer        *parquet.FileMetaData
-	RowGroups     []*Layout.RowGroup
-	Metadata      []string
 
 	PFile ParquetFile.ParquetFile
 
@@ -30,7 +28,7 @@ type CSVWriter struct {
 	CompressType parquet.CompressionCodec
 	Offset       int64
 
-	Objs              [][]interface{}
+	Objs              []interface{}
 	ObjsSize          int64
 	ObjSize           int64
 	CheckSizeCritical int64
@@ -46,7 +44,6 @@ type CSVWriter struct {
 func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error) {
 	res := new(CSVWriter)
 	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromMetadata(md)
-	res.Metadata = md
 	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M

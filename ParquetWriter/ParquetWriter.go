@@ -21,7 +21,6 @@ type ParquetWriter struct {
 	Footer        *parquet.FileMetaData
 	PFile         ParquetFile.ParquetFile
 
-	////write info/////
 	PageSize        int64
 	RowGroupSize    int64
 	CompressionType parquet.CompressionCodec

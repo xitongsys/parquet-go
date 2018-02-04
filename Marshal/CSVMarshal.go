@@ -8,13 +8,13 @@ import (
 )
 
 //Marshal function for CSV like data
-func MarshalCSV(records [][]interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
+func MarshalCSV(records []interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
 	res := make(map[string]*Layout.Table)
 	if ln := len(records); ln <= 0 {
 		return &res
 	}
 
-	for i := 0; i < len(records[0]); i++ {
+	for i := 0; i < len(records[0].([]interface{})); i++ {
 		pathStr := schemaHandler.GetRootName() + "." + schemaHandler.Infos[i].ExName
 		res[pathStr] = Layout.NewEmptyTable()
 		res[pathStr].Path = Common.StrToPath(pathStr)
@@ -25,7 +25,7 @@ func MarshalCSV(records [][]interface{}, bgn int, end int, schemaHandler *Schema
 		res[pathStr].Info = schemaHandler.Infos[i]
 
 		for j := bgn; j < end; j++ {
-			rec := records[j][i]
+			rec := records[j].([]interface{})[i]
 			res[pathStr].Values = append(res[pathStr].Values, rec)
 			res[pathStr].RepetitionLevels = append(res[pathStr].RepetitionLevels, 0)
 

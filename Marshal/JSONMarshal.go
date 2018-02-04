@@ -11,7 +11,8 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
+//ss is []string
+func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
@@ -44,7 +45,7 @@ func MarshalJSON(ss []string, bgn int, end int, schemaHandler *SchemaHandler.Sch
 
 		node := nodeBuf.GetNode()
 		var ui interface{}
-		json.Unmarshal([]byte(ss[i]), &ui)
+		json.Unmarshal([]byte(ss[i].(string)), &ui)
 		node.Val = reflect.ValueOf(ui)
 		node.PathMap = pathMap
 
