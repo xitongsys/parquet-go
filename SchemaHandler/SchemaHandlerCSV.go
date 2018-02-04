@@ -67,5 +67,6 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 	}
 	res := NewSchemaHandlerFromSchemaList(schemaList)
 	res.Infos = infos
+	res.CreateInExMap()
 	return res
 }
