@@ -70,8 +70,9 @@ func (self *CSVWriter) RenameSchema() {
 }
 
 //Write string values to parquet file
-func (self *CSVWriter) WriteString(recs []*string) error {
+func (self *CSVWriter) WriteString(recsi interface{}) error {
 	var err error
+	recs := recsi.([]*string)
 	lr := len(recs)
 	rec := make([]interface{}, lr)
 	for i := 0; i < lr; i++ {
@@ -105,8 +106,9 @@ func (self *CSVWriter) WriteString(recs []*string) error {
 }
 
 //Write parquet values to parquet file
-func (self *CSVWriter) Write(rec []interface{}) error {
+func (self *CSVWriter) Write(reci interface{}) error {
 	var err error
+	rec := reci.([]interface{})
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))

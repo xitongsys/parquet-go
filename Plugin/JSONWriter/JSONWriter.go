@@ -73,8 +73,9 @@ func (self *JSONWriter) RenameSchema() {
 }
 
 //Write parquet values to parquet file
-func (self *JSONWriter) Write(rec string) error {
+func (self *JSONWriter) Write(reci interface{}) error {
 	var err error
+	rec := reci.(string)
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
