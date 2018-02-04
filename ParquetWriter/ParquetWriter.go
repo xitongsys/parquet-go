@@ -36,6 +36,8 @@ type ParquetWriter struct {
 	NumRows     int64
 
 	DictRecs map[string]*Layout.DictRecType
+
+	MarshalFunc func(src interface{}, bgn int, end int, sh *SchemaHandler.SchemaHandler) (*map[string]*Layout.Table, error)
 }
 
 //Create a parquet handler
@@ -58,6 +60,7 @@ func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
 	_, err = res.PFile.Write([]byte("PAR1"))
+	res.MarshalFunc = Marshal.Marshal
 
 	if obj != nil {
 		if res.SchemaHandler, err = SchemaHandler.NewSchemaHandlerFromStruct(obj); err != nil {
@@ -179,7 +182,7 @@ func (self *ParquetWriter) flushObjs() error {
 				return
 			}
 
-			tableMap, err2 := Marshal.Marshal(self.Objs, b, e, self.SchemaHandler)
+			tableMap, err2 := self.MarshalFunc(self.Objs, b, e, self.SchemaHandler)
 
 			if err2 == nil {
 				for name, table := range *tableMap {
