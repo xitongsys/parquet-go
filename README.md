@@ -125,7 +125,7 @@ Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=RE
 
 ```
 
-## Read/Write
+## ParquetFile
 Read/Write a parquet file need a ParquetFile interface implemented
 ```golang
 type ParquetFile interface {
@@ -140,7 +140,7 @@ type ParquetFile interface {
 Using this interface, parquet-go can read/write parquet file on different plantforms. Currently local and HDFS interfaces are implemented.(It's not possible for S3, because it doesn't support random access.)
 
 
-
+## Read/Write
 Following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```golang
 package main
@@ -225,6 +225,52 @@ func main() {
 }
 
 ```
+
+## Schema
+There are three methods to define the schema:
+### Tag
+```golang
+type Student struct {
+	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
+	Age    int32   `parquet:"name=age, type=INT32"`
+	Id     int64   `parquet:"name=id, type=INT64"`
+	Weight float32 `parquet:"name=weight, type=FLOAT"`
+	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
+	Day    int32   `parquet:"name=day, type=DATE"`
+}
+```
+![Example](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
+
+
+### Json
+```golang
+var jsonSchema string = `{
+    "Tag":"name=parquet-go-root",
+    "Fields":[
+        {"Tag":"name=name, inname=Name, type=UTF8, encoding=PLAIN_DICTIONARY"},
+        {"Tag":"name=age, inname=Age, type=INT32"},
+        {"Tag":"name=id, inname=Id, type=INT64"},
+        {"Tag":"name=weight, inname=Weight, type=FLOAT"},
+        {"Tag":"name=sex, inname=Sex, type=BOOLEAN"},
+        {"Tag":"name=day, inname=Day, type=DATE"}
+    ]
+}
+`
+```
+![Example](https://github.com/xitongsys/parquet-go/blob/master/example/json_schema.go)
+
+### CSV metadata
+```golang
+	md := []string{
+		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=Age, type=INT32",
+		"name=Id, type=INT64",
+		"name=Weight, type=FLOAT",
+		"name=Sex, type=BOOLEAN",
+	}
+```
+![Example](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
+
 
 ## Read Columns
 If you just want to get some columns data, your can use column reader. The read function return a 3 slices([value], [RepetitionLevel], [DefinitionLevel]) of the record.  
