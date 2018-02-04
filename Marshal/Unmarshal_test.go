@@ -96,7 +96,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 		Classes: &stu02Class,
 	}
 
-	stus := make([]Student, 0)
+	stus := make([]interface{}, 0)
 	stus = append(stus, stu01, stu02)
 
 	src, _ := Marshal(stus, 0, len(stus), schemaHandler)
