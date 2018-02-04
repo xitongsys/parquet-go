@@ -105,9 +105,8 @@ func (self *CSVWriter) WriteString(recsi interface{}) error {
 }
 
 //Write parquet values to parquet file
-func (self *CSVWriter) Write(reci interface{}) error {
+func (self *CSVWriter) Write(rec interface{}) error {
 	var err error
-	rec := reci.([]interface{})
 	ln := int64(len(self.Objs))
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(reflect.ValueOf(rec))
@@ -186,7 +185,7 @@ func (self *CSVWriter) flushObjs() error {
 				doneChan <- 0
 				return
 			}
-			tableMap := Marshal.MarshalCSV(self.Objs, b, e, self.SchemaHandler)
+			tableMap, _ := Marshal.MarshalCSV(self.Objs, b, e, self.SchemaHandler)
 			for name, table := range *tableMap {
 				if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
 					lock.Lock()

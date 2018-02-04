@@ -8,10 +8,10 @@ import (
 )
 
 //Marshal function for CSV like data
-func MarshalCSV(records []interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) *map[string]*Layout.Table {
+func MarshalCSV(records []interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (*map[string]*Layout.Table, error) {
 	res := make(map[string]*Layout.Table)
 	if ln := len(records); ln <= 0 {
-		return &res
+		return &res, nil
 	}
 
 	for i := 0; i < len(records[0].([]interface{})); i++ {
@@ -36,5 +36,5 @@ func MarshalCSV(records []interface{}, bgn int, end int, schemaHandler *SchemaHa
 			}
 		}
 	}
-	return &res
+	return &res, nil
 }
