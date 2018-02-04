@@ -50,7 +50,7 @@ func main() {
 
 		data2 := []interface{}{
 			ParquetType.BYTE_ARRAY("Student Name"),
-			ParquetType.INT32(20 + i*5),
+			ParquetType.INT32(20 + i%5),
 			ParquetType.INT64(i),
 			ParquetType.FLOAT(50.0 + float32(i)*0.1),
 			ParquetType.BOOLEAN(i%2 == 0),

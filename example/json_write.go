@@ -58,7 +58,7 @@ func main() {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err := ParquetWriter.NewJSONWriter(md, fw, 1)
+	pw, err := ParquetWriter.NewJSONWriter(md, fw, 4)
 	if err != nil {
 		log.Println("Can't create json writer", err)
 		return
