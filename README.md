@@ -1,4 +1,4 @@
-# parquet-go v1.1.9
+# parquet-go v1.2
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -139,7 +139,7 @@ type ParquetFile interface {
 ```
 Using this interface, parquet-go can read/write parquet file on different plantforms. Currently local and HDFS interfaces are implemented.(It's not possible for S3, because it doesn't support random access.)
 
-## Writers
+## Writer
 Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
 * ParquetWriter is used to write predefined Golang structs.
 ![Example of ParquetWriter](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
@@ -150,7 +150,7 @@ Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
 * CSVWriter is used to write data format similar with CSV(not nested)
 ![Example of CSVWriter](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
 
-## Readers
+## Reader
 Two Readers are supported: ParquetReader, ColumnReader
 * ParquetReader is used to read predefined Golang structs
 ![Example of ParquetReader](https://github.com/xitongsys/parquet-go/blob/master/example/local_nested.go)
@@ -309,7 +309,7 @@ func main() {
 
 ## Status
 Here are a few todo items. Welcome any help!
-* Add CLI schema tool
+* Add more useful tools
 * Performance Test(Issue14)
 * Test in different platforms
 
