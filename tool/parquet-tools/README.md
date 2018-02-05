@@ -22,27 +22,33 @@ parquet_go_root struct{
 }
 ----- Json schema -----
 {
+  "Tag": "name=parquet_go_root, repetitiontype=REQUIRED",
   "Fields": [
     {
-      "Tag": "name=name, type=UTF8, repetitiontype=REQUIRED"
+      "Tag": "name=name, type=UTF8, repetitiontype=REQUIRED",
+      "Fields": null
     },
     {
-      "Tag": "name=age, type=INT32, repetitiontype=REQUIRED"
+      "Tag": "name=age, type=INT32, repetitiontype=REQUIRED",
+      "Fields": null
     },
     {
-      "Tag": "name=id, type=INT64, repetitiontype=REQUIRED"
+      "Tag": "name=id, type=INT64, repetitiontype=REQUIRED",
+      "Fields": null
     },
     {
-      "Tag": "name=weight, type=FLOAT, repetitiontype=REQUIRED"
+      "Tag": "name=weight, type=FLOAT, repetitiontype=REQUIRED",
+      "Fields": null
     },
     {
-      "Tag": "name=sex, type=BOOLEAN, repetitiontype=REQUIRED"
+      "Tag": "name=sex, type=BOOLEAN, repetitiontype=REQUIRED",
+      "Fields": null
     },
     {
-      "Tag": "name=day, type=DATE, repetitiontype=REQUIRED"
+      "Tag": "name=day, type=DATE, repetitiontype=REQUIRED",
+      "Fields": null
     }
-  ],
-  "Tag": "name=parquet_go_root, repetitiontype=REQUIRED"
+  ]
 }
 
 ```
