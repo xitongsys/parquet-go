@@ -142,21 +142,21 @@ Using this interface, parquet-go can read/write parquet file on different plantf
 ## Writer
 Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
 * ParquetWriter is used to write predefined Golang structs.
-![Example of ParquetWriter](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
+[Example of ParquetWriter](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
 
 * JSONWriter is used to write JSON strings
-![Example of JSONWriter](https://github.com/xitongsys/parquet-go/blob/master/example/json_write.go)
+[Example of JSONWriter](https://github.com/xitongsys/parquet-go/blob/master/example/json_write.go)
 
 * CSVWriter is used to write data format similar with CSV(not nested)
-![Example of CSVWriter](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
+[Example of CSVWriter](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
 
 ## Reader
 Two Readers are supported: ParquetReader, ColumnReader
 * ParquetReader is used to read predefined Golang structs
-![Example of ParquetReader](https://github.com/xitongsys/parquet-go/blob/master/example/local_nested.go)
+[Example of ParquetReader](https://github.com/xitongsys/parquet-go/blob/master/example/local_nested.go)
 
 * ColumnReader is used to read some columns. The read function return 3 slices([value], [RepetitionLevel], [DefinitionLevel]) of the records.
-![Example of ColumnReader](https://github.com/xitongsys/parquet-go/blob/master/example/column_read.go)
+[Example of ColumnReader](https://github.com/xitongsys/parquet-go/blob/master/example/column_read.go)
 
 
 
