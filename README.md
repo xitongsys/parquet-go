@@ -1,4 +1,4 @@
-# parquet-go v1.2
+# parquet-go v1.2.1
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -179,16 +179,65 @@ type Student struct {
 ### JSON
 JSON schema can be used to define some complicated schema, which can't be defined by tag.
 ```golang
-var jsonSchema string = `{
-    "Tag":"name=parquet-go-root",
-    "Fields":[
-        {"Tag":"name=name, inname=Name, type=UTF8, encoding=PLAIN_DICTIONARY"},
-        {"Tag":"name=age, inname=Age, type=INT32"},
-        {"Tag":"name=id, inname=Id, type=INT64"},
-        {"Tag":"name=weight, inname=Weight, type=FLOAT"},
-        {"Tag":"name=sex, inname=Sex, type=BOOLEAN"},
-        {"Tag":"name=day, inname=Day, type=DATE"}
-    ]
+type Student struct {
+	Name    string
+	Age     int32
+	Id      int64
+	Weight  float32
+	Sex     bool
+	Classes []string
+	Scores  map[string][]float32
+
+	Friends []struct {
+		Name string
+		Id   int64
+	}
+	Teachers []struct {
+		Name string
+		Id   int64
+	}
+}
+
+var jsonSchema string = `
+{
+  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
+  "Fields": [
+    {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+    {"Tag": "name=age, inname=Age, type=INT32, repetitiontype=REQUIRED"},
+    {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"},
+    {"Tag": "name=weight, inname=Weight, type=FLOAT, repetitiontype=REQUIRED"},
+    {"Tag": "name=sex, inname=Sex, type=BOOLEAN, repetitiontype=REQUIRED"},
+
+    {"Tag": "name=classes, inname=Classes, type=LIST, repetitiontype=REQUIRED",
+     "Fields": [{"Tag": "name=element, type=UTF8, repetitiontype=REQUIRED"}]
+    },
+    {
+      "Tag": "name=scores, inname=Scores, type=MAP, repetitiontype=REQUIRED",
+      "Fields": [
+        {"Tag": "name=key, type=UTF8, repetitiontype=REQUIRED"},
+        {"Tag": "name=value, type=LIST, repetitiontype=REQUIRED",
+         "Fields": [{"Tag": "name=element, type=FLOAT, repetitiontype=REQUIRED"}]
+        }
+      ]
+    },
+    {
+      "Tag": "name=friends, inname=Friends, type=LIST, repetitiontype=REQUIRED",
+      "Fields": [
+       {"Tag": "name=element, repetitiontype=REQUIRED",
+        "Fields": [
+         {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+         {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"}
+        ]}
+      ]
+    },
+    {
+      "Tag": "name=teachers, inname=Teachers, repetitiontype=REPEATED",
+      "Fields": [
+        {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+        {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"}
+      ]
+    }
+  ]
 }
 `
 ```

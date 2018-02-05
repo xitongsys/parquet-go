@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -281,7 +282,7 @@ func CreateSchemaTree(schemas []*parquet.SchemaElement) *SchemaTree {
 
 func (self *SchemaTree) OutputJsonSchema() string {
 	jsonStr := self.Root.OutputJsonSchema()
-	var obj interface{}
+	var obj SchemaHandler.JSONSchemaItemType
 	json.Unmarshal([]byte(jsonStr), &obj)
 	res, _ := json.MarshalIndent(&obj, "", "  ")
 	return string(res)
