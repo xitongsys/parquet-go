@@ -173,7 +173,7 @@ type Student struct {
 	Day    int32   `parquet:"name=day, type=DATE"`
 }
 ```
-![Example of tags](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
+[Example of tags](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
 
 
 ### JSON
@@ -241,7 +241,7 @@ var jsonSchema string = `
 }
 `
 ```
-![Example of JSON schema](https://github.com/xitongsys/parquet-go/blob/master/example/json_schema.go)
+[Example of JSON schema](https://github.com/xitongsys/parquet-go/blob/master/example/json_schema.go)
 
 
 ### CSV metadata
@@ -254,7 +254,7 @@ var jsonSchema string = `
 		"name=Sex, type=BOOLEAN",
 	}
 ```
-![Example of CSV metadata](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
+[Example of CSV metadata](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
 
 
 ## Parallel
@@ -353,7 +353,7 @@ func main() {
 ```
 
 ## Tool
-* ![parquet-tools](https://github.com/xitongsys/parquet-go/blob/master/tool/parquet-tools): Command line tools that aid in the inspection of Parquet files
+* [parquet-tools](https://github.com/xitongsys/parquet-go/blob/master/tool/parquet-tools): Command line tools that aid in the inspection of Parquet files
 
 
 ## Status
