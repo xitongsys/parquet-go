@@ -246,13 +246,13 @@ var jsonSchema string = `
 
 ### CSV metadata
 ```golang
-	md := []string{
-		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
-		"name=Age, type=INT32",
-		"name=Id, type=INT64",
-		"name=Weight, type=FLOAT",
-		"name=Sex, type=BOOLEAN",
-	}
+md := []string{
+	"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
+	"name=Age, type=INT32",
+	"name=Id, type=INT64",
+	"name=Weight, type=FLOAT",
+	"name=Sex, type=BOOLEAN",
+}
 ```
 [Example of CSV metadata](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
 

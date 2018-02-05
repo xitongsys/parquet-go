@@ -9,7 +9,7 @@ cd parquet-tools && go build parquet-tools
 ### Output Schema
 
 ```bash
-bash$ parquet-tools -cmd=schema -file=a.parquet
+bash$ ./parquet-tools -cmd=schema -file=a.parquet
 bash$
 ----- Go struct -----
 parquet_go_root struct{
