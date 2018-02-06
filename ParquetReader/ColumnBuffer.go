@@ -51,6 +51,7 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	rowGroups := self.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
 	if self.RowGroupIndex >= ln {
+		self.DataTableNumRows++ //very important, because DataTableNumRows is one smaller than real rows number
 		return fmt.Errorf("End of row groups")
 	}
 	self.RowGroupIndex++
@@ -109,11 +110,8 @@ func (self *ColumnBufferType) ReadPage() error {
 			self.DataTable = Layout.NewTableFromTable(page.DataTable)
 		}
 		self.DataTable.Merge(page.DataTable)
-
 		self.ChunkReadValues += numValues
-		if self.ChunkReadValues >= self.ChunkHeader.MetaData.NumValues {
-			numRows++
-		}
+
 		self.DataTableNumRows += numRows
 	} else {
 		if err := self.NextRowGroup(); err != nil {
@@ -132,6 +130,7 @@ func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 		err = self.ReadPage()
 
 	}
+
 	if num > self.DataTableNumRows {
 		num = self.DataTableNumRows
 	}
