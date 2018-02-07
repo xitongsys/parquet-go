@@ -1,5 +1,6 @@
 # parquet-tools
 parquet-tools is a command line tool that aid in the inspection of parquet files.
+More functions will be added.
 
 ## Build
 cd parquet-tools && go build parquet-tools
