@@ -3,6 +3,7 @@ package Marshal
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
@@ -121,6 +122,7 @@ func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *SchemaHandle
 					for key, _ := range node.PathMap.Children {
 						_, ok := keysMap[key]
 						if ok && node.Val.MapIndex(reflect.ValueOf(key)).Elem().IsValid() {
+
 							newNode := nodeBuf.GetNode()
 							newNode.PathMap = node.PathMap.Children[key]
 							newNode.Val = node.Val.MapIndex(reflect.ValueOf(key)).Elem()
@@ -136,8 +138,10 @@ func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *SchemaHandle
 
 						} else {
 							newPathStr := node.PathMap.Children[key].Path
-							for key, table := range res {
-								if len(key) >= len(newPathStr) && key[:len(newPathStr)] == newPathStr {
+							for path, table := range res {
+								if strings.HasPrefix(path, newPathStr) &&
+									(len(path) == len(newPathStr) || path[len(newPathStr)] == '.') {
+
 									table.Values = append(table.Values, nil)
 									table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 									table.RepetitionLevels = append(table.RepetitionLevels, node.RL)

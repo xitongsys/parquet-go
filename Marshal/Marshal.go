@@ -2,6 +2,7 @@ package Marshal
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
@@ -230,7 +231,8 @@ func Marshal(srcInterface []interface{}, bgn int, end int, schemaHandler *Schema
 				numChildren := schemaHandler.SchemaElements[index].GetNumChildren()
 				if numChildren > int32(0) {
 					for key, table := range res {
-						if len(key) >= len(node.PathMap.Path) && key[:len(node.PathMap.Path)] == node.PathMap.Path {
+						if strings.HasPrefix(key, path) &&
+							(len(key) == len(path) || key[len(path)] == '.') {
 							table.Values = append(table.Values, nil)
 							table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 							table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
