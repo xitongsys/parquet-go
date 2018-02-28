@@ -150,10 +150,10 @@ func (self *Node) OutputJsonSchema() string {
 			scale, precision := self.SE.GetScale(), self.SE.GetPrecision()
 			if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 				length := self.SE.GetTypeLength()
-				tagStr = "\"name=%s, type=%s, basetype=%s, scale=%d, precision=%s, length=%d, repetitiontype=%s\""
+				tagStr = "\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\""
 				res += fmt.Sprintf(tagStr, name, cTStr, pTStr, scale, precision, length, rTStr) + "}"
 			} else {
-				tagStr = "\"name=%s, type=%s, basetype=%s, scale=%d, precision=%s, repetitiontype\""
+				tagStr = "\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, repetitiontype\""
 				res += fmt.Sprintf(tagStr, name, cTStr, pTStr, scale, precision, rTStr) + "}"
 			}
 
