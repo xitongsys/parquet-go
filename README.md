@@ -137,7 +137,7 @@ type ParquetFile interface {
 	Create(name string) (ParquetFile, error)
 }
 ```
-Using this interface, parquet-go can read/write parquet file on different plantforms. Currently local and HDFS interfaces are implemented.(It's not possible for S3, because it doesn't support random access.)
+Using this interface, parquet-go can read/write parquet file on different platforms. Currently local and HDFS interfaces are implemented.(It's not possible for S3, because it doesn't support random access.)
 
 ## Writer
 Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
