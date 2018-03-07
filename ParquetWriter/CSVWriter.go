@@ -1,9 +1,10 @@
 package ParquetWriter
 
 import (
+	"io"
+
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
-	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -14,7 +15,7 @@ type CSVWriter struct {
 }
 
 //Create CSV writer
-func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error) {
+func NewCSVWriter(md []string, pfile io.Writer, np int64) (*CSVWriter, error) {
 	res := new(CSVWriter)
 	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromMetadata(md)
 	res.PFile = pfile
