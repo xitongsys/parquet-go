@@ -46,7 +46,12 @@ func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *SchemaHandle
 
 		node := nodeBuf.GetNode()
 		var ui interface{}
-		json.Unmarshal([]byte(ss[i].(string)), &ui)
+
+		// `useNumber`causes the Decoder to unmarshal a number into an interface{} as a Number instead of as a float64.
+		d := json.NewDecoder(strings.NewReader(ss[i].(string)))
+		d.UseNumber()
+		d.Decode(&ui)
+
 		node.Val = reflect.ValueOf(ui)
 		node.PathMap = pathMap
 
