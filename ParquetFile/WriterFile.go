@@ -8,8 +8,8 @@ type WriterFile struct {
 	Writer io.Writer
 }
 
-func NewWriterFile(writer io.Writer) (ParquetFile, error) {
-	return &WriterFile{Writer: writer}, nil
+func NewWriterFile(writer io.Writer) ParquetFile {
+	return &WriterFile{Writer: writer}
 }
 
 func (self *WriterFile) Create(name string) (ParquetFile, error) {

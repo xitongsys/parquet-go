@@ -22,11 +22,7 @@ type Student struct {
 func main() {
 	var err error
 	buf := new(bytes.Buffer)
-	fw, err := ParquetFile.NewWriterFile(buf)
-	if err != nil {
-		log.Println("Can't create local file", err)
-		return
-	}
+	fw := ParquetFile.NewWriterFile(buf)
 
 	//write
 	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
