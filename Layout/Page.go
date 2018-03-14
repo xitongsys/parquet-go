@@ -2,6 +2,7 @@ package Layout
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -247,7 +248,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
-	pageHeaderBuf, _ := ts.Write(page.Header)
+	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
 
 	var res []byte
 	res = append(res, pageHeaderBuf...)
@@ -342,7 +343,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
-	pageHeaderBuf, _ := ts.Write(page.Header)
+	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
 
 	var res []byte
 	res = append(res, pageHeaderBuf...)
