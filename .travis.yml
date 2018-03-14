@@ -11,6 +11,7 @@ install:
   - go get github.com/golang/snappy
   - go get git.apache.org/thrift.git/lib/go/thrift
   - go get github.com/colinmarc/hdfs
+  - go get github.com/spf13/afero
 
 script:
   - make test
