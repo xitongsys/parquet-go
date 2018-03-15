@@ -19,8 +19,8 @@ func SetInMemFileFs(fs *afero.Fs) {
 
 // GetMemFileFs - returns the current memory file-system
 // being used by ParquetFile
-func GetMemFileFs() *afero.Fs {
-	return &memFs
+func GetMemFileFs() afero.Fs {
+	return memFs
 }
 
 // OnCloseFunc function type, handles what to do
