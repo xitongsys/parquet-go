@@ -3,6 +3,7 @@ package ParquetWriter
 import (
 	"context"
 	"encoding/binary"
+	"io"
 	"reflect"
 	"sync"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
-	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -20,7 +20,7 @@ type ParquetWriter struct {
 	SchemaHandler *SchemaHandler.SchemaHandler
 	NP            int64 //parallel number
 	Footer        *parquet.FileMetaData
-	PFile         ParquetFile.ParquetFile
+	PFile         io.Writer
 
 	PageSize        int64
 	RowGroupSize    int64
@@ -42,7 +42,7 @@ type ParquetWriter struct {
 }
 
 //Create a parquet handler
-func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
+func NewParquetWriter(pFile io.Writer, obj interface{}, np int64) (*ParquetWriter, error) {
 	var err error
 
 	res := new(ParquetWriter)
