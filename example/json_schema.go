@@ -17,6 +17,7 @@ type Student struct {
 	Sex     bool
 	Classes []string
 	Scores  map[string][]float32
+	Ignored string
 
 	Friends []struct {
 		Name string

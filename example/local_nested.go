@@ -20,6 +20,7 @@ type Class struct {
 	Name     string   `parquet:"name=name, type=UTF8"`
 	Id       *int32   `parquet:"name=id, type=INT32"`
 	Required []string `parquet:"name=required, type=LIST, valuetype=UTF8"`
+	Ignored  string
 }
 
 func (c Class) String() string {

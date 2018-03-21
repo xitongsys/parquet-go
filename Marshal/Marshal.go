@@ -68,17 +68,24 @@ func (p *ParquetPtr) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 type ParquetStruct struct{}
 
 func (p *ParquetStruct) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
+	var ok bool
+
 	numField := node.Val.Type().NumField()
-	nodes := make([]*Node, numField)
+	nodes := make([]*Node, 0, numField)
 	for j := 0; j < numField; j++ {
 		tf := node.Val.Type().Field(j)
 		name := tf.Name
 		newNode := nodeBuf.GetNode()
-		newNode.PathMap = node.PathMap.Children[name]
+
+		//some ignored item
+		if newNode.PathMap, ok = node.PathMap.Children[name]; !ok {
+			continue
+		}
+
 		newNode.Val = node.Val.Field(j)
 		newNode.RL = node.RL
 		newNode.DL = node.DL
-		nodes[j] = newNode
+		nodes = append(nodes, newNode)
 	}
 	return nodes
 }
@@ -202,11 +209,6 @@ func Marshal(srcInterface []interface{}, bgn int, end int, schemaHandler *Schema
 			ln := len(stack)
 			node := stack[ln-1]
 			stack = stack[:ln-1]
-
-			//no schema, will be ingored
-			if _, ok := schemaHandler.MapIndex[node.PathMap.Path]; !ok {
-				continue
-			}
 
 			tk := node.Val.Type().Kind()
 			var m Marshaler

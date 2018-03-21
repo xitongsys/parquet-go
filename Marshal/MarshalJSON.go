@@ -67,7 +67,7 @@ func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *SchemaHandle
 			pathStr := node.PathMap.Path
 
 			schemaIndex, ok := schemaHandler.MapIndex[pathStr]
-			//no schema, will be ignored
+			//no schema item will be ignored
 			if !ok {
 				continue
 			}

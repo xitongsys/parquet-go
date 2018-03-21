@@ -200,6 +200,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 		item = stack[ln-1]
 		stack = stack[:ln-1]
 		var newInfo *Common.Tag
+
 		if item.GoType.Kind() == reflect.Struct {
 			schema := parquet.NewSchemaElement()
 			schema.Name = item.Info.InName
@@ -214,11 +215,15 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 
 			for i := int(numField - 1); i >= 0; i-- {
 				f := item.GoType.Field(i)
-				newItem := NewItem()
 				tagStr := f.Tag.Get("parquet")
+
+				//ignore item without parquet tag
 				if len(tagStr) <= 0 {
+					numField--
 					continue
 				}
+
+				newItem := NewItem()
 				newItem.Info = Common.StringToTag(tagStr)
 				newItem.Info.InName = f.Name
 				newItem.GoType = f.Type
@@ -327,6 +332,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			infos = append(infos, newInfo)
 		}
 	}
+
 	res := NewSchemaHandlerFromSchemaList(schemaElements)
 	res.Infos = infos
 	res.CreateInExMap()

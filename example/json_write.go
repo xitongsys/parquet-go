@@ -73,6 +73,7 @@ func main() {
                 "id":%d,
                 "weight":%f,
                 "sex":%t,
+                "ignored":"ignored",
                 "classes":["Math", "Computer", "English"],
                 "scores":{
                             "Math":[99.5, 98.5, 97],
