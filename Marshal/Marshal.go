@@ -203,6 +203,11 @@ func Marshal(srcInterface []interface{}, bgn int, end int, schemaHandler *Schema
 			node := stack[ln-1]
 			stack = stack[:ln-1]
 
+			//no schema, will be ingored
+			if _, ok := schemaHandler.MapIndex[node.PathMap.Path]; !ok {
+				continue
+			}
+
 			tk := node.Val.Type().Kind()
 			var m Marshaler
 

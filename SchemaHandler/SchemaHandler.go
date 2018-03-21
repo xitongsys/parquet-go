@@ -215,7 +215,11 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			for i := int(numField - 1); i >= 0; i-- {
 				f := item.GoType.Field(i)
 				newItem := NewItem()
-				newItem.Info = Common.StringToTag(f.Tag.Get("parquet"))
+				tagStr := f.Tag.Get("parquet")
+				if len(tagStr) <= 0 {
+					continue
+				}
+				newItem.Info = Common.StringToTag(tagStr)
 				newItem.Info.InName = f.Name
 				newItem.GoType = f.Type
 				if f.Type.Kind() == reflect.Ptr {

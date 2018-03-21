@@ -65,7 +65,13 @@ func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *SchemaHandle
 			tk := node.Val.Type().Kind()
 
 			pathStr := node.PathMap.Path
-			schemaIndex := schemaHandler.MapIndex[pathStr]
+
+			schemaIndex, ok := schemaHandler.MapIndex[pathStr]
+			//no schema, will be ignored
+			if !ok {
+				continue
+			}
+
 			info := schemaHandler.Infos[schemaIndex]
 
 			if tk == reflect.Map {
