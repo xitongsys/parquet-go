@@ -12,6 +12,7 @@ import (
 func main() {
 	cmd := flag.String("cmd", "schema", "command")
 	fileName := flag.String("file", "", "file name")
+	withTags := flag.Bool("tag", false, "show struct tags")
 
 	flag.Parse()
 
@@ -30,7 +31,7 @@ func main() {
 	if *cmd == "schema" {
 		tree := SchemaTool.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
 		fmt.Println("----- Go struct -----")
-		fmt.Printf("%s\n", tree.OutputStruct())
+		fmt.Printf("%s\n", tree.OutputStruct(*withTags))
 		fmt.Println("----- Json schema -----")
 		fmt.Printf("%s\n", tree.OutputJsonSchema())
 	} else {

@@ -197,7 +197,7 @@ func (self *Node) OutputJsonSchema() string {
 	return res
 }
 
-func(cNode *Node) getStructTags() string {
+func (cNode *Node) getStructTags() string {
 	rTStr := "REQUIRED"
 	if cNode.SE.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL {
 		rTStr = "OPTIONAL"
@@ -227,7 +227,7 @@ func(cNode *Node) getStructTags() string {
 	return tags
 }
 
-func (self *Node) OutputStruct(withName bool) string {
+func (self *Node) OutputStruct(withName bool, withTags bool) string {
 	name := self.SE.GetName()
 
 	res := ""
@@ -249,7 +249,11 @@ func (self *Node) OutputStruct(withName bool) string {
 	if pT == nil && cT == nil {
 		res += rTStr + "struct{\n"
 		for _, cNode := range self.Children {
-			res += cNode.OutputStruct(true) + " " + cNode.getStructTags()  + "\n"
+			if withTags {
+				res += cNode.OutputStruct(true, withTags) + " " + cNode.getStructTags() + "\n"
+			} else {
+				res += cNode.OutputStruct(true, withTags) + "\n"
+			}
 		}
 		res += "}"
 
@@ -258,11 +262,11 @@ func (self *Node) OutputStruct(withName bool) string {
 		keyPT, keyCT := keyNode.SE.Type, keyNode.SE.ConvertedType
 		keyGoTypeStr := ParquetTypeToGoTypeStr(keyPT, keyCT)
 		valNode := self.Children[0].Children[1]
-		res += rTStr + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct(false)
+		res += rTStr + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct(false, withTags)
 
 	} else if cT != nil && *cT == parquet.ConvertedType_LIST {
 		cNode := self.Children[0].Children[0]
-		res += rTStr + "[]" + cNode.OutputStruct(false)
+		res += rTStr + "[]" + cNode.OutputStruct(false, withTags)
 
 	} else {
 		goTypeStr := ParquetTypeToGoTypeStr(pT, cT)
@@ -320,6 +324,6 @@ func (self *SchemaTree) OutputJsonSchema() string {
 
 }
 
-func (self *SchemaTree) OutputStruct() string {
-	return self.Root.OutputStruct(true)
+func (self *SchemaTree) OutputStruct(withTags bool) string {
+	return self.Root.OutputStruct(true, withTags)
 }

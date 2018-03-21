@@ -5,12 +5,20 @@ More functions will be added.
 ## Build
 cd parquet-tools && go build parquet-tools
 
+## Description
+### -cmd
+schema: show schema of the parquet file; 
+### -file
+parquet file name;
+### -tag
+print the go struct tags; default is false;
+
 ## Example
 
 ### Output Schema
 
 ```bash
-bash$ ./parquet-tools -cmd=schema -file=a.parquet
+bash$ ./parquet-tools -cmd=schema -file=a.parquet -tag=false
 bash$
 ----- Go struct -----
 parquet_go_root struct{
