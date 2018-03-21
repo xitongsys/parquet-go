@@ -17,7 +17,7 @@ type Student struct {
 	Weight  float32 `parquet:"name=weight, type=FLOAT"`
 	Sex     bool    `parquet:"name=sex, type=BOOLEAN"`
 	Day     int32   `parquet:"name=day, type=DATE"`
-	Ignored int32
+	Ignored int32   //without parquet tag and won't write
 }
 
 func main() {

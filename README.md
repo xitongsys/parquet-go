@@ -1,4 +1,4 @@
-# parquet-go v1.2.2
+# parquet-go v1.2.4
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -161,7 +161,8 @@ Two Readers are supported: ParquetReader, ColumnReader
 
 
 ## Schema
-There are three methods to define the schema:
+There are three methods to define the schema: go struct tags, Json, CSV metadata. Only items in schema will be written and others will be ignored.
+
 ### Tag
 ```golang
 type Student struct {
@@ -282,12 +283,13 @@ import (
 )
 
 type Student struct {
-	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
-	Age    int32   `parquet:"name=age, type=INT32"`
-	Id     int64   `parquet:"name=id, type=INT64"`
-	Weight float32 `parquet:"name=weight, type=FLOAT"`
-	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
-	Day    int32   `parquet:"name=day, type=DATE"`
+	Name    string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
+	Age     int32   `parquet:"name=age, type=INT32"`
+	Id      int64   `parquet:"name=id, type=INT64"`
+	Weight  float32 `parquet:"name=weight, type=FLOAT"`
+	Sex     bool    `parquet:"name=sex, type=BOOLEAN"`
+	Day     int32   `parquet:"name=day, type=DATE"`
+	Ignored int32   //without parquet tag and won't write
 }
 
 func main() {
@@ -297,12 +299,14 @@ func main() {
 		log.Println("Can't create local file", err)
 		return
 	}
+
 	//write
 	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
+
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
@@ -346,9 +350,11 @@ func main() {
 		}
 		log.Println(stus)
 	}
+
 	pr.ReadStop()
 	fr.Close()
 }
+
 
 ```
 
