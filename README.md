@@ -9,8 +9,12 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 * High performance
 
 ## Required
-* git.apache.org/thrift.git/lib/go/thrift
-* github.com/golang/snappy
+```sh
+go get github.com/colinmarc/hdfs
+go get github.com/spf13/afero
+go get git.apache.org/thrift.git/lib/go/thrift
+go get github.com/golang/snappy
+```
 
 ## Install
 Add the parquet-go library to your $GOPATH/src:
