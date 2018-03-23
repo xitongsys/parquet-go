@@ -28,13 +28,16 @@ func main() {
 		return
 	}
 
-	if *cmd == "schema" {
+	switch *cmd {
+	case "schema":
 		tree := SchemaTool.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
 		fmt.Println("----- Go struct -----")
 		fmt.Printf("%s\n", tree.OutputStruct(*withTags))
 		fmt.Println("----- Json schema -----")
 		fmt.Printf("%s\n", tree.OutputJsonSchema())
-	} else {
+	case "rowcount":
+		fmt.Println(pr.GetNumRows())
+	default:
 		fmt.Println("Unknown command")
 	}
 
