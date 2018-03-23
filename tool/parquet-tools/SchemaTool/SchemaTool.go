@@ -232,7 +232,7 @@ func (self *Node) OutputStruct(withName bool, withTags bool) string {
 
 	res := ""
 	if withName {
-		res += name
+		res += strings.Title(name)
 	}
 
 	pT, cT := self.SE.Type, self.SE.ConvertedType
