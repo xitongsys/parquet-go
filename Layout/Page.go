@@ -489,7 +489,10 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 	} else {
 		return 0, fmt.Errorf("Unsupported page type")
 	}
+}
 
+func (self *Page) GetValueFromRawData() error {
+	return nil
 }
 
 //Read page header
