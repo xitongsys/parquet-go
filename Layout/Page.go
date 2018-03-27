@@ -355,10 +355,8 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	return res
 }
 
-/*
-
 //Get RepetitionLevels and Definitions from RawData
-func (self *Page) GetRLDLFromRawData() error {
+func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler) (int64, error) {
 	var err error
 	bytesReader := bytes.NewReader(self.RawData)
 	buf := make([]byte, 0)
@@ -367,7 +365,7 @@ func (self *Page) GetRLDLFromRawData() error {
 		dll := self.Header.DataPageHeaderV2.GetDefinitionLevelsByteLength()
 		rll := self.Header.DataPageHeaderV2.GetRepetitionLevelsByteLength()
 		repetitionLevelsBuf, definitionLevelsBuf := make([]byte, rll), make([]byte, dll)
-		dataBuf = make([]byte, len(self.RawData)-rll-dll)
+		dataBuf := make([]byte, len(self.RawData)-int(rll)-int(dll))
 		bytesReader.Read(repetitionLevelsBuf)
 		bytesReader.Read(definitionLevelsBuf)
 		bytesReader.Read(dataBuf)
@@ -391,30 +389,108 @@ func (self *Page) GetRLDLFromRawData() error {
 		switch self.CompressType {
 		case parquet.CompressionCodec_GZIP:
 			if buf, err = Compress.UncompressGzip(self.RawData); err != nil {
-				return err
+				return 0, err
 			}
 		case parquet.CompressionCodec_SNAPPY:
 			if buf, err = Compress.UncompressSnappy(self.RawData); err != nil {
-				return err
+				return 0, err
 			}
 		case parquet.CompressionCodec_UNCOMPRESSED:
 			buf = self.RawData
 		default:
-			return fmt.Errorf("Unsupported compress method")
+			return 0, fmt.Errorf("Unsupported compress method")
 		}
 	}
 
 	bytesReader = bytes.NewReader(buf)
-	if self.Header.GetType() == parquet.PageType_DATA_PAGE_V2 {
+	if self.Header.GetType() == parquet.PageType_DATA_PAGE_V2 || self.Header.GetType() == parquet.PageType_DATA_PAGE {
+		var numValues uint64
+		if self.Header.GetType() == parquet.PageType_DATA_PAGE {
+			numValues = uint64(self.Header.DataPageHeader.GetNumValues())
+		} else {
+			numValues = uint64(self.Header.DataPageHeaderV2.GetNumValues())
+		}
 
-	} else if self.Header.GetType() == parquet.PageType_DATA_PAGE {
+		maxDefinitionLevel, _ := schemaHandler.MaxDefinitionLevel(self.Path)
+		maxRepetitionLevel, _ := schemaHandler.MaxRepetitionLevel(self.Path)
+
+		var repetitionLevels, definitionLevels []interface{}
+		if maxRepetitionLevel > 0 {
+			bitWidth := Common.BitNum(uint64(maxRepetitionLevel))
+			if repetitionLevels, err = ReadDataPageValues(bytesReader,
+				parquet.Encoding_RLE,
+				parquet.Type_INT64,
+				-1,
+				numValues,
+				bitWidth); err != nil {
+				return 0, err
+			}
+		} else {
+			repetitionLevels = make([]interface{}, numValues)
+			for i := 0; i < len(repetitionLevels); i++ {
+				repetitionLevels[i] = ParquetType.INT64(0)
+			}
+		}
+		if len(repetitionLevels) > int(numValues) {
+			repetitionLevels = repetitionLevels[:numValues]
+		}
+
+		if maxDefinitionLevel > 0 {
+			bitWidth := Common.BitNum(uint64(maxDefinitionLevel))
+
+			definitionLevels, err = ReadDataPageValues(bytesReader,
+				parquet.Encoding_RLE,
+				parquet.Type_INT64,
+				-1,
+				numValues,
+				bitWidth)
+			if err != nil {
+				return 0, err
+			}
+
+		} else {
+			definitionLevels = make([]interface{}, numValues)
+			for i := 0; i < len(definitionLevels); i++ {
+				definitionLevels[i] = ParquetType.INT64(0)
+			}
+		}
+		if len(definitionLevels) > int(numValues) {
+			definitionLevels = definitionLevels[:numValues]
+		}
+
+		table := new(Table)
+		table.Path = self.Path
+		name := strings.Join(self.Path, ".")
+		table.RepetitionType = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
+		table.MaxRepetitionLevel = maxRepetitionLevel
+		table.MaxDefinitionLevel = maxDefinitionLevel
+		table.Values = make([]interface{}, len(definitionLevels))
+		table.RepetitionLevels = make([]int32, len(definitionLevels))
+		table.DefinitionLevels = make([]int32, len(definitionLevels))
+
+		numRows := int64(0)
+		for i := 0; i < len(definitionLevels); i++ {
+			dl, _ := definitionLevels[i].(ParquetType.INT64)
+			rl, _ := repetitionLevels[i].(ParquetType.INT64)
+			table.RepetitionLevels[i] = int32(rl)
+			table.DefinitionLevels[i] = int32(dl)
+			if table.RepetitionLevels[i] == 0 {
+				numRows++
+			}
+		}
+		self.DataTable = table
+		self.RawData = self.RawData[len(self.RawData)-bytesReader.Len():]
+
+		return numRows, nil
+
 	} else if self.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
+		return 0, nil
+
 	} else {
-		return fmt.Errorf("Unsupported page type")
+		return 0, fmt.Errorf("Unsupported page type")
 	}
 
 }
-*/
 
 //Read page header
 func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeader, error) {
