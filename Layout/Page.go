@@ -626,113 +626,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 	path = append(path, colMetaData.GetPathInSchema()...)
 	name := strings.Join(path, ".")
 
-	if pageHeader.GetType() == parquet.PageType_DATA_PAGE {
-		page = NewDataPage()
-		page.Header = pageHeader
-		maxDefinitionLevel, _ := schemaHandler.MaxDefinitionLevel(path)
-		maxRepetitionLevel, _ := schemaHandler.MaxRepetitionLevel(path)
-
-		var repetitionLevels []interface{}
-		if maxRepetitionLevel > 0 {
-			bitWidth := Common.BitNum(uint64(maxRepetitionLevel))
-
-			repetitionLevels, err = ReadDataPageValues(bytesReader,
-				pageHeader.DataPageHeader.GetRepetitionLevelEncoding(),
-				parquet.Type_INT64,
-				-1,
-				uint64(pageHeader.DataPageHeader.GetNumValues()),
-				bitWidth)
-			if err != nil {
-				return nil, 0, 0, err
-			}
-
-		} else {
-			repetitionLevels = make([]interface{}, pageHeader.DataPageHeader.GetNumValues())
-			for i := 0; i < len(repetitionLevels); i++ {
-				repetitionLevels[i] = ParquetType.INT64(0)
-			}
-		}
-		if len(repetitionLevels) > int(pageHeader.DataPageHeader.GetNumValues()) {
-			repetitionLevels = repetitionLevels[:pageHeader.DataPageHeader.GetNumValues()]
-		}
-
-		var definitionLevels []interface{}
-		if maxDefinitionLevel > 0 {
-			bitWidth := Common.BitNum(uint64(maxDefinitionLevel))
-
-			definitionLevels, err = ReadDataPageValues(bytesReader,
-				pageHeader.DataPageHeader.GetDefinitionLevelEncoding(),
-				parquet.Type_INT64,
-				-1,
-				uint64(pageHeader.DataPageHeader.GetNumValues()),
-				bitWidth)
-			if err != nil {
-				return nil, 0, 0, err
-			}
-
-		} else {
-			definitionLevels = make([]interface{}, pageHeader.DataPageHeader.GetNumValues())
-			for i := 0; i < len(definitionLevels); i++ {
-				definitionLevels[i] = ParquetType.INT64(0)
-			}
-		}
-		if len(definitionLevels) > int(pageHeader.DataPageHeader.GetNumValues()) {
-			definitionLevels = definitionLevels[:pageHeader.DataPageHeader.GetNumValues()]
-		}
-
-		var numNulls uint64 = 0
-		for i := 0; i < len(definitionLevels); i++ {
-			if int32(definitionLevels[i].(ParquetType.INT64)) != maxDefinitionLevel {
-				numNulls++
-			}
-		}
-
-		var values []interface{}
-		var ct parquet.ConvertedType = -1
-		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
-			ct = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetConvertedType()
-		}
-		if valuesNum := uint64(len(definitionLevels)) - numNulls; valuesNum > 0 {
-			values, err = ReadDataPageValues(bytesReader,
-				pageHeader.DataPageHeader.GetEncoding(),
-				colMetaData.GetType(),
-				ct,
-				valuesNum,
-				uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
-			if err != nil {
-				return nil, 0, 0, err
-			}
-		}
-
-		table := new(Table)
-		table.Path = path
-		table.RepetitionType = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
-		table.MaxRepetitionLevel = maxRepetitionLevel
-		table.MaxDefinitionLevel = maxDefinitionLevel
-		table.Values = make([]interface{}, len(definitionLevels))
-		table.RepetitionLevels = make([]int32, len(definitionLevels))
-		table.DefinitionLevels = make([]int32, len(definitionLevels))
-
-		j := 0
-		numRows := int64(0)
-		for i := 0; i < len(definitionLevels); i++ {
-			dl, _ := definitionLevels[i].(ParquetType.INT64)
-			rl, _ := repetitionLevels[i].(ParquetType.INT64)
-			table.RepetitionLevels[i] = int32(rl)
-			table.DefinitionLevels[i] = int32(dl)
-			if table.DefinitionLevels[i] == maxDefinitionLevel {
-				table.Values[i] = values[j]
-				j++
-			}
-			if table.RepetitionLevels[i] == 0 {
-				numRows++
-			}
-		}
-		page.DataTable = table
-
-		return page, int64(len(definitionLevels)), numRows, err
-
-	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
+	if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		page = NewDictPage()
 		page.Header = pageHeader
 		table := new(Table)
@@ -751,11 +645,24 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 	} else if pageHeader.GetType() == parquet.PageType_INDEX_PAGE {
 		return nil, 0, 0, fmt.Errorf("Unsupported page type: INDEX_PAGE")
 
-	} else if pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
+	} else if pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 ||
+		pageHeader.GetType() == parquet.PageType_DATA_PAGE {
+
 		page = NewDataPage()
 		page.Header = pageHeader
 		maxDefinitionLevel, _ := schemaHandler.MaxDefinitionLevel(path)
 		maxRepetitionLevel, _ := schemaHandler.MaxRepetitionLevel(path)
+
+		var numValues uint64
+		var encodingType parquet.Encoding
+
+		if pageHeader.GetType() == parquet.PageType_DATA_PAGE {
+			numValues = uint64(pageHeader.DataPageHeader.GetNumValues())
+			encodingType = pageHeader.DataPageHeader.GetEncoding()
+		} else {
+			numValues = uint64(pageHeader.DataPageHeaderV2.GetNumValues())
+			encodingType = pageHeader.DataPageHeaderV2.GetEncoding()
+		}
 
 		var repetitionLevels []interface{}
 		if maxRepetitionLevel > 0 {
@@ -765,20 +672,20 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 				parquet.Encoding_RLE,
 				parquet.Type_INT64,
 				-1,
-				uint64(pageHeader.DataPageHeaderV2.GetNumValues()),
+				numValues,
 				bitWidth)
 			if err != nil {
 				return nil, 0, 0, err
 			}
 
 		} else {
-			repetitionLevels = make([]interface{}, pageHeader.DataPageHeaderV2.GetNumValues())
+			repetitionLevels = make([]interface{}, numValues)
 			for i := 0; i < len(repetitionLevels); i++ {
 				repetitionLevels[i] = ParquetType.INT64(0)
 			}
 		}
-		if len(repetitionLevels) > int(pageHeader.DataPageHeaderV2.GetNumValues()) {
-			repetitionLevels = repetitionLevels[:pageHeader.DataPageHeaderV2.GetNumValues()]
+		if len(repetitionLevels) > int(numValues) {
+			repetitionLevels = repetitionLevels[:numValues]
 		}
 
 		var definitionLevels []interface{}
@@ -789,20 +696,20 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 				parquet.Encoding_RLE,
 				parquet.Type_INT64,
 				-1,
-				uint64(pageHeader.DataPageHeaderV2.GetNumValues()),
+				numValues,
 				bitWidth)
 			if err != nil {
 				return nil, 0, 0, err
 			}
 
 		} else {
-			definitionLevels = make([]interface{}, pageHeader.DataPageHeaderV2.GetNumValues())
+			definitionLevels = make([]interface{}, numValues)
 			for i := 0; i < len(definitionLevels); i++ {
 				definitionLevels[i] = ParquetType.INT64(0)
 			}
 		}
-		if len(definitionLevels) > int(pageHeader.DataPageHeaderV2.GetNumValues()) {
-			definitionLevels = definitionLevels[:pageHeader.DataPageHeaderV2.GetNumValues()]
+		if len(definitionLevels) > int(numValues) {
+			definitionLevels = definitionLevels[:numValues]
 		}
 
 		var numNulls uint64 = 0
@@ -818,7 +725,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			ct = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetConvertedType()
 		}
 		values, err = ReadDataPageValues(bytesReader,
-			pageHeader.DataPageHeaderV2.GetEncoding(),
+			encodingType,
 			colMetaData.GetType(),
 			ct,
 			uint64(len(definitionLevels))-numNulls,
