@@ -355,6 +355,67 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	return res
 }
 
+/*
+
+//Get RepetitionLevels and Definitions from RawData
+func (self *Page) GetRLDLFromRawData() error {
+	var err error
+	bytesReader := bytes.NewReader(self.RawData)
+	buf := make([]byte, 0)
+
+	if self.Header.GetType() == parquet.PageType_DATA_PAGE_V2 {
+		dll := self.Header.DataPageHeaderV2.GetDefinitionLevelsByteLength()
+		rll := self.Header.DataPageHeaderV2.GetRepetitionLevelsByteLength()
+		repetitionLevelsBuf, definitionLevelsBuf := make([]byte, rll), make([]byte, dll)
+		dataBuf = make([]byte, len(self.RawData)-rll-dll)
+		bytesReader.Read(repetitionLevelsBuf)
+		bytesReader.Read(definitionLevelsBuf)
+		bytesReader.Read(dataBuf)
+
+		tmpBuf := make([]byte, 0)
+		if rll > 0 {
+			tmpBuf = ParquetEncoding.WritePlainINT32([]interface{}{ParquetType.INT32(rll)})
+			tmpBuf = append(tmpBuf, repetitionLevelsBuf...)
+		}
+		buf = append(buf, tmpBuf...)
+
+		if dll > 0 {
+			tmpBuf = ParquetEncoding.WritePlainINT32([]interface{}{ParquetType.INT32(dll)})
+			tmpBuf = append(tmpBuf, definitionLevelsBuf...)
+		}
+		buf = append(buf, tmpBuf...)
+
+		buf = append(buf, dataBuf...)
+
+	} else {
+		switch self.CompressType {
+		case parquet.CompressionCodec_GZIP:
+			if buf, err = Compress.UncompressGzip(self.RawData); err != nil {
+				return err
+			}
+		case parquet.CompressionCodec_SNAPPY:
+			if buf, err = Compress.UncompressSnappy(self.RawData); err != nil {
+				return err
+			}
+		case parquet.CompressionCodec_UNCOMPRESSED:
+			buf = self.RawData
+		default:
+			return fmt.Errorf("Unsupported compress method")
+		}
+	}
+
+	bytesReader = bytes.NewReader(buf)
+	if self.Header.GetType() == parquet.PageType_DATA_PAGE_V2 {
+
+	} else if self.Header.GetType() == parquet.PageType_DATA_PAGE {
+	} else if self.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
+	} else {
+		return fmt.Errorf("Unsupported page type")
+	}
+
+}
+*/
+
 //Read page header
 func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeader, error) {
 	protocol := thrift.NewTCompactProtocol(thriftReader)
@@ -439,6 +500,41 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 	} else {
 		return res, fmt.Errorf("Unknown Encoding method")
 	}
+}
+
+//Read page RawData
+func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, error) {
+	var (
+		err error
+	)
+
+	pageHeader, err := ReadPageHeader(thriftReader)
+	if err != nil {
+		return nil, err
+	}
+
+	var page *Page
+	if pageHeader.GetType() == parquet.PageType_DATA_PAGE || pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
+		page = NewDataPage()
+	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
+		page = NewDictPage()
+	} else {
+		return page, fmt.Errorf("Unsupported page type")
+	}
+
+	compressedPageSize := pageHeader.GetCompressedPageSize()
+	buf := make([]byte, compressedPageSize)
+	if _, err := thriftReader.Read(buf); err != nil {
+		return nil, err
+	}
+
+	page.Header = pageHeader
+	page.CompressType = colMetaData.GetCodec()
+	page.RawData = buf
+	page.Path = make([]string, 0)
+	page.Path = append(page.Path, schemaHandler.GetRootName())
+	page.Path = append(page.Path, colMetaData.GetPathInSchema()...)
+	return page, nil
 }
 
 //Read page from parquet file
