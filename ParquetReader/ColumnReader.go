@@ -29,6 +29,28 @@ func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetRe
 	return res, nil
 }
 
+func (self *ParquetReader) SkipRowsByPath(pathStr string, num int) {
+	if num <= 0 || len(pathStr) <= 0 {
+		return
+	}
+	rootName := self.SchemaHandler.GetRootName()
+	if !strings.HasPrefix(pathStr, rootName) {
+		pathStr = rootName + "." + pathStr
+	}
+
+	if cb, ok := self.ColumnBuffers[pathStr]; ok {
+		cb.SkipRows(int64(num))
+	}
+}
+
+func (self *ParquetReader) SkipRowsByIndex(index int, num int) {
+	if index >= len(self.SchemaHandler.ValueColumns) {
+		return
+	}
+	pathStr := self.SchemaHandler.ValueColumns[index]
+	self.SkipRowsByPath(pathStr, num)
+}
+
 // ReadColumnByPath reads column by path in schema.
 func (self *ParquetReader) ReadColumnByPath(pathStr string, num int) (values []interface{}, rls []int32, dls []int32) {
 	if num <= 0 || len(pathStr) <= 0 {
