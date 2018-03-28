@@ -123,6 +123,10 @@ func (self *ColumnBufferType) ReadPage() error {
 	return nil
 }
 
+func (self *ColumnBufferType) SkipRows(num int64) int64 {
+	return 0
+}
+
 func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 	var err error
 
