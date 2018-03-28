@@ -123,8 +123,64 @@ func (self *ColumnBufferType) ReadPage() error {
 	return nil
 }
 
+func (self *ColumnBufferType) ReadPageForSkip() (*Layout.Page, error) {
+	if self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
+		page, err := Layout.ReadPageRawData(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
+		if err != nil {
+			return nil, err
+		}
+		numValues, numRows, err := page.GetRLDLFromRawData(self.SchemaHandler)
+		if err != nil {
+			return nil, err
+		}
+		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
+			self.DictPage = page
+			return nil, nil
+		}
+		if self.DataTable == nil {
+			self.DataTable = Layout.NewTableFromTable(page.DataTable)
+		}
+		self.DataTable.Merge(page.DataTable)
+		self.ChunkReadValues += numValues
+		self.DataTableNumRows += numRows
+		return page, nil
+
+	} else {
+		if err := self.NextRowGroup(); err != nil {
+			return nil, err
+		}
+		return self.ReadPageForSkip()
+	}
+}
+
 func (self *ColumnBufferType) SkipRows(num int64) int64 {
-	return 0
+	var (
+		err  error
+		page *Layout.Page
+	)
+
+	for self.DataTableNumRows < num && err == nil {
+		page, err = self.ReadPageForSkip()
+	}
+	if num > self.DataTableNumRows {
+		num = self.DataTableNumRows
+	}
+	if err = page.GetValueFromRawData(self.SchemaHandler); err != nil {
+		return 0
+	}
+	i, j := len(self.DataTable.Values)-1, len(page.DataTable.Values)-1
+	for i >= 0 && j >= 0 {
+		self.DataTable.Values[i] = page.DataTable.Values[j]
+		i, j = i-1, j-1
+	}
+	self.DataTable.Pop(num)
+	self.DataTableNumRows -= num
+	if self.DataTableNumRows <= 0 {
+		tmp := self.DataTable
+		self.DataTable = Layout.NewTableFromTable(tmp)
+		self.DataTable.Merge(tmp)
+	}
+	return num
 }
 
 func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
@@ -132,7 +188,6 @@ func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 
 	for self.DataTableNumRows < num && err == nil {
 		err = self.ReadPage()
-
 	}
 
 	if num > self.DataTableNumRows {

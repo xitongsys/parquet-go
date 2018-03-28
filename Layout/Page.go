@@ -362,14 +362,14 @@ func ReadPage2(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHan
 	if err != nil {
 		return nil, 0, 0, err
 	}
-	numRows, err := page.GetRLDLFromRawData(schemaHandler)
+	numValues, numRows, err := page.GetRLDLFromRawData(schemaHandler)
 	if err != nil {
 		return nil, 0, 0, err
 	}
 	if err = page.GetValueFromRawData(schemaHandler); err != nil {
 		return page, 0, 0, err
 	}
-	return page, int64(len(page.DataTable.DefinitionLevels)), numRows, nil
+	return page, numValues, numRows, nil
 }
 
 //Read page RawData
@@ -409,7 +409,7 @@ func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *Sch
 }
 
 //Get RepetitionLevels and Definitions from RawData
-func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler) (int64, error) {
+func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler) (int64, int64, error) {
 	var err error
 	bytesReader := bytes.NewReader(self.RawData)
 	buf := make([]byte, 0)
@@ -440,7 +440,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 
 	} else {
 		if buf, err = Compress.Uncompress(self.RawData, self.CompressType); err != nil {
-			return 0, fmt.Errorf("Unsupported compress method")
+			return 0, 0, fmt.Errorf("Unsupported compress method")
 		}
 	}
 
@@ -465,7 +465,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 				-1,
 				numValues,
 				bitWidth); err != nil {
-				return 0, err
+				return 0, 0, err
 			}
 		} else {
 			repetitionLevels = make([]interface{}, numValues)
@@ -487,7 +487,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 				numValues,
 				bitWidth)
 			if err != nil {
-				return 0, err
+				return 0, 0, err
 			}
 
 		} else {
@@ -523,16 +523,16 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 		self.DataTable = table
 		self.RawData = buf[len(buf)-bytesReader.Len():]
 
-		return numRows, nil
+		return int64(numValues), numRows, nil
 
 	} else if self.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		table := new(Table)
 		table.Path = self.Path
 		self.DataTable = table
-		return 0, nil
+		return 0, 0, nil
 
 	} else {
-		return 0, fmt.Errorf("Unsupported page type")
+		return 0, 0, fmt.Errorf("Unsupported page type")
 	}
 }
 
