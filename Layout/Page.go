@@ -355,6 +355,41 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	return res
 }
 
+//Read page RawData
+func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, error) {
+	var (
+		err error
+	)
+
+	pageHeader, err := ReadPageHeader(thriftReader)
+	if err != nil {
+		return nil, err
+	}
+
+	var page *Page
+	if pageHeader.GetType() == parquet.PageType_DATA_PAGE || pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
+		page = NewDataPage()
+	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
+		page = NewDictPage()
+	} else {
+		return page, fmt.Errorf("Unsupported page type")
+	}
+
+	compressedPageSize := pageHeader.GetCompressedPageSize()
+	buf := make([]byte, compressedPageSize)
+	if _, err := thriftReader.Read(buf); err != nil {
+		return nil, err
+	}
+
+	page.Header = pageHeader
+	page.CompressType = colMetaData.GetCodec()
+	page.RawData = buf
+	page.Path = make([]string, 0)
+	page.Path = append(page.Path, schemaHandler.GetRootName())
+	page.Path = append(page.Path, colMetaData.GetPathInSchema()...)
+	return page, nil
+}
+
 //Get RepetitionLevels and Definitions from RawData
 func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler) (int64, error) {
 	var err error
@@ -627,41 +662,6 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 	} else {
 		return res, fmt.Errorf("Unknown Encoding method")
 	}
-}
-
-//Read page RawData
-func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, error) {
-	var (
-		err error
-	)
-
-	pageHeader, err := ReadPageHeader(thriftReader)
-	if err != nil {
-		return nil, err
-	}
-
-	var page *Page
-	if pageHeader.GetType() == parquet.PageType_DATA_PAGE || pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 {
-		page = NewDataPage()
-	} else if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
-		page = NewDictPage()
-	} else {
-		return page, fmt.Errorf("Unsupported page type")
-	}
-
-	compressedPageSize := pageHeader.GetCompressedPageSize()
-	buf := make([]byte, compressedPageSize)
-	if _, err := thriftReader.Read(buf); err != nil {
-		return nil, err
-	}
-
-	page.Header = pageHeader
-	page.CompressType = colMetaData.GetCodec()
-	page.RawData = buf
-	page.Path = make([]string, 0)
-	page.Path = append(page.Path, schemaHandler.GetRootName())
-	page.Path = append(page.Path, colMetaData.GetPathInSchema()...)
-	return page, nil
 }
 
 //Read page from parquet file
