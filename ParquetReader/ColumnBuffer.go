@@ -134,8 +134,9 @@ func (self *ColumnBufferType) ReadPageForSkip() (*Layout.Page, error) {
 			return nil, err
 		}
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
+			page.GetValueFromRawData(self.SchemaHandler)
 			self.DictPage = page
-			return nil, nil
+			return page, nil
 		}
 		if self.DataTable == nil {
 			self.DataTable = Layout.NewTableFromTable(page.DataTable)
@@ -165,14 +166,18 @@ func (self *ColumnBufferType) SkipRows(num int64) int64 {
 	if num > self.DataTableNumRows {
 		num = self.DataTableNumRows
 	}
-	if err = page.GetValueFromRawData(self.SchemaHandler); err != nil {
-		return 0
+	if page != nil {
+		if err = page.GetValueFromRawData(self.SchemaHandler); err != nil {
+			return 0
+		}
+		page.Decode(self.DictPage)
+		i, j := len(self.DataTable.Values)-1, len(page.DataTable.Values)-1
+		for i >= 0 && j >= 0 {
+			self.DataTable.Values[i] = page.DataTable.Values[j]
+			i, j = i-1, j-1
+		}
 	}
-	i, j := len(self.DataTable.Values)-1, len(page.DataTable.Values)-1
-	for i >= 0 && j >= 0 {
-		self.DataTable.Values[i] = page.DataTable.Values[j]
-		i, j = i-1, j-1
-	}
+
 	self.DataTable.Pop(num)
 	self.DataTableNumRows -= num
 	if self.DataTableNumRows <= 0 {

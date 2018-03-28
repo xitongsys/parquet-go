@@ -123,6 +123,41 @@ func (self *ParquetReader) ReadFooter() error {
 	return self.Footer.Read(protocol)
 }
 
+//Skip rows of parquet file
+func (self *ParquetReader) SkipRows(num int64) error {
+	if num <= 0 {
+		return nil
+	}
+	doneChan := make(chan int, self.NP)
+	taskChan := make(chan string, len(self.ColumnBuffers))
+	stopChan := make(chan int)
+
+	for i := int64(0); i < self.NP; i++ {
+		go func() {
+			for {
+				select {
+				case <-stopChan:
+					return
+				case pathStr := <-taskChan:
+					cb := self.ColumnBuffers[pathStr]
+					cb.SkipRows(int64(num))
+					doneChan <- 0
+				}
+			}
+		}()
+	}
+	for key, _ := range self.ColumnBuffers {
+		taskChan <- key
+	}
+	for i := 0; i < len(self.ColumnBuffers); i++ {
+		<-doneChan
+	}
+	for i := int64(0); i < self.NP; i++ {
+		stopChan <- 0
+	}
+	return nil
+}
+
 //Read rows of parquet file
 func (self *ParquetReader) Read(dstInterface interface{}) error {
 	var err error
