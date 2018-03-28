@@ -3,9 +3,11 @@ package Compress
 import (
 	"bytes"
 	"compress/gzip"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/golang/snappy"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //Uncompress using Gzip
@@ -33,4 +35,30 @@ func UncompressSnappy(buf []byte) ([]byte, error) {
 //Compress using Snappy
 func CompressSnappy(buf []byte) []byte {
 	return snappy.Encode(nil, buf)
+}
+
+func Uncompress(buf []byte, compressMethod parquet.CompressionCodec) ([]byte, error) {
+	switch compressMethod {
+	case parquet.CompressionCodec_GZIP:
+		return UncompressGzip(buf)
+	case parquet.CompressionCodec_SNAPPY:
+		return UncompressSnappy(buf)
+	case parquet.CompressionCodec_UNCOMPRESSED:
+		return buf, nil
+	default:
+		return nil, fmt.Errorf("Unsupported compress method")
+	}
+}
+
+func Compress(buf []byte, compressMethod parquet.CompressionCodec) []byte {
+	switch compressMethod {
+	case parquet.CompressionCodec_GZIP:
+		return CompressGzip(buf)
+	case parquet.CompressionCodec_SNAPPY:
+		return CompressSnappy(buf)
+	case parquet.CompressionCodec_UNCOMPRESSED:
+		return buf
+	default:
+		return nil
+	}
 }

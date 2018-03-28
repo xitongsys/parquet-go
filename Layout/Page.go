@@ -386,18 +386,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 		buf = append(buf, dataBuf...)
 
 	} else {
-		switch self.CompressType {
-		case parquet.CompressionCodec_GZIP:
-			if buf, err = Compress.UncompressGzip(self.RawData); err != nil {
-				return 0, err
-			}
-		case parquet.CompressionCodec_SNAPPY:
-			if buf, err = Compress.UncompressSnappy(self.RawData); err != nil {
-				return 0, err
-			}
-		case parquet.CompressionCodec_UNCOMPRESSED:
-			buf = self.RawData
-		default:
+		if buf, err = Compress.Uncompress(self.RawData, self.CompressType); err != nil {
 			return 0, fmt.Errorf("Unsupported compress method")
 		}
 	}
@@ -484,6 +473,9 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 		return numRows, nil
 
 	} else if self.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
+		table := new(Table)
+		table.Path = self.Path
+		self.DataTable = table
 		return 0, nil
 
 	} else {
@@ -491,7 +483,63 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 	}
 }
 
-func (self *Page) GetValueFromRawData() error {
+func (self *Page) GetValueFromRawData(schemaHandler *SchemaHandler.SchemaHandler) error {
+	var err error
+	var encodingType parquet.Encoding
+
+	switch self.Header.GetType() {
+	case parquet.PageType_DICTIONARY_PAGE:
+		bytesReader := bytes.NewReader(self.RawData)
+		self.DataTable.Values, err = ParquetEncoding.ReadPlain(bytesReader,
+			self.DataType,
+			uint64(self.Header.DictionaryPageHeader.GetNumValues()),
+			0)
+		if err != nil {
+			return err
+		}
+	case parquet.PageType_DATA_PAGE_V2:
+		if self.RawData, err = Compress.Uncompress(self.RawData, self.CompressType); err != nil {
+			return err
+		}
+		encodingType = self.Header.DataPageHeader.GetEncoding()
+		fallthrough
+	case parquet.PageType_DATA_PAGE:
+		encodingType = self.Header.DataPageHeaderV2.GetEncoding()
+		bytesReader := bytes.NewReader(self.RawData)
+
+		var numNulls uint64 = 0
+		for i := 0; i < len(self.DataTable.DefinitionLevels); i++ {
+			if self.DataTable.DefinitionLevels[i] != self.DataTable.MaxDefinitionLevel {
+				numNulls++
+			}
+		}
+		name := strings.Join(self.DataTable.Path, ".")
+		var values []interface{}
+		var ct parquet.ConvertedType = -1
+		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
+			ct = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetConvertedType()
+		}
+		values, err = ReadDataPageValues(bytesReader,
+			encodingType,
+			self.DataType,
+			ct,
+			uint64(len(self.DataTable.DefinitionLevels))-numNulls,
+			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
+		if err != nil {
+			return err
+		}
+		j := 0
+		for i := 0; i < len(self.DataTable.DefinitionLevels); i++ {
+			if self.DataTable.DefinitionLevels[i] == self.DataTable.MaxDefinitionLevel {
+				self.DataTable.Values[i] = values[j]
+				j++
+			}
+		}
+		return nil
+
+	default:
+		return fmt.Errorf("Unsupported page type")
+	}
 	return nil
 }
 
@@ -650,19 +698,10 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 		}
 
 		codec := colMetaData.GetCodec()
-		if codec == parquet.CompressionCodec_GZIP {
-			if dataBuf, err = Compress.UncompressGzip(dataBuf); err != nil {
-				return nil, 0, 0, err
-			}
-		} else if codec == parquet.CompressionCodec_SNAPPY {
-			if dataBuf, err = Compress.UncompressSnappy(dataBuf); err != nil {
-				return nil, 0, 0, err
-			}
-		} else if codec == parquet.CompressionCodec_UNCOMPRESSED {
-			dataBuf = dataBuf
-		} else {
-			return nil, 0, 0, fmt.Errorf("Unsupported Codec: %v", codec)
+		if dataBuf, err = Compress.Uncompress(dataBuf, codec); err != nil {
+			return nil, 0, 0, err
 		}
+
 		tmpBuf := make([]byte, 0)
 		if rll > 0 {
 			tmpBuf = ParquetEncoding.WritePlainINT32([]interface{}{ParquetType.INT32(rll)})
@@ -684,18 +723,8 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHand
 			return nil, 0, 0, err
 		}
 		codec := colMetaData.GetCodec()
-		if codec == parquet.CompressionCodec_GZIP {
-			if buf, err = Compress.UncompressGzip(buf); err != nil {
-				return nil, 0, 0, err
-			}
-		} else if codec == parquet.CompressionCodec_SNAPPY {
-			if buf, err = Compress.UncompressSnappy(buf); err != nil {
-				return nil, 0, 0, err
-			}
-		} else if codec == parquet.CompressionCodec_UNCOMPRESSED {
-			buf = buf
-		} else {
-			return nil, 0, 0, fmt.Errorf("Unsupported Codec: %v", codec)
+		if buf, err = Compress.Uncompress(buf, codec); err != nil {
+			return nil, 0, 0, err
 		}
 	}
 
