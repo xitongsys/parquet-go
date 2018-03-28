@@ -355,7 +355,8 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	return res
 }
 
-func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
+//This is a test function
+func ReadPage2(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
 	var err error
 	page, err := ReadPageRawData(thriftReader, schemaHandler, colMetaData)
 	if err != nil {
@@ -535,6 +536,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *SchemaHandler.SchemaHandler)
 	}
 }
 
+//Get values from raw data
 func (self *Page) GetValueFromRawData(schemaHandler *SchemaHandler.SchemaHandler) error {
 	var err error
 	var encodingType parquet.Encoding
@@ -588,6 +590,7 @@ func (self *Page) GetValueFromRawData(schemaHandler *SchemaHandler.SchemaHandler
 				j++
 			}
 		}
+		self.RawData = []byte{}
 		return nil
 
 	default:
@@ -683,7 +686,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 }
 
 //Read page from parquet file
-func ReadPage2(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
+func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *SchemaHandler.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
 	var (
 		err error
 	)
