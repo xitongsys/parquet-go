@@ -29,7 +29,7 @@ func main() {
 	}
 
 	//write
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 1)
+	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
@@ -65,7 +65,7 @@ func main() {
 		return
 	}
 
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 1)
+	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
