@@ -162,6 +162,9 @@ Two Readers are supported: ParquetReader, ColumnReader
 * ColumnReader is used to read some columns. The read function return 3 slices([value], [RepetitionLevel], [DefinitionLevel]) of the records.
 [Example of ColumnReader](https://github.com/xitongsys/parquet-go/blob/master/example/column_read.go)
 
+### Tips
+* If the parquet file is very big (even the size of parquet file is small, the uncompressed size may be very large), please don't read all rows at one time, which may induce the OOM. You can read a small portion of the data at a time like a stream-oriented file.
+
 
 
 ## Schema
@@ -369,5 +372,6 @@ Here are a few todo items. Welcome any help!
 * Add more useful tools
 * Performance Test(Issue14)
 * Test in different platforms
+* Just star it :)
 
 Please start to use it and give feedback. Help is needed and anything is welcome.
