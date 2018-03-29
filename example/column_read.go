@@ -71,6 +71,7 @@ func main() {
 	}
 	num = int(pr.GetNumRows())
 
+	pr.SkipRowsByPath("name", 5) //skip the first five rows
 	names, rls, dls = pr.ReadColumnByPath("name", num)
 	log.Println("name", names, rls, dls)
 
@@ -82,6 +83,7 @@ func main() {
 	log.Println("scores_key", scores_key)
 	log.Println("scores_value", scores_value)
 
+	pr.SkipRowsByIndex(2, 5) //skip the first five rows
 	ids, _, _ = pr.ReadColumnByIndex(2, num)
 	log.Println(ids)
 
