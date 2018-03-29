@@ -372,6 +372,6 @@ Here are a few todo items. Welcome any help!
 * Add more useful tools
 * Performance Test(Issue14)
 * Test in different platforms
-* Just star it :)
+* Star it :)
 
 Please start to use it and give feedback. Help is needed and anything is welcome.
