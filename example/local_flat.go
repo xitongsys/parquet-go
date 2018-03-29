@@ -37,7 +37,7 @@ func main() {
 
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
-	num := 10
+	num := 100
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   "StudentName",
@@ -71,8 +71,12 @@ func main() {
 		return
 	}
 	num = int(pr.GetNumRows())
-	for i := 0; i < num; i++ {
-		stus := make([]Student, 1)
+	for i := 0; i < num/10; i++ {
+		if i%2 == 0 {
+			pr.SkipRows(10) //skip 10 rows
+			continue
+		}
+		stus := make([]Student, 10) //read 10 rows
 		if err = pr.Read(&stus); err != nil {
 			log.Println("Read error", err)
 		}

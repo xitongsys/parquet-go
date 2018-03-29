@@ -1,4 +1,4 @@
-# parquet-go v1.2.4
+# parquet-go v1.2.6
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -275,7 +275,6 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 Following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```golang
 package main
-
 import (
 	"log"
 	"time"
@@ -303,17 +302,15 @@ func main() {
 		log.Println("Can't create local file", err)
 		return
 	}
-
 	//write
 	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
-
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
-	num := 10
+	num := 100
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   "StudentName",
@@ -340,25 +337,26 @@ func main() {
 		log.Println("Can't open file")
 		return
 	}
-
 	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
 	}
 	num = int(pr.GetNumRows())
-	for i := 0; i < num; i++ {
-		stus := make([]Student, 1)
+	for i := 0; i < num/10; i++ {
+		if i%2 == 0 {
+			pr.SkipRows(10) //skip 10 rows
+			continue
+		}
+		stus := make([]Student, 10) //read 10 rows
 		if err = pr.Read(&stus); err != nil {
 			log.Println("Read error", err)
 		}
 		log.Println(stus)
 	}
-
 	pr.ReadStop()
 	fr.Close()
 }
-
 
 ```
 
