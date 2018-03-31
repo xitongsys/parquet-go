@@ -49,7 +49,7 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 				name == "DATE" || name == "TIME_MILLIS" {
 				schema.Type = parquet.TypePtr(parquet.Type_INT32)
 			} else if name == "INT_64" || name == "UINT_64" ||
-				name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" {
+				name == "TIME_MICROS" || name == "TIMESTAMP_MICROS" || name == "TIMESTAMP_MILLIS" {
 				schema.Type = parquet.TypePtr(parquet.Type_INT64)
 			} else if name == "UTF8" {
 				schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
