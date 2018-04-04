@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"git.apache.org/thrift.git/lib/go/thrift"
+	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Compress"
 	"github.com/xitongsys/parquet-go/ParquetEncoding"
