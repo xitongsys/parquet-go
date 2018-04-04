@@ -12,7 +12,7 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 ```sh
 go get github.com/colinmarc/hdfs
 go get github.com/spf13/afero
-go get git.apache.org/thrift.git/lib/go/thrift
+go get github.com/apache/thrift/lib/go/thrift
 go get github.com/golang/snappy
 ```
 
