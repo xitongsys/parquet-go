@@ -14,14 +14,14 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 	rootSchema.Name = "parquet_go_root"
 	rootNumChildren := int32(len(mds))
 	rootSchema.NumChildren = &rootNumChildren
-	rt := parquet.FieldRepetitionType(-1)
+	rt := parquet.FieldRepetitionType_REQUIRED
 	rootSchema.RepetitionType = &rt
 	schemaList = append(schemaList, rootSchema)
 
 	rootInfo := Common.NewTag()
 	rootInfo.InName = "parquet_go_root"
 	rootInfo.ExName = "parquet_go_root"
-	rootInfo.RepetitionType = parquet.FieldRepetitionType(-1)
+	rootInfo.RepetitionType = parquet.FieldRepetitionType_REQUIRED
 	infos = append(infos, rootInfo)
 
 	for _, md := range mds {
@@ -32,7 +32,7 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 		schema.Name = info.ExName
 		numChildren := int32(0)
 		schema.NumChildren = &numChildren
-		rt := parquet.FieldRepetitionType(1)
+		rt := parquet.FieldRepetitionType_OPTIONAL
 		schema.RepetitionType = &rt
 
 		if t, err := parquet.TypeFromString(info.Type); err == nil {

@@ -188,7 +188,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 	item.GoType = ot
 	item.Info.InName = "parquet_go_root"
 	item.Info.ExName = "parquet_go_root"
-	item.Info.RepetitionType = parquet.FieldRepetitionType(-1)
+	item.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
 
 	stack := make([]*Item, 1)
 	stack[0] = item
