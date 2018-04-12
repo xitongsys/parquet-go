@@ -32,5 +32,6 @@ func (self *WriterFile) Write(b []byte) (int, error) {
 	return self.Writer.Write(b)
 }
 
-func (self *WriterFile) Close() {
+func (self *WriterFile) Close() error {
+	return nil
 }

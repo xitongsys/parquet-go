@@ -26,7 +26,7 @@ func main() {
 	// create in-memory ParquetFile with Closer Function
 	// NOTE: closer function can be nil, no action will be
 	// run when the writer is closed.
-	fw, err := ParquetFile.NewMemFileWriter("flat.parquet.snappy", func(name string, r io.Reader) {
+	fw, err := ParquetFile.NewMemFileWriter("flat.parquet.snappy", func(name string, r io.Reader) error {
 		dat, err := ioutil.ReadAll(r)
 		if err != nil {
 			log.Printf("error reading data: %v", err)
@@ -37,6 +37,7 @@ func main() {
 		if err := ioutil.WriteFile(name, dat, 0644); err != nil {
 			log.Printf("error writing result file: %v", err)
 		}
+		return nil
 	})
 
 	if err != nil {

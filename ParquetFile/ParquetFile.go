@@ -1,14 +1,16 @@
 package ParquetFile
 
 import (
+	"io"
+
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
 type ParquetFile interface {
-	Seek(offset int64, whence int) (int64, error)
-	Read(b []byte) (n int, err error)
-	Write(b []byte) (n int, err error)
-	Close()
+	io.Seeker
+	io.Reader
+	io.Writer
+	io.Closer
 	Open(name string) (ParquetFile, error)
 	Create(name string) (ParquetFile, error)
 }
