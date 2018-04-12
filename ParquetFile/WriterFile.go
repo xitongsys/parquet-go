@@ -20,7 +20,7 @@ func (self *WriterFile) Open(name string) (ParquetFile, error) {
 	return self, nil
 }
 
-func (self *WriterFile) Seek(offset int, pos int) (int64, error) {
+func (self *WriterFile) Seek(offset int64, pos int) (int64, error) {
 	return 0, nil
 }
 

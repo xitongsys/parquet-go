@@ -77,8 +77,8 @@ func (fs *MemFile) Open(name string) (ParquetFile, error) {
 }
 
 // Seek - seek function
-func (fs *MemFile) Seek(offset int, pos int) (int64, error) {
-	return fs.File.Seek(int64(offset), pos)
+func (fs *MemFile) Seek(offset int64, pos int) (int64, error) {
+	return fs.File.Seek(offset, pos)
 }
 
 // Read - read file

@@ -71,8 +71,8 @@ func (self *HdfsFile) Open(name string) (ParquetFile, error) {
 	hf.FileReader, err = hf.Client.Open(name)
 	return hf, err
 }
-func (self *HdfsFile) Seek(offset int, pos int) (int64, error) {
-	return self.FileReader.Seek(int64(offset), pos)
+func (self *HdfsFile) Seek(offset int64, pos int) (int64, error) {
+	return self.FileReader.Seek(offset, pos)
 }
 
 func (self *HdfsFile) Read(b []byte) (n int, err error) {

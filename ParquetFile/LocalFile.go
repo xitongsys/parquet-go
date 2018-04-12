@@ -37,8 +37,8 @@ func (self *LocalFile) Open(name string) (ParquetFile, error) {
 	myFile.File, err = os.Open(name)
 	return myFile, err
 }
-func (self *LocalFile) Seek(offset int, pos int) (int64, error) {
-	return self.File.Seek(int64(offset), pos)
+func (self *LocalFile) Seek(offset int64, pos int) (int64, error) {
+	return self.File.Seek(offset, pos)
 }
 
 func (self *LocalFile) Read(b []byte) (n int, err error) {

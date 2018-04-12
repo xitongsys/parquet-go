@@ -114,7 +114,7 @@ func (self *ParquetReader) ReadFooter() error {
 	if err != nil {
 		return err
 	}
-	if _, err = self.PFile.Seek(int(-(int64)(8+size)), 2); err != nil {
+	if _, err = self.PFile.Seek(-(int64)(8+size), 2); err != nil {
 		return err
 	}
 	self.Footer = parquet.NewFileMetaData()
