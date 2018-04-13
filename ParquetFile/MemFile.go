@@ -26,7 +26,7 @@ func GetMemFileFs() afero.Fs {
 // OnCloseFunc function type, handles what to do
 // after converted file is closed in-memory.
 // Close() will pass the filename string and data as io.reader
-type OnCloseFunc func(string, io.Reader)
+type OnCloseFunc func(string, io.Reader) error
 
 // MemFile - ParquetFile type for in-memory file operations
 type MemFile struct {
@@ -92,12 +92,15 @@ func (fs *MemFile) Write(b []byte) (n int, err error) {
 }
 
 // Close - close file and execute OnCloseFunc
-func (fs *MemFile) Close() {
-	fs.File.Close()
+func (fs *MemFile) Close() error {
+	if err := fs.File.Close(); err != nil {
+		return err
+	}
 	if fs.OnClose != nil {
 		f, _ := fs.Open(fs.FilePath)
-		fs.OnClose(filepath.Base(fs.FilePath), f)
-		return
+		if err := fs.OnClose(filepath.Base(fs.FilePath), f); err != nil {
+			return err
+		}
 	}
-	return
+	return nil
 }

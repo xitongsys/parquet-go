@@ -83,7 +83,7 @@ func (self *HdfsFile) Write(b []byte) (n int, err error) {
 	return self.FileWriter.Write(b)
 }
 
-func (self *HdfsFile) Close() {
+func (self *HdfsFile) Close() error {
 	if self.FileReader != nil {
 		self.FileReader.Close()
 	}
@@ -93,4 +93,5 @@ func (self *HdfsFile) Close() {
 	if self.Client != nil {
 		self.Client.Close()
 	}
+	return nil
 }

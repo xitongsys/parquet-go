@@ -49,6 +49,6 @@ func (self *LocalFile) Write(b []byte) (n int, err error) {
 	return self.File.Write(b)
 }
 
-func (self *LocalFile) Close() {
-	self.File.Close()
+func (self *LocalFile) Close() error {
+	return self.File.Close()
 }
