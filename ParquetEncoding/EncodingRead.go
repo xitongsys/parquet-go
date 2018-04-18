@@ -198,6 +198,10 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([
 
 	res := make([]interface{}, 0, cnt)
 
+	if cnt == 0 {
+		return res, nil
+	}
+
 	if bitWidth == 0 {
 		for i := 0; i < int(cnt); i++ {
 			res = append(res, ParquetType.INT64(0))
