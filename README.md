@@ -133,10 +133,10 @@ Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=RE
 Read/Write a parquet file need a ParquetFile interface implemented
 ```golang
 type ParquetFile interface {
-	Seek(offset int, pos int) (int64, error)
-	Read(b []byte) (n int, err error)
-	Write(b []byte) (n int, err error)
-	Close()
+	io.Seeker
+	io.Reader
+	io.Writer
+	io.Closer
 	Open(name string) (ParquetFile, error)
 	Create(name string) (ParquetFile, error)
 }
