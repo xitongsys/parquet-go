@@ -93,7 +93,7 @@ func (self *GcsFile) Close() error {
 	}
 	if self.Client != nil {
 		if err := self.Client.Close(); err != nil {
-			return nil
+			return err
 		}
 	}
 	return nil
