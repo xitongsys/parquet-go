@@ -28,9 +28,12 @@ func NewGcsFileWriter(projectId string, bucketName string, name string, ctx cont
 	return res.Create(name)
 }
 
-func NewGcsFileReader(hosts []string, user string, name string) (ParquetFile, error) {
+func NewGcsFileReader(projectId string, bucketName string, name string, ctx context.Context) (ParquetFile, error) {
 	res := &GcsFile{
-		FilePath: name,
+		ProjectId:  projectId,
+		BucketName: bucketName,
+		Ctx:        ctx,
+		FilePath:   name,
 	}
 	return res.Open(name)
 }
@@ -64,7 +67,7 @@ func (self *GcsFile) Open(name string) (ParquetFile, error) {
 	gcs.FileReader, err = obj.NewReader(self.Ctx)
 	return gcs, err
 }
-func (self *GcsFile) Seek(offset int, pos int) (int64, error) {
+func (self *GcsFile) Seek(offset int64, pos int) (int64, error) {
 	//Not implemented
 	return 0, nil
 }
@@ -77,14 +80,21 @@ func (self *GcsFile) Write(b []byte) (n int, err error) {
 	return self.FileWriter.Write(b)
 }
 
-func (self *GcsFile) Close() {
+func (self *GcsFile) Close() error {
 	if self.FileReader != nil {
-		self.FileReader.Close()
+		if err := self.FileReader.Close(); err != nil {
+			return err
+		}
 	}
 	if self.FileWriter != nil {
-		self.FileWriter.Close()
+		if err := self.FileWriter.Close(); err != nil {
+			return err
+		}
 	}
 	if self.Client != nil {
-		self.Client.Close()
+		if err := self.Client.Close(); err != nil {
+			return nil
+		}
 	}
+	return nil
 }
