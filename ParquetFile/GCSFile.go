@@ -18,7 +18,7 @@ type GcsFile struct {
 	FileWriter *storage.Writer
 }
 
-func NewGcsFileWriter(projectId string, bucketName string, name string, ctx context.Context) (ParquetFile, error) {
+func NewGcsFileWriter(ctx context.Context, projectId string, bucketName string, name string) (ParquetFile, error) {
 	res := &GcsFile{
 		ProjectId:  projectId,
 		BucketName: bucketName,
@@ -28,7 +28,7 @@ func NewGcsFileWriter(projectId string, bucketName string, name string, ctx cont
 	return res.Create(name)
 }
 
-func NewGcsFileReader(projectId string, bucketName string, name string, ctx context.Context) (ParquetFile, error) {
+func NewGcsFileReader(ctx context.Context, projectId string, bucketName string, name string) (ParquetFile, error) {
 	res := &GcsFile{
 		ProjectId:  projectId,
 		BucketName: bucketName,
