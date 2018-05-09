@@ -195,9 +195,15 @@ func (self *ColumnBufferType) ReadRows(num int64) (*Layout.Table, int64) {
 		err = self.ReadPage()
 	}
 
+	if self.DataTableNumRows < 0 {
+		self.DataTableNumRows = 0
+		self.DataTable = Layout.NewEmptyTable()
+	}
+
 	if num > self.DataTableNumRows {
 		num = self.DataTableNumRows
 	}
+
 	res := self.DataTable.Pop(num)
 	self.DataTableNumRows -= num
 
