@@ -2,6 +2,7 @@ package ParquetReader
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
@@ -97,6 +98,23 @@ func (self *ColumnBufferType) ReadPage() error {
 	if self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
 		page, numValues, numRows, err := Layout.ReadPage(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
 		if err != nil {
+			//data is nil and rl/dl=0, no pages in file
+			if err == io.EOF {
+				if self.DataTable == nil {
+					index := self.SchemaHandler.MapIndex[self.PathStr]
+					self.DataTable = Layout.NewEmptyTable()
+					self.DataTable.Type = self.SchemaHandler.SchemaElements[index].GetType()
+					self.DataTable.Path = Common.StrToPath(self.PathStr)
+
+				}
+				for self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
+					self.DataTable.Values = append(self.DataTable.Values, nil)
+					self.DataTable.RepetitionLevels = append(self.DataTable.RepetitionLevels, int32(0))
+					self.DataTable.DefinitionLevels = append(self.DataTable.DefinitionLevels, int32(0))
+					self.ChunkReadValues++
+					self.DataTableNumRows++
+				}
+			}
 			return err
 		}
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
