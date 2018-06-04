@@ -20,10 +20,11 @@ func NewLocalFileReader(name string) (ParquetFile, error) {
 func (self *LocalFile) Create(name string) (ParquetFile, error) {
 	file, err := os.Create(name)
 	myFile := new(LocalFile)
+	myFile.FilePath = name
 	myFile.File = file
 	return myFile, err
-
 }
+
 func (self *LocalFile) Open(name string) (ParquetFile, error) {
 	var (
 		err error
