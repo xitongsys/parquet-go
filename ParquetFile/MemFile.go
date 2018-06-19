@@ -82,8 +82,17 @@ func (fs *MemFile) Seek(offset int64, pos int) (int64, error) {
 }
 
 // Read - read file
-func (fs *MemFile) Read(b []byte) (n int, err error) {
-	return fs.File.Read(b)
+func (fs *MemFile) Read(b []byte) (cnt int, err error) {
+	var n int
+	ln := len(b)
+	for cnt < ln {
+		n, err = self.File.Read(b[cnt:])
+		cnt += n
+		if err != nil {
+			break
+		}
+	}
+	return cnt, err
 }
 
 // Write - write file in-memory

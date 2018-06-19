@@ -42,8 +42,17 @@ func (self *LocalFile) Seek(offset int64, pos int) (int64, error) {
 	return self.File.Seek(offset, pos)
 }
 
-func (self *LocalFile) Read(b []byte) (n int, err error) {
-	return self.File.Read(b)
+func (self *LocalFile) Read(b []byte) (cnt int, err error) {
+	var n int
+	ln := len(b)
+	for cnt < ln {
+		n, err = self.File.Read(b[cnt:])
+		cnt += n
+		if err != nil {
+			break
+		}
+	}
+	return cnt, err
 }
 
 func (self *LocalFile) Write(b []byte) (n int, err error) {

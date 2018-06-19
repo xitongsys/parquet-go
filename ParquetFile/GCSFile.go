@@ -72,8 +72,17 @@ func (self *GcsFile) Seek(offset int64, pos int) (int64, error) {
 	return 0, nil
 }
 
-func (self *GcsFile) Read(b []byte) (n int, err error) {
-	return self.FileReader.Read(b)
+func (self *GcsFile) Read(b []byte) (cnt int, err error) {
+	var n int
+	ln := len(b)
+	for cnt < ln {
+		n, err = self.FileReader.Read(b[cnt:])
+		cnt += n
+		if err != nil {
+			break
+		}
+	}
+	return cnt, err
 }
 
 func (self *GcsFile) Write(b []byte) (n int, err error) {
