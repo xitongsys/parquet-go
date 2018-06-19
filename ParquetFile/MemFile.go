@@ -86,7 +86,7 @@ func (fs *MemFile) Read(b []byte) (cnt int, err error) {
 	var n int
 	ln := len(b)
 	for cnt < ln {
-		n, err = self.File.Read(b[cnt:])
+		n, err = fs.File.Read(b[cnt:])
 		cnt += n
 		if err != nil {
 			break
