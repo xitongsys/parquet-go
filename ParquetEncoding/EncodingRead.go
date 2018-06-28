@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -44,10 +43,10 @@ func ReadPlainBOOLEAN(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, err
 	}
 
 	for i := 0; i < int(cnt); i++ {
-		if resInt[i].(ParquetType.INT64) > 0 {
-			res[i] = ParquetType.BOOLEAN(true)
+		if resInt[i].(int64) > 0 {
+			res[i] = true
 		} else {
-			res[i] = ParquetType.BOOLEAN(false)
+			res[i] = false
 		}
 	}
 	return res, err
@@ -57,7 +56,7 @@ func ReadPlainINT32(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error
 	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.INT32
+		var cur int32
 		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
 			break
 		}
@@ -70,7 +69,7 @@ func ReadPlainINT64(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error
 	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.INT64
+		var cur int64
 		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
 			break
 		}
@@ -87,7 +86,7 @@ func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error
 		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
 			break
 		}
-		res[i] = ParquetType.INT96(cur[:12])
+		res[i] = string(cur[:12])
 	}
 	return res, err
 }
@@ -96,7 +95,7 @@ func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error
 	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.FLOAT
+		var cur float32
 		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
 			break
 		}
@@ -109,7 +108,7 @@ func ReadPlainDOUBLE(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, erro
 	var err error
 	res := make([]interface{}, cnt)
 	for i := 0; i < int(cnt); i++ {
-		var cur ParquetType.DOUBLE
+		var cur float64
 		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
 			break
 		}
@@ -129,7 +128,7 @@ func ReadPlainBYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, 
 		ln := binary.LittleEndian.Uint32(buf)
 		cur := make([]byte, ln)
 		bytesReader.Read(cur)
-		res[i] = ParquetType.BYTE_ARRAY(cur)
+		res[i] = string(cur)
 	}
 	return res, err
 }
@@ -142,7 +141,7 @@ func ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64, fixedL
 		if _, err = bytesReader.Read(cur); err != nil {
 			break
 		}
-		res[i] = ParquetType.FIXED_LEN_BYTE_ARRAY(cur)
+		res[i] = string(cur)
 	}
 	return res, err
 }
@@ -180,7 +179,7 @@ func ReadRLE(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([]inter
 	for len(data) < 4 {
 		data = append(data, byte(0))
 	}
-	val := ParquetType.INT64(binary.LittleEndian.Uint32(data))
+	val := int64(binary.LittleEndian.Uint32(data))
 	res = make([]interface{}, cnt)
 
 	for i := 0; i < int(cnt); i++ {
@@ -204,7 +203,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([
 
 	if bitWidth == 0 {
 		for i := 0; i < int(cnt); i++ {
-			res = append(res, ParquetType.INT64(0))
+			res = append(res, int64(0))
 		}
 		return res, err
 	}
@@ -222,7 +221,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([
 	for i < len(bytesBuf) {
 		if left >= resCurNeedBits {
 			resCur |= uint64(((uint64(b) >> uint64(used)) & ((1 << uint64(resCurNeedBits)) - 1)) << uint64(bitWidth-resCurNeedBits))
-			res = append(res, ParquetType.INT64(resCur))
+			res = append(res, int64(resCur))
 			left -= resCurNeedBits
 			used += resCurNeedBits
 
@@ -258,7 +257,7 @@ func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length u
 		if err != nil {
 			return res, err
 		}
-		length = uint64(lb[0].(ParquetType.INT32))
+		length = uint64(lb[0].(int32))
 	}
 
 	buf := make([]byte, length)
@@ -318,7 +317,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) ([]interface{}, error) 
 	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
 
 	res = make([]interface{}, 0)
-	res = append(res, ParquetType.INT64(firstValue))
+	res = append(res, int64(firstValue))
 	for uint64(len(res)) < numValues {
 		minDeltaZigZag, err := ReadUnsignedVarInt(bytesReader)
 		if err != nil {
@@ -339,7 +338,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) ([]interface{}, error) 
 				return res, err
 			}
 			for j := 0; j < len(cur); j++ {
-				res = append(res, ParquetType.INT64(int64(res[len(res)-1].(ParquetType.INT64))+int64(cur[j].(ParquetType.INT64))+minDelta))
+				res = append(res, (res[len(res)-1].(int64) + cur[j].(int64) + minDelta))
 			}
 		}
 	}
@@ -358,11 +357,11 @@ func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) ([]interface{}, error) 
 	}
 	res = make([]interface{}, len(lengths))
 	for i := 0; i < len(lengths); i++ {
-		cur, err := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(ParquetType.INT64)))
+		cur, err := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(int64)))
 		if err != nil {
 			return res, err
 		}
-		res[i] = ParquetType.BYTE_ARRAY(cur[0].(ParquetType.FIXED_LEN_BYTE_ARRAY))
+		res[i] = cur[0]
 	}
 	return res, err
 }
@@ -385,9 +384,9 @@ func ReadDeltaByteArray(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 	res[0] = suffixes[0]
 	for i := 1; i < len(prefixLengths); i++ {
-		prefixLength := prefixLengths[i].(ParquetType.INT64)
-		prefix := res[i-1].(ParquetType.BYTE_ARRAY)[:prefixLength]
-		suffix := suffixes[i].(ParquetType.BYTE_ARRAY)
+		prefixLength := prefixLengths[i].(int64)
+		prefix := res[i-1].(string)[:prefixLength]
+		suffix := suffixes[i].(string)
 		res[i] = prefix + suffix
 	}
 	return res, err

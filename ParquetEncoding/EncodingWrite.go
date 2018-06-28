@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/xitongsys/parquet-go/Common"
-	"github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func ToInt64(nums []interface{}) []int64 { //convert bool/int values to int64 values
@@ -30,30 +30,27 @@ func ToInt64(nums []interface{}) []int64 { //convert bool/int values to int64 va
 	return res
 }
 
-func WritePlain(src []interface{}) []byte {
+func WritePlain(src []interface{}, pt parquet.Type) []byte {
 	ln := len(src)
 	if ln <= 0 {
 		return []byte{}
 	}
-	dataType := reflect.TypeOf(src[0])
-	if dataType == nil {
-		return []byte{}
-	}
-	if dataType.Name() == "BOOLEAN" {
+
+	if pt == parquet.Type_BOOLEAN {
 		return WritePlainBOOLEAN(src)
-	} else if dataType.Name() == "INT32" {
+	} else if pt == parquet.Type_INT32 {
 		return WritePlainINT32(src)
-	} else if dataType.Name() == "INT64" {
+	} else if pt == parquet.Type_INT64 {
 		return WritePlainINT64(src)
-	} else if dataType.Name() == "INT96" {
+	} else if pt == parquet.Type_INT96 {
 		return WritePlainINT96(src)
-	} else if dataType.Name() == "FLOAT" {
+	} else if pt == parquet.Type_FLOAT {
 		return WritePlainFLOAT(src)
-	} else if dataType.Name() == "DOUBLE" {
+	} else if pt == parquet.Type_DOUBLE {
 		return WritePlainDOUBLE(src)
-	} else if dataType.Name() == "BYTE_ARRAY" {
+	} else if pt == parquet.Type_BYTE_ARRAY {
 		return WritePlainBYTE_ARRAY(src)
-	} else if dataType.Name() == "FIXED_LEN_BYTE_ARRAY" {
+	} else if pt == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 		return WritePlainFIXED_LEN_BYTE_ARRAY(src)
 	} else {
 		return []byte{}
@@ -65,7 +62,7 @@ func WritePlainBOOLEAN(nums []interface{}) []byte {
 	byteNum := (ln + 7) / 8
 	res := make([]byte, byteNum)
 	for i := 0; i < ln; i++ {
-		if nums[i].(ParquetType.BOOLEAN) {
+		if nums[i].(bool) {
 			res[i/8] = res[i/8] | (1 << uint32(i%8))
 		}
 	}
@@ -91,8 +88,8 @@ func WritePlainINT64(nums []interface{}) []byte {
 func WritePlainINT96(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
-		for j := 0; j < len(nums[i].(ParquetType.INT96)); j++ {
-			binary.Write(bufWriter, binary.LittleEndian, nums[i].(ParquetType.INT96)[j])
+		for j := 0; j < len(nums[i].(string)); j++ {
+			binary.Write(bufWriter, binary.LittleEndian, nums[i].(string)[j])
 		}
 	}
 	return bufWriter.Bytes()
@@ -118,9 +115,9 @@ func WritePlainBYTE_ARRAY(arrays []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
-		ln := uint32(len(arrays[i].(ParquetType.BYTE_ARRAY)))
+		ln := uint32(len(arrays[i].(string)))
 		binary.Write(bufWriter, binary.LittleEndian, ln)
-		bufWriter.Write([]byte(arrays[i].(ParquetType.BYTE_ARRAY)))
+		bufWriter.Write([]byte(arrays[i].(string)))
 	}
 	return bufWriter.Bytes()
 }
@@ -129,7 +126,7 @@ func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
-		bufWriter.Write([]byte(arrays[i].(ParquetType.FIXED_LEN_BYTE_ARRAY)))
+		bufWriter.Write([]byte(arrays[i].(string)))
 	}
 	return bufWriter.Bytes()
 }
@@ -151,7 +148,7 @@ func WriteUnsignedVarInt(num uint64) []byte {
 	return res
 }
 
-func WriteRLE(vals []interface{}, bitWidth int32) []byte {
+func WriteRLE(vals []interface{}, bitWidth int32, pt parquet.Type) []byte {
 	ln := len(vals)
 	i := 0
 	res := make([]byte, 0)
@@ -165,7 +162,7 @@ func WriteRLE(vals []interface{}, bitWidth int32) []byte {
 		byteNum := (bitWidth + 7) / 8
 		headerBuf := WriteUnsignedVarInt(uint64(header))
 
-		valBuf := WritePlain([]interface{}{vals[i]})
+		valBuf := WritePlain([]interface{}{vals[i]}, pt)
 
 		rleBuf := make([]byte, int64(len(headerBuf))+int64(byteNum))
 		copy(rleBuf[0:], headerBuf)
@@ -176,10 +173,10 @@ func WriteRLE(vals []interface{}, bitWidth int32) []byte {
 	return res
 }
 
-func WriteRLEBitPackedHybrid(vals []interface{}, bitWidths int32) []byte {
-	rleBuf := WriteRLE(vals, bitWidths)
+func WriteRLEBitPackedHybrid(vals []interface{}, bitWidths int32, pt parquet.Type) []byte {
+	rleBuf := WriteRLE(vals, bitWidths, pt)
 	res := make([]byte, 0)
-	lenBuf := WritePlain([]interface{}{ParquetType.INT32(len(rleBuf))})
+	lenBuf := WritePlain([]interface{}{int32(len(rleBuf))}, parquet.Type_INT32)
 	res = append(res, lenBuf...)
 	res = append(res, rleBuf...)
 	return res
@@ -266,7 +263,7 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 	var numValuesInMiniBlock uint64 = 32
 	var totalNumValues uint64 = uint64(len(nums))
 
-	num := int32(nums[0].(ParquetType.INT32))
+	num := nums[0].(int32)
 	var firstValue uint64 = uint64((num >> 31) ^ (num << 1))
 
 	res = append(res, WriteUnsignedVarInt(blockSize)...)
@@ -277,10 +274,10 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 	i := 1
 	for i < len(nums) {
 		blockBuf := make([]interface{}, 0)
-		var minDelta ParquetType.INT32 = 0x7FFFFFFF
+		var minDelta int32 = 0x7FFFFFFF
 
 		for i < len(nums) && uint64(len(blockBuf)) < blockSize {
-			delta := ParquetType.INT32(nums[i].(ParquetType.INT32) - nums[i-1].(ParquetType.INT32))
+			delta := nums[i].(int32) - nums[i-1].(int32)
 			blockBuf = append(blockBuf, delta)
 			if delta < minDelta {
 				minDelta = delta
@@ -295,11 +292,11 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 		bitWidths := make([]byte, numMiniBlocksInBlock)
 
 		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
-			var maxValue ParquetType.INT32 = 0
+			var maxValue int32 = 0
 			for k := uint64(j) * numValuesInMiniBlock; k < uint64(j+1)*numValuesInMiniBlock; k++ {
-				blockBuf[k] = blockBuf[k].(ParquetType.INT32) - minDelta
-				if blockBuf[k].(ParquetType.INT32) > maxValue {
-					maxValue = blockBuf[k].(ParquetType.INT32)
+				blockBuf[k] = blockBuf[k].(int32) - minDelta
+				if blockBuf[k].(int32) > maxValue {
+					maxValue = blockBuf[k].(int32)
 				}
 			}
 			bitWidths[j] = byte(Common.BitNum(uint64(maxValue)))
@@ -324,7 +321,7 @@ func WriteDeltaINT64(nums []interface{}) []byte {
 	var numValuesInMiniBlock uint64 = 32
 	var totalNumValues uint64 = uint64(len(nums))
 
-	num := int64(nums[0].(ParquetType.INT64))
+	num := nums[0].(int64)
 	var firstValue uint64 = uint64((num >> 63) ^ (num << 1))
 
 	res = append(res, WriteUnsignedVarInt(blockSize)...)
@@ -335,10 +332,10 @@ func WriteDeltaINT64(nums []interface{}) []byte {
 	i := 1
 	for i < len(nums) {
 		blockBuf := make([]interface{}, 0)
-		var minDelta ParquetType.INT64 = 0x7FFFFFFFFFFFFFFF
+		var minDelta int64 = 0x7FFFFFFFFFFFFFFF
 
 		for i < len(nums) && uint64(len(blockBuf)) < blockSize {
-			delta := ParquetType.INT64(nums[i].(ParquetType.INT64) - nums[i-1].(ParquetType.INT64))
+			delta := nums[i].(int64) - nums[i-1].(int64)
 			blockBuf = append(blockBuf, delta)
 			if delta < minDelta {
 				minDelta = delta
@@ -353,11 +350,11 @@ func WriteDeltaINT64(nums []interface{}) []byte {
 		bitWidths := make([]byte, numMiniBlocksInBlock)
 
 		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
-			var maxValue ParquetType.INT64 = 0
+			var maxValue int64 = 0
 			for k := uint64(j) * numValuesInMiniBlock; k < uint64(j+1)*numValuesInMiniBlock; k++ {
-				blockBuf[k] = blockBuf[k].(ParquetType.INT64) - minDelta
-				if blockBuf[k].(ParquetType.INT64) > maxValue {
-					maxValue = blockBuf[k].(ParquetType.INT64)
+				blockBuf[k] = blockBuf[k].(int64) - minDelta
+				if blockBuf[k].(int64) > maxValue {
+					maxValue = blockBuf[k].(int64)
 				}
 			}
 			bitWidths[j] = byte(Common.BitNum(uint64(maxValue)))
@@ -381,7 +378,7 @@ func WriteDeltaLengthByteArray(arrays []interface{}) []byte {
 	lengthArray := make([]interface{}, ln)
 	for i := 0; i < ln; i++ {
 		array := reflect.ValueOf(arrays[i]).String()
-		lengthArray[i] = ParquetType.INT32(len(array))
+		lengthArray[i] = int32(len(array))
 	}
 
 	lengthBuf := WriteDeltaINT32(lengthArray)
@@ -450,7 +447,7 @@ func WriteDeltaByteArray(arrays []interface{}) []byte {
 
 	prefixLengths := make([]interface{}, ln)
 	suffixes := make([]interface{}, ln)
-	prefixLengths[0] = ParquetType.INT32(0)
+	prefixLengths[0] = int32(0)
 	suffixes[0] = arrays[0]
 
 	for i := 1; i < ln; i++ {
@@ -465,8 +462,8 @@ func WriteDeltaByteArray(arrays []interface{}) []byte {
 			}
 			j++
 		}
-		prefixLengths[i] = ParquetType.INT32(j)
-		suffixes[i] = ParquetType.BYTE_ARRAY(s2[j:])
+		prefixLengths[i] = int32(j)
+		suffixes[i] = (s2[j:])
 	}
 
 	prefixBuf := WriteDeltaINT32(prefixLengths)

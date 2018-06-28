@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -360,19 +359,19 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 
 	if cT == nil {
 		if *pT == parquet.Type_BOOLEAN {
-			a, b := ai.(ParquetType.BOOLEAN), bi.(ParquetType.BOOLEAN)
+			a, b := ai.(bool), bi.(bool)
 			if !a && b {
 				return true
 			}
 			return false
 		} else if *pT == parquet.Type_INT32 {
-			return ai.(ParquetType.INT32) < bi.(ParquetType.INT32)
+			return ai.(int32) < bi.(int32)
 
 		} else if *pT == parquet.Type_INT64 {
-			return ai.(ParquetType.INT64) < bi.(ParquetType.INT64)
+			return ai.(int64) < bi.(int64)
 
 		} else if *pT == parquet.Type_INT96 {
-			a, b := []byte(ai.(ParquetType.INT96)), []byte(bi.(ParquetType.INT96))
+			a, b := []byte(ai.(string)), []byte(bi.(string))
 			fa, fb := a[11]>>7, b[11]>>7
 			if fa > fb {
 				return true
@@ -389,38 +388,38 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 			return false
 
 		} else if *pT == parquet.Type_FLOAT {
-			return ai.(ParquetType.FLOAT) < bi.(ParquetType.FLOAT)
+			return ai.(float32) < bi.(float32)
 
 		} else if *pT == parquet.Type_DOUBLE {
-			return ai.(ParquetType.DOUBLE) < bi.(ParquetType.DOUBLE)
+			return ai.(float64) < bi.(float64)
 
 		} else if *pT == parquet.Type_BYTE_ARRAY {
-			return ai.(ParquetType.BYTE_ARRAY) < bi.(ParquetType.BYTE_ARRAY)
+			return ai.(string) < bi.(string)
 
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			return ai.(ParquetType.FIXED_LEN_BYTE_ARRAY) < bi.(ParquetType.FIXED_LEN_BYTE_ARRAY)
+			return ai.(string) < bi.(string)
 		}
 	}
 
 	if *cT == parquet.ConvertedType_UTF8 {
-		return ai.(ParquetType.BYTE_ARRAY) < bi.(ParquetType.BYTE_ARRAY)
+		return ai.(string) < bi.(string)
 
 	} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
 		*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
-		return ai.(ParquetType.INT32) < bi.(ParquetType.INT32)
+		return ai.(int32) < bi.(int32)
 
 	} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
-		return uint32(ai.(ParquetType.INT32)) < uint32(bi.(ParquetType.INT32))
+		return uint32(ai.(int32)) < uint32(bi.(int32))
 
 	} else if *cT == parquet.ConvertedType_INT_64 || *cT == parquet.ConvertedType_TIME_MICROS ||
 		*cT == parquet.ConvertedType_TIMESTAMP_MILLIS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS {
-		return ai.(ParquetType.INT64) < bi.(ParquetType.INT64)
+		return ai.(int64) < bi.(int64)
 
 	} else if *cT == parquet.ConvertedType_UINT_64 {
-		return uint64(ai.(ParquetType.INT64)) < uint64(bi.(ParquetType.INT64))
+		return uint64(ai.(int64)) < uint64(bi.(int64))
 
 	} else if *cT == parquet.ConvertedType_INTERVAL {
-		a, b := []byte(ai.(ParquetType.FIXED_LEN_BYTE_ARRAY)), []byte(bi.(ParquetType.FIXED_LEN_BYTE_ARRAY))
+		a, b := []byte(ai.(string)), []byte(bi.(string))
 		for i := 11; i >= 0; i-- {
 			if a[i] > b[i] {
 				return false
@@ -432,18 +431,18 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 
 	} else if *cT == parquet.ConvertedType_DECIMAL {
 		if *pT == parquet.Type_BYTE_ARRAY {
-			as, bs := string(ai.(ParquetType.BYTE_ARRAY)), string(bi.(ParquetType.BYTE_ARRAY))
+			as, bs := ai.(string), bi.(string)
 			return CmpIntBinary(as, bs, "BigEndian", true)
 
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			as, bs := string(ai.(ParquetType.FIXED_LEN_BYTE_ARRAY)), string(bi.(ParquetType.FIXED_LEN_BYTE_ARRAY))
+			as, bs := ai.(string), bi.(string)
 			return CmpIntBinary(as, bs, "BigEndian", true)
 
 		} else if *pT == parquet.Type_INT32 {
-			return ai.(ParquetType.INT32) < bi.(ParquetType.INT32)
+			return ai.(int32) < bi.(int32)
 
 		} else if *pT == parquet.Type_INT64 {
-			return ai.(ParquetType.INT64) < bi.(ParquetType.INT64)
+			return ai.(int64) < bi.(int64)
 
 		}
 	}
@@ -506,15 +505,13 @@ func SizeOf(val reflect.Value) int64 {
 		return size
 	}
 	switch val.Type().Name() {
-	case "BOOLEAN":
+	case "bool":
 		return 1
-	case "INT32", "INT_8", "INT_16", "INT_32", "UINT_8", "UINT_16", "UINT_32", "FLOAT", "DATE", "TIME_MILLIS":
+	case "int32":
 		return 4
-	case "INT64", "INT_64", "UINT_64", "DOUBLE", "TIME_MICROS", "TIMESTAMP_MILLIS", "TIMESTAMP_MICROS":
+	case "int64":
 		return 8
-	case "INT96", "INTERVAL":
-		return 12
-	case "BYTE_ARRAY", "FIXED_LEN_BYTE_ARRAY", "UTF8", "DECIMAL":
+	case "string":
 		return int64(val.Len())
 	}
 	return 4
