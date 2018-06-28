@@ -289,7 +289,7 @@ func TestSizeOf(t *testing.T) {
 		{reflect.ValueOf(int32(1)), 4},
 		{reflect.ValueOf(int32(1)), 4},
 		{reflect.ValueOf(int64(1)), 8},
-		{reflect.ValueOf(int64(1)), 4},
+		{reflect.ValueOf(int64(1)), 8},
 		{reflect.ValueOf(int32(1)), 4},
 		{reflect.ValueOf(int64(1)), 8},
 		{reflect.ValueOf(int64(1)), 8},

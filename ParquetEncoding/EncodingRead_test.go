@@ -6,15 +6,15 @@ import (
 	"testing"
 
 	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func TestReadPlainBOOLEAN(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{BOOLEAN(true)},
-		[]interface{}{BOOLEAN(false)},
-		[]interface{}{BOOLEAN(false), BOOLEAN(false)},
-		[]interface{}{BOOLEAN(false), BOOLEAN(true)},
+		[]interface{}{(true)},
+		[]interface{}{(false)},
+		[]interface{}{(false), (false)},
+		[]interface{}{(false), (true)},
 	}
 
 	for _, data := range testData {
@@ -31,8 +31,8 @@ func TestReadPlainINT32(t *testing.T) {
 		byteReader *bytes.Reader
 	}{
 		{[]interface{}{}, bytes.NewReader([]byte{})},
-		{[]interface{}{INT32(0)}, bytes.NewReader([]byte{0, 0, 0, 0})},
-		{[]interface{}{INT32(0), INT32(1), INT32(2)}, bytes.NewReader([]byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0})},
+		{[]interface{}{int32(0)}, bytes.NewReader([]byte{0, 0, 0, 0})},
+		{[]interface{}{int32(0), int32(1), int32(2)}, bytes.NewReader([]byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0})},
 	}
 
 	for _, data := range testData {
@@ -49,8 +49,8 @@ func TestReadPlainINT64(t *testing.T) {
 		byteReader *bytes.Reader
 	}{
 		{[]interface{}{}, bytes.NewReader([]byte{})},
-		{[]interface{}{INT64(0)}, bytes.NewReader([]byte{0, 0, 0, 0, 0, 0, 0, 0})},
-		{[]interface{}{INT64(0), INT64(1), INT64(2)}, bytes.NewReader([]byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0})},
+		{[]interface{}{int64(0)}, bytes.NewReader([]byte{0, 0, 0, 0, 0, 0, 0, 0})},
+		{[]interface{}{int64(0), int64(1), int64(2)}, bytes.NewReader([]byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0})},
 	}
 
 	for _, data := range testData {
@@ -63,8 +63,8 @@ func TestReadPlainINT64(t *testing.T) {
 
 func TestReadPlainBYTE_ARRAY(t *testing.T) {
 	testData := [][]interface{}{
-		{BYTE_ARRAY("hello"), BYTE_ARRAY("world")},
-		{BYTE_ARRAY("good"), BYTE_ARRAY(""), BYTE_ARRAY("a"), BYTE_ARRAY("b")},
+		{("hello"), ("world")},
+		{("good"), (""), ("a"), ("b")},
 	}
 
 	for _, data := range testData {
@@ -77,12 +77,12 @@ func TestReadPlainBYTE_ARRAY(t *testing.T) {
 
 func TestReadPlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
 	testData := [][]interface{}{
-		{FIXED_LEN_BYTE_ARRAY("hello"), FIXED_LEN_BYTE_ARRAY("world")},
-		{FIXED_LEN_BYTE_ARRAY("a"), FIXED_LEN_BYTE_ARRAY("b"), FIXED_LEN_BYTE_ARRAY("c"), FIXED_LEN_BYTE_ARRAY("d")},
+		{("hello"), ("world")},
+		{("a"), ("b"), ("c"), ("d")},
 	}
 
 	for _, data := range testData {
-		res, _ := ReadPlainFIXED_LEN_BYTE_ARRAY(bytes.NewReader(WritePlainFIXED_LEN_BYTE_ARRAY(data)), uint64(len(data)), uint64(len(data[0].(FIXED_LEN_BYTE_ARRAY))))
+		res, _ := ReadPlainFIXED_LEN_BYTE_ARRAY(bytes.NewReader(WritePlainFIXED_LEN_BYTE_ARRAY(data)), uint64(len(data)), uint64(len(data[0].(string))))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainFIXED_LEN_BYTE_ARRAY err, %v", data)
 		}
@@ -91,8 +91,8 @@ func TestReadPlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
 
 func TestReadPlainFLOAT(t *testing.T) {
 	testData := [][]interface{}{
-		{FLOAT(0), FLOAT(1), FLOAT(2)},
-		{FLOAT(0), FLOAT(0.1), FLOAT(0.2)},
+		{float32(0), float32(1), float32(2)},
+		{float32(0), float32(0.1), float32(0.2)},
 	}
 
 	for _, data := range testData {
@@ -105,8 +105,8 @@ func TestReadPlainFLOAT(t *testing.T) {
 
 func TestReadPlainDOUBLE(t *testing.T) {
 	testData := [][]interface{}{
-		{DOUBLE(0), DOUBLE(1), DOUBLE(2)},
-		{DOUBLE(0), DOUBLE(0), DOUBLE(0)},
+		{float64(0), float64(1), float64(2)},
+		{float64(0), float64(0), float64(0)},
 	}
 
 	for _, data := range testData {
@@ -129,13 +129,13 @@ func TestReadUnsignedVarInt(t *testing.T) {
 
 func TestReadRLEBitPackedHybrid(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{INT64(1), INT64(2), INT64(3), INT64(4)},
-		[]interface{}{INT64(0), INT64(0), INT64(0), INT64(0), INT64(0)},
+		[]interface{}{int64(1), int64(2), int64(3), int64(4)},
+		[]interface{}{int64(0), int64(0), int64(0), int64(0), int64(0)},
 	}
 	for _, data := range testData {
-		maxVal := uint64(data[len(data)-1].(INT64))
+		maxVal := uint64(data[len(data)-1].(int64))
 
-		res, err := ReadRLEBitPackedHybrid(bytes.NewReader(WriteRLEBitPackedHybrid(data, int32(BitNum(maxVal)))), uint64(BitNum(maxVal)), 0)
+		res, err := ReadRLEBitPackedHybrid(bytes.NewReader(WriteRLEBitPackedHybrid(data, int32(BitNum(maxVal)), parquet.Type_INT64)), uint64(BitNum(maxVal)), 0)
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadRLEBitpackedHybrid error, expect %v, get %v, err info:%v", data, res, err)
 		}
@@ -144,8 +144,8 @@ func TestReadRLEBitPackedHybrid(t *testing.T) {
 
 func TestReadDeltaBinaryPackedINT(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{INT64(1), INT64(2), INT64(3), INT64(4)},
-		[]interface{}{INT64(0), INT64(0), INT64(0), INT64(0), INT64(0)},
+		[]interface{}{int64(1), int64(2), int64(3), int64(4)},
+		[]interface{}{int64(0), int64(0), int64(0), int64(0), int64(0)},
 	}
 	for _, data := range testData {
 		res, _ := ReadDeltaBinaryPackedINT(bytes.NewReader(WriteDeltaINT64(data)))

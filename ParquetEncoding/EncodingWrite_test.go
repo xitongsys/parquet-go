@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	. "github.com/xitongsys/parquet-go/Common"
-	. "github.com/xitongsys/parquet-go/ParquetType"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func TestToInt64(t *testing.T) {
@@ -71,13 +71,13 @@ func TestWriteRLE(t *testing.T) {
 		nums     []interface{}
 		expected []byte
 	}{
-		{[]interface{}{INT64(0), INT64(0), INT64(0)}, []byte{byte(3 << 1)}},
-		{[]interface{}{INT64(3)}, []byte{byte(1 << 1), byte(3)}},
-		{[]interface{}{INT64(1), INT64(2), INT64(3), INT64(3)}, []byte{byte(1 << 1), byte(1), byte(1 << 1), byte(2), byte(2 << 1), byte(3)}},
+		{[]interface{}{int64(0), int64(0), int64(0)}, []byte{byte(3 << 1)}},
+		{[]interface{}{int64(3)}, []byte{byte(1 << 1), byte(3)}},
+		{[]interface{}{int64(1), int64(2), int64(3), int64(3)}, []byte{byte(1 << 1), byte(1), byte(1 << 1), byte(2), byte(2 << 1), byte(3)}},
 	}
 
 	for _, data := range testData {
-		res := WriteRLE(data.nums, int32(BitNum(uint64(data.nums[len(data.nums)-1].(INT64)))))
+		res := WriteRLE(data.nums, int32(BitNum(uint64(data.nums[len(data.nums)-1].(int64)))), parquet.Type_INT64)
 		if string(res) != string(data.expected) {
 			t.Errorf("WriteRLE error, expect %v, get %v", data.expected, res)
 		}
@@ -107,9 +107,9 @@ func TestWritePlainBOOLEAN(t *testing.T) {
 		expected []byte
 	}{
 		{[]interface{}{}, []byte{}},
-		{[]interface{}{BOOLEAN(true)}, []byte{1}},
-		{[]interface{}{BOOLEAN(true), BOOLEAN(false)}, []byte{1}},
-		{[]interface{}{BOOLEAN(true), BOOLEAN(false), BOOLEAN(false), BOOLEAN(true), BOOLEAN(false)}, []byte{9}},
+		{[]interface{}{(true)}, []byte{1}},
+		{[]interface{}{(true), (false)}, []byte{1}},
+		{[]interface{}{(true), (false), (false), (true), (false)}, []byte{9}},
 	}
 
 	for _, data := range testData {
@@ -126,8 +126,8 @@ func TestWritePlainINT32(t *testing.T) {
 		expected []byte
 	}{
 		{[]interface{}{}, []byte{}},
-		{[]interface{}{INT32(0)}, []byte{0, 0, 0, 0}},
-		{[]interface{}{INT32(0), INT32(1), INT32(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
+		{[]interface{}{int32(0)}, []byte{0, 0, 0, 0}},
+		{[]interface{}{int32(0), int32(1), int32(2)}, []byte{0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0}},
 	}
 
 	for _, data := range testData {
@@ -144,8 +144,8 @@ func TestWritePlainINT64(t *testing.T) {
 		expected []byte
 	}{
 		{[]interface{}{}, []byte{}},
-		{[]interface{}{INT64(0)}, []byte{0, 0, 0, 0, 0, 0, 0, 0}},
-		{[]interface{}{INT64(0), INT64(1), INT64(2)}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{int64(0)}, []byte{0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{int64(0), int64(1), int64(2)}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0}},
 	}
 
 	for _, data := range testData {
@@ -162,11 +162,11 @@ func TestWritePlainINT96(t *testing.T) {
 		expected []byte
 	}{
 		{[]interface{}{}, []byte{}},
-		{[]interface{}{INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{[]interface{}{string([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})}, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 		{[]interface{}{
-			INT96([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
-			INT96([]byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
-			INT96([]byte{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})},
+			string([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+			string([]byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+			string([]byte{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})},
 
 			[]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 	}
@@ -185,7 +185,7 @@ func TestWritePlainBYTE_ARRAY(t *testing.T) {
 		expected []byte
 	}{
 		{[]interface{}{}, []byte{}},
-		{[]interface{}{BYTE_ARRAY("a"), BYTE_ARRAY("abc")}, []byte{1, 0, 0, 0, 97, 3, 0, 0, 0, 97, 98, 99}},
+		{[]interface{}{("a"), ("abc")}, []byte{1, 0, 0, 0, 97, 3, 0, 0, 0, 97, 98, 99}},
 	}
 
 	for _, data := range testData {
@@ -202,7 +202,7 @@ func TestWritePlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
 		expected []byte
 	}{
 		{[]interface{}{}, []byte{}},
-		{[]interface{}{FIXED_LEN_BYTE_ARRAY("bca"), FIXED_LEN_BYTE_ARRAY("abc")}, []byte{98, 99, 97, 97, 98, 99}},
+		{[]interface{}{("bca"), ("abc")}, []byte{98, 99, 97, 97, 98, 99}},
 	}
 
 	for _, data := range testData {
@@ -218,9 +218,9 @@ func TestWriteDeltaINT32(t *testing.T) {
 		nums     []interface{}
 		expected []byte
 	}{
-		{[]interface{}{INT32(1), INT32(2), INT32(3), INT32(4), INT32(5)}, []byte{128, 1, 4, 5, 2, 2, 0, 0, 0, 0}},
+		{[]interface{}{int32(1), int32(2), int32(3), int32(4), int32(5)}, []byte{128, 1, 4, 5, 2, 2, 0, 0, 0, 0}},
 		{
-			[]interface{}{INT32(7), INT32(5), INT32(3), INT32(1), INT32(2), INT32(3), INT32(4), INT32(5)},
+			[]interface{}{int32(7), int32(5), int32(3), int32(1), int32(2), int32(3), int32(4), int32(5)},
 			[]byte{128, 1, 4, 8, 14, 3, 2, 0, 0, 0, 192, 63, 0, 0, 0, 0, 0, 0},
 		},
 	}
@@ -233,14 +233,14 @@ func TestWriteDeltaINT32(t *testing.T) {
 	}
 }
 
-func TestWriteDeltaINT64(t *testing.T) {
+func TestWriteDeltaint64(t *testing.T) {
 	testData := []struct {
 		nums     []interface{}
 		expected []byte
 	}{
-		{[]interface{}{INT64(1), INT64(2), INT64(3), INT64(4), INT64(5)}, []byte{128, 1, 4, 5, 2, 2, 0, 0, 0, 0}},
+		{[]interface{}{int64(1), int64(2), int64(3), int64(4), int64(5)}, []byte{128, 1, 4, 5, 2, 2, 0, 0, 0, 0}},
 		{
-			[]interface{}{INT64(7), INT64(5), INT64(3), INT64(1), INT64(2), INT64(3), INT64(4), INT64(5)},
+			[]interface{}{int64(7), int64(5), int64(3), int64(1), int64(2), int64(3), int64(4), int64(5)},
 			[]byte{128, 1, 4, 8, 14, 3, 2, 0, 0, 0, 192, 63, 0, 0, 0, 0, 0, 0},
 		},
 	}
