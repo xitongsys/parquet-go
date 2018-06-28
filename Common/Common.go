@@ -513,6 +513,10 @@ func SizeOf(val reflect.Value) int64 {
 		return 8
 	case "string":
 		return int64(val.Len())
+	case "float32":
+		return 4
+	case "float64":
+		return 8
 	}
 	return 4
 }
