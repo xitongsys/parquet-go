@@ -190,7 +190,7 @@ func (self *ParquetWriter) flushObjs() error {
 					if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
 						lock.Lock()
 						if _, ok := self.DictRecs[name]; !ok {
-							self.DictRecs[name] = Layout.NewDictRec()
+							self.DictRecs[name] = Layout.NewDictRec(table.Type)
 						}
 						pagesMapList[index][name], _ = Layout.TableToDictDataPages(self.DictRecs[name],
 							table, int32(self.PageSize), 32, self.CompressionType)

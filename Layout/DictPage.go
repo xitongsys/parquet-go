@@ -15,11 +15,13 @@ import (
 type DictRecType struct {
 	DictMap   map[interface{}]int32
 	DictSlice []interface{}
+	Type      parquet.Type
 }
 
-func NewDictRec() *DictRecType {
+func NewDictRec(pT parquet.Type) *DictRecType {
 	res := new(DictRecType)
 	res.DictMap = make(map[interface{}]int32)
+	res.Type = pT
 	return res
 }
 
@@ -36,14 +38,14 @@ func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parque
 	page.DataType = parquet.Type_INT32
 	page.CompressType = compressType
 
-	page.DictPageCompress(compressType)
+	page.DictPageCompress(compressType, dictRec.Type)
 	totSize += int64(len(page.RawData))
 	return page, totSize
 }
 
 //Compress the dict page to parquet file
-func (page *Page) DictPageCompress(compressType parquet.CompressionCodec) []byte {
-	dataBuf := ParquetEncoding.WritePlain(page.DataTable.Values, page.DataType)
+func (page *Page) DictPageCompress(compressType parquet.CompressionCodec, pT parquet.Type) []byte {
+	dataBuf := ParquetEncoding.WritePlain(page.DataTable.Values, pT)
 	var dataEncodeBuf []byte
 	if compressType == parquet.CompressionCodec_GZIP {
 		dataEncodeBuf = Compress.CompressGzip(dataBuf)
@@ -229,7 +231,7 @@ func TableToDictPage(table *Table, pageSize int32, compressType parquet.Compress
 	page.Path = table.Path
 	page.Info = table.Info
 
-	page.DictPageCompress(compressType)
+	page.DictPageCompress(compressType, page.DataType)
 	totSize += int64(len(page.RawData))
 	return page, totSize
 }
