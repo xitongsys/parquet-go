@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/ParquetWriter"
 )
 
@@ -49,15 +48,16 @@ func main() {
 		}
 
 		data2 := []interface{}{
-			ParquetType.BYTE_ARRAY("Student Name"),
-			ParquetType.INT32(20 + i%5),
-			ParquetType.INT64(i),
-			ParquetType.FLOAT(50.0 + float32(i)*0.1),
-			ParquetType.BOOLEAN(i%2 == 0),
+			"Student Name",
+			int32(20 + i%5),
+			int64(i),
+			float32(50.0 + float32(i)*0.1),
+			i%2 == 0,
 		}
 		if err = pw.Write(data2); err != nil {
 			log.Println("Write error", err)
 		}
+
 	}
 	if err = pw.WriteStop(); err != nil {
 		log.Println("WriteStop error", err)
