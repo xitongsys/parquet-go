@@ -6,6 +6,7 @@ import (
 
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
+	"github.com/xitongsys/parquet-go/ParquetType"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -222,7 +223,9 @@ func Marshal(srcInterface []interface{}, bgn int, end int, schemaHandler *Schema
 				m = &ParquetMap{schemaHandler: schemaHandler}
 			} else {
 				table := res[node.PathMap.Path]
-				table.Values = append(table.Values, node.Val.Interface())
+				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
+				sele := schemaHandler.SchemaElements[schemaIndex]
+				table.Values = append(table.Values, ParquetType.GoTypeToParquetType(node.Val.Interface(), sele.Type, sele.ConvertedType))
 				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 				table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
 				continue

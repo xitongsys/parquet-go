@@ -409,14 +409,14 @@ func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.Converted
 		return ai.(int32) < bi.(int32)
 
 	} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
-		return uint32(ai.(uint32)) < uint32(bi.(uint32))
+		return uint32(ai.(int32)) < uint32(bi.(int32))
 
 	} else if *cT == parquet.ConvertedType_INT_64 || *cT == parquet.ConvertedType_TIME_MICROS ||
 		*cT == parquet.ConvertedType_TIMESTAMP_MILLIS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS {
 		return ai.(int64) < bi.(int64)
 
 	} else if *cT == parquet.ConvertedType_UINT_64 {
-		return uint64(ai.(uint64)) < uint64(bi.(uint64))
+		return uint64(ai.(int64)) < uint64(bi.(int64))
 
 	} else if *cT == parquet.ConvertedType_INTERVAL {
 		a, b := []byte(ai.(string)), []byte(bi.(string))

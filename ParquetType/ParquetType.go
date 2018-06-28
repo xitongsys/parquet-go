@@ -90,6 +90,24 @@ func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 	}
 }
 
+func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
+	if cT == nil {
+		return src
+	}
+
+	if *cT == parquet.ConvertedType_UINT_8 {
+		return int32(src.(uint32))
+	} else if *cT == parquet.ConvertedType_UINT_16 {
+		return int32(src.(uint32))
+	} else if *cT == parquet.ConvertedType_UINT_32 {
+		return int32(src.(uint32))
+	} else if *cT == parquet.ConvertedType_UINT_64 {
+		return int64(src.(uint64))
+	} else {
+		return src
+	}
+}
+
 //Scan a string to parquet value; length and scale just for decimal
 func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, length int, scale int) interface{} {
 	if cT == nil {
