@@ -55,35 +55,23 @@ func ReadPlainBOOLEAN(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, err
 func ReadPlainINT32(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
 	var err error
 	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur int32
-		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
-			break
-		}
-		res[i] = cur
-	}
+	err = BinaryReadINT32(bytesReader, res)
 	return res, err
 }
 
 func ReadPlainINT64(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
 	var err error
 	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur int64
-		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
-			break
-		}
-		res[i] = cur
-	}
+	err = BinaryReadINT64(bytesReader, res)
 	return res, err
 }
 
 func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
 	var err error
 	res := make([]interface{}, cnt)
+	cur := make([]byte, 12)
 	for i := 0; i < int(cnt); i++ {
-		var cur [12]byte
-		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
+		if _, err = bytesReader.Read(cur); err != nil {
 			break
 		}
 		res[i] = string(cur[:12])
@@ -94,26 +82,14 @@ func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error
 func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
 	var err error
 	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur float32
-		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
-			break
-		}
-		res[i] = cur
-	}
+	err = BinaryReadFLOAT32(bytesReader, res)
 	return res, err
 }
 
 func ReadPlainDOUBLE(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
 	var err error
 	res := make([]interface{}, cnt)
-	for i := 0; i < int(cnt); i++ {
-		var cur float64
-		if err = binary.Read(bytesReader, binary.LittleEndian, &cur); err != nil {
-			break
-		}
-		res[i] = cur
-	}
+	err = BinaryReadFLOAT64(bytesReader, res)
 	return res, err
 }
 
