@@ -2,7 +2,6 @@ package ParquetEncoding
 
 import (
 	"bytes"
-	"encoding/binary"
 	"reflect"
 
 	"github.com/xitongsys/parquet-go/Common"
@@ -71,43 +70,33 @@ func WritePlainBOOLEAN(nums []interface{}) []byte {
 
 func WritePlainINT32(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		binary.Write(bufWriter, binary.LittleEndian, nums[i])
-	}
+	BinaryWriteINT32(bufWriter, nums)
 	return bufWriter.Bytes()
 }
 
 func WritePlainINT64(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		binary.Write(bufWriter, binary.LittleEndian, nums[i])
-	}
+	BinaryWriteINT64(bufWriter, nums)
 	return bufWriter.Bytes()
 }
 
 func WritePlainINT96(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	for i := 0; i < len(nums); i++ {
-		for j := 0; j < len(nums[i].(string)); j++ {
-			binary.Write(bufWriter, binary.LittleEndian, nums[i].(string)[j])
-		}
+		bufWriter.WriteString(nums[i].(string))
 	}
 	return bufWriter.Bytes()
 }
 
 func WritePlainFLOAT(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		binary.Write(bufWriter, binary.LittleEndian, nums[i])
-	}
+	BinaryWriteFLOAT32(bufWriter, nums)
 	return bufWriter.Bytes()
 }
 
 func WritePlainDOUBLE(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
-	for i := 0; i < len(nums); i++ {
-		binary.Write(bufWriter, binary.LittleEndian, nums[i])
-	}
+	BinaryWriteFLOAT64(bufWriter, nums)
 	return bufWriter.Bytes()
 }
 
@@ -115,9 +104,9 @@ func WritePlainBYTE_ARRAY(arrays []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
-		ln := uint32(len(arrays[i].(string)))
-		binary.Write(bufWriter, binary.LittleEndian, ln)
-		bufWriter.Write([]byte(arrays[i].(string)))
+		ln := int32(len(arrays[i].(string)))
+		BinaryWriteINT32(bufWriter, []interface{}{ln})
+		bufWriter.WriteString(arrays[i].(string))
 	}
 	return bufWriter.Bytes()
 }
@@ -126,7 +115,7 @@ func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
-		bufWriter.Write([]byte(arrays[i].(string)))
+		bufWriter.WriteString(arrays[i].(string))
 	}
 	return bufWriter.Bytes()
 }
