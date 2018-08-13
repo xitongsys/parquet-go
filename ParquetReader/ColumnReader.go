@@ -9,7 +9,6 @@ import (
 
 // NewParquetColumnReader creates a parquet column reader
 func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetReader, error) {
-	var err error
 	res := new(ParquetReader)
 	res.NP = np
 	res.PFile = pFile
@@ -17,6 +16,7 @@ func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetRe
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
 
+	/* open when need
 	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
 		schema := res.SchemaHandler.SchemaElements[i]
 		if schema.GetNumChildren() == 0 {
@@ -26,6 +26,7 @@ func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetRe
 			}
 		}
 	}
+	*/
 	return res, nil
 }
 
@@ -36,6 +37,17 @@ func (self *ParquetReader) SkipRowsByPath(pathStr string, num int) {
 	rootName := self.SchemaHandler.GetRootName()
 	if !strings.HasPrefix(pathStr, rootName) {
 		pathStr = rootName + "." + pathStr
+	}
+
+	if _, ok := self.SchemaHandler.MapIndex[pathStr]; !ok {
+		return
+	}
+
+	if _, ok := self.ColumnBuffers[pathStr]; !ok {
+		var err error
+		if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.PFile, self.Footer, self.SchemaHandler, pathStr); err != nil {
+			return
+		}
 	}
 
 	if cb, ok := self.ColumnBuffers[pathStr]; ok {
@@ -59,6 +71,17 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, num int) (values []i
 	rootName := self.SchemaHandler.GetRootName()
 	if !strings.HasPrefix(pathStr, rootName) {
 		pathStr = rootName + "." + pathStr
+	}
+
+	if _, ok := self.SchemaHandler.MapIndex[pathStr]; !ok {
+		return []interface{}{}, []int32{}, []int32{}
+	}
+
+	if _, ok := self.ColumnBuffers[pathStr]; !ok {
+		var err error
+		if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.PFile, self.Footer, self.SchemaHandler, pathStr); err != nil {
+			return []interface{}{}, []int32{}, []int32{}
+		}
 	}
 
 	if cb, ok := self.ColumnBuffers[pathStr]; ok {
