@@ -205,16 +205,17 @@ func (cNode *Node) getStructTags() string {
 		rTStr = "REPEATED"
 	}
 
-	tags := fmt.Sprintf("`parquet:\"name=%s, type=%s, repetitiontype=%s\"`", cNode.SE.Name, *cNode.SE.Type, rTStr)
+	seType := cNode.SE.GetType()
+	tags := fmt.Sprintf("`parquet:\"name=%s, type=%s, repetitiontype=%s\"`", cNode.SE.Name, seType, rTStr)
 
 	pTStr, cTStr := ParquetTypeToParquetTypeStr(cNode.SE.Type, cNode.SE.ConvertedType)
-	if *cNode.SE.Type == parquet.Type_FIXED_LEN_BYTE_ARRAY && cNode.SE.ConvertedType == nil {
+	if seType == parquet.Type_FIXED_LEN_BYTE_ARRAY && cNode.SE.ConvertedType == nil {
 		length := cNode.SE.GetTypeLength()
 		tagStr := "`parquet:\"name=%s, type=%s, length=%d, repetitiontype=%s\"`"
 		tags = fmt.Sprintf(tagStr, cNode.SE.Name, pTStr, length, rTStr)
 	} else if cNode.SE.ConvertedType != nil && *cNode.SE.ConvertedType == parquet.ConvertedType_DECIMAL {
 		scale, precision := cNode.SE.GetScale(), cNode.SE.GetPrecision()
-		if *cNode.SE.Type == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+		if seType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			length := cNode.SE.GetTypeLength()
 			tagStr := "`parquet:\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\"`"
 			tags = fmt.Sprintf(tagStr, cNode.SE.Name, cTStr, pTStr, scale, precision, length, rTStr)
@@ -247,7 +248,7 @@ func (self *Node) OutputStruct(withName bool, withTags bool) string {
 	}
 
 	if pT == nil && cT == nil {
-		res += rTStr + "struct{\n"
+		res += rTStr + "struct {\n"
 		for _, cNode := range self.Children {
 			if withTags {
 				res += cNode.OutputStruct(true, withTags) + " " + cNode.getStructTags() + "\n"
@@ -257,14 +258,14 @@ func (self *Node) OutputStruct(withName bool, withTags bool) string {
 		}
 		res += "}"
 
-	} else if cT != nil && *cT == parquet.ConvertedType_MAP {
+	} else if cT != nil && *cT == parquet.ConvertedType_MAP && self.Children != nil {
 		keyNode := self.Children[0].Children[0]
 		keyPT, keyCT := keyNode.SE.Type, keyNode.SE.ConvertedType
 		keyGoTypeStr := ParquetTypeToGoTypeStr(keyPT, keyCT)
 		valNode := self.Children[0].Children[1]
 		res += rTStr + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct(false, withTags)
 
-	} else if cT != nil && *cT == parquet.ConvertedType_LIST {
+	} else if cT != nil && *cT == parquet.ConvertedType_LIST && self.Children != nil {
 		cNode := self.Children[0].Children[0]
 		res += rTStr + "[]" + cNode.OutputStruct(false, withTags)
 
