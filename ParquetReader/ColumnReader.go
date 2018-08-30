@@ -12,7 +12,9 @@ func NewParquetColumnReader(pFile ParquetFile.ParquetFile, np int64) (*ParquetRe
 	res := new(ParquetReader)
 	res.NP = np
 	res.PFile = pFile
-	res.ReadFooter()
+	if err := res.ReadFooter(); err != nil {
+		return nil, err
+	}
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 	res.SchemaHandler = SchemaHandler.NewSchemaHandlerFromSchemaList(res.Footer.GetSchema())
 
