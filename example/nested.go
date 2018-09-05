@@ -21,7 +21,7 @@ func main() {
 	}
 	defer closer()
 
-	r1 := &Data{
+	_ = &Data{
 		Symbol: "A",
 		M: map[string][]*ExpData{
 			"a1": []*ExpData{
@@ -48,10 +48,10 @@ func main() {
 			},
 		},
 	}
-	if err = w.Write(r1); err != nil {
+	if err = w.Write(*r2); err != nil {
 		log.Fatal(err)
 	}
-	if err = w.Write(r2); err != nil {
+	if err = w.Write(*r2); err != nil {
 		log.Fatal(err)
 	}
 }

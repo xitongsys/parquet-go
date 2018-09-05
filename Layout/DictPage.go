@@ -2,7 +2,6 @@ package Layout
 
 import (
 	"context"
-	"log"
 	"reflect"
 
 	"github.com/apache/thrift/lib/go/thrift"
@@ -84,8 +83,6 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	i := 0
 	dataType := table.Type
 
-	log.Print(table.Info)
-
 	pT, cT := ParquetType.TypeNameToParquetType(table.Info.Type, table.Info.BaseType)
 
 	for i < totalLn {
@@ -98,7 +95,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		values := make([]interface{}, 0)
 
 		for j < totalLn && size < pageSize {
-			if table.Values[j] != nil && table.DefinitionLevels[j] == table.MaxDefinitionLevel {
+			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
 				size += int32(Common.SizeOf(reflect.ValueOf(table.Values[j])))
 				maxVal = Common.Max(maxVal, table.Values[j], pT, cT)

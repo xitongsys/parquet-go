@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -74,7 +73,6 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
-	log.Print(table.Info)
 	pT, cT := ParquetType.TypeNameToParquetType(table.Info.Type, table.Info.BaseType)
 
 	for i < totalLn {
