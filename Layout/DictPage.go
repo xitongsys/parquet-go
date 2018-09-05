@@ -2,6 +2,7 @@ package Layout
 
 import (
 	"context"
+	"log"
 	"reflect"
 
 	"github.com/apache/thrift/lib/go/thrift"
@@ -82,6 +83,8 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
+
+	log.Print(table.Info)
 
 	pT, cT := ParquetType.TypeNameToParquetType(table.Info.Type, table.Info.BaseType)
 
