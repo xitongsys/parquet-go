@@ -12,60 +12,47 @@ import (
 
 var outFile = flag.String("output", "res.parquet", "the file to write the generated files to.")
 
-// TestData ...
-type TestData struct {
-	Status string             `parquet:"name=status, type=UTF8, encoding=PLAIN_DICTIONARY" json:"status"`
-	M      map[string][]*Data `parquet:"name=M, type=MAP, keytype=UTF8"`
-}
-
-// Data ...
-type Data struct {
-	Ask float64         `parquet:"name=ask, type=DOUBLE" json:"ask"`
-	D   []*Deliverables `parquet:"name=emptyList, type=LIST" json:"emptyList"`
-}
-
-// Deliverables ...
-type Deliverables struct {
-	Unused string `parquet:"name=unused, type=UTF8, encoding=PLAIN_DICTIONARY" json:"unused"`
-}
-
 func main() {
 	flag.Parse()
 
 	w, closer, err := NewParquetWriter(*outFile)
-	defer closer()
 	if err != nil {
 		log.Fatalf("unable to make parquet writer for %s\n\t%s", *outFile, err.Error)
 	}
+	defer closer()
 
-	r1 := &TestData{
-		Status: "Success",
-		M: map[string][]*Data{
-			"A": []*Data{
-				&Data{
-					Ask: 1,
-					D:   make([]*Deliverables, 0),
+	r1 := &Data{
+		Symbol: "A",
+		M: map[string][]*ExpData{
+			"a1": []*ExpData{
+				&ExpData{
+					Ask: 13,
+					D: []*D{
+						&D{
+							Symbol:           "A",
+							DeliverableUnits: 20.0,
+						},
+					},
 				},
 			},
 		},
 	}
-	r2 := &TestData{
-		Status: "Success",
-		M: map[string][]*Data{
-			"A": []*Data{
-				&Data{
-					Ask: 2,
-					D:   make([]*Deliverables, 0),
+	r2 := &Data{
+		Symbol: "B",
+		M: map[string][]*ExpData{
+			"b1": []*ExpData{
+				&ExpData{
+					Ask: 12.2,
+					D:   make([]*D, 0),
 				},
 			},
 		},
 	}
-
 	if err = w.Write(r1); err != nil {
-		log.Fatal("R1: ", err)
+		log.Fatal(err)
 	}
 	if err = w.Write(r2); err != nil {
-		log.Fatal("R2: ", err)
+		log.Fatal(err)
 	}
 }
 
@@ -76,7 +63,7 @@ func NewParquetWriter(fname string) (*ParquetWriter.ParquetWriter, func() error,
 		return nil, nil, fmt.Errorf("Can't create local file (%s)\n%s", fname, err.Error())
 	}
 
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(TestData), 1)
+	pw, err := ParquetWriter.NewParquetWriter(fw, new(Data), 1)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Can't create parquet writer for %s\n%s", fname, err.Error())
 	}
@@ -91,4 +78,23 @@ func NewParquetWriter(fname string) (*ParquetWriter.ParquetWriter, func() error,
 		log.Print("Parquet writer closed for: ", fname)
 		return fw.Close()
 	}, nil
+}
+
+// Data ...
+type Data struct {
+	Symbol string                `parquet:"name=symbol, type=UTF8, encoding=PLAIN_DICTIONARY" json:"symbol"`
+	M      map[string][]*ExpData `parquet:"name=M, type=MAP, keytype=UTF8"`
+}
+
+// ExpData ...
+type ExpData struct {
+	Ask float64 `parquet:"name=ask, type=DOUBLE" json:"ask"`
+	D   []*D    `parquet:"name=d, type=LIST" json:"d"`
+}
+
+// D ...
+type D struct {
+	Symbol           string  `parquet:"name=symbol, type=UTF8, encoding=PLAIN_DICTIONARY" json:"symbol"`
+	DeliverableUnits float64 `parquet:"name=deliverableUnits, type=DOUBLE" json:"deliverableUnits"`
+	CurrencyType     string  `parquet:"name=currencyType, type=UTF8, encoding=PLAIN_DICTIONARY" json:"currencyType"`
 }
