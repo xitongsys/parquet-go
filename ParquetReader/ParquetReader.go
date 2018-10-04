@@ -125,12 +125,21 @@ func (self *ParquetReader) ReadFooter() error {
 
 //Skip rows of parquet file
 func (self *ParquetReader) SkipRows(num int64) error {
+	var err error
 	if num <= 0 {
 		return nil
 	}
 	doneChan := make(chan int, self.NP)
-	taskChan := make(chan string, len(self.ColumnBuffers))
+	taskChan := make(chan string, len(self.SchemaHandler.ValueColumns))
 	stopChan := make(chan int)
+
+	for _, pathStr := range self.SchemaHandler.ValueColumns {
+		if _, ok := self.ColumnBuffers[pathStr]; !ok {
+			if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.PFile, self.Footer, self.SchemaHandler, pathStr); err != nil {
+				return err
+			}
+		}
+	}
 
 	for i := int64(0); i < self.NP; i++ {
 		go func() {
@@ -146,16 +155,18 @@ func (self *ParquetReader) SkipRows(num int64) error {
 			}
 		}()
 	}
+
 	for key, _ := range self.ColumnBuffers {
 		taskChan <- key
 	}
+
 	for i := 0; i < len(self.ColumnBuffers); i++ {
 		<-doneChan
 	}
 	for i := int64(0); i < self.NP; i++ {
 		stopChan <- 0
 	}
-	return nil
+	return err
 }
 
 //Read rows of parquet file
