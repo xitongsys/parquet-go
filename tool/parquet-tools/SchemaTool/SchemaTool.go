@@ -205,17 +205,21 @@ func (cNode *Node) getStructTags() string {
 		rTStr = "REPEATED"
 	}
 
-	seType := cNode.SE.GetType()
-	tags := fmt.Sprintf("`parquet:\"name=%s, type=%s, repetitiontype=%s\"`", cNode.SE.Name, seType, rTStr)
+	pT, cT := cNode.SE.Type, cNode.SE.ConvertedType
+	pTStr, cTStr := ParquetTypeToParquetTypeStr(pT, cT)
+	typeStr := pTStr
+	if cT != nil {
+		typeStr = cTStr
+	}
+	tags := fmt.Sprintf("`parquet:\"name=%s, type=%s, repetitiontype=%s\"`", cNode.SE.Name, typeStr, rTStr)
 
-	pTStr, cTStr := ParquetTypeToParquetTypeStr(cNode.SE.Type, cNode.SE.ConvertedType)
-	if seType == parquet.Type_FIXED_LEN_BYTE_ARRAY && cNode.SE.ConvertedType == nil {
+	if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY && cT == nil {
 		length := cNode.SE.GetTypeLength()
 		tagStr := "`parquet:\"name=%s, type=%s, length=%d, repetitiontype=%s\"`"
 		tags = fmt.Sprintf(tagStr, cNode.SE.Name, pTStr, length, rTStr)
-	} else if cNode.SE.ConvertedType != nil && *cNode.SE.ConvertedType == parquet.ConvertedType_DECIMAL {
+	} else if cT != nil && *cT == parquet.ConvertedType_DECIMAL {
 		scale, precision := cNode.SE.GetScale(), cNode.SE.GetPrecision()
-		if seType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+		if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			length := cNode.SE.GetTypeLength()
 			tagStr := "`parquet:\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\"`"
 			tags = fmt.Sprintf(tagStr, cNode.SE.Name, cTStr, pTStr, scale, precision, length, rTStr)
