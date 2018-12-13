@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/xitongsys/parquet-go/Common"
-	"github.com/xitongsys/parquet-go/Layout"
-	"github.com/xitongsys/parquet-go/ParquetType"
-	"github.com/xitongsys/parquet-go/SchemaHandler"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/pmalekn/parquet-go/Common"
+	"github.com/pmalekn/parquet-go/Layout"
+	"github.com/pmalekn/parquet-go/ParquetType"
+	"github.com/pmalekn/parquet-go/SchemaHandler"
+	"github.com/pmalekn/parquet-go/parquet"
 )
 
 //ss is []string

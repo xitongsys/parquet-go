@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"reflect"
 
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/pmalekn/parquet-go/parquet"
 )
 
 func TypeNameToParquetType(name string, baseName string) (*parquet.Type, *parquet.ConvertedType) {
