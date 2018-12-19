@@ -185,10 +185,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 				return
 			}
 
-			err, ok = r.(error)
-			if !ok {
-				err = errors.New("error occurred")
-			}
+			err = errors.New("error occurred")
 		}
 	}()
 
