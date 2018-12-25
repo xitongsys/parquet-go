@@ -620,6 +620,9 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 	var (
 		res []interface{}
 	)
+	if cnt <= 0{
+		return res, nil
+	}
 
 	if encoding == parquet.Encoding_PLAIN {
 		return ParquetEncoding.ReadPlain(bytesReader, dataType, cnt, bitWidth)
@@ -630,9 +633,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encoding parquet.Encoding, da
 			return res, err
 		}
 		bitWidth = uint64(b)
-		if cnt == 0 {
-			return res, nil
-		}
+
 		buf, err := ParquetEncoding.ReadRLEBitPackedHybrid(bytesReader, bitWidth, uint64(bytesReader.Len()))
 		if err != nil {
 			return res, err
