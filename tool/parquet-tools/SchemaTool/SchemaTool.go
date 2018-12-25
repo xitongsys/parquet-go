@@ -197,35 +197,61 @@ func (self *Node) OutputJsonSchema() string {
 	return res
 }
 
-func (cNode *Node) getStructTags() string {
-	rTStr := "REQUIRED"
-	if cNode.SE.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL {
-		rTStr = "OPTIONAL"
-	} else if cNode.SE.GetRepetitionType() == parquet.FieldRepetitionType_REPEATED {
-		rTStr = "REPEATED"
+func GetTypeStr(pT *parquet.Type, cT *parquet.ConvertedType) string {
+	if pT == nil && cT == nil {
+		return "STRUCT"
 	}
-
-	pT, cT := cNode.SE.Type, cNode.SE.ConvertedType
 	pTStr, cTStr := ParquetTypeToParquetTypeStr(pT, cT)
 	typeStr := pTStr
 	if cT != nil {
 		typeStr = cTStr
 	}
-	tags := fmt.Sprintf("`parquet:\"name=%s, type=%s, repetitiontype=%s\"`", cNode.SE.Name, typeStr, rTStr)
+	return typeStr
+}
 
-	if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY && cT == nil {
-		length := cNode.SE.GetTypeLength()
+func (self *Node) getStructTags() string {
+	rTStr := "REQUIRED"
+	if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL {
+		rTStr = "OPTIONAL"
+	} else if self.SE.GetRepetitionType() == parquet.FieldRepetitionType_REPEATED {
+		rTStr = "REPEATED"
+	}
+
+	pT, cT := self.SE.Type, self.SE.ConvertedType
+	pTStr, cTStr := ParquetTypeToParquetTypeStr(pT, cT)
+	typeStr := pTStr
+	if cT != nil {
+		typeStr = cTStr
+	}
+	tags := fmt.Sprintf("`parquet:\"name=%s, type=%s, repetitiontype=%s\"`", self.SE.Name, typeStr, rTStr)
+
+	if pT == nil && cT == nil {
+		tags = fmt.Sprintf("`parquet:\"name=%s, repetitiontype=%s\"`", self.SE.Name, rTStr)
+	} else if cT != nil && *cT == parquet.ConvertedType_MAP && self.Children != nil {
+		keyNode := self.Children[0].Children[0]
+		keyTypeStr := GetTypeStr(keyNode.SE.Type, keyNode.SE.ConvertedType)
+		valNode := self.Children[0].Children[1]
+		valTypeStr := GetTypeStr(valNode.SE.Type, valNode.SE.ConvertedType)
+		tags = fmt.Sprintf("`parquet:\"name=%s, type=MAP, repetitiontype=%s, keytype=%s, valuetype=%s\"`", self.SE.Name, rTStr, keyTypeStr, valTypeStr)
+
+	} else if cT != nil && *cT == parquet.ConvertedType_LIST && self.Children != nil {
+		cNode := self.Children[0].Children[0]
+		valTypeStr := GetTypeStr(cNode.SE.Type, cNode.SE.ConvertedType)
+		tags = fmt.Sprintf("`parquet:\"name=%s, type=LIST, repetitiontype=%s, valuetype=%s\"`", self.SE.Name, rTStr, valTypeStr)
+
+	} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY && cT == nil {
+		length := self.SE.GetTypeLength()
 		tagStr := "`parquet:\"name=%s, type=%s, length=%d, repetitiontype=%s\"`"
-		tags = fmt.Sprintf(tagStr, cNode.SE.Name, pTStr, length, rTStr)
+		tags = fmt.Sprintf(tagStr, self.SE.Name, pTStr, length, rTStr)
 	} else if cT != nil && *cT == parquet.ConvertedType_DECIMAL {
-		scale, precision := cNode.SE.GetScale(), cNode.SE.GetPrecision()
+		scale, precision := self.SE.GetScale(), self.SE.GetPrecision()
 		if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			length := cNode.SE.GetTypeLength()
+			length := self.SE.GetTypeLength()
 			tagStr := "`parquet:\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\"`"
-			tags = fmt.Sprintf(tagStr, cNode.SE.Name, cTStr, pTStr, scale, precision, length, rTStr)
+			tags = fmt.Sprintf(tagStr, self.SE.Name, cTStr, pTStr, scale, precision, length, rTStr)
 		} else {
 			tagStr := "`parquet:\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, repetitiontype\"`"
-			tags = fmt.Sprintf(tagStr, cNode.SE.Name, cNode.SE.Type, pTStr, scale, precision, rTStr)
+			tags = fmt.Sprintf(tagStr, self.SE.Name, self.SE.Type, pTStr, scale, precision, rTStr)
 		}
 	}
 
@@ -254,11 +280,7 @@ func (self *Node) OutputStruct(withName bool, withTags bool) string {
 	if pT == nil && cT == nil {
 		res += rTStr + "struct {\n"
 		for _, cNode := range self.Children {
-			if withTags {
-				res += cNode.OutputStruct(true, withTags) + " " + cNode.getStructTags() + "\n"
-			} else {
-				res += cNode.OutputStruct(true, withTags) + "\n"
-			}
+			res += cNode.OutputStruct(true, withTags) + "\n"
 		}
 		res += "}"
 
@@ -276,6 +298,10 @@ func (self *Node) OutputStruct(withName bool, withTags bool) string {
 	} else {
 		goTypeStr := ParquetTypeToGoTypeStr(pT, cT)
 		res += rTStr + goTypeStr
+	}
+
+	if withTags {
+		res += " " + self.getStructTags() + "\n"
 	}
 
 	ress := strings.Split(res, "\n")
