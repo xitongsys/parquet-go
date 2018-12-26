@@ -258,6 +258,19 @@ func (self *Node) getStructTags() string {
 	return tags
 }
 
+func Strip(s string) string {
+	ln := len(s)
+	i, j := ln-1, ln
+	for i >= 0 && s[i] != '}' {
+		if s[i] == '`' {
+			j = i
+		}
+		i--
+	}
+	s = s[:j]
+	return s
+}
+
 func (self *Node) OutputStruct(withName bool, withTags bool) string {
 	name := self.SE.GetName()
 
@@ -290,10 +303,12 @@ func (self *Node) OutputStruct(withName bool, withTags bool) string {
 		keyGoTypeStr := ParquetTypeToGoTypeStr(keyPT, keyCT)
 		valNode := self.Children[0].Children[1]
 		res += rTStr + "map[" + keyGoTypeStr + "]" + valNode.OutputStruct(false, withTags)
+		res = Strip(res)
 
 	} else if cT != nil && *cT == parquet.ConvertedType_LIST && self.Children != nil {
 		cNode := self.Children[0].Children[0]
 		res += rTStr + "[]" + cNode.OutputStruct(false, withTags)
+		res = Strip(res)
 
 	} else {
 		goTypeStr := ParquetTypeToGoTypeStr(pT, cT)
