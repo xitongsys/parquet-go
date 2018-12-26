@@ -2,6 +2,7 @@ package Marshal
 
 import (
 	"encoding/json"
+	"errors"
 	"reflect"
 	"strings"
 
@@ -16,7 +17,14 @@ import (
 func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = r.(error)
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("unknown error")
+			}
 		}
 	}()
 

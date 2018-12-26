@@ -2,6 +2,7 @@ package SchemaHandler
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -19,7 +20,14 @@ func NewJSONSchemaItem() *JSONSchemaItemType {
 func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = r.(error)
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("unknown error")
+			}
 		}
 	}()
 
