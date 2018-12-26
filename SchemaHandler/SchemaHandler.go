@@ -179,7 +179,13 @@ func NewItem() *Item {
 func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = r.(error)
+			s, ok := r.(string)
+			if ok {
+				err = errors.New(s)
+				return
+			}
+
+			err = errors.New("error occurred")
 		}
 	}()
 
