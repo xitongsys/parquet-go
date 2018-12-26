@@ -73,7 +73,7 @@ func (self *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 
 //Rename schema name to inname
 func (self *ParquetReader) RenameSchema() {
-	for i := 0; i < len(self.Footer.Schema); i++ {
+	for i := 0; i < len(self.SchemaHandler.Infos); i++ {
 		self.Footer.Schema[i].Name = self.SchemaHandler.Infos[i].InName
 	}
 	for _, rowGroup := range self.Footer.RowGroups {
