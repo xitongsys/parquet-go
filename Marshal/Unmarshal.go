@@ -1,6 +1,7 @@
 package Marshal
 
 import (
+	"errors"
 	"reflect"
 
 	"github.com/xitongsys/parquet-go/Common"
@@ -24,7 +25,14 @@ type MapRecord struct {
 func Unmarshal(tableMap *map[string]*Layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *SchemaHandler.SchemaHandler) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = r.(error)
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("unknown error")
+			}
 		}
 	}()
 

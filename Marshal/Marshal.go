@@ -1,6 +1,7 @@
 package Marshal
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 
@@ -168,7 +169,14 @@ func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 func Marshal(srcInterface []interface{}, bgn int, end int, schemaHandler *SchemaHandler.SchemaHandler) (tb *map[string]*Layout.Table, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = r.(error)
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("unkown error")
+			}
 		}
 	}()
 
