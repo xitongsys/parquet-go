@@ -26,19 +26,6 @@
   source = "github.com/apache/thrift"
 
 [[projects]]
-  digest = "1:bf2909a0e829fd1160bf31b4f8a10443c8aa4d599f249e7be7e3382d8de702f5"
-  name = "github.com/colinmarc/hdfs"
-  packages = [
-    ".",
-    "protocol/hadoop_common",
-    "protocol/hadoop_hdfs",
-    "rpc",
-  ]
-  pruneopts = "UT"
-  revision = "e2c734b8518275eeb74661de28966a00b9b6c212"
-  version = "v1.1.3"
-
-[[projects]]
   digest = "1:5d1b5a25486fc7d4e133646d834f6fca7ba1cef9903d40e7aa786c41b89e9e91"
   name = "github.com/golang/protobuf"
   packages = [
@@ -262,7 +249,6 @@
   input-imports = [
     "cloud.google.com/go/storage",
     "github.com/apache/thrift/lib/go/thrift",
-    "github.com/colinmarc/hdfs",
     "github.com/golang/snappy",
     "github.com/spf13/afero",
   ]
