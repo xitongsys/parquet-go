@@ -13,8 +13,11 @@ Add the parquet-go library to your $GOPATH/src and install dependencies:
 ```sh
 go get github.com/xitongsys/parquet-go/...
 ```
-Look at a few examples in `example/`. 
+Look at examples in `example/`. 
 ```sh
+cd parquet-go/
+dep ensure
+cd example/
 go run example/local_flat.go
 ```
 
