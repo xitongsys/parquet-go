@@ -50,16 +50,16 @@ func getPrettySize(size int64) string {
 		return fmt.Sprintf("%d bytes", size)
 	}
 	if size/oneMB < 1 {
-		return fmt.Sprintf("%.3f KB", float64(size/oneKB))
+		return fmt.Sprintf("%.3f KB", float64(size)/float64(oneKB))
 	}
 	if size/oneGB < 1 {
-		return fmt.Sprintf("%.3f MB", float64(size/oneMB))
+		return fmt.Sprintf("%.3f MB", float64(size)/float64(oneMB))
 	}
 	if size/oneTB < 1 {
-		return fmt.Sprintf("%.3f GB", float64(size/oneGB))
+		return fmt.Sprintf("%.3f GB", float64(size)/float64(oneGB))
 	}
 	if size/onePB < 1 {
-		return fmt.Sprintf("%.3f TB", float64(size/oneTB))
+		return fmt.Sprintf("%.3f TB", float64(size)/float64(oneTB))
 	}
-	return fmt.Sprintf("%.3f PB", float64(size/onePB))
+	return fmt.Sprintf("%.3f PB", float64(size)/float64(onePB))
 }

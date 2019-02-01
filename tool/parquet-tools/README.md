@@ -7,7 +7,7 @@ cd parquet-tools && go build parquet-tools
 
 ## Description
 ### -cmd
-schema: show schema of the parquet file; 
+schema/size/rowcount
 ### -file
 parquet file name;
 ### -tag
