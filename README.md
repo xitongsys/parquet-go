@@ -9,7 +9,7 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 * High performance
 
 ## Install
-Add the parquet-go library to your $GOPATH/src:
+Add the parquet-go library to your $GOPATH/src and install dependencies:
 ```sh
 go get github.com/xitongsys/parquet-go/...
 ```
