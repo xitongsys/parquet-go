@@ -91,6 +91,34 @@ func (p *ParquetStruct) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 	return nodes
 }
 
+type ParquetMapStruct struct{}
+
+func (p *ParquetMapStruct) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
+	var ok bool
+
+	nodes := make([]*Node, 0)
+	keys := node.Val.MapKeys()
+	if len(keys) <= 0 {
+		return nodes
+	}
+
+	for j := len(keys) - 1; j >= 0; j-- {
+		key := keys[j]
+		newNode := nodeBuf.GetNode()
+
+		//some ignored item
+		if newNode.PathMap, ok = node.PathMap.Children[key.String()]; !ok {
+			continue
+		}
+
+		newNode.Val = node.Val.MapIndex(key)
+		newNode.RL = node.RL
+		newNode.DL = node.DL
+		nodes = append(nodes, newNode)
+	}
+	return nodes
+}
+
 type ParquetSlice struct {
 	schemaHandler *SchemaHandler.SchemaHandler
 }
@@ -228,7 +256,13 @@ func Marshal(srcInterface []interface{}, bgn int, end int, schemaHandler *Schema
 			} else if tk == reflect.Slice {
 				m = &ParquetSlice{schemaHandler: schemaHandler}
 			} else if tk == reflect.Map {
-				m = &ParquetMap{schemaHandler: schemaHandler}
+				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
+				sele := schemaHandler.SchemaElements[schemaIndex]
+				if !sele.IsSetConvertedType() {
+					m = &ParquetMapStruct{}
+				} else {
+					m = &ParquetMap{schemaHandler: schemaHandler}
+				}
 			} else {
 				table := res[node.PathMap.Path]
 				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
