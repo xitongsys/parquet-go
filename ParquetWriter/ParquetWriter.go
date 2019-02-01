@@ -133,13 +133,13 @@ func (self *ParquetWriter) WriteStop() error {
 func (self *ParquetWriter) Write(src interface{}) error {
 	var err error
 	ln := int64(len(self.Objs))
-	
+
 	val := reflect.ValueOf(src)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 		src = val.Interface()
 	}
-	
+
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = Common.SizeOf(val) + 1
 	}
@@ -277,7 +277,8 @@ func (self *ParquetWriter) Flush(flag bool) error {
 				continue
 			}
 			rowGroup.Chunks = append(rowGroup.Chunks, chunk)
-			rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
+			//rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
+			rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalUncompressedSize
 			rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
 		}
 		rowGroup.RowGroupHeader.NumRows = self.NumRows
