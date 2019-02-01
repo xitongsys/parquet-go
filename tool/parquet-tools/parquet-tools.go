@@ -7,12 +7,15 @@ import (
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/ParquetReader"
 	"github.com/xitongsys/parquet-go/tool/parquet-tools/SchemaTool"
+	"github.com/xitongsys/parquet-go/tool/parquet-tools/SizeTool"
 )
 
 func main() {
-	cmd := flag.String("cmd", "schema", "command")
+	cmd := flag.String("cmd", "schema", "command to run. Allowed values: schema, rowcount or size")
 	fileName := flag.String("file", "", "file name")
 	withTags := flag.Bool("tag", false, "show struct tags")
+	withPrettySize := flag.Bool("pretty", false, "show pretty size")
+	uncompressedSize := flag.Bool("uncompressed", false, "show uncompressed size")
 
 	flag.Parse()
 
@@ -37,6 +40,8 @@ func main() {
 		fmt.Printf("%s\n", tree.OutputJsonSchema())
 	case "rowcount":
 		fmt.Println(pr.GetNumRows())
+	case "size":
+		fmt.Println(SizeTool.GetParquetFileSize(*fileName, pr, *withPrettySize, *uncompressedSize))
 	default:
 		fmt.Println("Unknown command")
 	}
