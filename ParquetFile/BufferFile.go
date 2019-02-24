@@ -5,6 +5,7 @@ import "bytes"
 // BufferFile allows reading parquet messages from a memory buffer.
 type BufferFile struct {
 	Reader *bytes.Reader
+	Writer *bytes.Buffer
 	buff   []byte
 }
 
@@ -12,19 +13,22 @@ type BufferFile struct {
 func NewBufferFile(b []byte) (ParquetFile, error) {
 	return BufferFile{
 		Reader: bytes.NewReader(b),
+		Writer: bytes.NewBuffer(b),
 		buff:   b,
 	}, nil
 }
 
 func (bf BufferFile) Create(name string) (ParquetFile, error) {
-	return BufferFile{
+	return &BufferFile{
 		Reader: bytes.NewReader(make([]byte, 0)),
+		Writer: bytes.NewBuffer(make([]byte, 0)),
 	}, nil
 }
 
 func (bf BufferFile) Open(name string) (ParquetFile, error) {
-	return BufferFile{
+	return &BufferFile{
 		Reader: bytes.NewReader(bf.buff),
+		Writer: bytes.NewBuffer(bf.buff),
 	}, nil
 }
 
@@ -49,11 +53,15 @@ func (bf BufferFile) Read(p []byte) (cnt int, err error) {
 
 // Write writes data from p into BufferFile.
 func (bf BufferFile) Write(p []byte) (int, error) {
-	n, err := bf.Reader.WriteTo(bytes.NewBuffer(p))
+	n, err := bf.Writer.Write(p)
 	return int(n), err
 }
 
 // Close is a no-op for a memory buffer.
 func (bf BufferFile) Close() error {
 	return nil
+}
+
+func (bf BufferFile) Bytes() []byte {
+	return bf.Writer.Bytes()
 }
