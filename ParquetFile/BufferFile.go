@@ -19,14 +19,14 @@ func NewBufferFile(b []byte) (ParquetFile, error) {
 }
 
 func (bf BufferFile) Create(name string) (ParquetFile, error) {
-	return &BufferFile{
+	return BufferFile{
 		Reader: bytes.NewReader(make([]byte, 0)),
 		Writer: bytes.NewBuffer(make([]byte, 0)),
 	}, nil
 }
 
 func (bf BufferFile) Open(name string) (ParquetFile, error) {
-	return &BufferFile{
+	return BufferFile{
 		Reader: bytes.NewReader(bf.buff),
 		Writer: bytes.NewBuffer(bf.buff),
 	}, nil
