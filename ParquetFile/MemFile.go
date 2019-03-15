@@ -37,7 +37,7 @@ type MemFile struct {
 
 // NewMemFileWriter - intiates and creates an instance of MemFiles
 // NOTE: there is no NewMemFileReader as this particular type was written
-// to handle in-memory converstions and offloading. The results of
+// to handle in-memory conversions and offloading. The results of
 // conversion can then be stored and read via HDFS, LocalFS, etc without
 // the need for loading the file back into memory directly
 func NewMemFileWriter(name string, f OnCloseFunc) (ParquetFile, error) {
