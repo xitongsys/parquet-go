@@ -95,7 +95,7 @@ func (self *ColumnBufferType) NextRowGroup() error {
 }
 
 func (self *ColumnBufferType) ReadPage() error {
-	if self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
+	if self.ChunkHeader != nil && self.ChunkHeader.MetaData != nil && self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
 		page, numValues, numRows, err := Layout.ReadPage(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
 		if err != nil {
 			//data is nil and rl/dl=0, no pages in file
@@ -142,7 +142,7 @@ func (self *ColumnBufferType) ReadPage() error {
 }
 
 func (self *ColumnBufferType) ReadPageForSkip() (*Layout.Page, error) {
-	if self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
+	if self.ChunkHeader != nil && self.ChunkHeader.MetaData != nil && self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
 		page, err := Layout.ReadPageRawData(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
 		if err != nil {
 			return nil, err
