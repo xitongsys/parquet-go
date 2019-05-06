@@ -15,21 +15,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-// S3File is a TODO
+// S3File is ParquetFile for AWS S3
 type S3File struct {
 	ctx    context.Context
 	client s3iface.S3API
 	offset int64
 	whence int
 
-	// write related fields
+	// write-related fields
 	writeOpened bool
 	writeDone   chan struct{}
 	pipeReader  *io.PipeReader
 	pipeWriter  *io.PipeWriter
 	downloader  *s3manager.Downloader
 
-	// read related fields
+	// read-related fields
 	readOpened bool
 	fileSize   int64
 
@@ -37,11 +37,19 @@ type S3File struct {
 	Key        string
 }
 
-var errWhence = errors.New("Seek: invalid whence")
-var errOffset = errors.New("Seek: invalid offset")
-var activeS3Session *session.Session
+const (
+	rangeHeader       = "bytes=%d-%d"
+	rangeHeaderSuffix = "bytes=%d"
+)
 
-// NewS3FileWriter is TODO
+var (
+	errWhence        = errors.New("Seek: invalid whence")
+	errInvalidOffset = errors.New("Seek: invalid offset")
+	errFailedUpload  = errors.New("Write: failed upload")
+	activeS3Session  *session.Session
+)
+
+// NewS3FileWriter creates an S3 FileWriter, to be used with NewParquetWriter
 func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (ParquetFile, error) {
 	if activeS3Session == nil {
 		activeS3Session = session.Must(session.NewSession())
@@ -58,7 +66,7 @@ func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aw
 	return file.Create(key)
 }
 
-// NewS3FileReader is TODO
+// NewS3FileReader creates an S3 FileReader, to be used with NewParquetReader
 func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (ParquetFile, error) {
 	if activeS3Session == nil {
 		activeS3Session = session.Must(session.NewSession())
@@ -83,16 +91,16 @@ func (s *S3File) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
 	case io.SeekStart:
 		if offset < 0 || offset > s.fileSize {
-			return 0, errOffset
+			return 0, errInvalidOffset
 		}
 	case io.SeekCurrent:
 		currentOffset := s.offset + offset
 		if currentOffset < 0 || currentOffset > s.fileSize {
-			return 0, errOffset
+			return 0, errInvalidOffset
 		}
 	case io.SeekEnd:
 		if offset > -1 || -offset > s.fileSize {
-			return 0, errOffset
+			return 0, errInvalidOffset
 		}
 	}
 
@@ -101,16 +109,14 @@ func (s *S3File) Seek(offset int64, whence int) (int64, error) {
 	return 0, nil
 }
 
-// Read up to len(p) bytes into p and return the number of bytes read.
-// not safe for concurrent reads
+// Read up to len(p) bytes into p and return the number of bytes read
 func (s *S3File) Read(p []byte) (n int, err error) {
 	if s.offset >= s.fileSize {
 		return 0, io.EOF
 	}
 
 	numBytes := len(p)
-	getObjRange := buildBytesRange(s.offset, s.whence, numBytes, s.fileSize)
-	fmt.Printf("==== byte range %q\n", getObjRange)
+	getObjRange := s.getBytesRange(numBytes)
 	getObj := &s3.GetObjectInput{
 		Bucket: aws.String(s.BucketName),
 		Key:    aws.String(s.Key),
@@ -127,26 +133,31 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 		copy(p, buf)
 	}
 
-	fmt.Printf("downloaded %d, new offset %d, %v\n", bytesDownloaded, s.offset, err)
-
 	return int(bytesDownloaded), err
 }
 
-// Write is TODO
+// Write len(p) bytes from p to the S3 data stream
 func (s *S3File) Write(p []byte) (n int, err error) {
 	if !s.writeOpened {
 		s.openWrite()
 	}
 
-	if s.pipeWriter != nil {
-		// exit when writer is erroring
-		return s.pipeWriter.Write(p)
+	if s.pipeWriter == nil {
+		return 0, errFailedUpload
+	}
+
+	// prevent further writes upon error
+	if _, err := s.pipeWriter.Write(p); err != nil {
+		s.pipeWriter.CloseWithError(err)
+		s.pipeWriter = nil
+		return 0, err
 	}
 
 	return 0, nil
 }
 
-// Close is TODO
+// Close cleans up any open streams. Will block until
+// pending uploads are complete.
 func (s *S3File) Close() error {
 	s.offset = 0
 
@@ -154,19 +165,19 @@ func (s *S3File) Close() error {
 		s.pipeWriter.Close()
 	}
 
-	// if s.pipeReader != nil {
-	// 	s.pipeReader.Close()
-	// }
-
 	// wait for pending uploads
 	if s.writeDone != nil {
 		<-s.writeDone
 	}
 
+	if s.pipeReader != nil {
+		s.pipeReader.Close()
+	}
+
 	return nil
 }
 
-// Open is TODO reader
+// Open creates a new S3 File instance to perform concurrent reads
 func (s *S3File) Open(name string) (ParquetFile, error) {
 	if !s.readOpened {
 		if err := s.openRead(); err != nil {
@@ -188,15 +199,20 @@ func (s *S3File) Open(name string) (ParquetFile, error) {
 	return pf, nil
 }
 
-// Create is TODO
+// Create creates a new S3 File instance to perform writes
 func (s *S3File) Create(name string) (ParquetFile, error) {
-	s.offset = 0
-	s.pipeReader = nil
-	s.pipeWriter = nil
-
-	return s, nil
+	pf := &S3File{
+		ctx:        s.ctx,
+		client:     s.client,
+		BucketName: s.BucketName,
+		Key:        s.Key,
+		writeDone:  make(chan struct{}),
+	}
+	return pf, nil
 }
 
+// openWrite creates an S3 uploader that consumes the Reader end of an io.Pipe.
+// Calling Close signals write completion.
 func (s *S3File) openWrite() {
 	pr, pw := io.Pipe()
 	s.pipeReader = pr
@@ -211,12 +227,14 @@ func (s *S3File) openWrite() {
 	uploader := s3manager.NewUploaderWithClient(s.client)
 
 	go func(uploader *s3manager.Uploader) {
-		result, err := uploader.Upload(uploadParams)
-		fmt.Printf("uploaded: %v %v\n", result, err)
+		// upload data and signal done when complete
+		uploader.Upload(uploadParams)
 		close(s.writeDone)
 	}(uploader)
 }
 
+// openRead verifies the requested file is accessible and
+// tracks the file size
 func (s *S3File) openRead() error {
 	hoi := &s3.HeadObjectInput{
 		Bucket: aws.String(s.BucketName),
@@ -233,23 +251,23 @@ func (s *S3File) openRead() error {
 		s.fileSize = *hoo.ContentLength
 	}
 
-	fmt.Printf("opened file, size %d\n", s.fileSize)
 	return nil
 }
 
-func buildBytesRange(offset int64, whence int, numBytes int, maxBytes int64) string {
-	end := offset + int64(numBytes)
-	if end > maxBytes {
-		end = maxBytes
+// getBytesRange returns the range request header string
+func (s *S3File) getBytesRange(numBytes int) string {
+	end := s.offset + int64(numBytes)
+	if end > s.fileSize {
+		end = s.fileSize
 	}
 	var byteRange string
-	switch whence {
+	switch s.whence {
 	case io.SeekStart:
-		byteRange = fmt.Sprintf("bytes=%d-%d", offset, end)
+		byteRange = fmt.Sprintf(rangeHeader, s.offset, end)
 	case io.SeekCurrent:
-		byteRange = fmt.Sprintf("bytes=%d-%d", offset, end)
+		byteRange = fmt.Sprintf(rangeHeader, s.offset, end)
 	case io.SeekEnd:
-		byteRange = fmt.Sprintf("bytes=%d", offset)
+		byteRange = fmt.Sprintf(rangeHeaderSuffix, s.offset)
 	}
 
 	return byteRange
