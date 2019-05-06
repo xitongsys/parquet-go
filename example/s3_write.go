@@ -17,25 +17,26 @@ type student struct {
 	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
 }
 
-func main() {
-	// var err error
+// s3Example provides a sample write and read using the S3 Parquet File
+func s3Example() {
 	ctx := context.Background()
 	bucket := "my-bucket"
 	key := "test/foobar.parquet"
 	num := 100
 
-	//write
+	// create new S3 file writer
 	fw, err := ParquetFile.NewS3FileWriter(ctx, bucket, key)
 	if err != nil {
 		log.Println("Can't open file", err)
 		return
 	}
+	// create new parquet file writer
 	pw, err := ParquetWriter.NewParquetWriter(fw, new(student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
-
+	// write 100 student records to the parquet file
 	for i := 0; i < num; i++ {
 		stu := student{
 			Name:   "StudentName",
@@ -48,27 +49,29 @@ func main() {
 			log.Println("Write error", err)
 		}
 	}
+	// write parquet file footer
 	if err = pw.WriteStop(); err != nil {
 		log.Println("WriteStop err", err)
 	}
 	log.Println("Write Finished")
 	fw.Close()
 
-	//read
-	log.Println("Start Read")
+	// read the written parquet file
+	// create new S3 file reader
 	fr, err := ParquetFile.NewS3FileReader(ctx, bucket, key)
-	// fr, err := ParquetFile.NewLocalFileReader("/Users/shsing/Documents/parquet-go/example/foobar.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
 	}
 
+	// create new parquet file reader
 	pr, err := ParquetReader.NewParquetReader(fr, new(student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
 	}
 
+	// read the student rows and print
 	num = int(pr.GetNumRows())
 	for i := 0; i < num/10; i++ {
 		if i%2 == 0 {
@@ -82,6 +85,7 @@ func main() {
 		log.Println(stus)
 	}
 
+	// close the parquet file
 	pr.ReadStop()
 	fr.Close()
 }
