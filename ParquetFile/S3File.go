@@ -91,30 +91,36 @@ func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aw
 
 // Seek tracks the offset for the next Read. Has no effect on Write.
 func (s *S3File) Seek(offset int64, whence int) (int64, error) {
-	switch whence {
-	case io.SeekStart:
-		if offset < 0 || offset > s.fileSize {
-			return 0, errInvalidOffset
-		}
-	case io.SeekCurrent:
-		currentOffset := s.offset + offset
-		if currentOffset < 0 || currentOffset > s.fileSize {
-			return 0, errInvalidOffset
-		}
-	case io.SeekEnd:
-		if offset > -1 || -offset > s.fileSize {
-			return 0, errInvalidOffset
+	if whence < io.SeekStart || whence > io.SeekEnd {
+		return 0, errWhence
+	}
+
+	if s.fileSize > 0 {
+		switch whence {
+		case io.SeekStart:
+			if offset < 0 || offset > s.fileSize {
+				return 0, errInvalidOffset
+			}
+		case io.SeekCurrent:
+			offset += s.offset
+			if offset < 0 || offset > s.fileSize {
+				return 0, errInvalidOffset
+			}
+		case io.SeekEnd:
+			if offset > -1 || -offset > s.fileSize {
+				return 0, errInvalidOffset
+			}
 		}
 	}
 
 	s.offset = offset
 	s.whence = whence
-	return 0, nil
+	return s.offset, nil
 }
 
 // Read up to len(p) bytes into p and return the number of bytes read
 func (s *S3File) Read(p []byte) (n int, err error) {
-	if s.offset >= s.fileSize {
+	if s.fileSize > 0 && s.offset >= s.fileSize {
 		return 0, io.EOF
 	}
 
@@ -134,6 +140,7 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 	if buf := wab.Bytes(); len(buf) > numBytes {
 		// backing buffer reassigned, copy over some of the data
 		copy(p, buf)
+		bytesDownloaded = int64(len(p))
 	}
 
 	return int(bytesDownloaded), err
@@ -153,7 +160,8 @@ func (s *S3File) Write(p []byte) (n int, err error) {
 	}
 
 	// prevent further writes upon error
-	if _, writeError = s.pipeWriter.Write(p); err != nil {
+	bytesWritten, writeError := s.pipeWriter.Write(p)
+	if writeError != nil {
 		s.lock.Lock()
 		s.err = writeError
 		s.lock.Unlock()
@@ -162,7 +170,7 @@ func (s *S3File) Write(p []byte) (n int, err error) {
 		return 0, writeError
 	}
 
-	return 0, nil
+	return bytesWritten, nil
 }
 
 // Close cleans up any open streams. Will block until
@@ -210,12 +218,12 @@ func (s *S3File) Open(name string) (ParquetFile, error) {
 }
 
 // Create creates a new S3 File instance to perform writes
-func (s *S3File) Create(name string) (ParquetFile, error) {
+func (s *S3File) Create(key string) (ParquetFile, error) {
 	pf := &S3File{
 		ctx:        s.ctx,
 		client:     s.client,
 		BucketName: s.BucketName,
-		Key:        s.Key,
+		Key:        key,
 		writeDone:  make(chan error),
 	}
 	pf.openWrite()
@@ -283,6 +291,18 @@ func (s *S3File) getBytesRange(numBytes int) string {
 		end       int64
 	)
 
+	// Processing for unknown file size relies on the requestor to
+	// know which ranges are valid. May occur if caller is missing HEAD permissions.
+	if s.fileSize < 1 {
+		switch s.whence {
+		case io.SeekStart, io.SeekCurrent:
+			byteRange = fmt.Sprintf(rangeHeader, s.offset, s.offset+int64(numBytes)-1)
+		case io.SeekEnd:
+			byteRange = fmt.Sprintf(rangeHeaderSuffix, s.offset)
+		}
+		return byteRange
+	}
+
 	switch s.whence {
 	case io.SeekStart, io.SeekCurrent:
 		begin = s.offset
@@ -293,6 +313,9 @@ func (s *S3File) getBytesRange(numBytes int) string {
 	}
 
 	endIndex := s.fileSize - 1
+	if begin < 0 {
+		begin = 0
+	}
 	end = begin + int64(numBytes) - 1
 	if end > endIndex {
 		end = endIndex
