@@ -24,7 +24,7 @@ type S3File struct {
 
 	// write-related fields
 	writeOpened bool
-	writeDone   chan struct{}
+	writeDone   chan error
 	pipeReader  *io.PipeReader
 	pipeWriter  *io.PipeWriter
 	downloader  *s3manager.Downloader
@@ -58,7 +58,7 @@ func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aw
 	file := &S3File{
 		ctx:        ctx,
 		client:     s3.New(activeS3Session, cfgs...),
-		writeDone:  make(chan struct{}),
+		writeDone:  make(chan error),
 		BucketName: bucket,
 		Key:        key,
 	}
@@ -159,6 +159,7 @@ func (s *S3File) Write(p []byte) (n int, err error) {
 // Close cleans up any open streams. Will block until
 // pending uploads are complete.
 func (s *S3File) Close() error {
+	var err error
 	s.offset = 0
 
 	if s.pipeWriter != nil {
@@ -167,14 +168,14 @@ func (s *S3File) Close() error {
 
 	// wait for pending uploads
 	if s.writeDone != nil {
-		<-s.writeDone
+		err = <-s.writeDone
 	}
 
 	if s.pipeReader != nil {
 		s.pipeReader.Close()
 	}
 
-	return nil
+	return err
 }
 
 // Open creates a new S3 File instance to perform concurrent reads
@@ -196,6 +197,7 @@ func (s *S3File) Open(name string) (ParquetFile, error) {
 		fileSize:   s.fileSize,
 		offset:     0,
 	}
+	pf.openWrite()
 	return pf, nil
 }
 
@@ -206,7 +208,7 @@ func (s *S3File) Create(name string) (ParquetFile, error) {
 		client:     s.client,
 		BucketName: s.BucketName,
 		Key:        s.Key,
-		writeDone:  make(chan struct{}),
+		writeDone:  make(chan error),
 	}
 	return pf, nil
 }
@@ -228,8 +230,13 @@ func (s *S3File) openWrite() {
 
 	go func(uploader *s3manager.Uploader) {
 		// upload data and signal done when complete
-		uploader.Upload(uploadParams)
-		close(s.writeDone)
+		_, err := uploader.Upload(uploadParams)
+		if err != nil && s.pipeWriter != nil {
+			s.pipeWriter.CloseWithError(err)
+			s.pipeWriter = nil
+			s.writeDone <- err
+		}
+		s.writeDone <- nil
 	}(uploader)
 }
 

@@ -53,8 +53,12 @@ func s3Example() {
 	if err = pw.WriteStop(); err != nil {
 		log.Println("WriteStop err", err)
 	}
+
+	err = fw.Close()
+	if err != nil {
+		log.Println("Error closing S3 file writer")
+	}
 	log.Println("Write Finished")
-	fw.Close()
 
 	// read the written parquet file
 	// create new S3 file reader
@@ -87,5 +91,9 @@ func s3Example() {
 
 	// close the parquet file
 	pr.ReadStop()
-	fr.Close()
+	err = fr.Close()
+	if err != nil {
+		log.Println("Error closing S3 file reader")
+	}
+	log.Println("Read Finished")
 }
