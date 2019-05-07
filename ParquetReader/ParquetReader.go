@@ -6,13 +6,13 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/Common"
 	"github.com/xitongsys/parquet-go/Layout"
 	"github.com/xitongsys/parquet-go/Marshal"
 	"github.com/xitongsys/parquet-go/ParquetFile"
 	"github.com/xitongsys/parquet-go/SchemaHandler"
 	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/apache/thrift/lib/go/thrift"
 )
 
 type ParquetReader struct {
@@ -98,7 +98,7 @@ func (self *ParquetReader) GetNumRows() int64 {
 //Get the footer size
 func (self *ParquetReader) GetFooterSize() (uint32, error) {
 	var err error
-	buf := make([]byte, 8)
+	buf := make([]byte, 4)
 	if _, err = self.PFile.Seek(-8, io.SeekEnd); err != nil {
 		return 0, err
 	}

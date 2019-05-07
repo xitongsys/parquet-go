@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -33,6 +34,8 @@ type S3File struct {
 	readOpened bool
 	fileSize   int64
 
+	lock       sync.RWMutex
+	err        error
 	BucketName string
 	Key        string
 }
@@ -142,15 +145,21 @@ func (s *S3File) Write(p []byte) (n int, err error) {
 		s.openWrite()
 	}
 
-	if s.pipeWriter == nil {
-		return 0, errFailedUpload
+	s.lock.RLock()
+	writeError := s.err
+	s.lock.RUnlock()
+	if writeError != nil {
+		return 0, writeError
 	}
 
 	// prevent further writes upon error
-	if _, err := s.pipeWriter.Write(p); err != nil {
+	if _, writeError = s.pipeWriter.Write(p); err != nil {
+		s.lock.Lock()
+		s.err = writeError
+		s.lock.Unlock()
+
 		s.pipeWriter.CloseWithError(err)
-		s.pipeWriter = nil
-		return 0, err
+		return 0, writeError
 	}
 
 	return 0, nil
@@ -197,7 +206,6 @@ func (s *S3File) Open(name string) (ParquetFile, error) {
 		fileSize:   s.fileSize,
 		offset:     0,
 	}
-	pf.openWrite()
 	return pf, nil
 }
 
@@ -210,6 +218,7 @@ func (s *S3File) Create(name string) (ParquetFile, error) {
 		Key:        s.Key,
 		writeDone:  make(chan error),
 	}
+	pf.openWrite()
 	return pf, nil
 }
 
@@ -231,12 +240,17 @@ func (s *S3File) openWrite() {
 	go func(uploader *s3manager.Uploader) {
 		// upload data and signal done when complete
 		_, err := uploader.Upload(uploadParams)
-		if err != nil && s.pipeWriter != nil {
-			s.pipeWriter.CloseWithError(err)
-			s.pipeWriter = nil
-			s.writeDone <- err
+		if err != nil {
+			s.lock.Lock()
+			s.err = err
+			s.lock.Unlock()
+
+			if s.pipeWriter != nil {
+				s.pipeWriter.CloseWithError(err)
+			}
 		}
-		s.writeDone <- nil
+
+		s.writeDone <- err
 	}(uploader)
 }
 
@@ -263,19 +277,27 @@ func (s *S3File) openRead() error {
 
 // getBytesRange returns the range request header string
 func (s *S3File) getBytesRange(numBytes int) string {
-	end := s.offset + int64(numBytes)
-	if end > s.fileSize {
-		end = s.fileSize
-	}
-	var byteRange string
+	var (
+		byteRange string
+		begin     int64
+		end       int64
+	)
+
 	switch s.whence {
-	case io.SeekStart:
-		byteRange = fmt.Sprintf(rangeHeader, s.offset, end)
-	case io.SeekCurrent:
-		byteRange = fmt.Sprintf(rangeHeader, s.offset, end)
+	case io.SeekStart, io.SeekCurrent:
+		begin = s.offset
 	case io.SeekEnd:
-		byteRange = fmt.Sprintf(rangeHeaderSuffix, s.offset)
+		begin = s.fileSize + s.offset
+	default:
+		return byteRange
 	}
 
+	endIndex := s.fileSize - 1
+	end = begin + int64(numBytes) - 1
+	if end > endIndex {
+		end = endIndex
+	}
+
+	byteRange = fmt.Sprintf(rangeHeader, begin, end)
 	return byteRange
 }
