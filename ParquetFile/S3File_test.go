@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -199,16 +200,31 @@ func TestWriteError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	errMessage := "some write error"
 	data := []byte("some data")
-	// errMessage := "some write error"
 	bucket := "test-bucket"
 	key := "test/foobar.parquet"
 
+	buf := bytes.NewBuffer(data)
+	req, err := http.NewRequest(http.MethodPost, "http://localhost/upload", buf)
+	if err != nil {
+		t.Error("unable to create mock S3 client http request")
+	}
 	mockClient := mocks.NewMockS3API(ctrl)
+	mockClient.EXPECT().PutObjectRequest(gomock.Any()).
+		Return(
+			&request.Request{
+				HTTPRequest: req,
+				Error:       errors.New(errMessage),
+			},
+			&s3.PutObjectOutput{})
+
 	s := &S3File{
+		ctx:        context.Background(),
 		BucketName: bucket,
 		Key:        key,
 		client:     mockClient,
+		writeDone:  make(chan error),
 	}
 
 	s.openWrite()
@@ -222,8 +238,8 @@ func TestWriteError(t *testing.T) {
 	}
 
 	err = s.Close()
-	if err != nil {
-		t.Errorf("expected error to be nil but got %q", err.Error())
+	if err.Error() != errMessage {
+		t.Errorf("expected error to be %q but got %q", errMessage, err.Error())
 	}
 }
 

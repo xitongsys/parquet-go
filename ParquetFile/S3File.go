@@ -28,11 +28,12 @@ type S3File struct {
 	writeDone   chan error
 	pipeReader  *io.PipeReader
 	pipeWriter  *io.PipeWriter
-	downloader  *s3manager.Downloader
+	uploader    *s3manager.Uploader
 
 	// read-related fields
 	readOpened bool
 	fileSize   int64
+	downloader *s3manager.Downloader
 
 	lock       sync.RWMutex
 	err        error
@@ -173,23 +174,21 @@ func (s *S3File) Write(p []byte) (n int, err error) {
 	return bytesWritten, nil
 }
 
-// Close cleans up any open streams. Will block until
-// pending uploads are complete.
+// Close signals write completion and cleans up any
+// open streams. Will block until pending uploads are complete.
 func (s *S3File) Close() error {
 	var err error
 	s.offset = 0
 
 	if s.pipeWriter != nil {
-		s.pipeWriter.Close()
+		if err = s.pipeWriter.Close(); err != nil {
+			return err
+		}
 	}
 
 	// wait for pending uploads
 	if s.writeDone != nil {
 		err = <-s.writeDone
-	}
-
-	if s.pipeReader != nil {
-		s.pipeReader.Close()
 	}
 
 	return err
@@ -237,29 +236,51 @@ func (s *S3File) openWrite() {
 	s.pipeReader = pr
 	s.pipeWriter = pw
 	s.writeOpened = true
+	s.uploader = s3manager.NewUploaderWithClient(s.client)
 
 	uploadParams := &s3manager.UploadInput{
 		Bucket: aws.String(s.BucketName),
 		Key:    aws.String(s.Key),
 		Body:   s.pipeReader,
 	}
-	uploader := s3manager.NewUploaderWithClient(s.client)
 
-	go func(uploader *s3manager.Uploader) {
+	// go s.monitorContextCancellation()
+	go func(uploader *s3manager.Uploader, params *s3manager.UploadInput, done chan error) {
+		defer close(done)
+
 		// upload data and signal done when complete
-		_, err := uploader.Upload(uploadParams)
+		_, err := uploader.Upload(params)
 		if err != nil {
 			s.lock.Lock()
 			s.err = err
 			s.lock.Unlock()
 
-			if s.pipeWriter != nil {
+			if s.writeOpened {
 				s.pipeWriter.CloseWithError(err)
 			}
 		}
 
-		s.writeDone <- err
-	}(uploader)
+		done <- err
+	}(s.uploader, uploadParams, s.writeDone)
+}
+
+func (s *S3File) monitorContextCancellation() {
+	if s.ctx == nil {
+		return
+	}
+
+	select {
+	case <-s.ctx.Done():
+		s.lock.Lock()
+		err := s.ctx.Err()
+		s.err = err
+		s.lock.Unlock()
+
+		if s.writeOpened {
+			s.pipeWriter.CloseWithError(err)
+		}
+	case <-s.writeDone:
+	}
 }
 
 // openRead verifies the requested file is accessible and
