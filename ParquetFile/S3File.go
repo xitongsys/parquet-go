@@ -244,7 +244,6 @@ func (s *S3File) openWrite() {
 		Body:   s.pipeReader,
 	}
 
-	// go s.monitorContextCancellation()
 	go func(uploader *s3manager.Uploader, params *s3manager.UploadInput, done chan error) {
 		defer close(done)
 
@@ -262,25 +261,6 @@ func (s *S3File) openWrite() {
 
 		done <- err
 	}(s.uploader, uploadParams, s.writeDone)
-}
-
-func (s *S3File) monitorContextCancellation() {
-	if s.ctx == nil {
-		return
-	}
-
-	select {
-	case <-s.ctx.Done():
-		s.lock.Lock()
-		err := s.ctx.Err()
-		s.err = err
-		s.lock.Unlock()
-
-		if s.writeOpened {
-			s.pipeWriter.CloseWithError(err)
-		}
-	case <-s.writeDone:
-	}
 }
 
 // openRead verifies the requested file is accessible and
