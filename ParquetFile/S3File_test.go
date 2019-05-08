@@ -17,14 +17,6 @@ import (
 	"github.com/xitongsys/parquet-go/mocks"
 )
 
-func TestNewS3FileWriterPreparesAnUploader(t *testing.T) {
-
-}
-
-func TestNewS3FileReaderDeterminesFileSize(t *testing.T) {
-
-}
-
 func TestSeek(t *testing.T) {
 	testcases := []struct {
 		name           string
@@ -174,10 +166,6 @@ func TestRead(t *testing.T) {
 	}
 }
 
-func TestWriteWithUninitializedUploader(t *testing.T) {
-
-}
-
 func TestWriteWithPriorEncounteredError(t *testing.T) {
 	data := []byte("some data")
 	errMessage := "some write error"
@@ -196,7 +184,184 @@ func TestWriteWithPriorEncounteredError(t *testing.T) {
 	}
 }
 
-func TestWriteError(t *testing.T) {
+func TestWrite(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	data := []byte("some data")
+	bucket := "test-bucket"
+	key := "test/foobar.parquet"
+
+	buf := bytes.NewBuffer(data)
+	req, err := http.NewRequest(http.MethodPost, "http://localhost/upload", buf)
+	if err != nil {
+		t.Error("unable to create mock S3 client http request")
+	}
+
+	mockClient := mocks.NewMockS3API(ctrl)
+	mockClient.EXPECT().PutObjectRequest(gomock.Any()).
+		Return(
+			&request.Request{HTTPRequest: req}, &s3.PutObjectOutput{})
+
+	s := &S3File{
+		ctx:        context.Background(),
+		BucketName: bucket,
+		Key:        key,
+		client:     mockClient,
+		writeDone:  make(chan error),
+	}
+
+	writtenBytes, err := s.Write(data)
+	if writtenBytes != len(data) {
+		t.Errorf("expected number of byte written to be %d but got %d", len(data), writtenBytes)
+	}
+
+	if err != nil {
+		t.Errorf("expected error to be nil but got %q", err.Error())
+	}
+
+	// close signals write completion
+	err = s.Close()
+	if err != nil {
+		t.Errorf("expected error to be nil but got %q", err.Error())
+	}
+}
+
+func TestClose(t *testing.T) {
+	s := &S3File{}
+
+	// verify close without any initialization
+	err := s.Close()
+	if err != nil {
+		t.Errorf("expected error to be nil but got %q", err.Error())
+	}
+
+	// verify pipewriter closure
+	_, pw := io.Pipe()
+	s.pipeWriter = pw
+	err = s.Close()
+	if err != nil {
+		t.Errorf("expected error to be nil but got %q", err.Error())
+	}
+
+	writtenBytes, err := pw.Write([]byte("data"))
+	if writtenBytes != 0 {
+		t.Errorf("expected read bytes to be 0 but got %d", writtenBytes)
+	}
+
+	if err != io.ErrClosedPipe {
+		t.Errorf("expected error to be %q but got %q", io.ErrClosedPipe.Error(), err.Error())
+	}
+
+	// verify done channel check
+	s.writeDone = make(chan error)
+	go func() { s.writeDone <- nil }()
+	err = s.Close()
+	if err != nil {
+		t.Errorf("expected error to be nil but got %q", err.Error())
+	}
+}
+
+func TestOpen(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	bucket := "test-bucket"
+	key := "test/foobar.parquet"
+	fileSize := int64(123)
+
+	mockClient := mocks.NewMockS3API(ctrl)
+	mockClient.EXPECT().HeadObject(gomock.Any()).
+		Return(&s3.HeadObjectOutput{ContentLength: aws.Int64(fileSize)}, nil)
+	s := &S3File{
+		ctx:        context.Background(),
+		BucketName: bucket,
+		client:     mockClient,
+	}
+
+	pf, err := s.Open(key)
+	if err != nil {
+		t.Errorf("expected error to be nil but got %q", err.Error())
+	}
+
+	s3File, ok := pf.(*S3File)
+	if !ok {
+		t.Errorf("expected parquet file to be of type %T but got %T", s, pf)
+	}
+
+	if s3File.Key != key {
+		t.Errorf("expected file key to be %q but got %q", key, s3File.Key)
+	}
+
+	if !s3File.readOpened {
+		t.Errorf("expected read opened to be %t but got %t", true, s3File.readOpened)
+	}
+
+	if s3File.offset != 0 {
+		t.Errorf("expected offset to be %d but got %d", 0, s3File.offset)
+	}
+
+	if s3File.fileSize != fileSize {
+		t.Errorf("expected file size to be %d but got %d", fileSize, s3File.fileSize)
+	}
+}
+
+func TestCreate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	bucket := "test-bucket"
+	key := "test/foobar.parquet"
+	data := []byte("some data")
+	buf := bytes.NewBuffer(data)
+	req, err := http.NewRequest(http.MethodPost, "http://localhost/upload", buf)
+	if err != nil {
+		t.Error("unable to create mock S3 client http request")
+	}
+	mockClient := mocks.NewMockS3API(ctrl)
+	mockClient.EXPECT().PutObjectRequest(gomock.Any()).
+		Return(
+			&request.Request{HTTPRequest: req}, &s3.PutObjectOutput{})
+	s := &S3File{
+		ctx:        context.Background(),
+		BucketName: bucket,
+		client:     mockClient,
+	}
+
+	pf, err := s.Create(key)
+	if err != nil {
+		t.Errorf("expected error to be nil but got %q", err.Error())
+	}
+
+	s3File, ok := pf.(*S3File)
+	if !ok {
+		t.Errorf("expected parquet file to be of type %T but got %T", s, pf)
+	}
+
+	if s3File.Key != key {
+		t.Errorf("expected file key to be %q but got %q", key, s3File.Key)
+	}
+
+	if !s3File.writeOpened {
+		t.Errorf("expected read opened to be %t but got %t", true, s3File.writeOpened)
+	}
+
+	if s3File.pipeWriter == nil {
+		t.Error("expected pipewriter to be created but got nil")
+	}
+
+	if s3File.pipeReader == nil {
+		t.Error("expected pipereader to be created but got nil")
+	}
+
+	// verify upload initiated and cleanup
+	err = pf.Close()
+	if err != nil {
+		t.Errorf("expected error to be nil but got %q", err.Error())
+	}
+}
+
+func TestOpenWriteUploadFailuresPreventFurtherWrites(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -215,7 +380,7 @@ func TestWriteError(t *testing.T) {
 		Return(
 			&request.Request{
 				HTTPRequest: req,
-				Error:       errors.New(errMessage),
+				Error:       errors.New(errMessage), // triggers an error to be returned
 			},
 			&s3.PutObjectOutput{})
 
@@ -227,6 +392,7 @@ func TestWriteError(t *testing.T) {
 		writeDone:  make(chan error),
 	}
 
+	// initialize and write data
 	s.openWrite()
 	writtenBytes, err := s.Write(data)
 	if writtenBytes != len(data) {
@@ -237,84 +403,21 @@ func TestWriteError(t *testing.T) {
 		t.Errorf("expected error to be nil but got %q", err.Error())
 	}
 
+	// close signals write completion
 	err = s.Close()
 	if err.Error() != errMessage {
 		t.Errorf("expected error to be %q but got %q", errMessage, err.Error())
 	}
-}
 
-func TestWrite(t *testing.T) {
+	// further writes should error
+	writtenBytes, err = s.Write(data)
+	if writtenBytes != 0 {
+		t.Errorf("expected number of byte written to be 0 but got %d", writtenBytes)
+	}
 
-}
-
-func TestCloseWaitForUploadCompletion(t *testing.T) {
-
-}
-
-func TestClose(t *testing.T) {
-
-}
-
-func TestOpen(t *testing.T) {
-
-}
-
-func TestCreate(t *testing.T) {
-
-}
-
-func TestOpenWriteUploadFailuresPreventFurtherWrites(t *testing.T) {
-	// ctrl := gomock.NewController(t)
-	// defer ctrl.Finish()
-
-	// message := []byte("secret message")
-	// errMessage := "some writer error"
-	// bucket := "test-bucket"
-	// key := "test/foobar.parquet"
-
-	// mockClient := mocks.NewMockS3API(ctrl)
-	// // mockClient.EXPECT().PutObjectRequest(gomock.Any()).Return(&request.Request{}, nil)
-	// s := &S3File{
-	// 	BucketName: bucket,
-	// 	Key:        key,
-	// 	client:     mockClient,
-	// }
-
-	// s.openWrite()
-	// s.pipeWriter.Write(message)
-	// // s.pipeWriter.CloseWithError(errors.New(errMessage))
-
-	// // wait for err
-
-	// select {
-	// case <-time.After(1 * time.Second):
-	// 	t.Error("expected error to be set")
-	// case err := <-s.writeDone:
-	// 	if err.Error() != errMessage {
-	// 		t.Errorf("expected error to be %q but got %q", errMessage, err.Error())
-	// 	}
-	// }
-
-	// s.Close()
-}
-
-func TestOpenWrite(t *testing.T) {
-	// ctrl := gomock.NewController(t)
-	// defer ctrl.Finish()
-
-	// errMessage := "some client error"
-	// bucket := "test-bucket"
-	// key := "test/foobar.parquet"
-
-	// mockClient := mocks.NewMockS3API(ctrl)
-	// s := &S3File{
-	// 	BucketName: bucket,
-	// 	Key:        key,
-	// 	client:     mockClient,
-	// }
-
-	// s.openWrite()
-
+	if err.Error() != errMessage {
+		t.Errorf("expected error to be %q but got %q", errMessage, err.Error())
+	}
 }
 
 func TestOpenReadFileSizeError(t *testing.T) {

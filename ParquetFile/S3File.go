@@ -208,7 +208,7 @@ func (s *S3File) Open(name string) (ParquetFile, error) {
 		client:     s.client,
 		downloader: s.downloader,
 		BucketName: s.BucketName,
-		Key:        s.Key,
+		Key:        name,
 		readOpened: s.readOpened,
 		fileSize:   s.fileSize,
 		offset:     0,
