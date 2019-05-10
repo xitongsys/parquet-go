@@ -61,7 +61,9 @@ func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aw
 	sessLock.RUnlock()
 	if sess == nil {
 		sessLock.Lock()
-		activeS3Session = session.Must(session.NewSession())
+		if activeS3Session == nil {
+			activeS3Session = session.Must(session.NewSession())
+		}
 		sessLock.Unlock()
 	}
 
@@ -83,7 +85,9 @@ func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aw
 	sessLock.RUnlock()
 	if sess == nil {
 		sessLock.Lock()
-		activeS3Session = session.Must(session.NewSession())
+		if activeS3Session == nil {
+			activeS3Session = session.Must(session.NewSession())
+		}
 		sessLock.Unlock()
 	}
 
@@ -220,6 +224,11 @@ func (s *S3File) Open(name string) (ParquetFile, error) {
 		if err := s.openRead(); err != nil {
 			return nil, err
 		}
+	}
+
+	// ColumBuffer passes in an empty string for name
+	if len(name) == 0 {
+		name = s.Key
 	}
 
 	// create a new instance
