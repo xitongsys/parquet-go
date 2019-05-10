@@ -51,12 +51,18 @@ var (
 	errInvalidOffset = errors.New("Seek: invalid offset")
 	errFailedUpload  = errors.New("Write: failed upload")
 	activeS3Session  *session.Session
+	sessLock         sync.RWMutex
 )
 
 // NewS3FileWriter creates an S3 FileWriter, to be used with NewParquetWriter
 func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (ParquetFile, error) {
-	if activeS3Session == nil {
+	sessLock.RLock()
+	sess := activeS3Session
+	sessLock.RUnlock()
+	if sess == nil {
+		sessLock.Lock()
 		activeS3Session = session.Must(session.NewSession())
+		sessLock.Unlock()
 	}
 
 	file := &S3File{
@@ -72,8 +78,13 @@ func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aw
 
 // NewS3FileReader creates an S3 FileReader, to be used with NewParquetReader
 func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (ParquetFile, error) {
-	if activeS3Session == nil {
+	sessLock.RLock()
+	sess := activeS3Session
+	sessLock.RUnlock()
+	if sess == nil {
+		sessLock.Lock()
 		activeS3Session = session.Must(session.NewSession())
+		sessLock.Unlock()
 	}
 
 	s3Client := s3.New(activeS3Session, cfgs...)
@@ -137,6 +148,10 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 
 	wab := aws.NewWriteAtBuffer(p)
 	bytesDownloaded, err := s.downloader.Download(wab, getObj)
+	if err != nil {
+		return 0, err
+	}
+
 	s.offset += bytesDownloaded
 	if buf := wab.Bytes(); len(buf) > numBytes {
 		// backing buffer reassigned, copy over some of the data
@@ -149,7 +164,10 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 
 // Write len(p) bytes from p to the S3 data stream
 func (s *S3File) Write(p []byte) (n int, err error) {
-	if !s.writeOpened {
+	s.lock.RLock()
+	writeOpened := s.writeOpened
+	s.lock.RUnlock()
+	if !writeOpened {
 		s.openWrite()
 	}
 
@@ -178,7 +196,6 @@ func (s *S3File) Write(p []byte) (n int, err error) {
 // open streams. Will block until pending uploads are complete.
 func (s *S3File) Close() error {
 	var err error
-	s.offset = 0
 
 	if s.pipeWriter != nil {
 		if err = s.pipeWriter.Close(); err != nil {
@@ -196,7 +213,10 @@ func (s *S3File) Close() error {
 
 // Open creates a new S3 File instance to perform concurrent reads
 func (s *S3File) Open(name string) (ParquetFile, error) {
-	if !s.readOpened {
+	s.lock.RLock()
+	readOpened := s.readOpened
+	s.lock.RUnlock()
+	if !readOpened {
 		if err := s.openRead(); err != nil {
 			return nil, err
 		}
@@ -233,10 +253,13 @@ func (s *S3File) Create(key string) (ParquetFile, error) {
 // Calling Close signals write completion.
 func (s *S3File) openWrite() {
 	pr, pw := io.Pipe()
+	uploader := s3manager.NewUploaderWithClient(s.client)
+	s.lock.Lock()
 	s.pipeReader = pr
 	s.pipeWriter = pw
 	s.writeOpened = true
-	s.uploader = s3manager.NewUploaderWithClient(s.client)
+	s.uploader = uploader
+	s.lock.Unlock()
 
 	uploadParams := &s3manager.UploadInput{
 		Bucket: aws.String(s.BucketName),
@@ -276,10 +299,12 @@ func (s *S3File) openRead() error {
 		return err
 	}
 
+	s.lock.Lock()
 	s.readOpened = true
 	if hoo.ContentLength != nil {
 		s.fileSize = *hoo.ContentLength
 	}
+	s.lock.Unlock()
 
 	return nil
 }
