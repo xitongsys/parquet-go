@@ -51,15 +51,12 @@ var (
 	errInvalidOffset = errors.New("Seek: invalid offset")
 	errFailedUpload  = errors.New("Write: failed upload")
 	activeS3Session  *session.Session
-	sessLock         sync.RWMutex
+	sessLock         sync.Mutex
 )
 
 // NewS3FileWriter creates an S3 FileWriter, to be used with NewParquetWriter
 func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (ParquetFile, error) {
-	sessLock.RLock()
-	sess := activeS3Session
-	sessLock.RUnlock()
-	if sess == nil {
+	if activeS3Session == nil {
 		sessLock.Lock()
 		if activeS3Session == nil {
 			activeS3Session = session.Must(session.NewSession())
@@ -80,10 +77,7 @@ func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aw
 
 // NewS3FileReader creates an S3 FileReader, to be used with NewParquetReader
 func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (ParquetFile, error) {
-	sessLock.RLock()
-	sess := activeS3Session
-	sessLock.RUnlock()
-	if sess == nil {
+	if activeS3Session == nil {
 		sessLock.Lock()
 		if activeS3Session == nil {
 			activeS3Session = session.Must(session.NewSession())
