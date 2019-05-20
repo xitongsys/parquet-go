@@ -2,6 +2,7 @@ package ParquetReader
 
 import (
 	"encoding/binary"
+	"io"
 	"reflect"
 	"sync"
 
@@ -98,7 +99,7 @@ func (self *ParquetReader) GetNumRows() int64 {
 func (self *ParquetReader) GetFooterSize() (uint32, error) {
 	var err error
 	buf := make([]byte, 4)
-	if _, err = self.PFile.Seek(-8, 2); err != nil {
+	if _, err = self.PFile.Seek(-8, io.SeekEnd); err != nil {
 		return 0, err
 	}
 	if _, err = self.PFile.Read(buf); err != nil {
@@ -114,7 +115,7 @@ func (self *ParquetReader) ReadFooter() error {
 	if err != nil {
 		return err
 	}
-	if _, err = self.PFile.Seek(-(int64)(8+size), 2); err != nil {
+	if _, err = self.PFile.Seek(-(int64)(8+size), io.SeekEnd); err != nil {
 		return err
 	}
 	self.Footer = parquet.NewFileMetaData()
