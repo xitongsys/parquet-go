@@ -136,7 +136,7 @@ type ParquetFile interface {
 	Create(name string) (ParquetFile, error)
 }
 ```
-Using this interface, parquet-go can read/write parquet file on different platforms. All the file sources are at [parquet-go-source](https://github.com/xitongsys/parquet-go-source).
+Using this interface, parquet-go can read/write parquet file on different platforms. All the file sources are at [parquet-go-source](https://github.com/xitongsys/parquet-go-source). Now it supports(local/hdfs/s3/gcs/memory).
 
 ## Writer
 Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
