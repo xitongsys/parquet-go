@@ -3,19 +3,19 @@ package SizeTool
 import (
 	"testing"
 
-	"github.com/xitongsys/parquet-go/ParquetReader"
+	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func TestGetParquetFileSize(t *testing.T) {
 	tests := map[string]struct {
-		pr           *ParquetReader.ParquetReader
+		pr           *reader.ParquetReader
 		pretty       bool
 		uncompressed bool
 		size         string
 	}{
 		"compresed_size": {
-			pr: &ParquetReader.ParquetReader{
+			pr: &reader.ParquetReader{
 				Footer: &parquet.FileMetaData{
 					RowGroups: []*parquet.RowGroup{
 						&parquet.RowGroup{
@@ -49,7 +49,7 @@ func TestGetParquetFileSize(t *testing.T) {
 			size:         "foo: 1234 bytes",
 		},
 		"uncompresed_size": {
-			pr: &ParquetReader.ParquetReader{
+			pr: &reader.ParquetReader{
 				Footer: &parquet.FileMetaData{
 					RowGroups: []*parquet.RowGroup{
 						&parquet.RowGroup{
@@ -66,7 +66,7 @@ func TestGetParquetFileSize(t *testing.T) {
 			size:         "foo: 1025 bytes",
 		},
 		"pretty_size_KB": {
-			pr: &ParquetReader.ParquetReader{
+			pr: &reader.ParquetReader{
 				Footer: &parquet.FileMetaData{
 					RowGroups: []*parquet.RowGroup{
 						&parquet.RowGroup{

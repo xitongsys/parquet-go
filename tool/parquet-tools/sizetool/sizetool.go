@@ -3,10 +3,10 @@ package SizeTool
 import (
 	"fmt"
 
-	"github.com/xitongsys/parquet-go/ParquetReader"
+	"github.com/xitongsys/parquet-go/reader"
 )
 
-func GetParquetFileSize(name string, pr *ParquetReader.ParquetReader, pretty, uncompressedSize bool) string {
+func GetParquetFileSize(name string, pr *reader.ParquetReader, pretty, uncompressedSize bool) string {
 	var size int64
 	if uncompressedSize {
 		size = getUncompressedSize(pr)
@@ -20,7 +20,7 @@ func GetParquetFileSize(name string, pr *ParquetReader.ParquetReader, pretty, un
 	return fmt.Sprintf("%s: %d bytes", name, size)
 }
 
-func getUncompressedSize(pr *ParquetReader.ParquetReader) int64 {
+func getUncompressedSize(pr *reader.ParquetReader) int64 {
 	var size int64
 	for _, rg := range pr.Footer.RowGroups {
 		size += rg.TotalByteSize
@@ -28,7 +28,7 @@ func getUncompressedSize(pr *ParquetReader.ParquetReader) int64 {
 	return size
 }
 
-func getCompressedSize(pr *ParquetReader.ParquetReader) int64 {
+func getCompressedSize(pr *reader.ParquetReader) int64 {
 	var size int64
 	for _, rg := range pr.Footer.RowGroups {
 		for _, cc := range rg.Columns {

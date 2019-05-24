@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/tool/parquet-tools/SchemaTool"
-	"github.com/xitongsys/parquet-go/tool/parquet-tools/SizeTool"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/tool/parquet-tools/schematool"
+	"github.com/xitongsys/parquet-go/tool/parquet-tools/sizetool"
 )
 
 func main() {
@@ -19,13 +19,13 @@ func main() {
 
 	flag.Parse()
 
-	fr, err := ParquetFile.NewLocalFileReader(*fileName)
+	fr, err := source.NewLocalFileReader(*fileName)
 	if err != nil {
 		fmt.Println("Can't open file ", *fileName)
 		return
 	}
 
-	pr, err := ParquetReader.NewParquetColumnReader(fr, 1)
+	pr, err := reader.NewParquetColumnReader(fr, 1)
 	if err != nil {
 		fmt.Println("Can't create parquet reader ", err)
 		return
@@ -33,7 +33,7 @@ func main() {
 
 	switch *cmd {
 	case "schema":
-		tree := SchemaTool.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
+		tree := schematool.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
 		fmt.Println("----- Go struct -----")
 		fmt.Printf("%s\n", tree.OutputStruct(*withTags))
 		fmt.Println("----- Json schema -----")
@@ -41,7 +41,7 @@ func main() {
 	case "rowcount":
 		fmt.Println(pr.GetNumRows())
 	case "size":
-		fmt.Println(SizeTool.GetParquetFileSize(*fileName, pr, *withPrettySize, *uncompressedSize))
+		fmt.Println(sizetool.GetParquetFileSize(*fileName, pr, *withPrettySize, *uncompressedSize))
 	default:
 		fmt.Println("Unknown command")
 	}
