@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/writer"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -77,14 +77,14 @@ var jsonSchema string = `
 
 func main() {
 	var err error
-	fw, err := ParquetFile.NewLocalFileWriter("json_schema.parquet")
+	fw, err := source.NewLocalFileWriter("json_schema.parquet")
 	if err != nil {
 		log.Println("Can't create local file", err)
 		return
 	}
 
 	//write
-	pw, err := ParquetWriter.NewParquetWriter(fw, nil, 4)
+	pw, err := writer.NewParquetWriter(fw, nil, 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
@@ -148,13 +148,13 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := ParquetFile.NewLocalFileReader("json_schema.parquet")
+	fr, err := source.NewLocalFileReader("json_schema.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
 	}
 
-	pr, err := ParquetReader.NewParquetReader(fr, nil, 4)
+	pr, err := reader.NewParquetReader(fr, nil, 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return

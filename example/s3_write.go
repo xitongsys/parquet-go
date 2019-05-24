@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 type student struct {
@@ -25,13 +25,13 @@ func s3Example() {
 	num := 100
 
 	// create new S3 file writer
-	fw, err := ParquetFile.NewS3FileWriter(ctx, bucket, key)
+	fw, err := source.NewS3FileWriter(ctx, bucket, key)
 	if err != nil {
 		log.Println("Can't open file", err)
 		return
 	}
 	// create new parquet file writer
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
@@ -62,14 +62,14 @@ func s3Example() {
 
 	// read the written parquet file
 	// create new S3 file reader
-	fr, err := ParquetFile.NewS3FileReader(ctx, bucket, key)
+	fr, err := source.NewS3FileReader(ctx, bucket, key)
 	if err != nil {
 		log.Println("Can't open file")
 		return
 	}
 
 	// create new parquet file reader
-	pr, err := ParquetReader.NewParquetReader(fr, new(student), 4)
+	pr, err := reader.NewParquetReader(fr, new(student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return

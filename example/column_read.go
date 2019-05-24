@@ -4,9 +4,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 type Student struct {
@@ -23,12 +23,12 @@ type Student struct {
 func main() {
 	var err error
 	//write
-	fw, err := ParquetFile.NewLocalFileWriter("column.parquet")
+	fw, err := source.NewLocalFileWriter("column.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer")
 		return
@@ -59,12 +59,12 @@ func main() {
 	var rls, dls []int32
 
 	///read
-	fr, err := ParquetFile.NewLocalFileReader("column.parquet")
+	fr, err := source.NewLocalFileReader("column.parquet")
 	if err != nil {
 		log.Println("Can't open file", err)
 		return
 	}
-	pr, err := ParquetReader.NewParquetColumnReader(fr, 4)
+	pr, err := reader.NewParquetColumnReader(fr, 4)
 	if err != nil {
 		log.Println("Can't create column reader", err)
 		return

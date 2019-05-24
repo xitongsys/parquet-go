@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 type Student struct {
@@ -19,12 +19,12 @@ type Student struct {
 func main() {
 	var err error
 	//write
-	fw, err := ParquetFile.NewHdfsFileWriter([]string{"localhost:9000"}, "root", "/flat.parquet")
+	fw, err := source.NewHdfsFileWriter([]string{"localhost:9000"}, "root", "/flat.parquet")
 	if err != nil {
 		log.Println("Can't create hdfs file", err)
 		return
 	}
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
@@ -50,12 +50,12 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := ParquetFile.NewHdfsFileReader([]string{"localhost:9000"}, "", "/flat.parquet")
+	fr, err := source.NewHdfsFileReader([]string{"localhost:9000"}, "", "/flat.parquet")
 	if err != nil {
 		log.Println("Can't open hdfs file", err)
 		return
 	}
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	pr, err := reader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return

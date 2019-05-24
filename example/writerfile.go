@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/writer"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -22,10 +22,10 @@ type Student struct {
 func main() {
 	var err error
 	buf := new(bytes.Buffer)
-	fw := ParquetFile.NewWriterFile(buf)
+	fw := source.NewWriterFile(buf)
 
 	//write
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return

@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetType"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 func main() {
@@ -25,12 +24,12 @@ func main() {
 	fileName := "gcs_example/csv.parquet"
 
 	//write
-	fw, err := ParquetFile.NewGcsFileWriter(ctx, projectId, bucketName, fileName)
+	fw, err := source.NewGcsFileWriter(ctx, projectId, bucketName, fileName)
 	if err != nil {
 		log.Println("Can't open file", err)
 		return
 	}
-	pw, err := ParquetWriter.NewCSVWriter(md, fw, 4)
+	pw, err := writer.NewCSVWriter(md, fw, 4)
 	if err != nil {
 		log.Println("Can't create csv writer", err)
 		return
@@ -54,11 +53,11 @@ func main() {
 		}
 
 		data2 := []interface{}{
-			ParquetType.BYTE_ARRAY("Student Name"),
-			ParquetType.INT32(20 + i%5),
-			ParquetType.INT64(i),
-			ParquetType.FLOAT(50.0 + float32(i)*0.1),
-			ParquetType.BOOLEAN(i%2 == 0),
+			[]byte("Student Name"),
+			int32(20 + i%5),
+			int64(i),
+			float32(50.0 + float32(i)*0.1),
+			bool(i%2 == 0),
 		}
 		if err = pw.Write(data2); err != nil {
 			log.Println("Write error", err)

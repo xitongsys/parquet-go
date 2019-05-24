@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/writer"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	// create in-memory ParquetFile with Closer Function
 	// NOTE: closer function can be nil, no action will be
 	// run when the writer is closed.
-	fw, err := ParquetFile.NewMemFileWriter("flat.parquet.snappy", func(name string, r io.Reader) error {
+	fw, err := source.NewMemFileWriter("flat.parquet.snappy", func(name string, r io.Reader) error {
 		dat, err := ioutil.ReadAll(r)
 		if err != nil {
 			log.Printf("error reading data: %v", err)
@@ -45,7 +45,7 @@ func main() {
 		return
 	}
 	//write
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
@@ -75,13 +75,13 @@ func main() {
 	// os.Exit(1)
 
 	///read
-	fr, err := ParquetFile.NewLocalFileReader("flat.parquet.snappy")
+	fr, err := source.NewLocalFileReader("flat.parquet.snappy")
 	if err != nil {
 		log.Println("Can't open file")
 		return
 	}
 
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	pr, err := reader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
@@ -99,7 +99,7 @@ func main() {
 
 	// NOTE: you can access the underlying MemFs using ParquetFile.GetMemFileFs()
 	// EXAMPLE: this will delete the file we created from the in-memory file system
-	if err := ParquetFile.GetMemFileFs().Remove("flat.parquet.snappy"); err != nil {
+	if err := source.GetMemFileFs().Remove("flat.parquet.snappy"); err != nil {
 		log.Printf("error removing file from memfs: %v", err)
 		os.Exit(1)
 	}
