@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -67,7 +68,10 @@ func StringToTag(tag string) *Tag {
 			kv[0] == "scale" || kv[0] == "keyscale" || kv[0] == "valuescale" ||
 			kv[0] == "precision" || kv[0] == "keyprecision" || kv[0] == "valueprecision" ||
 			kv[0] == "fieldid" || kv[0] == "keyfieldid" || kv[0] == "valuefieldid" {
-			valInt, _ := strconv.Atoi(kv[1])
+			valInt, err := strconv.Atoi(kv[1])
+			if err != nil {
+				panic(err)
+			}
 			valInt32 = int32(valInt)
 		}
 		switch kv[0] {
@@ -122,6 +126,8 @@ func StringToTag(tag string) *Tag {
 				mp.RepetitionType = parquet.FieldRepetitionType_REQUIRED
 			case "optional":
 				mp.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
+			default:
+				panic(fmt.Errorf("Unknown repetitiontype: " + val))
 			}
 		case "keyrepetitiontype":
 			switch strings.ToLower(val) {
@@ -131,6 +137,8 @@ func StringToTag(tag string) *Tag {
 				mp.KeyRepetitionType = parquet.FieldRepetitionType_REQUIRED
 			case "optional":
 				mp.KeyRepetitionType = parquet.FieldRepetitionType_OPTIONAL
+			default:
+				panic(fmt.Errorf("Unknown keyrepetitiontype: " + val))
 			}
 		case "valuerepetitiontype":
 			switch strings.ToLower(val) {
@@ -140,6 +148,8 @@ func StringToTag(tag string) *Tag {
 				mp.ValueRepetitionType = parquet.FieldRepetitionType_REQUIRED
 			case "optional":
 				mp.ValueRepetitionType = parquet.FieldRepetitionType_OPTIONAL
+			default:
+				panic(fmt.Errorf("Unknown valuerepetitiontype: " + val))
 			}
 		case "encoding":
 			switch strings.ToLower(val) {
@@ -154,7 +164,7 @@ func StringToTag(tag string) *Tag {
 			case "plain_dictionary":
 				mp.Encoding = parquet.Encoding_PLAIN_DICTIONARY
 			default:
-				mp.Encoding = parquet.Encoding_PLAIN
+				panic(fmt.Errorf("Unknown encoding: " + val))
 			}
 		case "keyencoding":
 			switch strings.ToLower(val) {
@@ -169,7 +179,7 @@ func StringToTag(tag string) *Tag {
 			case "plain_dictionary":
 				mp.KeyEncoding = parquet.Encoding_PLAIN_DICTIONARY
 			default:
-				mp.KeyEncoding = parquet.Encoding_PLAIN
+				panic(fmt.Errorf("Unknown keyencoding: " + val))
 			}
 		case "valueencoding":
 			switch strings.ToLower(val) {
@@ -184,8 +194,10 @@ func StringToTag(tag string) *Tag {
 			case "plain_dictionary":
 				mp.ValueEncoding = parquet.Encoding_PLAIN_DICTIONARY
 			default:
-				mp.ValueEncoding = parquet.Encoding_PLAIN
+				panic(fmt.Errorf("Unknown valueencoding: " + val))
 			}
+		default:
+			panic(fmt.Errorf("Unrecognized tag " + kv[0]))
 		}
 	}
 	return mp

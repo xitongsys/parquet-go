@@ -66,7 +66,7 @@ func TypeNameToParquetType(name string, baseName string) (*parquet.Type, *parque
 			return parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)
 		}
 	}
-	return nil, nil
+	panic(fmt.Errorf("Unknown type: " + name))
 }
 
 func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {

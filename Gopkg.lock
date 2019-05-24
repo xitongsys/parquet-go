@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:e95de5c830369d6592224de57a31cd87a2ba1cec2abaf050d06a63ee8f7babd8"
+  digest = "1:1b2208b11ad707c7fce6bb4d093b507dd3dfe378dfd88fdf5097cf26ad5beff4"
   name = "github.com/apache/thrift"
   packages = ["lib/go/thrift"]
   pruneopts = "UT"
