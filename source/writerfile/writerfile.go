@@ -1,4 +1,4 @@
-package writer
+package writerfile
 
 import (
 	"io"
