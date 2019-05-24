@@ -18,7 +18,7 @@ Look at examples in `example/`.
 cd parquet-go/
 dep ensure
 cd example/
-go run example/local_flat.go
+go run local_flat.go
 ```
 
 ## Type
