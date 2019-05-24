@@ -1,4 +1,4 @@
-package SizeTool
+package sizetool
 
 import (
 	"fmt"
