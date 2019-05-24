@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/types"
 	"github.com/xitongsys/parquet-go/writer"
@@ -48,7 +48,7 @@ type TypeList struct {
 func main() {
 	var err error
 	//write
-	fw, err := source.NewLocalFileWriter("type.parquet")
+	fw, err := local.NewLocalFileWriter("type.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
 		return
@@ -106,7 +106,7 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := source.NewLocalFileReader("type.parquet")
+	fr, err := local.NewLocalFileReader("type.parquet")
 	if err != nil {
 		log.Println("Can't create file reader", err)
 		return

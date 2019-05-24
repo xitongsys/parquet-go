@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/hdfs"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
 )
@@ -19,7 +19,7 @@ type Student struct {
 func main() {
 	var err error
 	//write
-	fw, err := source.NewHdfsFileWriter([]string{"localhost:9000"}, "root", "/flat.parquet")
+	fw, err := hdfs.NewHdfsFileWriter([]string{"localhost:9000"}, "root", "/flat.parquet")
 	if err != nil {
 		log.Println("Can't create hdfs file", err)
 		return
@@ -50,7 +50,7 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := source.NewHdfsFileReader([]string{"localhost:9000"}, "", "/flat.parquet")
+	fr, err := hdfs.NewHdfsFileReader([]string{"localhost:9000"}, "", "/flat.parquet")
 	if err != nil {
 		log.Println("Can't open hdfs file", err)
 		return

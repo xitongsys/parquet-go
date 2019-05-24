@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/gcs"
 	"github.com/xitongsys/parquet-go/writer"
 )
 
@@ -24,7 +24,7 @@ func main() {
 	fileName := "gcs_example/csv.parquet"
 
 	//write
-	fw, err := source.NewGcsFileWriter(ctx, projectId, bucketName, fileName)
+	fw, err := gcs.NewGcsFileWriter(ctx, projectId, bucketName, fileName)
 	if err != nil {
 		log.Println("Can't open file", err)
 		return

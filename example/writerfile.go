@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/writerfile"
 	"github.com/xitongsys/parquet-go/writer"
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -22,7 +22,7 @@ type Student struct {
 func main() {
 	var err error
 	buf := new(bytes.Buffer)
-	fw := source.NewWriterFile(buf)
+	fw := writerfile.NewWriterFile(buf)
 
 	//write
 	pw, err := writer.NewParquetWriter(fw, new(Student), 4)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
 )
@@ -103,7 +103,7 @@ func writeNested() {
 	stus = append(stus, stu01, stu02)
 
 	//write nested
-	fw, err := source.NewLocalFileWriter("nested.parquet")
+	fw, err := local.NewLocalFileWriter("nested.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
 		return
@@ -126,7 +126,7 @@ func writeNested() {
 	log.Println("Write Finished")
 
 	//read nested
-	fr, err := source.NewLocalFileReader("nested.parquet")
+	fr, err := local.NewLocalFileReader("nested.parquet")
 	if err != nil {
 		log.Println("Can't open file", err)
 		return

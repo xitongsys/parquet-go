@@ -7,7 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/mem"
+	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -26,7 +27,7 @@ func main() {
 	// create in-memory ParquetFile with Closer Function
 	// NOTE: closer function can be nil, no action will be
 	// run when the writer is closed.
-	fw, err := source.NewMemFileWriter("flat.parquet.snappy", func(name string, r io.Reader) error {
+	fw, err := mem.NewMemFileWriter("flat.parquet.snappy", func(name string, r io.Reader) error {
 		dat, err := ioutil.ReadAll(r)
 		if err != nil {
 			log.Printf("error reading data: %v", err)
@@ -75,7 +76,7 @@ func main() {
 	// os.Exit(1)
 
 	///read
-	fr, err := source.NewLocalFileReader("flat.parquet.snappy")
+	fr, err := local.NewLocalFileReader("flat.parquet.snappy")
 	if err != nil {
 		log.Println("Can't open file")
 		return
@@ -99,7 +100,7 @@ func main() {
 
 	// NOTE: you can access the underlying MemFs using ParquetFile.GetMemFileFs()
 	// EXAMPLE: this will delete the file we created from the in-memory file system
-	if err := source.GetMemFileFs().Remove("flat.parquet.snappy"); err != nil {
+	if err := mem.GetMemFileFs().Remove("flat.parquet.snappy"); err != nil {
 		log.Printf("error removing file from memfs: %v", err)
 		os.Exit(1)
 	}

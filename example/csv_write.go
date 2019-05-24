@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/writer"
 )
 
@@ -19,7 +19,7 @@ func main() {
 	}
 
 	//write
-	fw, err := source.NewLocalFileWriter("csv.parquet")
+	fw, err := local.NewLocalFileWriter("csv.parquet")
 	if err != nil {
 		log.Println("Can't open file", err)
 		return

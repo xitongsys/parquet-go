@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/s3"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
 )
@@ -25,7 +25,7 @@ func s3Example() {
 	num := 100
 
 	// create new S3 file writer
-	fw, err := source.NewS3FileWriter(ctx, bucket, key)
+	fw, err := s3.NewS3FileWriter(ctx, bucket, key)
 	if err != nil {
 		log.Println("Can't open file", err)
 		return
@@ -62,7 +62,7 @@ func s3Example() {
 
 	// read the written parquet file
 	// create new S3 file reader
-	fr, err := source.NewS3FileReader(ctx, bucket, key)
+	fr, err := s3.NewS3FileReader(ctx, bucket, key)
 	if err != nil {
 		log.Println("Can't open file")
 		return

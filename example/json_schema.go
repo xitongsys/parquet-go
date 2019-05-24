@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -77,7 +77,7 @@ var jsonSchema string = `
 
 func main() {
 	var err error
-	fw, err := source.NewLocalFileWriter("json_schema.parquet")
+	fw, err := local.NewLocalFileWriter("json_schema.parquet")
 	if err != nil {
 		log.Println("Can't create local file", err)
 		return
@@ -148,7 +148,7 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := source.NewLocalFileReader("json_schema.parquet")
+	fr, err := local.NewLocalFileReader("json_schema.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
