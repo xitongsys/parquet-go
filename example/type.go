@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetType"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/types"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 type TypeList struct {
@@ -48,12 +48,12 @@ type TypeList struct {
 func main() {
 	var err error
 	//write
-	fw, err := ParquetFile.NewLocalFileWriter("type.parquet")
+	fw, err := local.NewLocalFileWriter("type.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(TypeList), 4)
+	pw, err := writer.NewParquetWriter(fw, new(TypeList), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
@@ -64,7 +64,7 @@ func main() {
 			Bool:              bool(i%2 == 0),
 			Int32:             int32(i),
 			Int64:             int64(i),
-			Int96:             ParquetType.StrIntToBinary("12345", "LittleEndian", 12, true),
+			Int96:             types.StrIntToBinary("12345", "LittleEndian", 12, true),
 			Float:             float32(float32(i) * 0.5),
 			Double:            float64(float64(i) * 0.5),
 			ByteArray:         "ByteArray",
@@ -84,12 +84,12 @@ func main() {
 			TimeMicros:      int64(i),
 			TimestampMillis: int64(i),
 			TimestampMicros: int64(i),
-			Interval:        ParquetType.StrIntToBinary("12345", "LittleEndian", 12, false),
+			Interval:        types.StrIntToBinary("12345", "LittleEndian", 12, false),
 
 			Decimal1: int32(12345),
 			Decimal2: int64(12345),
-			Decimal3: ParquetType.StrIntToBinary("-12345", "BigEndian", 12, true),
-			Decimal4: ParquetType.StrIntToBinary("12345", "BigEndian", 0, true),
+			Decimal3: types.StrIntToBinary("-12345", "BigEndian", 12, true),
+			Decimal4: types.StrIntToBinary("12345", "BigEndian", 0, true),
 
 			Map:      map[string]int32{"One": 1, "Two": 2},
 			List:     []string{"item1", "item2"},
@@ -106,12 +106,12 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := ParquetFile.NewLocalFileReader("type.parquet")
+	fr, err := local.NewLocalFileReader("type.parquet")
 	if err != nil {
 		log.Println("Can't create file reader", err)
 		return
 	}
-	pr, err := ParquetReader.NewParquetReader(fr, new(TypeList), 10)
+	pr, err := reader.NewParquetReader(fr, new(TypeList), 10)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return

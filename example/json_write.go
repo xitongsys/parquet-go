@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 func main() {
@@ -53,12 +53,12 @@ func main() {
 `
 
 	//write
-	fw, err := ParquetFile.NewLocalFileWriter("json.parquet")
+	fw, err := local.NewLocalFileWriter("json.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err := ParquetWriter.NewJSONWriter(md, fw, 4)
+	pw, err := writer.NewJSONWriter(md, fw, 4)
 	if err != nil {
 		log.Println("Can't create json writer", err)
 		return

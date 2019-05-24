@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 type Student struct {
@@ -103,12 +103,12 @@ func writeNested() {
 	stus = append(stus, stu01, stu02)
 
 	//write nested
-	fw, err := ParquetFile.NewLocalFileWriter("nested.parquet")
+	fw, err := local.NewLocalFileWriter("nested.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
@@ -126,12 +126,12 @@ func writeNested() {
 	log.Println("Write Finished")
 
 	//read nested
-	fr, err := ParquetFile.NewLocalFileReader("nested.parquet")
+	fr, err := local.NewLocalFileReader("nested.parquet")
 	if err != nil {
 		log.Println("Can't open file", err)
 		return
 	}
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+	pr, err := reader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return

@@ -1,4 +1,4 @@
-# parquet-go v1.2.8
+# parquet-go v1.3.0
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -136,7 +136,7 @@ type ParquetFile interface {
 	Create(name string) (ParquetFile, error)
 }
 ```
-Using this interface, parquet-go can read/write parquet file on different platforms. Currently local and HDFS interfaces are implemented.(It's not possible for S3, because it doesn't support random access.)
+Using this interface, parquet-go can read/write parquet file on different platforms. All the file sources are at [parquet-go-source](https://github.com/xitongsys/parquet-go-source). Now it supports(local/hdfs/s3/gcs/memory).
 
 ## Writer
 Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
@@ -273,13 +273,14 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 Following is a simple example of read/write parquet file on local disk. It can be found in example directory:
 ```golang
 package main
+
 import (
 	"log"
 	"time"
 
-	"github.com/xitongsys/parquet-go/ParquetFile"
-	"github.com/xitongsys/parquet-go/ParquetReader"
-	"github.com/xitongsys/parquet-go/ParquetWriter"
+	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/reader"
+	"github.com/xitongsys/parquet-go/writer"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -295,17 +296,19 @@ type Student struct {
 
 func main() {
 	var err error
-	fw, err := ParquetFile.NewLocalFileWriter("flat.parquet")
+	fw, err := local.NewLocalFileWriter("flat.parquet")
 	if err != nil {
 		log.Println("Can't create local file", err)
 		return
 	}
+
 	//write
-	pw, err := ParquetWriter.NewParquetWriter(fw, new(Student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
+
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 100
@@ -330,12 +333,13 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := ParquetFile.NewLocalFileReader("flat.parquet")
+	fr, err := local.NewLocalFileReader("flat.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
 	}
-	pr, err := ParquetReader.NewParquetReader(fr, new(Student), 4)
+
+	pr, err := reader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
@@ -352,6 +356,7 @@ func main() {
 		}
 		log.Println(stus)
 	}
+
 	pr.ReadStop()
 	fr.Close()
 }
@@ -362,11 +367,4 @@ func main() {
 * [parquet-tools](https://github.com/xitongsys/parquet-go/blob/master/tool/parquet-tools): Command line tools that aid in the inspection of Parquet files
 
 
-## Status
-Here are a few todo items. Welcome any help!
-* Add more useful tools
-* Performance Test(Issue14)
-* Test in different platforms
-* Star it :)
-
-Please start to use it and give feedback. Help is needed and anything is welcome.
+Please start to use it and give feedback or start it! Help is needed and anything is welcome.
