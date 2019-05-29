@@ -127,7 +127,7 @@ func StringToTag(tag string) *Tag {
 			case "optional":
 				mp.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
 			default:
-				panic(fmt.Errorf("Unknown repetitiontype: " + val))
+				panic(fmt.Errorf("Unknown repetitiontype: '%v'", val))
 			}
 		case "keyrepetitiontype":
 			switch strings.ToLower(val) {
@@ -138,7 +138,7 @@ func StringToTag(tag string) *Tag {
 			case "optional":
 				mp.KeyRepetitionType = parquet.FieldRepetitionType_OPTIONAL
 			default:
-				panic(fmt.Errorf("Unknown keyrepetitiontype: " + val))
+				panic(fmt.Errorf("Unknown keyrepetitiontype: '%v'", val))
 			}
 		case "valuerepetitiontype":
 			switch strings.ToLower(val) {
@@ -149,7 +149,7 @@ func StringToTag(tag string) *Tag {
 			case "optional":
 				mp.ValueRepetitionType = parquet.FieldRepetitionType_OPTIONAL
 			default:
-				panic(fmt.Errorf("Unknown valuerepetitiontype: " + val))
+				panic(fmt.Errorf("Unknown valuerepetitiontype: '%v'", val))
 			}
 		case "encoding":
 			switch strings.ToLower(val) {
@@ -164,7 +164,7 @@ func StringToTag(tag string) *Tag {
 			case "plain_dictionary":
 				mp.Encoding = parquet.Encoding_PLAIN_DICTIONARY
 			default:
-				panic(fmt.Errorf("Unknown encoding: " + val))
+				panic(fmt.Errorf("Unknown encoding type: '%v'", val))
 			}
 		case "keyencoding":
 			switch strings.ToLower(val) {
@@ -179,7 +179,7 @@ func StringToTag(tag string) *Tag {
 			case "plain_dictionary":
 				mp.KeyEncoding = parquet.Encoding_PLAIN_DICTIONARY
 			default:
-				panic(fmt.Errorf("Unknown keyencoding: " + val))
+				panic(fmt.Errorf("Unknown keyencoding type: '%v'", val))
 			}
 		case "valueencoding":
 			switch strings.ToLower(val) {
@@ -194,10 +194,10 @@ func StringToTag(tag string) *Tag {
 			case "plain_dictionary":
 				mp.ValueEncoding = parquet.Encoding_PLAIN_DICTIONARY
 			default:
-				panic(fmt.Errorf("Unknown valueencoding: " + val))
+				panic(fmt.Errorf("Unknown valueencoding type: '%v'", val))
 			}
 		default:
-			panic(fmt.Errorf("Unrecognized tag " + kv[0]))
+			panic(fmt.Errorf("Unrecognized tag '%v'", kv[0]))
 		}
 	}
 	return mp
