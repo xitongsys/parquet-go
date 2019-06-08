@@ -12,11 +12,12 @@ type GcsFile struct {
 	BucketName string
 	Ctx        context.Context
 
-	Client     *storage.Client
-	Bucket     *storage.BucketHandle
-	FilePath   string
-	FileReader *storage.Reader
-	FileWriter *storage.Writer
+	Client         *storage.Client
+	externalClient bool
+	Bucket         *storage.BucketHandle
+	FilePath       string
+	FileReader     *storage.Reader
+	FileWriter     *storage.Writer
 }
 
 func NewGcsFileWriter(ctx context.Context, projectId string, bucketName string, name string) (source.ParquetFile, error) {
@@ -25,6 +26,18 @@ func NewGcsFileWriter(ctx context.Context, projectId string, bucketName string, 
 		BucketName: bucketName,
 		Ctx:        ctx,
 		FilePath:   name,
+	}
+	return res.Create(name)
+}
+
+func NewGcsFileWriterWithClient(ctx context.Context, client *storage.Client, projectId string, bucketName string, name string) (source.ParquetFile, error) {
+	res := &GcsFile{
+		ProjectId:      projectId,
+		BucketName:     bucketName,
+		Ctx:            ctx,
+		Client:         client,
+		externalClient: true,
+		FilePath:       name,
 	}
 	return res.Create(name)
 }
@@ -39,10 +52,28 @@ func NewGcsFileReader(ctx context.Context, projectId string, bucketName string, 
 	return res.Open(name)
 }
 
+func NewGcsFileReaderWithClient(ctx context.Context, client *storage.Client, projectId string, bucketName string, name string) (source.ParquetFile, error) {
+	res := &GcsFile{
+		ProjectId:      projectId,
+		BucketName:     bucketName,
+		Ctx:            ctx,
+		Client:         client,
+		externalClient: true,
+		FilePath:       name,
+	}
+	return res.Open(name)
+}
+
 func (self *GcsFile) Create(name string) (source.ParquetFile, error) {
 	var err error
 	gcs := new(GcsFile)
-	gcs.Client, err = storage.NewClient(self.Ctx)
+	if self.Client == nil {
+		gcs.Client, err = storage.NewClient(self.Ctx)
+		gcs.externalClient = false
+	} else {
+		gcs.Client = self.Client
+		gcs.externalClient = self.externalClient
+	}
 	gcs.FilePath = name
 	if err != nil {
 		return gcs, err
@@ -57,7 +88,13 @@ func (self *GcsFile) Create(name string) (source.ParquetFile, error) {
 func (self *GcsFile) Open(name string) (source.ParquetFile, error) {
 	var err error
 	gcs := new(GcsFile)
-	gcs.Client, err = storage.NewClient(self.Ctx)
+	if self.Client == nil {
+		gcs.Client, err = storage.NewClient(self.Ctx)
+		gcs.externalClient = false
+	} else {
+		gcs.Client = self.Client
+		gcs.externalClient = self.externalClient
+	}
 	gcs.FilePath = name
 	if err != nil {
 		return gcs, err
@@ -101,8 +138,10 @@ func (self *GcsFile) Close() error {
 			return err
 		}
 	}
-	if self.Client != nil {
-		if err := self.Client.Close(); err != nil {
+	if self.Client != nil && !self.externalClient {
+		err := self.Client.Close()
+		self.Client = nil
+		if err != nil {
 			return err
 		}
 	}
