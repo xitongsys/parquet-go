@@ -251,11 +251,12 @@ func (s *S3File) Open(name string) (source.ParquetFile, error) {
 // Create creates a new S3 File instance to perform writes
 func (s *S3File) Create(key string) (source.ParquetFile, error) {
 	pf := &S3File{
-		ctx:        s.ctx,
-		client:     s.client,
-		BucketName: s.BucketName,
-		Key:        key,
-		writeDone:  make(chan error),
+		ctx:             s.ctx,
+		client:          s.client,
+		uploaderOptions: s.uploaderOptions,
+		BucketName:      s.BucketName,
+		Key:             key,
+		writeDone:       make(chan error),
 	}
 	pf.openWrite()
 	return pf, nil
@@ -362,4 +363,3 @@ func (s *S3File) getBytesRange(numBytes int) string {
 	byteRange = fmt.Sprintf(rangeHeader, begin, end)
 	return byteRange
 }
-
