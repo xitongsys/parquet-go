@@ -25,11 +25,12 @@ type S3File struct {
 	whence int
 
 	// write-related fields
-	writeOpened bool
-	writeDone   chan error
-	pipeReader  *io.PipeReader
-	pipeWriter  *io.PipeWriter
-	uploader    *s3manager.Uploader
+	writeOpened     bool
+	writeDone       chan error
+	pipeReader      *io.PipeReader
+	pipeWriter      *io.PipeWriter
+	uploader        *s3manager.Uploader
+	uploaderOptions []func(*s3manager.Uploader)
 
 	// read-related fields
 	readOpened bool
@@ -56,7 +57,13 @@ var (
 )
 
 // NewS3FileWriter creates an S3 FileWriter, to be used with NewParquetWriter
-func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (source.ParquetFile, error) {
+func NewS3FileWriter(
+	ctx context.Context,
+	bucket string,
+	key string,
+	uploaderOptions []func(*s3manager.Uploader),
+	cfgs ...*aws.Config,
+) (source.ParquetFile, error) {
 	if activeS3Session == nil {
 		sessLock.Lock()
 		if activeS3Session == nil {
@@ -66,11 +73,12 @@ func NewS3FileWriter(ctx context.Context, bucket string, key string, cfgs ...*aw
 	}
 
 	file := &S3File{
-		ctx:        ctx,
-		client:     s3.New(activeS3Session, cfgs...),
-		writeDone:  make(chan error),
-		BucketName: bucket,
-		Key:        key,
+		ctx:             ctx,
+		client:          s3.New(activeS3Session, cfgs...),
+		writeDone:       make(chan error),
+		uploaderOptions: uploaderOptions,
+		BucketName:      bucket,
+		Key:             key,
 	}
 
 	return file.Create(key)
@@ -243,11 +251,12 @@ func (s *S3File) Open(name string) (source.ParquetFile, error) {
 // Create creates a new S3 File instance to perform writes
 func (s *S3File) Create(key string) (source.ParquetFile, error) {
 	pf := &S3File{
-		ctx:        s.ctx,
-		client:     s.client,
-		BucketName: s.BucketName,
-		Key:        key,
-		writeDone:  make(chan error),
+		ctx:             s.ctx,
+		client:          s.client,
+		uploaderOptions: s.uploaderOptions,
+		BucketName:      s.BucketName,
+		Key:             key,
+		writeDone:       make(chan error),
 	}
 	pf.openWrite()
 	return pf, nil
@@ -257,7 +266,7 @@ func (s *S3File) Create(key string) (source.ParquetFile, error) {
 // Calling Close signals write completion.
 func (s *S3File) openWrite() {
 	pr, pw := io.Pipe()
-	uploader := s3manager.NewUploaderWithClient(s.client)
+	uploader := s3manager.NewUploaderWithClient(s.client, s.uploaderOptions...)
 	s.lock.Lock()
 	s.pipeReader = pr
 	s.pipeWriter = pw
