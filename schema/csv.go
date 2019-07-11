@@ -58,7 +58,16 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 				var ln int32 = 12
 				schema.TypeLength = &ln
 			} else if name == "DECIMAL" {
-				schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
+				if info.BaseType == parquet.Type_BYTE_ARRAY.String() {
+					schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
+				} else if info.BaseType == parquet.Type_FIXED_LEN_BYTE_ARRAY.String() {
+					schema.Type = parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY)
+					schema.TypeLength = &info.Length
+				} else if info.BaseType == parquet.Type_INT32.String() {
+					schema.Type = parquet.TypePtr(parquet.Type_INT32)
+				} else if info.BaseType == parquet.Type_INT64.String() {
+					schema.Type = parquet.TypePtr(parquet.Type_INT64)
+				}
 				schema.Scale = &info.Scale
 				schema.Precision = &info.Precision
 			}
