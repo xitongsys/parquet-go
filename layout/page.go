@@ -537,6 +537,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 		table := new(Table)
 		table.Path = self.Path
 		self.DataTable = table
+		self.RawData = buf
 		return 0, 0, nil
 
 	} else {
