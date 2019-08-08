@@ -17,8 +17,7 @@ dep ensure
 ```
 Look at examples in `example/`. 
 ```sh
-cd $GOPATH/src/github.com/xitongsys/parquet-go/
-cd example/
+cd $GOPATH/src/github.com/xitongsys/parquet-go/example
 go run local_flat.go
 ```
 
