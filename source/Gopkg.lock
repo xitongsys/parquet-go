@@ -150,7 +150,6 @@
   version = "v1.2.2"
 
 [[projects]]
-  branch = "dev"
   digest = "1:42d0933eab5ea49007aaf2d94608cadc4fe3f29f23a189aab2f41c1fa7a84d78"
   name = "github.com/xitongsys/parquet-go"
   packages = [
@@ -167,7 +166,8 @@
     "writer",
   ]
   pruneopts = "UT"
-  revision = "61f7d1aaa5062e10e74e7e21144a8e9531aa3095"
+  revision = "181eb30d676372f253730d2d4371e49487af8482"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:6a0fd720abef071f9c9821249e2a7ee87a2e90fe7e45cef8fe413e6b5287363a"
