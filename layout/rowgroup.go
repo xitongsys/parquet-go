@@ -1,6 +1,8 @@
 package layout
 
 import (
+	"errors"
+	
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/source"
 	"github.com/xitongsys/parquet-go/schema"
@@ -40,6 +42,7 @@ func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
 
 //Read one RowGroup from parquet file (Deprecated)
 func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, schemaHandler *schema.SchemaHandler, NP int64) (*RowGroup, error) {
+	var err error
 	rowGroup := new(RowGroup)
 	rowGroup.RowGroupHeader = rowGroupHeader
 
@@ -64,6 +67,19 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 		}
 
 		go func(index int64, bgn int64, end int64) {
+			defer func() {
+				if r := recover(); r != nil {
+					switch x := r.(type) {
+					case string:
+						err = errors.New(x)
+					case error:
+						err = x
+					default:
+						err = errors.New("unknown error")
+					}
+				}
+			}()
+
 			for i := bgn; i < end; i++ {
 				offset := columnChunks[i].FileOffset
 				PFile := PFile
@@ -93,5 +109,5 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 		rowGroup.Chunks = append(rowGroup.Chunks, chunksList[c]...)
 	}
 
-	return rowGroup, nil
+	return rowGroup, err
 }
