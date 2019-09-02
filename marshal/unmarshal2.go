@@ -80,6 +80,32 @@ func Unmarshal2(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfa
 
 		for i := bgn; i < end; i++ {
 			rl, dl, val := table.RepetitionLevels[i], table.DefinitionLevels[i], table.Values[i]
+			index, ov, pi := -1, reflect.ValueOf(dstInterface).Elem(), repPathIndex[rl]
+
+			for {
+				curPathStr := common.PathToStr(path[:index+1])
+
+				if ov.Type().Kind() == reflect.Struct {
+					index++
+					ov = ov.FieldByName(path[index])
+
+				} else if ov.Type().Kind() == reflect.Slice && 
+				*schemaHandler.SchemaElements[schemaHandler.MapIndex[curPathStr]].RepetitionType != parquet.FieldRepetitionType_REPEATED {
+					if ov.IsNil() {
+						ov.Set(reflect.MakeSlice(ov.Type(), 0, 0))
+					}
+
+					if ov.Len() <= int(repObjIndex[rl])
+				}
+
+				if pi - 1 == int32(index) {
+					if ov.Len() <= int(repObjIndex[rl]) {
+						ot := ov.Elem().Type()
+						ov.Set(reflect.Append(ov, reflect.New(ot).Elem()))
+					}
+					ov = ov.Index(int(repObjIndex[rl]))
+				}
+			}
 			
 		}
 
