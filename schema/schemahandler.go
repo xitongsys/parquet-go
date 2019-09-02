@@ -3,6 +3,7 @@ package schema
 import (
 	"errors"
 	"reflect"
+	"fmt"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -111,6 +112,27 @@ func (self *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 	}
 	return res, nil
 }
+
+// MaxRepetitionLevel returns the max repetition level type of a column by it's schema path
+func (self *SchemaHandler) GetRepetitionLevelIndex(path []string, rl int32) (int32, error) {
+	var res int32 = 0
+	ln := len(path)
+	for i := 2; i <= ln; i++ {
+		rt, err := self.GetRepetitionType(path[:i])
+		if err != nil {
+			return 0, err
+		}
+		if rt == parquet.FieldRepetitionType_REPEATED {
+			res++
+		}
+
+		if res == rl {
+			return int32(i - 1), nil
+		}
+	}
+	return res, fmt.Errorf("rl = %d not found in path = %v", rl, path)
+}
+
 
 // MaxRepetitionLevel returns the max repetition level type of a column by it's schema path
 func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
