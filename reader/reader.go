@@ -23,6 +23,10 @@ type ParquetReader struct {
 	PFile         source.ParquetFile
 
 	ColumnBuffers map[string]*ColumnBufferType
+
+	//One reader can only read one type objects
+	ObjType			reflect.Type
+	ObjPartialType	reflect.Type
 }
 
 //Create a parquet reader
@@ -181,6 +185,25 @@ func (self *ParquetReader) Read(dstInterface interface{}) error {
 	return self.read(dstInterface, "")
 }
 
+func (self *ParquetReader) ReadByNumber(maxReadNumber int) (interface{}, error) {
+	var err error 
+	if self.ObjType == nil {
+		if self.ObjType, err = self.SchemaHandler.GetType(self.SchemaHandler.GetRootInName()); err != nil {
+			return nil, err
+		}
+	}
+
+	vs := reflect.MakeSlice(reflect.SliceOf(self.ObjType), maxReadNumber, maxReadNumber)
+	res := reflect.New(vs.Type())
+	res.Elem().Set(vs)
+
+	if err = self.Read(res.Interface()); err != nil {
+		return nil, err
+	}
+
+	return res.Elem().Interface(), err
+}
+
 //Read rows of parquet file and unmarshal all to dst
 func (self *ParquetReader) ReadPartial(dstInterface interface{}, prefixPath string) error {
 	prefixPath, err := self.SchemaHandler.ConvertToInPathStr(prefixPath)
@@ -190,6 +213,27 @@ func (self *ParquetReader) ReadPartial(dstInterface interface{}, prefixPath stri
 	
 	return self.read(dstInterface, prefixPath)
 }
+
+func (self *ParquetReader) ReadPartialByNumber(maxReadNumber int, prefixPath string) (interface{}, error) {
+	var err error 
+	if self.ObjPartialType == nil {
+		if self.ObjPartialType, err = self.SchemaHandler.GetType(prefixPath); err != nil {
+			return nil, err
+		}
+	}
+
+	vs := reflect.MakeSlice(reflect.SliceOf(self.ObjPartialType), maxReadNumber, maxReadNumber)
+	res := reflect.New(vs.Type())
+	res.Elem().Set(vs)
+
+	if err = self.ReadPartial(res.Interface(), prefixPath); err != nil {
+		return nil, err
+	}
+
+	return res.Elem().Interface(), err
+}
+
+
 
 //Read rows of parquet file with a prefixPath
 func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) error {

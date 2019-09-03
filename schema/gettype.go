@@ -2,6 +2,7 @@ package schema
 
 import (
 	"reflect"
+	"fmt"
 
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/types"
@@ -9,7 +10,7 @@ import (
 
 
 // Get object type from schema by reflect
-func (self *SchemaHandler) GetType() reflect.Type {
+func (self *SchemaHandler) GetTypes() []reflect.Type {
 	ln := int32(len(self.SchemaElements))
 	elements := make([][]int32, ln)
 	for i := 0; i<int(ln); i++ {
@@ -96,5 +97,19 @@ func (self *SchemaHandler) GetType() reflect.Type {
 		}
 	}
 
-	return elementTypes[0]
+	return elementTypes
+}
+
+func (self *SchemaHandler) GetType(prefixPath string) (reflect.Type, error) {
+	prefixPath, err := self.ConvertToInPathStr(prefixPath)
+	if err != nil {
+		return nil, err
+	}
+	
+	ts := self.GetTypes()
+	if idx, ok := self.MapIndex[prefixPath]; !ok {
+		return nil, fmt.Errorf("[GetType] Can't find %v", prefixPath)
+	} else {
+		return ts[idx], nil
+	}
 }
