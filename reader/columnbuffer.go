@@ -62,14 +62,15 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	ln = int64(len(columnChunks))
 	for i = 0; i < ln; i++ {
 		path := make([]string, 0)
-		path = append(path, self.SchemaHandler.GetRootName())
+		path = append(path, self.SchemaHandler.GetRootInName())
 		path = append(path, columnChunks[i].MetaData.GetPathInSchema()...)
+
 		if self.PathStr == common.PathToStr(path) {
 			break
 		}
 	}
 	if i >= ln {
-		return fmt.Errorf("Column not found: %v", self.PathStr)
+		return fmt.Errorf("[NextRowGroup] Column not found: %v", self.PathStr)
 	}
 
 	self.ChunkHeader = columnChunks[i]

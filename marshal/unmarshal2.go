@@ -198,7 +198,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 						})
 					}
 
-					if path[index + 1] == "key" {
+					if strings.ToLower(path[index + 1]) == "key" {
 						po = mapRecords[po].KeyValues[mapRecords[po].Index].Key
 
 					}else {

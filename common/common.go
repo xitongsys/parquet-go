@@ -250,7 +250,7 @@ func DeepCopy(src, dst interface{}) {
 //Get key tag map for map
 func GetKeyTagMap(src *Tag) *Tag {
 	res := NewTag()
-	res.InName = "key"
+	res.InName = "Key"
 	res.ExName = "key"
 	res.Type = src.KeyType
 	res.BaseType = src.KeyBaseType
@@ -266,7 +266,7 @@ func GetKeyTagMap(src *Tag) *Tag {
 //Get value tag map for map
 func GetValueTagMap(src *Tag) *Tag {
 	res := NewTag()
-	res.InName = "value"
+	res.InName = "Value"
 	res.ExName = "value"
 	res.Type = src.ValueType
 	res.BaseType = src.ValueBaseType

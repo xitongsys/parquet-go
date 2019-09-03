@@ -40,18 +40,22 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 		if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
 			return res, err
 		}
-		res.RenameSchema()
 
-		for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
-			schema := res.SchemaHandler.SchemaElements[i]
-			if schema.GetNumChildren() == 0 {
-				pathStr := res.SchemaHandler.IndexMap[int32(i)]
-				if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
-					return res, err
-				}
+	}else{
+		res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(res.Footer.Schema)
+	}
+
+	res.RenameSchema()
+	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
+		schema := res.SchemaHandler.SchemaElements[i]
+		if schema.GetNumChildren() == 0 {
+			pathStr := res.SchemaHandler.IndexMap[int32(i)]
+			if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
+				return res, err
 			}
 		}
 	}
+
 	return res, nil
 }
 
@@ -60,6 +64,7 @@ func (self *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 	if self.SchemaHandler, err = schema.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
 		return err
 	}
+
 	self.RenameSchema()
 	for i := 0; i < len(self.SchemaHandler.SchemaElements); i++ {
 		schemaElement := self.SchemaHandler.SchemaElements[i]
@@ -81,7 +86,7 @@ func (self *ParquetReader) RenameSchema() {
 	for _, rowGroup := range self.Footer.RowGroups {
 		for _, chunk := range rowGroup.Columns {
 			exPath := make([]string, 0)
-			exPath = append(exPath, self.SchemaHandler.GetRootName())
+			exPath = append(exPath, self.SchemaHandler.GetRootExName())
 			exPath = append(exPath, chunk.MetaData.GetPathInSchema()...)
 			exPathStr := common.PathToStr(exPath)
 

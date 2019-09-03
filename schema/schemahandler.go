@@ -77,7 +77,7 @@ func (self *SchemaHandler) GetColumnNum() int64 {
 
 // setPathMap builds the PathMap from leaf SchemaElement
 func (self *SchemaHandler) setPathMap() {
-	self.PathMap = NewPathMap(self.GetRootName())
+	self.PathMap = NewPathMap(self.GetRootInName())
 	for i := 0; i < len(self.SchemaElements); i++ {
 		schema := self.SchemaElements[i]
 		numChildren := schema.GetNumChildren()
@@ -152,6 +152,7 @@ func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 
 func (self *SchemaHandler) CreateInExMap() {
 	//use DFS get path of schema
+	self.ExPathToInPath, self.InPathToExPath = map[string]string{}, map[string]string{}
 	schemas := self.SchemaElements
 	ln := int32(len(schemas))
 	var pos int32 = 0
@@ -193,11 +194,18 @@ func (self *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
 }
 
 //Get root name from the schema handler
-func (self *SchemaHandler) GetRootName() string {
+func (self *SchemaHandler) GetRootInName() string {
 	if len(self.SchemaElements) <= 0 {
 		return ""
 	}
-	return self.SchemaElements[0].GetName()
+	return self.Infos[0].InName
+}
+
+func (self *SchemaHandler) GetRootExName() string {
+	if len(self.SchemaElements) <= 0 {
+		return ""
+	}
+	return self.Infos[0].ExName
 }
 
 type Item struct {
@@ -229,7 +237,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 	ot := reflect.TypeOf(obj).Elem()
 	item := NewItem()
 	item.GoType = ot
-	item.Info.InName = "parquet_go_root"
+	item.Info.InName = "Parquet_go_root"
 	item.Info.ExName = "parquet_go_root"
 	item.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
 
@@ -292,19 +300,19 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			infos = append(infos, newInfo)
 
 			schema = parquet.NewSchemaElement()
-			schema.Name = "list"
+			schema.Name = "List"
 			rt2 := parquet.FieldRepetitionType_REPEATED
 			schema.RepetitionType = &rt2
 			schema.NumChildren = &numField
 			schemaElements = append(schemaElements, schema)
 			newInfo = common.NewTag()
 			common.DeepCopy(item.Info, newInfo)
-			newInfo.InName, newInfo.ExName = "list", "list"
+			newInfo.InName, newInfo.ExName = "List", "list"
 			infos = append(infos, newInfo)
 
 			newItem := NewItem()
 			newItem.Info = common.GetValueTagMap(item.Info)
-			newItem.Info.InName = "element"
+			newItem.Info.InName = "Element"
 			newItem.Info.ExName = "element"
 			newItem.GoType = item.GoType.Elem()
 			if newItem.GoType.Kind() == reflect.Ptr {
@@ -337,7 +345,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			infos = append(infos, newInfo)
 
 			schema = parquet.NewSchemaElement()
-			schema.Name = "key_value"
+			schema.Name = "Key_value"
 			rt2 := parquet.FieldRepetitionType_REPEATED
 			schema.RepetitionType = &rt2
 			var numField2 int32 = 2
@@ -347,7 +355,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			schemaElements = append(schemaElements, schema)
 			newInfo = common.NewTag()
 			common.DeepCopy(item.Info, newInfo)
-			newInfo.InName, newInfo.ExName = "key_value", "key_value"
+			newInfo.InName, newInfo.ExName = "Key_value", "key_value"
 			infos = append(infos, newInfo)
 
 			newItem := NewItem()
@@ -391,6 +399,17 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	schemaHandler.ExPathToInPath = make(map[string]string)
 	schemaHandler.SchemaElements = schemas
 
+	schemaHandler.Infos = make([]*common.Tag, len(schemas))
+	for i := 0; i < len(schemas); i++ {
+		name := schemas[i].GetName()
+		InName, ExName := common.HeadToUpper(name),  name
+		schemaHandler.Infos[i] = &common.Tag{
+			InName: InName,
+			ExName: ExName,
+		}
+	}
+	schemaHandler.CreateInExMap()
+
 	//use DFS get path of schema
 	ln := int32(len(schemas))
 	var pos int32 = 0
@@ -406,7 +425,8 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 		} else {
 			path := make([]string, 0)
 			for i := 0; i < len(stack); i++ {
-				path = append(path, schemas[stack[i][0]].GetName())
+				inname := schemaHandler.Infos[stack[i][0]].InName
+				path = append(path, inname)
 			}
 			topPos := stack[len(stack)-1][0]
 			schemaHandler.MapIndex[common.PathToStr(path)] = topPos
@@ -416,5 +436,6 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	}
 	schemaHandler.setPathMap()
 	schemaHandler.setValueColumns()
+
 	return schemaHandler
 }

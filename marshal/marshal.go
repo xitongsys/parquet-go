@@ -129,8 +129,8 @@ func (p *ParquetSlice) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 	pathMap := node.PathMap
 	path := node.PathMap.Path
 	if *p.schemaHandler.SchemaElements[p.schemaHandler.MapIndex[node.PathMap.Path]].RepetitionType != parquet.FieldRepetitionType_REPEATED {
-		pathMap = pathMap.Children["list"].Children["element"]
-		path += ".list" + ".element"
+		pathMap = pathMap.Children["List"].Children["Element"]
+		path += ".List" + ".Element"
 	}
 	if ln <= 0 {
 		return nodes
@@ -158,7 +158,7 @@ type ParquetMap struct {
 
 func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 	nodes := make([]*Node, 0)
-	path := node.PathMap.Path + ".key_value"
+	path := node.PathMap.Path + ".Key_value"
 	keys := node.Val.MapKeys()
 	if len(keys) <= 0 {
 		return nodes
@@ -169,7 +169,7 @@ func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 		key := keys[j]
 		value := node.Val.MapIndex(key)
 		newNode := nodeBuf.GetNode()
-		newNode.PathMap = node.PathMap.Children["key_value"].Children["key"]
+		newNode.PathMap = node.PathMap.Children["Key_value"].Children["Key"]
 		newNode.Val = key
 		newNode.DL = node.DL + 1
 		if j == 0 {
@@ -180,7 +180,7 @@ func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 		nodes = append(nodes, newNode)
 
 		newNode = nodeBuf.GetNode()
-		newNode.PathMap = node.PathMap.Children["key_value"].Children["value"]
+		newNode.PathMap = node.PathMap.Children["Key_value"].Children["Value"]
 		newNode.Val = value
 		newNode.DL = node.DL + 1
 		if j == 0 {
