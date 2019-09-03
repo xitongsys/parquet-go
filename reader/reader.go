@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"sync"
+	"strings"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
@@ -222,12 +223,18 @@ func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) err
 			}
 		}()
 	}
+
+	readNum := 0
 	for key, _ := range self.ColumnBuffers {
-		taskChan <- key
+		if strings.HasPrefix(key, prefixPath) {
+			taskChan <- key
+			readNum++
+		}
 	}
-	for i := 0; i < len(self.ColumnBuffers); i++ {
+	for i := 0; i < readNum; i++ {
 		<-doneChan
 	}
+
 	for i := int64(0); i < self.NP; i++ {
 		stopChan <- 0
 	}
