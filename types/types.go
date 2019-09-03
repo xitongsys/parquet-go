@@ -70,7 +70,7 @@ func TypeNameToParquetType(name string, baseName string) (*parquet.Type, *parque
 }
 
 func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionType) reflect.Type {
-	if rT!=nil && *rT != parquet.FieldRepetitionType_OPTIONAL {
+	if rT==nil || *rT != parquet.FieldRepetitionType_OPTIONAL {
 
 		if *pT == parquet.Type_BOOLEAN {
 			return reflect.TypeOf(true)
