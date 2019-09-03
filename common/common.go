@@ -542,3 +542,8 @@ func PathToStr(path []string) string {
 func StrToPath(str string) []string {
 	return strings.Split(str, ".")
 }
+
+//Get the pathStr index in a path
+func PathStrIndex(str string) int {
+	return len(strings.Split(str, "."))
+}

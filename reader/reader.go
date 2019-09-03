@@ -170,8 +170,23 @@ func (self *ParquetReader) SkipRows(num int64) error {
 	return err
 }
 
-//Read rows of parquet file
+//Read rows of parquet file and unmarshal all to dst
 func (self *ParquetReader) Read(dstInterface interface{}) error {
+	return self.read(dstInterface, "")
+}
+
+//Read rows of parquet file and unmarshal all to dst
+func (self *ParquetReader) ReadPartial(dstInterface interface{}, prefixPath string) error {
+	prefixPath, err := self.SchemaHandler.ConvertToInPathStr(prefixPath)
+	if err != nil {
+		return err
+	}
+	
+	return self.read(dstInterface, prefixPath)
+}
+
+//Read rows of parquet file
+func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) error {
 	var err error
 	tmap := make(map[string]*layout.Table)
 	locker := new(sync.Mutex)
@@ -232,7 +247,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) error {
 		}
 		go func(b, e, index int) {
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
-			if err2 := marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler, ""); err2 != nil {
+			if err2 := marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler, prefixPath); err2 != nil {
 				err = err2
 			}
 			doneChan <- 0

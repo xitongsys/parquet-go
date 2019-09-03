@@ -169,13 +169,26 @@ func (self *SchemaHandler) CreateInExMap() {
 			for i := 0; i < len(stack); i++ {
 				inPath = append(inPath, self.Infos[stack[i][0]].InName)
 				exPath = append(exPath, self.Infos[stack[i][0]].ExName)
+
+				inPathStr, exPathStr := common.PathToStr(inPath), common.PathToStr(exPath)
+				self.ExPathToInPath[exPathStr] = inPathStr
+				self.InPathToExPath[inPathStr] = exPathStr
 			}
-			inPathStr, exPathStr := common.PathToStr(inPath), common.PathToStr(exPath)
-			self.ExPathToInPath[exPathStr] = inPathStr
-			self.InPathToExPath[inPathStr] = exPathStr
 			stack = stack[:len(stack)-1]
 		}
 	}
+}
+
+func (self *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
+	if _, ok := self.InPathToExPath[pathStr]; ok {
+		return pathStr, nil
+	}
+
+	if res, ok := self.ExPathToInPath[pathStr]; ok {
+		return res, nil
+	}
+
+	return "", fmt.Errorf("can't find path %v", pathStr)
 }
 
 //Get root name from the schema handler
