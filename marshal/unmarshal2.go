@@ -9,6 +9,7 @@ import (
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/types"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //Record Map KeyValue pair
@@ -87,8 +88,11 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 		path := table.Path
 		bgn := tableBgn[name]
 		end := tableEnd[name]
-		schemaIndex := schemaHandler.MapIndex[common.PathToStr(path)]
-		pT, cT := schemaHandler.SchemaElements[schemaIndex].Type, schemaHandler.SchemaElements[schemaIndex].ConvertedType
+		schemaIndexs := make([]int, len(path))
+		for i := 0; i< len(path); i++ {
+			curPathStr := common.PathToStr(path[:i + 1])
+			schemaIndexs[i] = int(schemaHandler.MapIndex[curPathStr])
+		}
 
 		repetitionLevels, definitionLevels := make([]int32, len(path)), make([]int32, len(path))
 		for i := 0; i<len(path); i++ {
@@ -107,7 +111,10 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 			rl, dl, val := table.RepetitionLevels[i], table.DefinitionLevels[i], table.Values[i]
 			po, index := root, 0
 			for index < len(path) {
-				if po.Type().Kind() == reflect.Slice {
+				schemaIndex := schemaIndexs[index]
+				pT, cT := schemaHandler.SchemaElements[schemaIndex].Type, schemaHandler.SchemaElements[schemaIndex].ConvertedType
+
+				if po.Type().Kind() == reflect.Slice && (cT == nil || *cT != parquet.ConvertedType_LIST){
 					if po.IsNil() {
 						po.Set(reflect.MakeSlice(po.Type(), 0, 0))
 					}
@@ -129,6 +136,38 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 					}
 
 					po = sliceRecords[po].Values[sliceRecords[po].Index]
+
+				} else if po.Type().Kind() == reflect.Slice && cT != nil && *cT == parquet.ConvertedType_LIST {
+					if po.IsNil() {
+						po.Set(reflect.MakeSlice(po.Type(), 0, 0))
+					}
+
+					if _, ok := sliceRecords[po]; !ok {
+						sliceRecords[po] = &SliceRecord{
+							Values:	[]reflect.Value{},
+							Index:	-1,
+						}
+						sliceRecordsStack = append(sliceRecordsStack, po)
+					}
+
+					index++
+					if definitionLevels[index] > dl {
+						break
+					}
+
+					if rl == repetitionLevels[index] || sliceRecords[po].Index < 0 {
+						sliceRecords[po].Index++
+					}
+
+					if sliceRecords[po].Index >= len(sliceRecords[po].Values) {
+						sliceRecords[po].Values = append(sliceRecords[po].Values, reflect.New(po.Type().Elem()).Elem())
+					}
+
+					po = sliceRecords[po].Values[sliceRecords[po].Index]
+					index++
+					if definitionLevels[index] > dl {
+						break
+					}
 
 				} else if po.Type().Kind() == reflect.Map {
 					if po.IsNil() {
