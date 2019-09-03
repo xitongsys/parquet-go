@@ -35,7 +35,7 @@ func (self *SchemaHandler) GetType() reflect.Type {
 			curlen := len(stack) - 1
 			idx := stack[curlen][0]
 			nc := self.SchemaElements[idx].GetNumChildren()
-			pT := self.SchemaElements[idx].Type
+			pT, cT := self.SchemaElements[idx].Type, self.SchemaElements[idx].ConvertedType
 			rT := self.SchemaElements[idx].RepetitionType
 			
 			if nc == 0 {
@@ -47,24 +47,48 @@ func (self *SchemaHandler) GetType() reflect.Type {
 				}				
 				
 			} else {
-				fields := []reflect.StructField{}
-				for _, ci := range elements[idx] {
-					fields = append(fields, reflect.StructField{
-						Name: self.Infos[ci].InName,
-						Type: elementTypes[ci],
-					})
-				}
+				if cT != nil && *cT == parquet.ConvertedType_LIST &&
+					len(elements[idx]) == 1 && 
+					self.GetInName(int(elements[idx][0])) == "List" &&
+					len(elements[elements[idx][0]]) == 1 && 
+					self.GetInName(int(elements[elements[idx][0]][0])) == "Element" {
+						cidx := elements[elements[idx][0]][0]
+						cpT := self.SchemaElements[cidx].Type
+						elementTypes[idx] = reflect.SliceOf(types.ParquetTypeToGoReflectType(cpT, nil))
+					
+				} else if cT != nil && *cT == parquet.ConvertedType_MAP && 
+					len(elements[idx]) == 1 && 
+					self.GetInName(int(elements[idx][0])) == "Key_value" &&
+					len(elements[elements[idx][0]]) == 2 && 
+					self.GetInName(int(elements[elements[idx][0]][0])) == "Key" && 
+					self.GetInName(int(elements[elements[idx][0]][1])) == "Value"{
+						kIdx, vIdx := elements[elements[idx][0]][0], elements[elements[idx][0]][1]
+						kpT, krT := self.SchemaElements[kIdx].Type, self.SchemaElements[kIdx].RepetitionType
+						vpT, vrT := self.SchemaElements[vIdx].Type, self.SchemaElements[vIdx].RepetitionType
 
-				structType := reflect.StructOf(fields)
+						kT, vT := types.ParquetTypeToGoReflectType(kpT, krT), types.ParquetTypeToGoReflectType(vpT, vrT)
+						elementTypes[idx] = reflect.MapOf(kT, vT)
 
-				if *rT == parquet.FieldRepetitionType_REQUIRED {
-					elementTypes[idx] = structType
+				}else {
+					fields := []reflect.StructField{}
+					for _, ci := range elements[idx] {
+						fields = append(fields, reflect.StructField{
+							Name: self.Infos[ci].InName,
+							Type: elementTypes[ci],
+						})
+					}
 
-				} else if *rT == parquet.FieldRepetitionType_OPTIONAL {
-					elementTypes[idx] = reflect.New(structType).Type()
+					structType := reflect.StructOf(fields)
 
-				} else if *rT == parquet.FieldRepetitionType_REPEATED {
-					elementTypes[idx] = reflect.SliceOf(structType)
+					if *rT == parquet.FieldRepetitionType_REQUIRED {
+						elementTypes[idx] = structType
+
+					} else if *rT == parquet.FieldRepetitionType_OPTIONAL {
+						elementTypes[idx] = reflect.New(structType).Type()
+
+					} else if *rT == parquet.FieldRepetitionType_REPEATED {
+						elementTypes[idx] = reflect.SliceOf(structType)
+					}
 				}
 			}
 

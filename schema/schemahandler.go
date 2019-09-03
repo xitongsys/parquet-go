@@ -150,6 +150,14 @@ func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	return res, nil
 }
 
+func (self *SchemaHandler) GetInName(index int) string {
+	return self.Infos[index].InName
+}
+
+func (self *SchemaHandler) GetExName(index int) string {
+	return self.Infos[index].ExName
+}
+
 func (self *SchemaHandler) CreateInExMap() {
 	//use DFS get path of schema
 	self.ExPathToInPath, self.InPathToExPath = map[string]string{}, map[string]string{}
