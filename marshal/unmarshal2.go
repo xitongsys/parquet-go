@@ -81,6 +81,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 	sliceRecords := make(map[reflect.Value]*SliceRecord)
 	sliceRecordsStack := make([]reflect.Value, 0)
 	root := reflect.ValueOf(dstInterface).Elem()
+	prefixLen := common.PathStrIndex(prefixPath) + 1
 
 	for name, table := range tableNeeds {
 		path := table.Path
@@ -107,7 +108,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 
 		for i := bgn; i < end; i++ {
 			rl, dl, val := table.RepetitionLevels[i], table.DefinitionLevels[i], table.Values[i]
-			po, index := root, 0
+			po, index := root, prefixLen
 			for index < len(path) {
 				schemaIndex := schemaIndexs[index]
 				pT, cT := schemaHandler.SchemaElements[schemaIndex].Type, schemaHandler.SchemaElements[schemaIndex].ConvertedType
