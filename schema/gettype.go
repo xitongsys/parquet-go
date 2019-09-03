@@ -2,7 +2,6 @@ package schema
 
 import (
 	"reflect"
-	"fmt"
 
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/types"
@@ -49,14 +48,13 @@ func (self *SchemaHandler) GetType() reflect.Type {
 				
 			} else {
 				fields := []reflect.StructField{}
-				for ci := range elements[idx] {
+				for _, ci := range elements[idx] {
 					fields = append(fields, reflect.StructField{
 						Name: self.Infos[ci].InName,
 						Type: elementTypes[ci],
 					})
 				}
 
-				fmt.Println("==============", fields, elements[idx], nc, self.SchemaElements)
 				structType := reflect.StructOf(fields)
 
 				if *rT == parquet.FieldRepetitionType_REQUIRED {
