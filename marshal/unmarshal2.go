@@ -1,7 +1,7 @@
 package marshal
 
 import (
-	//"errors"
+	"errors"
 	"reflect"
 	"strings"
 
@@ -30,7 +30,6 @@ type SliceRecord struct {
 
 //Convert the table map to objects slice. desInterface is a slice of pointers of objects
 func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *schema.SchemaHandler, prefixPath string) (err error) {
-	/*
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -43,7 +42,6 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 			}
 		}
 	}()
-	*/
 
 	tableNeeds := make(map[string]*layout.Table)
 	tableBgn, tableEnd := make(map[string]int), make(map[string]int)
