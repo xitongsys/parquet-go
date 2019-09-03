@@ -4,7 +4,6 @@ import (
 	//"errors"
 	"reflect"
 	"strings"
-	"fmt"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
@@ -21,6 +20,11 @@ type KeyValue struct {
 type MapRecord struct {
 	KeyValues []KeyValue
 	Index     int
+}
+
+type SliceRecord struct {
+	Values	[]reflect.Value
+	Index	int
 }
 
 //Convert the table map to objects slice. desInterface is a slice of pointers of objects
@@ -73,7 +77,11 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 		}
 	}
 
-	mapRecords := make(map[reflect.Value][]KeyValue)
+	mapRecords := make(map[reflect.Value]*MapRecord)
+	mapRecordsStack := make([]reflect.Value, 0)
+	sliceRecords := make(map[reflect.Value]*SliceRecord)
+	sliceRecordsStack := make([]reflect.Value, 0)
+	root := reflect.ValueOf(dstInterface).Elem()
 
 	for name, table := range tableNeeds {
 		path := table.Path
@@ -87,43 +95,52 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 			repetitionLevels[i], _ = schemaHandler.MaxRepetitionLevel(path[:i+1])
 			definitionLevels[i], _ = schemaHandler.MaxDefinitionLevel(path[:i+1])
 		}
-		repetitionIndexs := make([]int32, len(path))
-		for i := 0; i < len(path); i++ {
-			repetitionIndexs[i] = -1
-		}
 
-		fmt.Println("========", name)
+		for _, rc := range sliceRecords {
+			rc.Index = -1
+		}
+		for _, rc := range mapRecords {
+			rc.Index = -1
+		}
 
 		for i := bgn; i < end; i++ {
 			rl, dl, val := table.RepetitionLevels[i], table.DefinitionLevels[i], table.Values[i]
-			po, index := reflect.ValueOf(dstInterface).Elem(), 0
-
+			po, index := root, 0
 			for index < len(path) {
 				if po.Type().Kind() == reflect.Slice {
 					if po.IsNil() {
 						po.Set(reflect.MakeSlice(po.Type(), 0, 0))
 					}
 
-					if rl == repetitionLevels[index] || repetitionIndexs[index] < 0 {
-						repetitionIndexs[index]++
+					if _, ok := sliceRecords[po]; !ok {
+						sliceRecords[po] = &SliceRecord{
+							Values:	[]reflect.Value{},
+							Index:	-1,
+						}
+						sliceRecordsStack = append(sliceRecordsStack, po)
 					}
 
-					if repetitionIndexs[index] >= int32(po.Len()) {
-						potmp := reflect.Append(po, reflect.New(po.Type().Elem()).Elem())
-						po.Set(potmp)
+					if rl == repetitionLevels[index] || sliceRecords[po].Index < 0 {
+						sliceRecords[po].Index++
 					}
 
-					fmt.Println("=====", po.Len(), repetitionIndexs[index])
+					if sliceRecords[po].Index >= len(sliceRecords[po].Values) {
+						sliceRecords[po].Values = append(sliceRecords[po].Values, reflect.New(po.Type().Elem()).Elem())
+					}
 
-					po = po.Index(int(repetitionIndexs[index]))
+					po = sliceRecords[po].Values[sliceRecords[po].Index]
 
 				} else if po.Type().Kind() == reflect.Map {
 					if po.IsNil() {
 						po.Set(reflect.MakeMap(po.Type()))
 					}
-
+					
 					if _, ok := mapRecords[po]; !ok {
-						mapRecords[po] = make([]KeyValue, 0)
+						mapRecords[po] = &MapRecord{
+							KeyValues:	[]KeyValue{},
+							Index:		-1,
+						}
+						mapRecordsStack = append(mapRecordsStack, po)
 					}
 
 					index++
@@ -131,19 +148,23 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 						break
 					}
 
-					if rl == repetitionLevels[index] {
-						repetitionIndexs[index]++
+					if rl == repetitionLevels[index] || mapRecords[po].Index < 0 {
+						mapRecords[po].Index++
 					}
 
-					if repetitionIndexs[index] >= int32(len(mapRecords[po])) {
-						mapRecords[po] = append(mapRecords[po], KeyValue{})
+					if mapRecords[po].Index >= len(mapRecords[po].KeyValues) {
+						mapRecords[po].KeyValues = append(mapRecords[po].KeyValues,
+							KeyValue{
+								Key: reflect.New(po.Type().Key()).Elem(),
+								Value: reflect.New(po.Type().Elem()).Elem(),
+						})
 					}
 
 					if path[index + 1] == "key" {
-						po = mapRecords[po][repetitionIndexs[index]].Key
+						po = mapRecords[po].KeyValues[mapRecords[po].Index].Key
 
 					}else {
-						po = mapRecords[po][repetitionIndexs[index]].Value
+						po = mapRecords[po].KeyValues[mapRecords[po].Index].Value
 					}
 
 					index++
@@ -173,8 +194,16 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 		}
 	}
 
-	for po, kvs := range mapRecords {
-		for _, kv := range kvs {
+	for i := len(sliceRecordsStack) - 1; i >= 0; i-- {
+		po := sliceRecordsStack[i]
+		vs := sliceRecords[po]
+		potmp := reflect.Append(po, vs.Values...)
+		po.Set(potmp)
+	}
+
+	for i := len(mapRecordsStack) - 1; i >= 0; i-- {
+		po := mapRecordsStack[i]
+		for _, kv := range mapRecords[po].KeyValues {
 			po.SetMapIndex(kv.Key, kv.Value)
 		}
 	}
