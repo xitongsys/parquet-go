@@ -186,7 +186,7 @@ func (self *ParquetReader) ReadPartial(dstInterface interface{}, prefixPath stri
 	return self.read(dstInterface, prefixPath)
 }
 
-//Read rows of parquet file
+//Read rows of parquet file with a prefixPath
 func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) error {
 	var err error
 	tmap := make(map[string]*layout.Table)

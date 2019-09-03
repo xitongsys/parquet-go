@@ -179,6 +179,7 @@ func (self *SchemaHandler) CreateInExMap() {
 	}
 }
 
+//Convert a path to internal path
 func (self *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
 	if _, ok := self.InPathToExPath[pathStr]; ok {
 		return pathStr, nil
