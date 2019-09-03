@@ -232,7 +232,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) error {
 		}
 		go func(b, e, index int) {
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
-			if err2 := marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler); err2 != nil {
+			if err2 := marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler, ""); err2 != nil {
 				err = err2
 			}
 			doneChan <- 0

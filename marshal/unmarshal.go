@@ -11,18 +11,9 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-type KeyValue struct {
-	Key   reflect.Value
-	Value reflect.Value
-}
-
-type MapRecord struct {
-	KeyValues []KeyValue
-	Index     int
-}
 
 //Convert the table map to objects slice. desInterface is a slice of pointers of objects
-func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *schema.SchemaHandler) (err error) {
+func Unmarshal2(tableMap *map[string]*layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *schema.SchemaHandler) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
