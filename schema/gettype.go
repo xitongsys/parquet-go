@@ -77,7 +77,7 @@ func (self *SchemaHandler) GetTypes() []reflect.Type {
 
 					structType := reflect.StructOf(fields)
 
-					if *rT == parquet.FieldRepetitionType_REQUIRED {
+					if rT == nil || *rT == parquet.FieldRepetitionType_REQUIRED {
 						elementTypes[idx] = structType
 
 					} else if *rT == parquet.FieldRepetitionType_OPTIONAL {
