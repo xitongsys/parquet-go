@@ -54,8 +54,7 @@ func (self *SchemaHandler) GetTypes() []reflect.Type {
 					len(elements[elements[idx][0]]) == 1 && 
 					self.GetInName(int(elements[elements[idx][0]][0])) == "Element" {
 						cidx := elements[elements[idx][0]][0]
-						cpT := self.SchemaElements[cidx].Type
-						elementTypes[idx] = reflect.SliceOf(types.ParquetTypeToGoReflectType(cpT, nil))
+						elementTypes [idx] = reflect.SliceOf(elementTypes[cidx])
 					
 				} else if cT != nil && *cT == parquet.ConvertedType_MAP && 
 					len(elements[idx]) == 1 && 
@@ -64,10 +63,7 @@ func (self *SchemaHandler) GetTypes() []reflect.Type {
 					self.GetInName(int(elements[elements[idx][0]][0])) == "Key" && 
 					self.GetInName(int(elements[elements[idx][0]][1])) == "Value"{
 						kIdx, vIdx := elements[elements[idx][0]][0], elements[elements[idx][0]][1]
-						kpT, krT := self.SchemaElements[kIdx].Type, self.SchemaElements[kIdx].RepetitionType
-						vpT, vrT := self.SchemaElements[vIdx].Type, self.SchemaElements[vIdx].RepetitionType
-
-						kT, vT := types.ParquetTypeToGoReflectType(kpT, krT), types.ParquetTypeToGoReflectType(vpT, vrT)
+						kT, vT := elementTypes[kIdx], elementTypes[vIdx]
 						elementTypes[idx] = reflect.MapOf(kT, vT)
 
 				}else {
@@ -105,7 +101,7 @@ func (self *SchemaHandler) GetType(prefixPath string) (reflect.Type, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	ts := self.GetTypes()
 	if idx, ok := self.MapIndex[prefixPath]; !ok {
 		return nil, fmt.Errorf("[GetType] Can't find %v", prefixPath)
