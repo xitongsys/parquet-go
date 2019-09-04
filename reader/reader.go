@@ -185,7 +185,8 @@ func (self *ParquetReader) Read(dstInterface interface{}) error {
 	return self.read(dstInterface, "")
 }
 
-func (self *ParquetReader) ReadByNumber(maxReadNumber int) (interface{}, error) {
+// Read maxReadNumber objects
+func (self *ParquetReader) ReadByNumber(maxReadNumber int) ([]interface{}, error) {
 	var err error 
 	if self.ObjType == nil {
 		if self.ObjType, err = self.SchemaHandler.GetType(self.SchemaHandler.GetRootInName()); err != nil {
@@ -201,7 +202,13 @@ func (self *ParquetReader) ReadByNumber(maxReadNumber int) (interface{}, error) 
 		return nil, err
 	}
 
-	return res.Elem().Interface(), err
+	ln := res.Elem().Len()
+	ret := make([]interface{}, ln)
+	for i := 0; i < ln; i++ {
+		ret[i] = res.Elem().Index(i).Interface()
+	}
+
+	return ret, nil
 }
 
 //Read rows of parquet file and unmarshal all to dst
@@ -214,7 +221,8 @@ func (self *ParquetReader) ReadPartial(dstInterface interface{}, prefixPath stri
 	return self.read(dstInterface, prefixPath)
 }
 
-func (self *ParquetReader) ReadPartialByNumber(maxReadNumber int, prefixPath string) (interface{}, error) {
+// Read maxReadNumber partial objects 
+func (self *ParquetReader) ReadPartialByNumber(maxReadNumber int, prefixPath string) ([]interface{}, error) {
 	var err error 
 	if self.ObjPartialType == nil {
 		if self.ObjPartialType, err = self.SchemaHandler.GetType(prefixPath); err != nil {
@@ -230,10 +238,14 @@ func (self *ParquetReader) ReadPartialByNumber(maxReadNumber int, prefixPath str
 		return nil, err
 	}
 
-	return res.Elem().Interface(), err
+	ln := res.Elem().Len()
+	ret := make([]interface{}, ln)
+	for i := 0; i < ln; i++ {
+		ret[i] = res.Elem().Index(i).Interface()
+	}
+
+	return ret, nil
 }
-
-
 
 //Read rows of parquet file with a prefixPath
 func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) error {
