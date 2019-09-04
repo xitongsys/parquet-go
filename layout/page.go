@@ -410,7 +410,7 @@ func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *sch
 	page.CompressType = colMetaData.GetCodec()
 	page.RawData = buf
 	page.Path = make([]string, 0)
-	page.Path = append(page.Path, schemaHandler.GetRootName())
+	page.Path = append(page.Path, schemaHandler.GetRootInName())
 	page.Path = append(page.Path, colMetaData.GetPathInSchema()...)
 	page.DataType = colMetaData.GetType()
 	return page, nil
@@ -764,7 +764,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 
 	bytesReader := bytes.NewReader(buf)
 	path := make([]string, 0)
-	path = append(path, schemaHandler.GetRootName())
+	path = append(path, schemaHandler.GetRootInName())
 	path = append(path, colMetaData.GetPathInSchema()...)
 	name := strings.Join(path, ".")
 

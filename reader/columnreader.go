@@ -36,7 +36,7 @@ func (self *ParquetReader) SkipRowsByPath(pathStr string, num int) {
 	if num <= 0 || len(pathStr) <= 0 {
 		return
 	}
-	rootName := self.SchemaHandler.GetRootName()
+	rootName := self.SchemaHandler.GetRootInName()
 	if !strings.HasPrefix(pathStr, rootName) {
 		pathStr = rootName + "." + pathStr
 	}
@@ -70,7 +70,7 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, num int) (values []i
 	if num <= 0 || len(pathStr) <= 0 {
 		return []interface{}{}, []int32{}, []int32{}
 	}
-	rootName := self.SchemaHandler.GetRootName()
+	rootName := self.SchemaHandler.GetRootInName()
 	if !strings.HasPrefix(pathStr, rootName) {
 		pathStr = rootName + "." + pathStr
 	}

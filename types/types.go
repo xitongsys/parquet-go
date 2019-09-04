@@ -69,6 +69,75 @@ func TypeNameToParquetType(name string, baseName string) (*parquet.Type, *parque
 	panic(fmt.Errorf("Unknown data type: '%s'", name))
 }
 
+func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionType) reflect.Type {
+	if rT==nil || *rT != parquet.FieldRepetitionType_OPTIONAL {
+		if *pT == parquet.Type_BOOLEAN {
+			return reflect.TypeOf(true)
+
+		}else if *pT == parquet.Type_INT32 {
+			return reflect.TypeOf(int32(0))
+
+		}else if *pT == parquet.Type_INT64 {
+			return reflect.TypeOf(int64(0))
+
+		}else if *pT == parquet.Type_INT96 {
+			return reflect.TypeOf("")
+
+		}else if *pT == parquet.Type_FLOAT {
+			return reflect.TypeOf(float32(0))
+
+		}else if *pT == parquet.Type_DOUBLE {
+			return reflect.TypeOf(float64(0))
+
+		}else if *pT == parquet.Type_BYTE_ARRAY {
+			return reflect.TypeOf("")
+
+		}else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			return reflect.TypeOf("")
+
+		}else {
+			return nil
+		}
+
+	} else {
+		if *pT == parquet.Type_BOOLEAN {
+			v := true
+			return reflect.TypeOf(&v)
+
+		}else if *pT == parquet.Type_INT32 {
+			v := int32(0)
+			return reflect.TypeOf(&v)
+
+		}else if *pT == parquet.Type_INT64 {
+			v := int64(0)
+			return reflect.TypeOf(&v)
+
+		}else if *pT == parquet.Type_INT96 {
+			v := ""
+			return reflect.TypeOf(&v)
+
+		}else if *pT == parquet.Type_FLOAT {
+			v := float32(0)
+			return reflect.TypeOf(&v)
+
+		}else if *pT == parquet.Type_DOUBLE {
+			v := float64(0)
+			return reflect.TypeOf(&v)
+
+		}else if *pT == parquet.Type_BYTE_ARRAY {
+			v := ""
+			return reflect.TypeOf(&v)
+
+		}else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			v := ""
+			return reflect.TypeOf(&v)
+
+		}else {
+			return nil
+		}
+	}
+}
+
 func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
 	if src == nil {
 		return nil
