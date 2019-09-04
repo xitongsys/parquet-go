@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"encoding/json"
 
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
@@ -11,11 +12,12 @@ import (
 )
 
 func main() {
-	cmd := flag.String("cmd", "schema", "command to run. Allowed values: schema, rowcount or size")
+	cmd := flag.String("cmd", "schema", "command to run. Allowed values: schema, rowcount, size, cat")
 	fileName := flag.String("file", "", "file name")
 	withTags := flag.Bool("tag", false, "show struct tags")
 	withPrettySize := flag.Bool("pretty", false, "show pretty size")
 	uncompressedSize := flag.Bool("uncompressed", false, "show uncompressed size")
+	catCount := flag.Int("count", 1000, "max count to cat")
 
 	flag.Parse()
 
@@ -25,7 +27,7 @@ func main() {
 		return
 	}
 
-	pr, err := reader.NewParquetColumnReader(fr, 1)
+	pr, err := reader.NewParquetReader(fr, nil, 1)
 	if err != nil {
 		fmt.Println("Can't create parquet reader ", err)
 		return
@@ -42,6 +44,21 @@ func main() {
 		fmt.Println(pr.GetNumRows())
 	case "size":
 		fmt.Println(sizetool.GetParquetFileSize(*fileName, pr, *withPrettySize, *uncompressedSize))
+	case "cat":
+		res, err := pr.ReadByNumber(*catCount)
+		if err != nil {
+			fmt.Println("Can't cat ", err)
+			return
+		}
+
+		jsonBs, err := json.Marshal(res)
+		if err != nil {
+			fmt.Println("Can't to json ", err)
+			return
+		}
+
+		fmt.Println(string(jsonBs))
+
 	default:
 		fmt.Println("Unknown command")
 	}
