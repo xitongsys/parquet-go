@@ -84,7 +84,7 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 
 ### Tips
 * The difference between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md). I suggest just use a List.
-* For LIST and MAP, some existed parquet files use a non-standard format(see [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md)). For standard format, parquet-go will convert them to go slice and go map. For no-sandard format, parquet-go will convert them to corresponding structs.
+* For LIST and MAP, some existed parquet files use some nonstandard formats(see [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md)). For standard format, parquet-go will convert them to go slice and go map. For nonstandard formats, parquet-go will convert them to corresponding structs.
 
 
 ## Example of Type and Encoding
