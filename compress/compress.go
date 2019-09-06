@@ -39,8 +39,9 @@ func CompressSnappy(buf []byte) []byte {
 }
 
 //Compress using Zstd
-func CompressZstd(buf []byte) ([]byte, error) {
-	return zstd.Compress(nil, buf)
+func CompressZstd(buf []byte) []byte {
+	res, _ := zstd.Compress(nil, buf)
+	return res
 }
 
 //Uncompress using Zstd
@@ -54,6 +55,8 @@ func Uncompress(buf []byte, compressMethod parquet.CompressionCodec) ([]byte, er
 		return UncompressGzip(buf)
 	case parquet.CompressionCodec_SNAPPY:
 		return UncompressSnappy(buf)
+	case parquet.CompressionCodec_ZSTD:
+		return UncompressZstd(buf)
 	case parquet.CompressionCodec_UNCOMPRESSED:
 		return buf, nil
 	default:
@@ -67,6 +70,8 @@ func Compress(buf []byte, compressMethod parquet.CompressionCodec) []byte {
 		return CompressGzip(buf)
 	case parquet.CompressionCodec_SNAPPY:
 		return CompressSnappy(buf)
+	case parquet.CompressionCodec_ZSTD:
+		return CompressZstd(buf)
 	case parquet.CompressionCodec_UNCOMPRESSED:
 		return buf
 	default:
