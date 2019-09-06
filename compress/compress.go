@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/snappy"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/DataDog/zstd"
 )
 
 //Uncompress using Gzip
@@ -37,12 +38,25 @@ func CompressSnappy(buf []byte) []byte {
 	return snappy.Encode(nil, buf)
 }
 
+//Compress using Zstd
+func CompressZstd(buf []byte) []byte {
+	res, _ := zstd.Compress(nil, buf)
+	return res
+}
+
+//Uncompress using Zstd
+func UncompressZstd(buf []byte) ([]byte, error) {
+	return zstd.Decompress(nil, buf)
+}
+
 func Uncompress(buf []byte, compressMethod parquet.CompressionCodec) ([]byte, error) {
 	switch compressMethod {
 	case parquet.CompressionCodec_GZIP:
 		return UncompressGzip(buf)
 	case parquet.CompressionCodec_SNAPPY:
 		return UncompressSnappy(buf)
+	case parquet.CompressionCodec_ZSTD:
+		return UncompressZstd(buf)
 	case parquet.CompressionCodec_UNCOMPRESSED:
 		return buf, nil
 	default:
@@ -56,6 +70,8 @@ func Compress(buf []byte, compressMethod parquet.CompressionCodec) []byte {
 		return CompressGzip(buf)
 	case parquet.CompressionCodec_SNAPPY:
 		return CompressSnappy(buf)
+	case parquet.CompressionCodec_ZSTD:
+		return CompressZstd(buf)
 	case parquet.CompressionCodec_UNCOMPRESSED:
 		return buf
 	default:

@@ -46,14 +46,7 @@ func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parque
 //Compress the dict page to parquet file
 func (page *Page) DictPageCompress(compressType parquet.CompressionCodec, pT parquet.Type) []byte {
 	dataBuf := encoding.WritePlain(page.DataTable.Values, pT)
-	var dataEncodeBuf []byte
-	if compressType == parquet.CompressionCodec_GZIP {
-		dataEncodeBuf = compress.CompressGzip(dataBuf)
-	} else if compressType == parquet.CompressionCodec_SNAPPY {
-		dataEncodeBuf = compress.CompressSnappy(dataBuf)
-	} else {
-		dataEncodeBuf = dataBuf
-	}
+	var dataEncodeBuf []byte = compress.Compress(dataBuf, compressType)
 
 	//pageHeader/////////////////////////////////////
 	page.Header = parquet.NewPageHeader()
@@ -175,14 +168,7 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	dataBuf = append(dataBuf, definitionLevelBuf...)
 	dataBuf = append(dataBuf, valuesRawBuf...)
 
-	var dataEncodeBuf []byte
-	if compressType == parquet.CompressionCodec_GZIP {
-		dataEncodeBuf = compress.CompressGzip(dataBuf)
-	} else if compressType == parquet.CompressionCodec_SNAPPY {
-		dataEncodeBuf = compress.CompressSnappy(dataBuf)
-	} else {
-		dataEncodeBuf = dataBuf
-	}
+	var dataEncodeBuf []byte = compress.Compress(dataBuf, compressType)
 
 	//pageHeader/////////////////////////////////////
 	page.Header = parquet.NewPageHeader()

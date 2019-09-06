@@ -72,7 +72,6 @@ BYTE_ARRAY, UTF8
 ### Tips
 * Some platforms don't support all kinds of encodings. If you are not sure, just use PLAIN and PLAIN_DICTIONARY.
 
-
 ## Repetition Type
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
 
@@ -124,6 +123,20 @@ List     []string         `parquet:"name=list, type=LIST, valuetype=UTF8"`
 Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=REPEATED"`
 
 ```
+
+
+## Compression Type
+|Type|Support|
+|-|-|
+| CompressionCodec_UNCOMPRESSED | YES|
+|CompressionCodec_SNAPPY|YES|
+|CompressionCodec_GZIP|YES|
+|CompressionCodec_LZO|NO|
+|CompressionCodec_BROTLI|NO|
+|CompressionCodec_LZ4 |NO|
+|CompressionCodec_ZSTD|YES|
+
+
 
 ## ParquetFile
 Read/Write a parquet file need a ParquetFile interface implemented
