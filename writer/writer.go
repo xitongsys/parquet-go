@@ -142,7 +142,7 @@ func (self *ParquetWriter) Write(src interface{}) error {
 	}
 
 	if self.CheckSizeCritical <= ln {
-		self.ObjSize = common.SizeOf(val) + 1
+		self.ObjSize = (self.ObjSize + common.SizeOf(val))/2 + 1
 	}
 	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, src)
