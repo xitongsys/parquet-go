@@ -113,7 +113,7 @@ func StringToTag(tag string) *Tag {
 			mp.ValueFieldID = valInt32
 		case "name":
 			if mp.InName == "" {
-				mp.InName = val
+				mp.InName = HeadToUpper(val)
 			}
 			mp.ExName = val
 		case "inname":

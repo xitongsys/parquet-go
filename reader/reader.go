@@ -69,7 +69,6 @@ func (self *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 		return err
 	}
 
-	self.RenameSchema()
 	for i := 0; i < len(self.SchemaHandler.SchemaElements); i++ {
 		schemaElement := self.SchemaHandler.SchemaElements[i]
 		if schemaElement.GetNumChildren() == 0 {

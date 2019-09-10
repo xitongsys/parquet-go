@@ -31,7 +31,7 @@ type Student struct {
 
 var jsonSchema string = `
 {
-  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
+  "Tag": "name=parquet_go_root, repetitiontype=REQUIRED",
   "Fields": [
     {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
     {"Tag": "name=age, inname=Age, type=INT32, repetitiontype=REQUIRED"},
@@ -159,10 +159,12 @@ func main() {
 		log.Println("Can't create parquet reader", err)
 		return
 	}
+	/*
 	if err = pr.SetSchemaHandlerFromJSON(jsonSchema); err != nil {
 		log.Println("Can't set schema from json", err)
 		return
 	}
+	*/
 
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
