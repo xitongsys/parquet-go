@@ -134,17 +134,18 @@ func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *schema.Schem
 					}
 
 				} else { //struct
-					keysMap := make(map[string]bool)
+					keysMap := make(map[string]int)
 					for j := 0; j < len(keys); j++ {
-						keysMap[keys[j].String()] = true
+						//ExName to InName
+						keysMap[common.HeadToUpper(keys[j].String())] = j
 					}
 					for key, _ := range node.PathMap.Children {
-						_, ok := keysMap[key]
-						if ok && node.Val.MapIndex(reflect.ValueOf(key)).Elem().IsValid() {
-
+						ki, ok := keysMap[key]
+						
+						if ok && node.Val.MapIndex(keys[ki]).Elem().IsValid() {
 							newNode := nodeBuf.GetNode()
 							newNode.PathMap = node.PathMap.Children[key]
-							newNode.Val = node.Val.MapIndex(reflect.ValueOf(key)).Elem()
+							newNode.Val = node.Val.MapIndex(keys[ki]).Elem()
 							newNode.RL = node.RL
 							newNode.DL = node.DL
 							newPathStr := newNode.PathMap.Path
