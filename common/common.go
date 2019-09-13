@@ -55,26 +55,30 @@ func NewTag() *Tag {
 
 func StringToTag(tag string) *Tag {
 	mp := NewTag()
-	tagStr := strings.Replace(tag, " ", "", -1)
-	tagStr = strings.Replace(tagStr, "\t", "", -1)
+	tagStr := strings.Replace(tag, "\t", "", -1)
 	tags := strings.Split(tagStr, ",")
 
 	for _, tag := range tags {
+		tag = strings.TrimSpace(tag)
+
 		kv := strings.Split(tag, "=")
-		kv[0] = strings.ToLower(kv[0])
+
+		key := kv[0]
+		key = strings.ToLower(key)
+		key = strings.TrimSpace(key)
+
 		val := kv[1]
-		var valInt32 int32
-		if kv[0] == "length" || kv[0] == "keylength" || kv[0] == "valuelength" ||
-			kv[0] == "scale" || kv[0] == "keyscale" || kv[0] == "valuescale" ||
-			kv[0] == "precision" || kv[0] == "keyprecision" || kv[0] == "valueprecision" ||
-			kv[0] == "fieldid" || kv[0] == "keyfieldid" || kv[0] == "valuefieldid" {
-			valInt, err := strconv.Atoi(kv[1])
+		val = strings.TrimSpace(val)
+
+		valInt32 := func() int32 {
+			valInt, err := strconv.Atoi(val)
 			if err != nil {
 				panic(err)
 			}
-			valInt32 = int32(valInt)
+			return int32(valInt)
 		}
-		switch kv[0] {
+
+		switch key {
 		case "type":
 			mp.Type = val
 		case "keytype":
@@ -88,29 +92,29 @@ func StringToTag(tag string) *Tag {
 		case "valuebasetype":
 			mp.ValueBaseType = val
 		case "length":
-			mp.Length = valInt32
+			mp.Length = valInt32()
 		case "keylength":
-			mp.KeyLength = valInt32
+			mp.KeyLength = valInt32()
 		case "valuelength":
-			mp.ValueLength = valInt32
+			mp.ValueLength = valInt32()
 		case "scale":
-			mp.Scale = valInt32
+			mp.Scale = valInt32()
 		case "keyscale":
-			mp.KeyScale = valInt32
+			mp.KeyScale = valInt32()
 		case "valuescale":
-			mp.ValueScale = valInt32
+			mp.ValueScale = valInt32()
 		case "precision":
-			mp.Precision = valInt32
+			mp.Precision = valInt32()
 		case "keyprecision":
-			mp.KeyPrecision = valInt32
+			mp.KeyPrecision = valInt32()
 		case "valueprecision":
-			mp.ValuePrecision = valInt32
+			mp.ValuePrecision = valInt32()
 		case "fieldid":
-			mp.FieldID = valInt32
+			mp.FieldID = valInt32()
 		case "keyfieldid":
-			mp.KeyFieldID = valInt32
+			mp.KeyFieldID = valInt32()
 		case "valuefieldid":
-			mp.ValueFieldID = valInt32
+			mp.ValueFieldID = valInt32()
 		case "name":
 			if mp.InName == "" {
 				mp.InName = HeadToUpper(val)
@@ -197,7 +201,7 @@ func StringToTag(tag string) *Tag {
 				panic(fmt.Errorf("Unknown valueencoding type: '%v'", val))
 			}
 		default:
-			panic(fmt.Errorf("Unrecognized tag '%v'", kv[0]))
+			panic(fmt.Errorf("Unrecognized tag '%v'", key))
 		}
 	}
 	return mp
