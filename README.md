@@ -71,6 +71,7 @@ BYTE_ARRAY, UTF8
 
 ### Tips
 * Some platforms don't support all kinds of encodings. If you are not sure, just use PLAIN and PLAIN_DICTIONARY.
+* If the fields have many different values, please don't use PLAIN_DICTIONARY encoding. Because it will record all the different values in a map which will use a lot of memory.
 
 ## Repetition Type
 There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
