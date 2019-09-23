@@ -12,7 +12,7 @@ import (
 
 type Student struct {
 	Name    string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
-	Age     int32   `parquet:"name=age, type=INT32"`
+	Age     int32   `parquet:"name=age, type=INT32, encoding=PLAIN"`
 	Id      int64   `parquet:"name=id, type=INT64"`
 	Weight  float32 `parquet:"name=weight, type=FLOAT"`
 	Sex     bool    `parquet:"name=sex, type=BOOLEAN"`

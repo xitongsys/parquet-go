@@ -157,6 +157,8 @@ func StringToTag(tag string) *Tag {
 			}
 		case "encoding":
 			switch strings.ToLower(val) {
+			 case "plain":
+			 	mp.Encoding = parquet.Encoding_PLAIN
 			case "rle":
 				mp.Encoding = parquet.Encoding_RLE
 			case "delta_binary_packed":
