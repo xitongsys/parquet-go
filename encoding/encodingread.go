@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-
+	"time"
+	
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -74,9 +75,30 @@ func ReadPlainINT96(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error
 		if _, err = bytesReader.Read(cur); err != nil {
 			break
 		}
-		res[i] = string(cur[:12])
+		res[i] = int96ToString(cur)
 	}
 	return res, err
+}
+
+// credit to https://stackoverflow.com/a/53133964
+func int96ToString(parquetDate []byte) string{
+	nano := binary.LittleEndian.Uint64(parquetDate[:8])
+	dt := binary.LittleEndian.Uint32(parquetDate[8:])
+
+	l := dt + 68569
+	n := 4 * l / 146097
+	l = l - (146097*n+3)/4
+	i := 4000 * (l + 1) / 1461001
+	l = l - 1461*i/4 + 31
+	j := 80 * l / 2447
+	k := l - 2447*j/80
+	l = j / 11
+	j = j + 2 - 12*l
+	i = 100*(n-49) + i + l
+
+	tm := time.Date(int(i), time.Month(j), int(k), 0, 0, 0, 0, time.UTC)
+	tm = tm.Add(time.Duration(nano))
+	return tm.Format(time.RFC3339)
 }
 
 func ReadPlainFLOAT(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
