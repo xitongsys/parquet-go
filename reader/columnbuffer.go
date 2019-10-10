@@ -225,7 +225,7 @@ func (self *ColumnBufferType) SkipRows(num int64) int64 {
 		self.DataTable = layout.NewTableFromTable(tmp)
 		self.DataTable.Merge(tmp)
 	}
-	
+
 	return num
 }
 
