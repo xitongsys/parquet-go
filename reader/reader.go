@@ -29,7 +29,7 @@ type ParquetReader struct {
 	ObjPartialType	reflect.Type
 }
 
-//Create a parquet reader
+//Create a parquet reader: obj is a object with schema tags or a JSON schema string
 func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
 	res := new(ParquetReader)
@@ -41,8 +41,14 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 
 	if obj != nil {
-		if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+		if sa, ok := obj.(string); ok {
+			err = res.SetSchemaHandlerFromJSON(sa)
 			return res, err
+
+		} else {
+			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+				return res, err
+			}
 		}
 
 	}else{
@@ -65,10 +71,13 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 
 func (self *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 	var err error
+
 	if self.SchemaHandler, err = schema.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
 		return err
 	}
 
+	
+	self.RenameSchema()
 	for i := 0; i < len(self.SchemaHandler.SchemaElements); i++ {
 		schemaElement := self.SchemaHandler.SchemaElements[i]
 		if schemaElement.GetNumChildren() == 0 {
