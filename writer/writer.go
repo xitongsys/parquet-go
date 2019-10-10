@@ -42,7 +42,7 @@ type ParquetWriter struct {
 	MarshalFunc func(src []interface{}, bgn int, end int, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
 }
 
-//Create a parquet handler
+//Create a parquet handler. Obj is a object with tags or JSON schema string.
 func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
 	var err error
 
@@ -65,9 +65,16 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.MarshalFunc = marshal.Marshal
 
 	if obj != nil {
-		if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+		if sa, ok := obj.(string); ok {
+			err = res.SetSchemaHandlerFromJSON(sa)
 			return res, err
+
+		}else{
+			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+				return res, err
+			}
 		}
+
 		res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	}
 

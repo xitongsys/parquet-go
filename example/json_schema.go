@@ -84,13 +84,9 @@ func main() {
 	}
 
 	//write
-	pw, err := writer.NewParquetWriter(fw, nil, 4)
+	pw, err := writer.NewParquetWriter(fw, jsonSchema, 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
-		return
-	}
-	if err = pw.SetSchemaHandlerFromJSON(jsonSchema); err != nil {
-		log.Println("Can't set schema from json ", err)
 		return
 	}
 
