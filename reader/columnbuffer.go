@@ -43,7 +43,10 @@ func NewColumnBuffer(pFile source.ParquetFile, footer *parquet.FileMetaData, sch
 		PathStr:          pathStr,
 		DataTableNumRows: -1,
 	}
-	err = res.NextRowGroup()
+
+	if err = res.NextRowGroup(); err == io.EOF {
+		err = nil
+	}
 	return res, err
 }
 
@@ -53,8 +56,9 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	ln := int64(len(rowGroups))
 	if self.RowGroupIndex >= ln {
 		self.DataTableNumRows++ //very important, because DataTableNumRows is one smaller than real rows number
-		return fmt.Errorf("End of row groups")
+		return io.EOF
 	}
+
 	self.RowGroupIndex++
 
 	columnChunks := rowGroups[self.RowGroupIndex-1].GetColumns()
@@ -69,6 +73,7 @@ func (self *ColumnBufferType) NextRowGroup() error {
 			break
 		}
 	}
+
 	if i >= ln {
 		return fmt.Errorf("[NextRowGroup] Column not found: %v", self.PathStr)
 	}
@@ -80,15 +85,18 @@ func (self *ColumnBufferType) NextRowGroup() error {
 			return err
 		}
 	}
+
 	//offset := columnChunks[i].FileOffset
 	offset := columnChunks[i].MetaData.DataPageOffset
 	if columnChunks[i].MetaData.DictionaryPageOffset != nil {
 		offset = *columnChunks[i].MetaData.DictionaryPageOffset
 	}
+
 	size := columnChunks[i].MetaData.GetTotalCompressedSize()
 	if self.ThriftReader != nil {
 		self.ThriftReader.Close()
 	}
+
 	self.ThriftReader = source.ConvertToThriftReader(self.PFile, offset, size)
 	self.ChunkReadValues = 0
 	self.DictPage = nil
@@ -108,6 +116,7 @@ func (self *ColumnBufferType) ReadPage() error {
 					self.DataTable.Path = common.StrToPath(self.PathStr)
 
 				}
+
 				for self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
 					self.DataTable.Values = append(self.DataTable.Values, nil)
 					self.DataTable.RepetitionLevels = append(self.DataTable.RepetitionLevels, int32(0))
@@ -116,8 +125,10 @@ func (self *ColumnBufferType) ReadPage() error {
 					self.DataTableNumRows++
 				}
 			}
+
 			return err
 		}
+
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
 			self.DictPage = page
 			return nil
@@ -128,6 +139,7 @@ func (self *ColumnBufferType) ReadPage() error {
 		if self.DataTable == nil {
 			self.DataTable = layout.NewTableFromTable(page.DataTable)
 		}
+
 		self.DataTable.Merge(page.DataTable)
 		self.ChunkReadValues += numValues
 
@@ -136,6 +148,7 @@ func (self *ColumnBufferType) ReadPage() error {
 		if err := self.NextRowGroup(); err != nil {
 			return err
 		}
+
 		return self.ReadPage()
 	}
 
@@ -148,18 +161,22 @@ func (self *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		numValues, numRows, err := page.GetRLDLFromRawData(self.SchemaHandler)
 		if err != nil {
 			return nil, err
 		}
+
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
 			page.GetValueFromRawData(self.SchemaHandler)
 			self.DictPage = page
 			return page, nil
 		}
+		
 		if self.DataTable == nil {
 			self.DataTable = layout.NewTableFromTable(page.DataTable)
 		}
+
 		self.DataTable.Merge(page.DataTable)
 		self.ChunkReadValues += numValues
 		self.DataTableNumRows += numRows
@@ -169,6 +186,7 @@ func (self *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
 		if err := self.NextRowGroup(); err != nil {
 			return nil, err
 		}
+
 		return self.ReadPageForSkip()
 	}
 }
@@ -182,13 +200,16 @@ func (self *ColumnBufferType) SkipRows(num int64) int64 {
 	for self.DataTableNumRows < num && err == nil {
 		page, err = self.ReadPageForSkip()
 	}
+
 	if num > self.DataTableNumRows {
 		num = self.DataTableNumRows
 	}
+
 	if page != nil {
 		if err = page.GetValueFromRawData(self.SchemaHandler); err != nil {
 			return 0
 		}
+
 		page.Decode(self.DictPage)
 		i, j := len(self.DataTable.Values)-1, len(page.DataTable.Values)-1
 		for i >= 0 && j >= 0 {
@@ -204,6 +225,7 @@ func (self *ColumnBufferType) SkipRows(num int64) int64 {
 		self.DataTable = layout.NewTableFromTable(tmp)
 		self.DataTable.Merge(tmp)
 	}
+	
 	return num
 }
 
