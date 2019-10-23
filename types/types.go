@@ -70,32 +70,32 @@ func TypeNameToParquetType(name string, baseName string) (*parquet.Type, *parque
 }
 
 func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionType) reflect.Type {
-	if rT==nil || *rT != parquet.FieldRepetitionType_OPTIONAL {
+	if rT == nil || *rT != parquet.FieldRepetitionType_OPTIONAL {
 		if *pT == parquet.Type_BOOLEAN {
 			return reflect.TypeOf(true)
 
-		}else if *pT == parquet.Type_INT32 {
+		} else if *pT == parquet.Type_INT32 {
 			return reflect.TypeOf(int32(0))
 
-		}else if *pT == parquet.Type_INT64 {
+		} else if *pT == parquet.Type_INT64 {
 			return reflect.TypeOf(int64(0))
 
-		}else if *pT == parquet.Type_INT96 {
+		} else if *pT == parquet.Type_INT96 {
 			return reflect.TypeOf("")
 
-		}else if *pT == parquet.Type_FLOAT {
+		} else if *pT == parquet.Type_FLOAT {
 			return reflect.TypeOf(float32(0))
 
-		}else if *pT == parquet.Type_DOUBLE {
+		} else if *pT == parquet.Type_DOUBLE {
 			return reflect.TypeOf(float64(0))
 
-		}else if *pT == parquet.Type_BYTE_ARRAY {
+		} else if *pT == parquet.Type_BYTE_ARRAY {
 			return reflect.TypeOf("")
 
-		}else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			return reflect.TypeOf("")
 
-		}else {
+		} else {
 			return nil
 		}
 
@@ -104,35 +104,35 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionTyp
 			v := true
 			return reflect.TypeOf(&v)
 
-		}else if *pT == parquet.Type_INT32 {
+		} else if *pT == parquet.Type_INT32 {
 			v := int32(0)
 			return reflect.TypeOf(&v)
 
-		}else if *pT == parquet.Type_INT64 {
+		} else if *pT == parquet.Type_INT64 {
 			v := int64(0)
 			return reflect.TypeOf(&v)
 
-		}else if *pT == parquet.Type_INT96 {
+		} else if *pT == parquet.Type_INT96 {
 			v := ""
 			return reflect.TypeOf(&v)
 
-		}else if *pT == parquet.Type_FLOAT {
+		} else if *pT == parquet.Type_FLOAT {
 			v := float32(0)
 			return reflect.TypeOf(&v)
 
-		}else if *pT == parquet.Type_DOUBLE {
+		} else if *pT == parquet.Type_DOUBLE {
 			v := float64(0)
 			return reflect.TypeOf(&v)
 
-		}else if *pT == parquet.Type_BYTE_ARRAY {
+		} else if *pT == parquet.Type_BYTE_ARRAY {
 			v := ""
 			return reflect.TypeOf(&v)
 
-		}else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			v := ""
 			return reflect.TypeOf(&v)
 
-		}else {
+		} else {
 			return nil
 		}
 	}
@@ -265,12 +265,12 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 			return int64(tmp)
 
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			s = num.String()
+			s = num.Text('f', 0)
 			res := StrIntToBinary(s, "BigEndian", length, true)
 			return res
 
 		} else {
-			s = num.String()
+			s = num.Text('f', 0)
 			res := StrIntToBinary(s, "BigEndian", 0, true)
 			return res
 		}
