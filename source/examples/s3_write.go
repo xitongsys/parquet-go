@@ -25,7 +25,7 @@ func s3Example() {
 	num := 100
 
 	// create new S3 file writer
-	fw, err := s3.NewS3FileWriter(ctx, bucket, key)
+	fw, err := s3.NewS3FileWriter(ctx, bucket, key, nil)
 	if err != nil {
 		log.Println("Can't open file", err)
 		return
