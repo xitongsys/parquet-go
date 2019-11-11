@@ -3,17 +3,17 @@ package writer
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"reflect"
 	"sync"
-	"errors"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/marshal"
-	"github.com/xitongsys/parquet-go/source"
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/schema"
+	"github.com/xitongsys/parquet-go/source"
 )
 
 //ParquetWriter is a writer  parquet file
@@ -69,7 +69,7 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 			err = res.SetSchemaHandlerFromJSON(sa)
 			return res, err
 
-		}else{
+		} else {
 			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
 				return res, err
 			}
@@ -149,7 +149,7 @@ func (self *ParquetWriter) Write(src interface{}) error {
 	}
 
 	if self.CheckSizeCritical <= ln {
-		self.ObjSize = (self.ObjSize + common.SizeOf(val))/2 + 1
+		self.ObjSize = (self.ObjSize+common.SizeOf(val))/2 + 1
 	}
 	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, src)
@@ -215,7 +215,8 @@ func (self *ParquetWriter) flushObjs() error {
 
 			if err2 == nil {
 				for name, table := range *tableMap {
-					if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
+					if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY ||
+						table.Info.Encoding == parquet.Encoding_RLE_DICTIONARY {
 						lock.Lock()
 						if _, ok := self.DictRecs[name]; !ok {
 							self.DictRecs[name] = layout.NewDictRec(table.Type)
@@ -271,7 +272,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 		//pages -> chunk
 		chunkMap := make(map[string]*layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
-			if len(pages) > 0 && pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
+			if len(pages) > 0 && (pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY || pages[0].Info.Encoding == parquet.Encoding_RLE_DICTIONARY) {
 				dictPage, _ := layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressionType)
 				tmp := append([]*layout.Page{dictPage}, pages...)
 				chunkMap[name] = layout.PagesToDictChunk(tmp)
