@@ -203,11 +203,12 @@ func (self *ParquetWriter) flushObjs() error {
 					default:
 						err = errors.New("unknown error")
 					}
+					close(doneChan)
 				}
+				doneChan <- 0
 			}()
 
 			if e <= b {
-				doneChan <- 0
 				return
 			}
 
@@ -234,7 +235,6 @@ func (self *ParquetWriter) flushObjs() error {
 				err = err2
 			}
 
-			doneChan <- 0
 		}(int(bgn), int(end), c)
 	}
 
