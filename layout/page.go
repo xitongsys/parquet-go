@@ -614,7 +614,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 	if encodingMethod == parquet.Encoding_PLAIN {
 		return encoding.ReadPlain(bytesReader, dataType, cnt, bitWidth)
 
-	} else if encodingMethod == parquet.Encoding_PLAIN_DICTIONARY {
+	} else if encodingMethod == parquet.Encoding_PLAIN_DICTIONARY || encodingMethod == parquet.Encoding_RLE_DICTIONARY {
 		b, err := bytesReader.ReadByte()
 		if err != nil {
 			return res, err

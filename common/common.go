@@ -157,8 +157,8 @@ func StringToTag(tag string) *Tag {
 			}
 		case "encoding":
 			switch strings.ToLower(val) {
-			 case "plain":
-			 	mp.Encoding = parquet.Encoding_PLAIN
+			case "plain":
+				mp.Encoding = parquet.Encoding_PLAIN
 			case "rle":
 				mp.Encoding = parquet.Encoding_RLE
 			case "delta_binary_packed":
@@ -169,6 +169,8 @@ func StringToTag(tag string) *Tag {
 				mp.Encoding = parquet.Encoding_DELTA_BYTE_ARRAY
 			case "plain_dictionary":
 				mp.Encoding = parquet.Encoding_PLAIN_DICTIONARY
+			case "rle_dictionary":
+				mp.Encoding = parquet.Encoding_RLE_DICTIONARY
 			default:
 				panic(fmt.Errorf("Unknown encoding type: '%v'", val))
 			}

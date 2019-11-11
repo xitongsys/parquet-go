@@ -4,9 +4,9 @@ import (
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/encoding"
-	"github.com/xitongsys/parquet-go/types"
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/schema"
+	"github.com/xitongsys/parquet-go/types"
 )
 
 //Chunk stores the ColumnChunk in parquet file
@@ -107,6 +107,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_BIT_PACKED)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN_DICTIONARY)
+	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE_DICTIONARY)
 
 	metaData.Codec = pages[1].CompressType
 	metaData.NumValues = numValues
