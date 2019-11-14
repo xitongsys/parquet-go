@@ -4,7 +4,7 @@ package compress
 
 import (
 	"github.com/DataDog/zstd"
-	"github.com/tyronegroves/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/parquet"
 )
 
 func init() {
