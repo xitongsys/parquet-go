@@ -11,7 +11,6 @@ import (
 )
 
 var gzipWriterPool sync.Pool
-var buffersPool sync.Pool
 
 func init() {
 	gzipWriterPool = sync.Pool{
@@ -20,21 +19,13 @@ func init() {
 		},
 	}
 
-	buffersPool = sync.Pool{
-		New: func() interface{} {
-			return new(bytes.Buffer)
-		},
-	}
-
 	compressors[parquet.CompressionCodec_GZIP] = &Compressor{
 		Compress: func(buf []byte) []byte {
-			res := buffersPool.Get().(*bytes.Buffer)
-			res.Reset()
+			res := new(bytes.Buffer)
 			gzipWriter := gzipWriterPool.Get().(*gzip.Writer)
 			gzipWriter.Reset(res)
 			gzipWriter.Write(buf)
 			gzipWriter.Close()
-			buffersPool.Put(res)
 			gzipWriterPool.Put(gzipWriter)
 			return res.Bytes()
 		},
