@@ -4,7 +4,7 @@ package compress
 
 import (
 	"bytes"
-	"compress/gzip"
+	"github.com/klauspost/compress/gzip"
 	"github.com/xitongsys/parquet-go/parquet"
 	"io/ioutil"
 )
