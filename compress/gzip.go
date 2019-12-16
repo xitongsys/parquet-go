@@ -7,15 +7,27 @@ import (
 	"github.com/klauspost/compress/gzip"
 	"github.com/xitongsys/parquet-go/parquet"
 	"io/ioutil"
+	"sync"
 )
 
+var gzipWriterPool sync.Pool
+
 func init() {
+	gzipWriterPool = sync.Pool{
+		New: func() interface{} {
+			return gzip.NewWriter(nil)
+		},
+	}
+
 	compressors[parquet.CompressionCodec_GZIP] = &Compressor{
 		Compress: func(buf []byte) []byte {
-			var res bytes.Buffer
-			gzipWriter := gzip.NewWriter(&res)
+			res := new(bytes.Buffer)
+			gzipWriter := gzipWriterPool.Get().(*gzip.Writer)
+			gzipWriter.Reset(res)
 			gzipWriter.Write(buf)
 			gzipWriter.Close()
+			gzipWriter.Reset(nil)
+			gzipWriterPool.Put(gzipWriter)
 			return res.Bytes()
 		},
 		Uncompress: func(buf []byte) (i []byte, err error) {
