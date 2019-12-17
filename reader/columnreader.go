@@ -22,7 +22,7 @@ func NewParquetColumnReader(pFile source.ParquetFile, np int64) (*ParquetReader,
 	return res, nil
 }
 
-func (self *ParquetReader) SkipRowsByPath(pathStr string, num int) error {
+func (self *ParquetReader) SkipRowsByPath(pathStr string, num int64) error {
 	errPathNotFound := fmt.Errorf("path %v not found", pathStr)
 
 	pathStr, err := self.SchemaHandler.ConvertToInPathStr(pathStr)
@@ -51,8 +51,8 @@ func (self *ParquetReader) SkipRowsByPath(pathStr string, num int) error {
 	return nil
 }
 
-func (self *ParquetReader) SkipRowsByIndex(index int, num int) {
-	if index >= len(self.SchemaHandler.ValueColumns) {
+func (self *ParquetReader) SkipRowsByIndex(index int64, num int64) {
+	if index >= int64(len(self.SchemaHandler.ValueColumns)) {
 		return
 	}
 	pathStr := self.SchemaHandler.ValueColumns[index]
@@ -60,7 +60,7 @@ func (self *ParquetReader) SkipRowsByIndex(index int, num int) {
 }
 
 // ReadColumnByPath reads column by path in schema.
-func (self *ParquetReader) ReadColumnByPath(pathStr string, num int) (values []interface{}, rls []int32, dls []int32, err error) {
+func (self *ParquetReader) ReadColumnByPath(pathStr string, num int64) (values []interface{}, rls []int32, dls []int32, err error) {
 	errPathNotFound := fmt.Errorf("path %v not found", pathStr)
 
 	pathStr, err = self.SchemaHandler.ConvertToInPathStr(pathStr)
@@ -87,8 +87,8 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, num int) (values []i
 }
 
 // ReadColumnByIndex reads column by index. The index of first column is 0.
-func (self *ParquetReader) ReadColumnByIndex(index int, num int) (values []interface{}, rls []int32, dls []int32, err error) {
-	if index >= len(self.SchemaHandler.ValueColumns) {
+func (self *ParquetReader) ReadColumnByIndex(index int64, num int64) (values []interface{}, rls []int32, dls []int32, err error) {
+	if index >= int64(len(self.SchemaHandler.ValueColumns)) {
 		err = fmt.Errorf("index %v out of range %v", index, len(self.SchemaHandler.ValueColumns))
 		return
 	}
