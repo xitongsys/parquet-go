@@ -1,4 +1,4 @@
-# parquet-go v1.4.3
+# parquet-go 
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -12,8 +12,6 @@ parquet-go is a pure-go implementation of reading and writing the parquet format
 Add the parquet-go library to your $GOPATH/src and install dependencies:
 ```sh
 go get github.com/xitongsys/parquet-go
-cd $GOPATH/src/github.com/xitongsys/parquet-go/
-dep ensure
 ```
 Look at examples in `example/`. 
 ```sh

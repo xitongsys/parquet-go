@@ -232,13 +232,10 @@ func WriteDelta(nums []interface{}) []byte {
 	if ln <= 0 {
 		return []byte{}
 	}
-	dataType := reflect.TypeOf(nums[0])
-	if dataType == nil {
-		return []byte{}
-	}
-	if dataType.Name() == "INT32" {
+
+	if _, ok := nums[0].(int32); ok {
 		return WriteDeltaINT32(nums)
-	} else if dataType.Name() == "INT64" {
+	} else if _, ok := nums[0].(int64); ok {
 		return WriteDeltaINT64(nums)
 	} else {
 		return []byte{}
