@@ -3,6 +3,7 @@ package writer
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"reflect"
 	"sync"
 
@@ -10,9 +11,9 @@ import (
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/marshal"
-	"github.com/xitongsys/parquet-go/source"
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/schema"
+	"github.com/xitongsys/parquet-go/source"
 )
 
 //ParquetWriter is a writer  parquet file
@@ -41,7 +42,7 @@ type ParquetWriter struct {
 	MarshalFunc func(src []interface{}, bgn int, end int, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
 }
 
-//Create a parquet handler
+//Create a parquet handler. Obj is a object with tags or JSON schema string.
 func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
 	var err error
 
@@ -64,9 +65,16 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.MarshalFunc = marshal.Marshal
 
 	if obj != nil {
-		if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+		if sa, ok := obj.(string); ok {
+			err = res.SetSchemaHandlerFromJSON(sa)
 			return res, err
+
+		} else {
+			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+				return res, err
+			}
 		}
+
 		res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	}
 
@@ -141,7 +149,7 @@ func (self *ParquetWriter) Write(src interface{}) error {
 	}
 
 	if self.CheckSizeCritical <= ln {
-		self.ObjSize = common.SizeOf(val) + 1
+		self.ObjSize = (self.ObjSize+common.SizeOf(val))/2 + 1
 	}
 	self.ObjsSize += self.ObjSize
 	self.Objs = append(self.Objs, src)
@@ -185,8 +193,22 @@ func (self *ParquetWriter) flushObjs() error {
 		}
 
 		go func(b, e int, index int64) {
-			if e <= b {
+			defer func() {
+				if r := recover(); r != nil {
+					switch x := r.(type) {
+					case string:
+						err = errors.New(x)
+					case error:
+						err = x
+					default:
+						err = errors.New("unknown error")
+					}
+					close(doneChan)
+				}
 				doneChan <- 0
+			}()
+
+			if e <= b {
 				return
 			}
 
@@ -194,7 +216,8 @@ func (self *ParquetWriter) flushObjs() error {
 
 			if err2 == nil {
 				for name, table := range *tableMap {
-					if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
+					if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY ||
+						table.Info.Encoding == parquet.Encoding_RLE_DICTIONARY {
 						lock.Lock()
 						if _, ok := self.DictRecs[name]; !ok {
 							self.DictRecs[name] = layout.NewDictRec(table.Type)
@@ -212,7 +235,6 @@ func (self *ParquetWriter) flushObjs() error {
 				err = err2
 			}
 
-			doneChan <- 0
 		}(int(bgn), int(end), c)
 	}
 
@@ -250,7 +272,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 		//pages -> chunk
 		chunkMap := make(map[string]*layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
-			if len(pages) > 0 && pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY {
+			if len(pages) > 0 && (pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY || pages[0].Info.Encoding == parquet.Encoding_RLE_DICTIONARY) {
 				dictPage, _ := layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressionType)
 				tmp := append([]*layout.Page{dictPage}, pages...)
 				chunkMap[name] = layout.PagesToDictChunk(tmp)

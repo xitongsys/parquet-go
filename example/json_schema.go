@@ -10,7 +10,7 @@ import (
 )
 
 type Student struct {
-	Name    string
+	NameIn    string
 	Age     int32
 	Id      int64
 	Weight  float32
@@ -31,9 +31,9 @@ type Student struct {
 
 var jsonSchema string = `
 {
-  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
+  "Tag": "name=parquet_go_root, repetitiontype=REQUIRED",
   "Fields": [
-    {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+    {"Tag": "name=name, inname=NameIn, type=UTF8, repetitiontype=REQUIRED"},
     {"Tag": "name=age, inname=Age, type=INT32, repetitiontype=REQUIRED"},
     {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"},
     {"Tag": "name=weight, inname=Weight, type=FLOAT, repetitiontype=REQUIRED"},
@@ -84,13 +84,9 @@ func main() {
 	}
 
 	//write
-	pw, err := writer.NewParquetWriter(fw, nil, 4)
+	pw, err := writer.NewParquetWriter(fw, jsonSchema, 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
-		return
-	}
-	if err = pw.SetSchemaHandlerFromJSON(jsonSchema); err != nil {
-		log.Println("Can't set schema from json ", err)
 		return
 	}
 
@@ -99,7 +95,7 @@ func main() {
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
-			Name:    "StudentName",
+			NameIn:    "StudentName",
 			Age:     int32(20 + i%5),
 			Id:      int64(i),
 			Weight:  float32(50.0 + float32(i)*0.1),
@@ -154,16 +150,12 @@ func main() {
 		return
 	}
 
-	pr, err := reader.NewParquetReader(fr, nil, 4)
+	pr, err := reader.NewParquetReader(fr, jsonSchema, 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
 	}
-	if err = pr.SetSchemaHandlerFromJSON(jsonSchema); err != nil {
-		log.Println("Can't set schema from json", err)
-		return
-	}
-
+	
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)

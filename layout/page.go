@@ -24,7 +24,7 @@ type Page struct {
 	DataTable *Table
 	//Compressed data of the page, which is written in parquet file
 	RawData []byte
-	//Compress type: gzip/snappy/none
+	//Compress type: gzip/snappy/zstd/none
 	CompressType parquet.CompressionCodec
 	//Parquet type of the values in the page
 	DataType parquet.Type
@@ -212,14 +212,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	dataBuf = append(dataBuf, definitionLevelBuf...)
 	dataBuf = append(dataBuf, valuesRawBuf...)
 
-	var dataEncodeBuf []byte
-	if compressType == parquet.CompressionCodec_GZIP {
-		dataEncodeBuf = compress.CompressGzip(dataBuf)
-	} else if compressType == parquet.CompressionCodec_SNAPPY {
-		dataEncodeBuf = compress.CompressSnappy(dataBuf)
-	} else {
-		dataEncodeBuf = dataBuf
-	}
+	var dataEncodeBuf []byte = compress.Compress(dataBuf, compressType)
 
 	//pageHeader/////////////////////////////////////
 	page.Header = parquet.NewPageHeader()
@@ -304,14 +297,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 			parquet.Type_INT64)
 	}
 
-	var dataEncodeBuf []byte
-	if compressType == parquet.CompressionCodec_GZIP {
-		dataEncodeBuf = compress.CompressGzip(valuesRawBuf)
-	} else if compressType == parquet.CompressionCodec_SNAPPY {
-		dataEncodeBuf = compress.CompressSnappy(valuesRawBuf)
-	} else {
-		dataEncodeBuf = valuesRawBuf
-	}
+	var dataEncodeBuf []byte = compress.Compress(valuesRawBuf, compressType)
 
 	//pageHeader/////////////////////////////////////
 	page.Header = parquet.NewPageHeader()
@@ -410,7 +396,7 @@ func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *sch
 	page.CompressType = colMetaData.GetCodec()
 	page.RawData = buf
 	page.Path = make([]string, 0)
-	page.Path = append(page.Path, schemaHandler.GetRootName())
+	page.Path = append(page.Path, schemaHandler.GetRootInName())
 	page.Path = append(page.Path, colMetaData.GetPathInSchema()...)
 	page.DataType = colMetaData.GetType()
 	return page, nil
@@ -628,7 +614,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 	if encodingMethod == parquet.Encoding_PLAIN {
 		return encoding.ReadPlain(bytesReader, dataType, cnt, bitWidth)
 
-	} else if encodingMethod == parquet.Encoding_PLAIN_DICTIONARY {
+	} else if encodingMethod == parquet.Encoding_PLAIN_DICTIONARY || encodingMethod == parquet.Encoding_RLE_DICTIONARY {
 		b, err := bytesReader.ReadByte()
 		if err != nil {
 			return res, err
@@ -764,7 +750,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 
 	bytesReader := bytes.NewReader(buf)
 	path := make([]string, 0)
-	path = append(path, schemaHandler.GetRootName())
+	path = append(path, schemaHandler.GetRootInName())
 	path = append(path, colMetaData.GetPathInSchema()...)
 	name := strings.Join(path, ".")
 

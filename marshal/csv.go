@@ -15,7 +15,7 @@ func MarshalCSV(records []interface{}, bgn int, end int, schemaHandler *schema.S
 	}
 
 	for i := 0; i < len(records[0].([]interface{})); i++ {
-		pathStr := schemaHandler.GetRootName() + "." + schemaHandler.Infos[i+1].ExName
+		pathStr := schemaHandler.GetRootInName() + "." + schemaHandler.Infos[i+1].InName
 		res[pathStr] = layout.NewEmptyTable()
 		res[pathStr].Path = common.StrToPath(pathStr)
 		res[pathStr].MaxDefinitionLevel = 1

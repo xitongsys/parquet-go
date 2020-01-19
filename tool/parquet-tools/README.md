@@ -12,13 +12,15 @@ schema/size/rowcount
 parquet file name;
 ### -tag
 print the go struct tags; default is false;
+### -cat
+cat records of parquet file.
 
 ## Example
 
 ### Output Schema
 
 ```bash
-bash$ ./parquet-tools -cmd=schema -file=a.parquet -tag=false
+bash$ ./parquet-tools -cmd schema -file a.parquet -tag false
 bash$
 ----- Go struct -----
 parquet_go_root struct{
@@ -60,4 +62,10 @@ parquet_go_root struct{
   ]
 }
 
+```
+
+### Show records
+```bash
+#show first 2 records of a.parquet
+./parquet-tools -cmd cat -count 2 -file a.parquet 
 ```

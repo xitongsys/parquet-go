@@ -12,17 +12,18 @@ import (
 
 type Student struct {
 	Name    string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
-	Age     int32   `parquet:"name=age, type=INT32, encoding=PLAIN"`
+	Age     int32   `parquet:"name=age, type=INT32"`
 	Id      int64   `parquet:"name=id, type=INT64"`
 	Weight  float32 `parquet:"name=weight, type=FLOAT"`
 	Sex     bool    `parquet:"name=sex, type=BOOLEAN"`
 	Day     int32   `parquet:"name=day, type=DATE"`
+	Scores	map[string]int32 `parquet:"name=scores, type=MAP, keytype=UTF8, valuetype=INT32"`
 	Ignored int32   //without parquet tag and won't write
 }
 
 func main() {
 	var err error
-	fw, err := local.NewLocalFileWriter("flat.parquet")
+	fw, err := local.NewLocalFileWriter("without_predefined_schema.parquet")
 	if err != nil {
 		log.Println("Can't create local file", err)
 		return
@@ -37,7 +38,7 @@ func main() {
 
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
-	num := 100
+	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   "StudentName",
@@ -46,6 +47,11 @@ func main() {
 			Weight: float32(50.0 + float32(i)*0.1),
 			Sex:    bool(i%2 == 0),
 			Day:    int32(time.Now().Unix() / 3600 / 24),
+			Scores: map[string]int32{
+				"math": int32(90 + i%5),
+				"physics": int32(90 + i%3),
+				"computer": int32(80 + i%10),
+			},
 		}
 		if err = pw.Write(stu); err != nil {
 			log.Println("Write error", err)
@@ -59,29 +65,26 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := local.NewLocalFileReader("flat.parquet")
+	fr, err := local.NewLocalFileReader("without_predefined_schema.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
 	}
 
-	pr, err := reader.NewParquetReader(fr, new(Student), 4)
+	pr, err := reader.NewParquetReader(fr, nil, 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
 	}
+	
 	num = int(pr.GetNumRows())
-	for i := 0; i < num/10; i++ {
-		if i%2 == 0 {
-			pr.SkipRows(10) //skip 10 rows
-			continue
-		}
-		stus := make([]Student, 10) //read 10 rows
-		if err = pr.Read(&stus); err != nil {
-			log.Println("Read error", err)
-		}
-		log.Println(stus)
+	res, err := pr.ReadByNumber(num)
+	if err != nil {
+		log.Println("Can't read", err)
+		return
 	}
+
+	log.Println(res)
 
 	pr.ReadStop()
 	fr.Close()

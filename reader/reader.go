@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"sync"
+	"strings"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
@@ -22,9 +23,13 @@ type ParquetReader struct {
 	PFile         source.ParquetFile
 
 	ColumnBuffers map[string]*ColumnBufferType
+
+	//One reader can only read one type objects
+	ObjType			reflect.Type
+	ObjPartialType	reflect.Type
 }
 
-//Create a parquet reader
+//Create a parquet reader: obj is a object with schema tags or a JSON schema string
 func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
 	res := new(ParquetReader)
@@ -36,29 +41,42 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.ColumnBuffers = make(map[string]*ColumnBufferType)
 
 	if obj != nil {
-		if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+		if sa, ok := obj.(string); ok {
+			err = res.SetSchemaHandlerFromJSON(sa)
 			return res, err
-		}
-		res.RenameSchema()
 
-		for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
-			schema := res.SchemaHandler.SchemaElements[i]
-			if schema.GetNumChildren() == 0 {
-				pathStr := res.SchemaHandler.IndexMap[int32(i)]
-				if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
-					return res, err
-				}
+		} else {
+			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+				return res, err
+			}
+		}
+
+	}else{
+		res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(res.Footer.Schema)
+	}
+
+	res.RenameSchema()
+	for i := 0; i < len(res.SchemaHandler.SchemaElements); i++ {
+		schema := res.SchemaHandler.SchemaElements[i]
+		if schema.GetNumChildren() == 0 {
+			pathStr := res.SchemaHandler.IndexMap[int32(i)]
+			if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
+				return res, err
 			}
 		}
 	}
+
 	return res, nil
 }
 
 func (self *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 	var err error
+
 	if self.SchemaHandler, err = schema.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
 		return err
 	}
+
+	
 	self.RenameSchema()
 	for i := 0; i < len(self.SchemaHandler.SchemaElements); i++ {
 		schemaElement := self.SchemaHandler.SchemaElements[i]
@@ -80,7 +98,7 @@ func (self *ParquetReader) RenameSchema() {
 	for _, rowGroup := range self.Footer.RowGroups {
 		for _, chunk := range rowGroup.Columns {
 			exPath := make([]string, 0)
-			exPath = append(exPath, self.SchemaHandler.GetRootName())
+			exPath = append(exPath, self.SchemaHandler.GetRootExName())
 			exPath = append(exPath, chunk.MetaData.GetPathInSchema()...)
 			exPathStr := common.PathToStr(exPath)
 
@@ -170,8 +188,75 @@ func (self *ParquetReader) SkipRows(num int64) error {
 	return err
 }
 
-//Read rows of parquet file
+//Read rows of parquet file and unmarshal all to dst
 func (self *ParquetReader) Read(dstInterface interface{}) error {
+	return self.read(dstInterface, "")
+}
+
+// Read maxReadNumber objects
+func (self *ParquetReader) ReadByNumber(maxReadNumber int) ([]interface{}, error) {
+	var err error 
+	if self.ObjType == nil {
+		if self.ObjType, err = self.SchemaHandler.GetType(self.SchemaHandler.GetRootInName()); err != nil {
+			return nil, err
+		}
+	}
+
+	vs := reflect.MakeSlice(reflect.SliceOf(self.ObjType), maxReadNumber, maxReadNumber)
+	res := reflect.New(vs.Type())
+	res.Elem().Set(vs)
+
+	if err = self.Read(res.Interface()); err != nil {
+		return nil, err
+	}
+
+	ln := res.Elem().Len()
+	ret := make([]interface{}, ln)
+	for i := 0; i < ln; i++ {
+		ret[i] = res.Elem().Index(i).Interface()
+	}
+
+	return ret, nil
+}
+
+//Read rows of parquet file and unmarshal all to dst
+func (self *ParquetReader) ReadPartial(dstInterface interface{}, prefixPath string) error {
+	prefixPath, err := self.SchemaHandler.ConvertToInPathStr(prefixPath)
+	if err != nil {
+		return err
+	}
+	
+	return self.read(dstInterface, prefixPath)
+}
+
+// Read maxReadNumber partial objects 
+func (self *ParquetReader) ReadPartialByNumber(maxReadNumber int, prefixPath string) ([]interface{}, error) {
+	var err error 
+	if self.ObjPartialType == nil {
+		if self.ObjPartialType, err = self.SchemaHandler.GetType(prefixPath); err != nil {
+			return nil, err
+		}
+	}
+
+	vs := reflect.MakeSlice(reflect.SliceOf(self.ObjPartialType), maxReadNumber, maxReadNumber)
+	res := reflect.New(vs.Type())
+	res.Elem().Set(vs)
+
+	if err = self.ReadPartial(res.Interface(), prefixPath); err != nil {
+		return nil, err
+	}
+
+	ln := res.Elem().Len()
+	ret := make([]interface{}, ln)
+	for i := 0; i < ln; i++ {
+		ret[i] = res.Elem().Index(i).Interface()
+	}
+
+	return ret, nil
+}
+
+//Read rows of parquet file with a prefixPath
+func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) error {
 	var err error
 	tmap := make(map[string]*layout.Table)
 	locker := new(sync.Mutex)
@@ -207,12 +292,18 @@ func (self *ParquetReader) Read(dstInterface interface{}) error {
 			}
 		}()
 	}
+
+	readNum := 0
 	for key, _ := range self.ColumnBuffers {
-		taskChan <- key
+		if strings.HasPrefix(key, prefixPath) {
+			taskChan <- key
+			readNum++
+		}
 	}
-	for i := 0; i < len(self.ColumnBuffers); i++ {
+	for i := 0; i < readNum; i++ {
 		<-doneChan
 	}
+
 	for i := int64(0); i < self.NP; i++ {
 		stopChan <- 0
 	}
@@ -232,7 +323,7 @@ func (self *ParquetReader) Read(dstInterface interface{}) error {
 		}
 		go func(b, e, index int) {
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
-			if err2 := marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler); err2 != nil {
+			if err2 := marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler, prefixPath); err2 != nil {
 				err = err2
 			}
 			doneChan <- 0
