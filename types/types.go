@@ -69,16 +69,40 @@ func TypeNameToParquetType(name string, baseName string) (*parquet.Type, *parque
 	panic(fmt.Errorf("Unknown data type: '%s'", name))
 }
 
-func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionType) reflect.Type {
+func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT *parquet.FieldRepetitionType) reflect.Type {
 	if rT == nil || *rT != parquet.FieldRepetitionType_OPTIONAL {
 		if *pT == parquet.Type_BOOLEAN {
 			return reflect.TypeOf(true)
 
-		} else if *pT == parquet.Type_INT32 {
+		} else if *pT == parquet.Type_INT32 && cT == nil {
 			return reflect.TypeOf(int32(0))
 
-		} else if *pT == parquet.Type_INT64 {
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_8 {
+			return reflect.TypeOf(int8(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_16 {
+			return reflect.TypeOf(int16(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_32 {
+			return reflect.TypeOf(int32(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_8 {
+			return reflect.TypeOf(uint8(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_16 {
+			return reflect.TypeOf(uint16(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
+			return reflect.TypeOf(uint32(0))
+
+		}else if *pT == parquet.Type_INT64 && cT == nil {
 			return reflect.TypeOf(int64(0))
+
+		}else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_INT_64 {
+			return reflect.TypeOf(int64(0))
+		
+		}else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_UINT_64 {
+			return reflect.TypeOf(uint64(0))
 
 		} else if *pT == parquet.Type_INT96 {
 			return reflect.TypeOf("")
@@ -104,12 +128,44 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionTyp
 			v := true
 			return reflect.TypeOf(&v)
 
-		} else if *pT == parquet.Type_INT32 {
+		} else if *pT == parquet.Type_INT32 && cT == nil{
 			v := int32(0)
 			return reflect.TypeOf(&v)
 
-		} else if *pT == parquet.Type_INT64 {
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_8 {
+			v := int8(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_16 {
+			v := int16(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_32 {
+			v := int32(0)
+			return reflect.TypeOf(&v)
+		
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_8 {
+			v := uint8(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_16 {
+			v := uint16(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
+			v := uint32(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT64 && cT == nil {
 			v := int64(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_INT_64 {
+			v := int64(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_UINT_64 {
+			v := uint64(0)
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT96 {
