@@ -34,8 +34,8 @@ func main() {
 		log.Println("Can't create parquet writer")
 		return
 	}
-	num := 10
-	for i := 0; i < num; i++ {
+	num := int64(10)
+	for i := 0; int64(i) < num; i++ {
 		stu := Student{
 			Name:   "StudentName",
 			Age:    int32(20 + i%5),
@@ -70,7 +70,7 @@ func main() {
 		log.Println("Can't create column reader", err)
 		return
 	}
-	num = int(pr.GetNumRows())
+	num = int64(pr.GetNumRows())
 
 	pr.SkipRowsByPath("parquet_go_root.name", 5) //skip the first five rows
 	names, rls, dls, err = pr.ReadColumnByPath("parquet_go_root.name", num)

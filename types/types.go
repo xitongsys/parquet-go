@@ -69,13 +69,43 @@ func TypeNameToParquetType(name string, baseName string) (*parquet.Type, *parque
 	panic(fmt.Errorf("Unknown data type: '%s'", name))
 }
 
-func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionType) reflect.Type {
+func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT *parquet.FieldRepetitionType) reflect.Type {
 	if rT == nil || *rT != parquet.FieldRepetitionType_OPTIONAL {
 		if *pT == parquet.Type_BOOLEAN {
 			return reflect.TypeOf(true)
 
+		} else if *pT == parquet.Type_INT32 && cT == nil {
+			return reflect.TypeOf(int32(0))
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_8 {
+			return reflect.TypeOf(int8(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_16 {
+			return reflect.TypeOf(int16(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_32 {
+			return reflect.TypeOf(int32(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_8 {
+			return reflect.TypeOf(uint8(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_16 {
+			return reflect.TypeOf(uint16(0))
+
+		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
+			return reflect.TypeOf(uint32(0))
+
 		} else if *pT == parquet.Type_INT32 {
 			return reflect.TypeOf(int32(0))
+
+		}else if *pT == parquet.Type_INT64 && cT == nil {
+			return reflect.TypeOf(int64(0))
+
+		}else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_INT_64 {
+			return reflect.TypeOf(int64(0))
+		
+		}else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_UINT_64 {
+			return reflect.TypeOf(uint64(0))
 
 		} else if *pT == parquet.Type_INT64 {
 			return reflect.TypeOf(int64(0))
@@ -104,8 +134,48 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionTyp
 			v := true
 			return reflect.TypeOf(&v)
 
+		} else if *pT == parquet.Type_INT32 && cT == nil{
+			v := int32(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_8 {
+			v := int8(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_16 {
+			v := int16(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_32 {
+			v := int32(0)
+			return reflect.TypeOf(&v)
+		
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_8 {
+			v := uint8(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_16 {
+			v := uint16(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
+			v := uint32(0)
+			return reflect.TypeOf(&v)
+
 		} else if *pT == parquet.Type_INT32 {
 			v := int32(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT64 && cT == nil {
+			v := int64(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_INT_64 {
+			v := int64(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_UINT_64 {
+			v := uint64(0)
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT64 {
@@ -146,10 +216,14 @@ func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 		return src
 	}
 
-	if *cT == parquet.ConvertedType_UINT_8 {
-		return uint32(src.(int32))
+	if *cT == parquet.ConvertedType_INT_8 {
+		return int8(src.(int32))
+	} else if *cT == parquet.ConvertedType_INT_16 {
+		return int16(src.(int32))
+	} else if *cT == parquet.ConvertedType_UINT_8 {
+		return uint8(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_16 {
-		return uint32(src.(int32))
+		return uint16(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_32 {
 		return uint32(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_64 {
@@ -164,10 +238,14 @@ func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 		return src
 	}
 
-	if *cT == parquet.ConvertedType_UINT_8 {
-		return int32(src.(uint32))
+	if *cT == parquet.ConvertedType_INT_8 {
+		return int32(src.(int8))
+	}else if *cT == parquet.ConvertedType_INT_16 {
+		return int32(src.(int16))
+	} else if *cT == parquet.ConvertedType_UINT_8 {
+		return int32(src.(uint8))
 	} else if *cT == parquet.ConvertedType_UINT_16 {
-		return int32(src.(uint32))
+		return int32(src.(uint16))
 	} else if *cT == parquet.ConvertedType_UINT_32 {
 		return int32(src.(uint32))
 	} else if *cT == parquet.ConvertedType_UINT_64 {
@@ -221,16 +299,40 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 	if *cT == parquet.ConvertedType_UTF8 {
 		return s
 
-	} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
-		*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
+	} else if *cT == parquet.ConvertedType_INT_8 {
+		var v int8
+		fmt.Sscanf(s, "%d", &v)
+		return int32(v)
+
+	} else if *cT == parquet.ConvertedType_INT_16 {
+		var v int16
+		fmt.Sscanf(s, "%d", &v)
+		return int32(v)
+
+	} else if *cT == parquet.ConvertedType_INT_32 {
 		var v int32
 		fmt.Sscanf(s, "%d", &v)
-		return v
+		return int32(v)
 
-	} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
-		var vt uint32
-		fmt.Sscanf(s, "%d", &vt)
-		return int32(vt)
+	} else if *cT == parquet.ConvertedType_UINT_8 {
+		var v uint8
+		fmt.Sscanf(s, "%d", &v)
+		return int32(v)
+
+	} else if *cT == parquet.ConvertedType_UINT_16 {
+		var v uint16
+		fmt.Sscanf(s, "%d", &v)
+		return int32(v)
+
+	} else if *cT == parquet.ConvertedType_UINT_32 {
+		var v uint32
+		fmt.Sscanf(s, "%d", &v)
+		return int32(v)
+
+	} else if *cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
+		var v int32
+		fmt.Sscanf(s, "%d", &v)
+		return int32(v)
 
 	} else if *cT == parquet.ConvertedType_UINT_64 {
 		var vt uint64
