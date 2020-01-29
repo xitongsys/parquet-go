@@ -299,16 +299,40 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 	if *cT == parquet.ConvertedType_UTF8 {
 		return s
 
-	} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
-		*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
+	} else if *cT == parquet.ConvertedType_INT_8 {
+		var v int8
+		fmt.Sscanf(s, "%d", &v)
+		return v
+
+	} else if *cT == parquet.ConvertedType_INT_16 {
+		var v int16
+		fmt.Sscanf(s, "%d", &v)
+		return v
+
+	} else if *cT == parquet.ConvertedType_INT_32 {
 		var v int32
 		fmt.Sscanf(s, "%d", &v)
 		return v
 
-	} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
-		var vt uint32
-		fmt.Sscanf(s, "%d", &vt)
-		return int32(vt)
+	} else if *cT == parquet.ConvertedType_UINT_8 {
+		var v uint8
+		fmt.Sscanf(s, "%d", &v)
+		return v
+
+	} else if *cT == parquet.ConvertedType_UINT_16 {
+		var v uint16
+		fmt.Sscanf(s, "%d", &v)
+		return v
+
+	} else if *cT == parquet.ConvertedType_UINT_32 {
+		var v uint32
+		fmt.Sscanf(s, "%d", &v)
+		return v
+
+	} else if *cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
+		var v int32
+		fmt.Sscanf(s, "%d", &v)
+		return v
 
 	} else if *cT == parquet.ConvertedType_UINT_64 {
 		var vt uint64
