@@ -33,12 +33,12 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 |BYTE_ARRAY|BYTE_ARRAY|string|
 |FIXED_LEN_BYTE_ARRAY|FIXED_LEN_BYTE_ARRAY|string|
 |UTF8|BYTE_ARRAY|string|
-|INT_8|INT32|int32|
-|INT_16|INT32|int32|
+|INT_8|INT32|int8|
+|INT_16|INT32|int16|
 |INT_32|INT32|int32|
 |INT_64|INT64|int64|
-|UINT_8|INT32|uint32|
-|UINT_16|INT32|uint32|
+|UINT_8|INT32|uint8|
+|UINT_16|INT32|uint16|
 |UINT_32|INT32|uint32|
 |UINT_64|INT64|uint64|
 |DATE|INT32|int32|
