@@ -78,19 +78,19 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 			return reflect.TypeOf(int32(0))
 
 		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_8 {
-			return reflect.TypeOf(int32(0))
+			return reflect.TypeOf(int8(0))
 
 		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_16 {
-			return reflect.TypeOf(int32(0))
+			return reflect.TypeOf(int16(0))
 
 		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_32 {
 			return reflect.TypeOf(int32(0))
 
 		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_8 {
-			return reflect.TypeOf(uint32(0))
+			return reflect.TypeOf(uint8(0))
 
 		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_16 {
-			return reflect.TypeOf(uint32(0))
+			return reflect.TypeOf(uint16(0))
 
 		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
 			return reflect.TypeOf(uint32(0))
@@ -139,11 +139,11 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_8 {
-			v := int32(0)
+			v := int8(0)
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_16 {
-			v := int32(0)
+			v := int16(0)
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_32 {
@@ -151,11 +151,11 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 			return reflect.TypeOf(&v)
 		
 		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_8 {
-			v := uint32(0)
+			v := uint8(0)
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_16 {
-			v := uint32(0)
+			v := uint16(0)
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
@@ -216,10 +216,14 @@ func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 		return src
 	}
 
-	if *cT == parquet.ConvertedType_UINT_8 {
-		return uint32(src.(int32))
+	if *cT == parquet.ConvertedType_INT_8 {
+		return int8(src.(int32))
+	} else if *cT == parquet.ConvertedType_INT_16 {
+		return int16(src.(int32))
+	} else if *cT == parquet.ConvertedType_UINT_8 {
+		return uint8(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_16 {
-		return uint32(src.(int32))
+		return uint16(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_32 {
 		return uint32(src.(int32))
 	} else if *cT == parquet.ConvertedType_UINT_64 {
@@ -234,10 +238,14 @@ func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.Converte
 		return src
 	}
 
-	if *cT == parquet.ConvertedType_UINT_8 {
-		return int32(src.(uint32))
+	if *cT == parquet.ConvertedType_INT_8 {
+		return int32(src.(int8))
+	}else if *cT == parquet.ConvertedType_INT_16 {
+		return int32(src.(int16))
+	} else if *cT == parquet.ConvertedType_UINT_8 {
+		return int32(src.(uint8))
 	} else if *cT == parquet.ConvertedType_UINT_16 {
-		return int32(src.(uint32))
+		return int32(src.(uint16))
 	} else if *cT == parquet.ConvertedType_UINT_32 {
 		return int32(src.(uint32))
 	} else if *cT == parquet.ConvertedType_UINT_64 {
