@@ -95,6 +95,9 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
 			return reflect.TypeOf(uint32(0))
 
+		} else if *pT == parquet.Type_INT32 {
+			return reflect.TypeOf(int32(0))
+
 		}else if *pT == parquet.Type_INT64 && cT == nil {
 			return reflect.TypeOf(int64(0))
 
@@ -103,6 +106,9 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 		
 		}else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_UINT_64 {
 			return reflect.TypeOf(uint64(0))
+
+		} else if *pT == parquet.Type_INT64 {
+			return reflect.TypeOf(int64(0))
 
 		} else if *pT == parquet.Type_INT96 {
 			return reflect.TypeOf("")
@@ -156,6 +162,10 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 			v := uint32(0)
 			return reflect.TypeOf(&v)
 
+		} else if *pT == parquet.Type_INT32 {
+			v := int32(0)
+			return reflect.TypeOf(&v)
+
 		} else if *pT == parquet.Type_INT64 && cT == nil {
 			v := int64(0)
 			return reflect.TypeOf(&v)
@@ -166,6 +176,10 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 
 		} else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_UINT_64 {
 			v := uint64(0)
+			return reflect.TypeOf(&v)
+
+		} else if *pT == parquet.Type_INT64 {
+			v := int64(0)
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT96 {
