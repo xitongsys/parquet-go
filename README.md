@@ -97,12 +97,12 @@ ByteArray         string  `parquet:"name=bytearray, type=BYTE_ARRAY"`
 FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
 
 Utf8            string `parquet:"name=utf8, type=UTF8, encoding=PLAIN_DICTIONARY"`
-Int_8           int32  `parquet:"name=int_8, type=INT_8"`
-Int_16          int32  `parquet:"name=int_16, type=INT_16"`
+Int_8           int8  `parquet:"name=int_8, type=INT_8"`
+Int_16          int16  `parquet:"name=int_16, type=INT_16"`
 Int_32          int32  `parquet:"name=int_32, type=INT_32"`
 Int_64          int64  `parquet:"name=int_64, type=INT_64"`
-Uint_8          uint32 `parquet:"name=uint_8, type=UINT_8"`
-Uint_16         uint32 `parquet:"name=uint_16, type=UINT_16"`
+Uint_8          uint8 `parquet:"name=uint_8, type=UINT_8"`
+Uint_16         uint16 `parquet:"name=uint_16, type=UINT_16"`
 Uint_32         uint32 `parquet:"name=uint_32, type=UINT_32"`
 Uint_64         uint64 `parquet:"name=uint_64, type=UINT_64"`
 Date            int32  `parquet:"name=date, type=DATE"`
@@ -120,7 +120,6 @@ Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=20, ba
 Map      map[string]int32 `parquet:"name=map, type=MAP, keytype=UTF8, valuetype=INT32"`
 List     []string         `parquet:"name=list, type=LIST, valuetype=UTF8"`
 Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=REPEATED"`
-
 ```
 
 
