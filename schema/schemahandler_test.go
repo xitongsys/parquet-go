@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -22,4 +23,23 @@ type Student struct {
 func TestNewSchemaHandlerFromStruct(t *testing.T) {
 	schemaMap, _ := NewSchemaHandlerFromStruct(new(Student))
 	fmt.Println(schemaMap)
+}
+
+
+func TestNewSchemaHandlerFromSchemaList(t *testing.T) {
+
+	//get any schema
+	sourceSchema, err := NewSchemaHandlerFromStruct(new(Student))
+
+	assert.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
+
+	schema := NewSchemaHandlerFromSchemaList(sourceSchema.SchemaElements)
+
+	for path, idx := range schema.MapIndex {
+		assert.Equal(t, *schema.SchemaElements[idx].RepetitionType, schema.Infos[idx].RepetitionType, "RepetitionType of 'SchemaElements' does not match RepetitionType of 'Infos' for Element at path %s (pos %d)", path, idx)
+	}
+
 }

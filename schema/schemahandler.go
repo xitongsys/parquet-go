@@ -414,6 +414,7 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 		schemaHandler.Infos[i] = &common.Tag{
 			InName: InName,
 			ExName: ExName,
+			RepetitionType: *schemas[i].RepetitionType,
 		}
 	}
 	schemaHandler.CreateInExMap()
