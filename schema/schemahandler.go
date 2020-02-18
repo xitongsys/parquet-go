@@ -2,8 +2,8 @@ package schema
 
 import (
 	"errors"
-	"reflect"
 	"fmt"
+	"reflect"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -411,10 +411,12 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	for i := 0; i < len(schemas); i++ {
 		name := schemas[i].GetName()
 		InName, ExName := common.HeadToUpper(name),  name
+
 		schemaHandler.Infos[i] = &common.Tag{
 			InName: InName,
 			ExName: ExName,
-			RepetitionType: *schemas[i].RepetitionType,
+
+			//i assume the 'RepetitionTypes' are handled correctly for all the structural stuff
 		}
 	}
 	schemaHandler.CreateInExMap()
@@ -445,6 +447,21 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	}
 	schemaHandler.setPathMap()
 	schemaHandler.setValueColumns()
+
+	//update Repetition types for resolved 'ValueColumns'
+	ln = int32(len(schemaHandler.ValueColumns))
+	for pos = 0 ; pos < ln; pos++ {
+		colIdx := schemaHandler.MapIndex[schemaHandler.ValueColumns[pos]]
+
+		sourceElement := schemaHandler.SchemaElements[colIdx]
+		targetInfo := schemaHandler.Infos[colIdx]
+
+		if sourceElement.Type != nil && targetInfo.Type == ""{
+			targetInfo.Type =  sourceElement.Type.String()
+		}
+
+		targetInfo.RepetitionType =  *sourceElement.RepetitionType
+	}
 
 	return schemaHandler
 }

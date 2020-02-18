@@ -26,7 +26,7 @@ func TestNewSchemaHandlerFromStruct(t *testing.T) {
 }
 
 
-func TestNewSchemaHandlerFromSchemaList(t *testing.T) {
+func TestValueColumnsSchemaElementsOfNewSchemaHandlerFromSchemaList(t *testing.T) {
 
 	//get any schema
 	sourceSchema, err := NewSchemaHandlerFromStruct(new(Student))
@@ -37,9 +37,16 @@ func TestNewSchemaHandlerFromSchemaList(t *testing.T) {
 	}
 
 	schema := NewSchemaHandlerFromSchemaList(sourceSchema.SchemaElements)
+	assert.EqualValues(t, sourceSchema.SchemaElements, schema.SchemaElements)
 
-	for path, idx := range schema.MapIndex {
-		assert.Equal(t, *schema.SchemaElements[idx].RepetitionType, schema.Infos[idx].RepetitionType, "RepetitionType of 'SchemaElements' does not match RepetitionType of 'Infos' for Element at path %s (pos %d)", path, idx)
+	for _, path := range schema.ValueColumns {
+
+		colIdx := schema.MapIndex[path]
+
+		expectedElement := sourceSchema.SchemaElements[colIdx]
+		sourceElement := schema.SchemaElements[colIdx]
+
+
+		assert.EqualValues(t, *expectedElement, *sourceElement, "initial 'SchemaElement' of schema created by struct does not match 'SchemaElement' created by list for Element at path %s (pos %d)", path, colIdx)
 	}
-
 }
