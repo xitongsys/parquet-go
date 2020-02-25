@@ -56,6 +56,16 @@ var (
 	sessLock         sync.Mutex
 )
 
+// SetActiveSession sets the current session. If this is unset, the functions
+// of this package will implicitly create a new session.Session and use that.
+// This allows you to control what session is used, particularly useful for
+// testing with a system like localstack.
+func SetActiveSession(sess *session.Session) {
+	sessLock.Lock()
+	activeS3Session = sess
+	sessLock.Unlock()
+}
+
 // NewS3FileWriter creates an S3 FileWriter, to be used with NewParquetWriter
 func NewS3FileWriter(
 	ctx context.Context,
