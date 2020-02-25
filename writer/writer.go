@@ -205,7 +205,9 @@ func (self *ParquetWriter) flushObjs() error {
 					}
 					close(doneChan)
 				}
-				doneChan <- 0
+				if _, ok := <- doneChan; ok {
+					doneChan <- 0
+				}
 			}()
 
 			if e <= b {
