@@ -2,6 +2,7 @@ package layout
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -54,8 +55,7 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 	}
 
 	delta := (ln + NP - 1) / NP
-	doneChan := make(chan int, 1)
-
+	var wg sync.WaitGroup
 	for c := int64(0); c < NP; c++ {
 		bgn := c * delta
 		end := bgn + delta
@@ -66,8 +66,10 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 			bgn, end = ln, ln
 		}
 
+		wg.Add(1)
 		go func(index int64, bgn int64, end int64) {
 			defer func() {
+				wg.Done()
 				if r := recover(); r != nil {
 					switch x := r.(type) {
 					case string:
@@ -77,7 +79,6 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 					default:
 						err = errors.New("unknown error")
 					}
-					close(doneChan)
 				}
 			}()
 
@@ -95,13 +96,10 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 				chunksList[index] = append(chunksList[index], chunk)
 				PFile.Close()
 			}
-			doneChan <- 1
 		}(c, bgn, end)
 	}
 
-	for c := int64(0); c < NP; c++ {
-		<-doneChan
-	}
+	wg.Wait()
 
 	for c := int64(0); c < NP; c++ {
 		if len(chunksList[c]) <= 0 {

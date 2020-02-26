@@ -177,11 +177,11 @@ func (self *ParquetWriter) flushObjs() error {
 	for i := 0; i < int(self.NP); i++ {
 		pagesMapList[i] = make(map[string][]*layout.Page)
 	}
-	doneChan := make(chan int)
 
 	var c int64 = 0
 	delta := (l + self.NP - 1) / self.NP
 	lock := new(sync.Mutex)
+	var wg sync.WaitGroup
 	for c = 0; c < self.NP; c++ {
 		bgn := c * delta
 		end := bgn + delta
@@ -192,8 +192,10 @@ func (self *ParquetWriter) flushObjs() error {
 			bgn, end = l, l
 		}
 
+		wg.Add(1)
 		go func(b, e int, index int64) {
 			defer func() {
+				wg.Done()
 				if r := recover(); r != nil {
 					switch x := r.(type) {
 					case string:
@@ -203,9 +205,7 @@ func (self *ParquetWriter) flushObjs() error {
 					default:
 						err = errors.New("unknown error")
 					}
-					close(doneChan)
 				}
-				doneChan <- 0
 			}()
 
 			if e <= b {
@@ -238,9 +238,7 @@ func (self *ParquetWriter) flushObjs() error {
 		}(int(bgn), int(end), c)
 	}
 
-	for c = 0; c < self.NP; c++ {
-		<-doneChan
-	}
+	wg.Wait()
 
 	for _, pagesMap := range pagesMapList {
 		for name, pages := range pagesMap {
