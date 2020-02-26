@@ -311,7 +311,7 @@ func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) err
 	dstList := make([]interface{}, self.NP)
 	delta := (int64(num) + self.NP - 1) / self.NP
 
-	doneChan = make(chan int)
+	var wg sync.WaitGroup
 	for c := int64(0); c < self.NP; c++ {
 		bgn := c * delta
 		end := bgn + delta
@@ -321,17 +321,20 @@ func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) err
 		if bgn >= int64(num) {
 			bgn, end = int64(num), int64(num)
 		}
+		wg.Add(1)
 		go func(b, e, index int) {
+			defer func(){
+				wg.Done()
+			}()
+
 			dstList[index] = reflect.New(reflect.SliceOf(ot)).Interface()
 			if err2 := marshal.Unmarshal(&tmap, b, e, dstList[index], self.SchemaHandler, prefixPath); err2 != nil {
 				err = err2
 			}
-			doneChan <- 0
 		}(int(bgn), int(end), int(c))
 	}
-	for c := int64(0); c < self.NP; c++ {
-		<-doneChan
-	}
+
+	wg.Wait()
 
 	resTmp := reflect.MakeSlice(reflect.SliceOf(ot), 0, num)
 	for _, dst := range dstList {
