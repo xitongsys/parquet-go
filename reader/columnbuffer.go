@@ -7,9 +7,9 @@ import (
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/source"
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/schema"
+	"github.com/xitongsys/parquet-go/source"
 )
 
 type ColumnBufferType struct {
@@ -117,12 +117,13 @@ func (self *ColumnBufferType) ReadPage() error {
 
 				}
 
+				self.DataTableNumRows = self.ChunkHeader.MetaData.NumValues
+
 				for self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
 					self.DataTable.Values = append(self.DataTable.Values, nil)
 					self.DataTable.RepetitionLevels = append(self.DataTable.RepetitionLevels, int32(0))
 					self.DataTable.DefinitionLevels = append(self.DataTable.DefinitionLevels, int32(0))
 					self.ChunkReadValues++
-					self.DataTableNumRows++
 				}
 			}
 
@@ -172,7 +173,7 @@ func (self *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
 			self.DictPage = page
 			return page, nil
 		}
-		
+
 		if self.DataTable == nil {
 			self.DataTable = layout.NewTableFromTable(page.DataTable)
 		}
