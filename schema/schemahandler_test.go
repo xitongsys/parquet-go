@@ -28,6 +28,8 @@ func TestNewSchemaHandlerFromStruct(t *testing.T) {
 
 func TestValueColumnsSchemaElementsOfNewSchemaHandlerFromSchemaList(t *testing.T) {
 
+	t.Skip("Obsolete")
+
 	//get any schema
 	sourceSchema, err := NewSchemaHandlerFromStruct(new(Student))
 

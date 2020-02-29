@@ -459,8 +459,6 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 		if sourceElement.Type != nil && targetInfo.Type == ""{
 			targetInfo.Type =  sourceElement.Type.String()
 		}
-
-		targetInfo.RepetitionType =  *sourceElement.RepetitionType
 	}
 
 	return schemaHandler
