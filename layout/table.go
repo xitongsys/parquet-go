@@ -11,6 +11,7 @@ func NewTableFromTable(src *Table) *Table {
 	}
 	table := new(Table)
 	table.Type = src.Type
+	table.ConvertedType = src.ConvertedType
 	table.Path = append(table.Path, src.Path...)
 	table.MaxDefinitionLevel = 0
 	table.MaxRepetitionLevel = 0
@@ -29,7 +30,9 @@ type Table struct {
 	//Repetition type of the values: REQUIRED/OPTIONAL/REPEATED
 	RepetitionType parquet.FieldRepetitionType
 	//Parquet type
-	Type parquet.Type
+	Type *parquet.Type
+	//Converted type
+	ConvertedType *parquet.ConvertedType
 	//Path of this column
 	Path []string
 	//Maximum of definition levels

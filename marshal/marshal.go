@@ -223,7 +223,8 @@ func Marshal(srcInterface []interface{}, bgn int, end int, schemaHandler *schema
 			res[pathStr].MaxDefinitionLevel, _ = schemaHandler.MaxDefinitionLevel(res[pathStr].Path)
 			res[pathStr].MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(res[pathStr].Path)
 			res[pathStr].RepetitionType = schema.GetRepetitionType()
-			res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].GetType()
+			res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].Type
+			res[pathStr].ConvertedType = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].ConvertedType
 			res[pathStr].Info = schemaHandler.Infos[i]
 		}
 	}

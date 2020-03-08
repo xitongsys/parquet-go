@@ -117,7 +117,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
 		page.MaxVal = maxVal
 		page.MinVal = minVal
-		page.DataType = dataType //check !!!
+		page.DataType = *dataType //check !!!
 		page.CompressType = compressType
 		page.Path = table.Path
 		page.Info = table.Info
@@ -212,7 +212,7 @@ func TableToDictPage(table *Table, pageSize int32, compressType parquet.Compress
 	page.DataTable.Values = table.Values
 	page.DataTable.DefinitionLevels = table.DefinitionLevels
 	page.DataTable.RepetitionLevels = table.RepetitionLevels
-	page.DataType = dataType
+	page.DataType = *dataType
 	page.CompressType = compressType
 	page.Path = table.Path
 	page.Info = table.Info
