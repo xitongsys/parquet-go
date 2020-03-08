@@ -112,7 +112,8 @@ func (self *ColumnBufferType) ReadPage() error {
 				if self.DataTable == nil {
 					index := self.SchemaHandler.MapIndex[self.PathStr]
 					self.DataTable = layout.NewEmptyTable()
-					self.DataTable.Type = self.SchemaHandler.SchemaElements[index].GetType()
+					self.DataTable.Type = self.SchemaHandler.SchemaElements[index].Type
+					self.DataTable.ConvertedType = self.SchemaHandler.SchemaElements[index].ConvertedType
 					self.DataTable.Path = common.StrToPath(self.PathStr)
 
 				}

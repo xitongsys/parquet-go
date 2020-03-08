@@ -21,7 +21,8 @@ func MarshalCSV(records []interface{}, bgn int, end int, schemaHandler *schema.S
 		res[pathStr].MaxDefinitionLevel = 1
 		res[pathStr].MaxRepetitionLevel = 0
 		res[pathStr].RepetitionType = parquet.FieldRepetitionType_OPTIONAL
-		res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].GetType()
+		res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].Type
+		res[pathStr].ConvertedType = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].ConvertedType
 		res[pathStr].Info = schemaHandler.Infos[i+1]
 
 		for j := bgn; j < end; j++ {

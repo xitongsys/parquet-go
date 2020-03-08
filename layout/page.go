@@ -11,7 +11,6 @@ import (
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/compress"
 	"github.com/xitongsys/parquet-go/encoding"
-	"github.com/xitongsys/parquet-go/types"
 	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -73,7 +72,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	res := make([]*Page, 0)
 	i := 0
 	dataType := table.Type
-	pT, cT := types.TypeNameToParquetType(table.Info.Type, table.Info.BaseType)
+	pT, cT := table.Type, table.ConvertedType
 
 	for i < totalLn {
 		j := i + 1
@@ -108,7 +107,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
 		page.MaxVal = maxVal
 		page.MinVal = minVal
-		page.DataType = dataType
+		page.DataType = *dataType
 		page.CompressType = compressType
 		page.Path = table.Path
 		page.Info = table.Info
