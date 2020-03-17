@@ -42,7 +42,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 	chunk.Pages = pages
 	chunk.ChunkHeader = parquet.NewColumnChunk()
 	metaData := parquet.NewColumnMetaData()
-	metaData.Type = pages[0].DataType
+	metaData.Type = *pages[0].DataType
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_BIT_PACKED)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN)
@@ -102,7 +102,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	chunk.Pages = pages
 	chunk.ChunkHeader = parquet.NewColumnChunk()
 	metaData := parquet.NewColumnMetaData()
-	metaData.Type = pages[1].DataType
+	metaData.Type = *pages[1].DataType
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_BIT_PACKED)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN)
