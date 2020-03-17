@@ -6,7 +6,6 @@ import (
 	"github.com/xitongsys/parquet-go/encoding"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/types"
 )
 
 //Chunk stores the ColumnChunk in parquet file
@@ -24,7 +23,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[0].MaxVal
 	var minVal interface{} = pages[0].MinVal
-	pT, cT := types.TypeNameToParquetType(pages[0].Info.Type, pages[0].Info.BaseType)
+	pT, cT := pages[0].DataType, pages[0].DataConvertedType
 
 	for i := 0; i < ln; i++ {
 		if pages[i].Header.DataPageHeader != nil {
@@ -42,7 +41,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 	chunk.Pages = pages
 	chunk.ChunkHeader = parquet.NewColumnChunk()
 	metaData := parquet.NewColumnMetaData()
-	metaData.Type = pages[0].DataType
+	metaData.Type = *pages[0].DataType
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_BIT_PACKED)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN)
@@ -81,8 +80,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[1].MaxVal
 	var minVal interface{} = pages[1].MinVal
-	pT, cT := types.TypeNameToParquetType(pages[1].Info.Type,
-		pages[1].Info.BaseType)
+	pT, cT := pages[1].DataType, pages[1].DataConvertedType
 
 	for i := 0; i < len(pages); i++ {
 		if pages[i].Header.DataPageHeader != nil {
@@ -102,7 +100,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	chunk.Pages = pages
 	chunk.ChunkHeader = parquet.NewColumnChunk()
 	metaData := parquet.NewColumnMetaData()
-	metaData.Type = pages[1].DataType
+	metaData.Type = *pages[1].DataType
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_BIT_PACKED)
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN)
