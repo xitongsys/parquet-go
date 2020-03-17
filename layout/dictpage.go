@@ -8,7 +8,6 @@ import (
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/compress"
 	"github.com/xitongsys/parquet-go/encoding"
-	"github.com/xitongsys/parquet-go/types"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -78,7 +77,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	i := 0
 	dataType := table.Type
 
-	pT, cT := types.TypeNameToParquetType(table.Info.Type, table.Info.BaseType)
+	pT, cT := table.Type, table.ConvertedType
 
 	for i < totalLn {
 		j := i
