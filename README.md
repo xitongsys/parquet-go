@@ -1,25 +1,37 @@
-# parquet-go 
+# parquet-go
+
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
+parquet-go is a pure-go implementation of reading and writing the parquet format file.
 
-parquet-go is a pure-go implementation of reading and writing the parquet format file. 
 * Support Read/Write Nested/Flat Parquet File
 * Simple to use
 * High performance
 
 ## Install
+
 Add the parquet-go library to your $GOPATH/src and install dependencies:
+
 ```sh
 go get github.com/xitongsys/parquet-go
 ```
-Look at examples in `example/`. 
+
+## Examples
+
+The `example/` directory contains several examples.
+
+The `local_flat.go` example creates some data and writes it out to the `example/output/flat.parquet` file.
+
 ```sh
 cd $GOPATH/src/github.com/xitongsys/parquet-go/example
 go run local_flat.go
 ```
 
+The `local_flat.go` code shows how it's easy to output `structs` from Go programs to Parquet files.
+
 ## Type
+
 There are two types in Parquet: Primitive Type and Logical Type. Logical types are stored as primitive types. The following list is the currently implemented data types:
 
 |Parquet Type|Primitive Type|Go Type|
@@ -52,27 +64,38 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 |MAP||map||
 
 ### Tips
-* Although DECIMAL can be stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY. 
+* Although DECIMAL can be stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY.
 
 ## Encoding
 
 #### PLAIN:
-All types  
+
+All types
+
 #### PLAIN_DICTIONARY:
-All types  
+
+All types
+
 #### DELTA_BINARY_PACKED:
-INT32, INT64, INT_8, INT_16, INT_32, INT_64, UINT_8, UINT_16, UINT_32, UINT_64, TIME_MILLIS, TIME_MICROS, TIMESTAMP_MILLIS, TIMESTAMP_MICROS  
+
+INT32, INT64, INT_8, INT_16, INT_32, INT_64, UINT_8, UINT_16, UINT_32, UINT_64, TIME_MILLIS, TIME_MICROS, TIMESTAMP_MILLIS, TIMESTAMP_MICROS
+
 #### DELTA_BYTE_ARRAY:
-BYTE_ARRAY, UTF8  
+
+BYTE_ARRAY, UTF8
+
 #### DELTA_LENGTH_BYTE_ARRAY:
+
 BYTE_ARRAY, UTF8
 
 ### Tips
+
 * Some platforms don't support all kinds of encodings. If you are not sure, just use PLAIN and PLAIN_DICTIONARY.
 * If the fields have many different values, please don't use PLAIN_DICTIONARY encoding. Because it will record all the different values in a map which will use a lot of memory.
 
 ## Repetition Type
-There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED. 
+
+There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 
 |Repetition Type|Example|Description|
 |-|-|-|
@@ -81,11 +104,12 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 |REPEATED|```V1 []int32 `parquet:"name=v1, type=INT32, repetitontype=REPEATED"` ```|Add 'repetitiontype=REPEATED' in tags|
 
 ### Tips
+
 * The difference between a List and a REPEATED variable is the 'repetitiontype' in tags. Although both of them are stored as slice in go, they are different in parquet. You can find the detail of List in parquet at [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md). I suggest just use a List.
 * For LIST and MAP, some existed parquet files use some nonstandard formats(see [here](https://github.com/apache/parquet-format/blob/master/LogicalTypes.md)). For standard format, parquet-go will convert them to go slice and go map. For nonstandard formats, parquet-go will convert them to corresponding structs.
 
-
 ## Example of Type and Encoding
+
 ```golang
 Bool              bool    `parquet:"name=bool, type=BOOLEAN"`
 Int32             int32   `parquet:"name=int32, type=INT32"`
@@ -122,8 +146,8 @@ List     []string         `parquet:"name=list, type=LIST, valuetype=UTF8"`
 Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=REPEATED"`
 ```
 
-
 ## Compression Type
+
 |Type|Support|
 |-|-|
 | CompressionCodec_UNCOMPRESSED | YES|
@@ -134,10 +158,10 @@ Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=RE
 |CompressionCodec_LZ4 |NO|
 |CompressionCodec_ZSTD|YES|
 
-
-
 ## ParquetFile
+
 Read/Write a parquet file need a ParquetFile interface implemented
+
 ```golang
 type ParquetFile interface {
 	io.Seeker
@@ -148,10 +172,13 @@ type ParquetFile interface {
 	Create(name string) (ParquetFile, error)
 }
 ```
+
 Using this interface, parquet-go can read/write parquet file on different platforms. All the file sources are at [parquet-go-source](https://github.com/xitongsys/parquet-go-source). Now it supports(local/hdfs/s3/gcs/memory).
 
 ## Writer
+
 Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
+
 * ParquetWriter is used to write predefined Golang structs.
 [Example of ParquetWriter](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
 
@@ -162,7 +189,9 @@ Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
 [Example of CSVWriter](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
 
 ## Reader
+
 Two Readers are supported: ParquetReader, ColumnReader
+
 * ParquetReader is used to read predefined Golang structs
 [Example of ParquetReader](https://github.com/xitongsys/parquet-go/blob/master/example/local_nested.go)
 
@@ -170,13 +199,15 @@ Two Readers are supported: ParquetReader, ColumnReader
 [Example of ColumnReader](https://github.com/xitongsys/parquet-go/blob/master/example/column_read.go)
 
 ### Tips
+
 * If the parquet file is very big (even the size of parquet file is small, the uncompressed size may be very large), please don't read all rows at one time, which may induce the OOM. You can read a small portion of the data at a time like a stream-oriented file.
 
-
 ## Schema
+
 There are three methods to define the schema: go struct tags, Json, CSV metadata. Only items in schema will be written and others will be ignored.
 
 ### Tag
+
 ```golang
 type Student struct {
 	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
@@ -187,11 +218,13 @@ type Student struct {
 	Day    int32   `parquet:"name=day, type=DATE"`
 }
 ```
+
 [Example of tags](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
 
-
 ### JSON
+
 JSON schema can be used to define some complicated schema, which can't be defined by tag.
+
 ```golang
 type Student struct {
 	Name    string
@@ -259,6 +292,7 @@ var jsonSchema string = `
 
 
 ### CSV metadata
+
 ```golang
 md := []string{
 	"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
@@ -268,11 +302,13 @@ md := []string{
 	"name=Sex, type=BOOLEAN",
 }
 ```
+
 [Example of CSV metadata](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
 
-
 ## Parallel
+
 Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
+
 ```golang
 func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error)
 func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error)
@@ -281,6 +317,7 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 ```
 
 ## Examples
+
 |Example file|Descriptions|
 |-|-|
 |[local_flat.go](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)|write/read parquet file with no nested struct|
@@ -298,7 +335,8 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 
 
 ## Tool
+
 * [parquet-tools](https://github.com/xitongsys/parquet-go/blob/master/tool/parquet-tools): Command line tools that aid in the inspection of Parquet files
 
-
 Please start to use it and give feedback or start it! Help is needed and anything is welcome.
+
