@@ -11,8 +11,8 @@ import (
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/compress"
 	"github.com/xitongsys/parquet-go/encoding"
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/schema"
 )
 
 //Page is used to store the page data
@@ -125,13 +125,20 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 
 //Decode dict page
 func (page *Page) Decode(dictPage *Page) {
-	if dictPage == nil {
+	if dictPage == nil || page == nil ||
+		(page.Header.DataPageHeader == nil && page.Header.DataPageHeaderV2 == nil) {
 		return
 	}
 
-	if page == nil || page.Header.DataPageHeader == nil ||
+	if page.Header.DataPageHeader != nil &&
 		(page.Header.DataPageHeader.Encoding != parquet.Encoding_RLE_DICTIONARY &&
 			page.Header.DataPageHeader.Encoding != parquet.Encoding_PLAIN_DICTIONARY) {
+		return
+	}
+
+	if page.Header.DataPageHeaderV2 != nil &&
+		(page.Header.DataPageHeaderV2.Encoding != parquet.Encoding_RLE_DICTIONARY &&
+			page.Header.DataPageHeaderV2.Encoding != parquet.Encoding_PLAIN_DICTIONARY) {
 		return
 	}
 
@@ -230,7 +237,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.MaxVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.DataType)
 		if (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_DECIMAL) ||
-		   (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
+			(page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Max = tmpBuf
@@ -238,7 +245,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.DataType)
 		if (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_DECIMAL) ||
-		   (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
+			(page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Min = tmpBuf
@@ -320,7 +327,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.MaxVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.DataType)
 		if (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_DECIMAL) ||
-		   (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
+			(page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Max = tmpBuf
@@ -328,7 +335,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.DataType)
 		if (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_DECIMAL) ||
-		   (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
+			(page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Min = tmpBuf
@@ -610,7 +617,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 	var (
 		res []interface{}
 	)
-	if cnt <= 0{
+	if cnt <= 0 {
 		return res, nil
 	}
 

@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/xitongsys/parquet-go/types"
 	"github.com/xitongsys/parquet-go/parquet"
+	. "github.com/xitongsys/parquet-go/types"
 )
 
 func TestHeadToUpper(t *testing.T) {
@@ -220,7 +220,6 @@ func TestCmp(t *testing.T) {
 
 	for _, c := range cases {
 		res := Cmp(c.numa, c.numb, c.PT, c.CT)
-		fmt.Println("====", c.PT, c.CT)
 		if res != c.expect {
 			t.Errorf("Cmp error %v-%v, %v", c.numa, c.numa, c.str)
 		}
