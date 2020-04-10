@@ -45,6 +45,9 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 			err = res.SetSchemaHandlerFromJSON(sa)
 			return res, err
 
+		} else if sa, ok := obj.([]*parquet.SchemaElement); ok {
+			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(sa)
+
 		} else {
 			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
 				return res, err
