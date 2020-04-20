@@ -234,7 +234,7 @@ func NewSchemaElementFromTagMap(info *Tag) *parquet.SchemaElement {
 		} else if typeName == "INT_64" || typeName == "UINT_64" ||
 			typeName == "TIME_MICROS" || typeName == "TIMESTAMP_MICROS" || typeName == "TIMESTAMP_MILLIS" {
 			schema.Type = parquet.TypePtr(parquet.Type_INT64)
-		} else if typeName == "UTF8" {
+		} else if typeName == "UTF8" || typeName == "JSON" || typeName == "BSON" {
 			schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
 		} else if typeName == "INTERVAL" {
 			schema.Type = parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY)
