@@ -293,7 +293,13 @@ func HeadToUpper(str string) string {
 	if ln <= 0 {
 		return str
 	}
-	return strings.ToUpper(str[0:1]) + str[1:]
+
+	c := str[0]
+	if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
+		return strings.ToUpper(str[0:1]) + str[1:]
+	}
+	//handle non-alpha prefix such as "_"
+	return "P_" + str
 }
 
 //Get the number of bits needed by the num; 0 needs 0, 1 need 1, 2 need 2, 3 need 2 ....
