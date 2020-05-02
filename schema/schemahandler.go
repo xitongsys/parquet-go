@@ -410,7 +410,7 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	schemaHandler.Infos = make([]*common.Tag, len(schemas))
 	for i := 0; i < len(schemas); i++ {
 		name := schemas[i].GetName()
-		InName, ExName := common.HeadToUpper(name),  name
+		InName, ExName := common.StringToVariableName(name),  name
 		schemaHandler.Infos[i] = &common.Tag{
 			InName: InName,
 			ExName: ExName,
