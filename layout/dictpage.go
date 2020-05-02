@@ -35,8 +35,9 @@ func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parque
 	page.DataTable = new(Table)
 	page.DataTable.Values = dictRec.DictSlice
 	dataType := parquet.Type_INT32
-	page.DataType = &dataType
-	page.DataConvertedType = nil
+	page.Schema = &parquet.SchemaElement{
+		Type: &dataType,
+	}
 	page.CompressType = compressType
 
 	page.DictPageCompress(compressType, dictRec.Type)
@@ -75,9 +76,8 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
-	dataType := table.Type
 
-	pT, cT := table.Type, table.ConvertedType
+	pT, cT := table.Schema.Type, table.Schema.ConvertedType
 
 	for i < totalLn {
 		j := i
@@ -118,8 +118,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
 		page.MaxVal = maxVal
 		page.MinVal = minVal
-
-		page.DataType = dataType //check !!!
+		page.Schema = table.Schema
 		page.CompressType = compressType
 		page.Path = table.Path
 		page.Info = table.Info
@@ -199,7 +198,6 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 func TableToDictPage(table *Table, pageSize int32, compressType parquet.CompressionCodec) (*Page, int64) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
-	pT, cT := table.Type, table.ConvertedType
 
 	page := NewDataPage()
 	page.PageSize = pageSize
@@ -214,13 +212,12 @@ func TableToDictPage(table *Table, pageSize int32, compressType parquet.Compress
 	page.DataTable.Values = table.Values
 	page.DataTable.DefinitionLevels = table.DefinitionLevels
 	page.DataTable.RepetitionLevels = table.RepetitionLevels
-	page.DataType = pT
-	page.DataConvertedType = cT
+	page.Schema = table.Schema
 	page.CompressType = compressType
 	page.Path = table.Path
 	page.Info = table.Info
 
-	page.DictPageCompress(compressType, *page.DataType)
+	page.DictPageCompress(compressType, *page.Schema.Type)
 	totSize += int64(len(page.RawData))
 	return page, totSize
 }

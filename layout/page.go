@@ -25,10 +25,8 @@ type Page struct {
 	RawData []byte
 	//Compress type: gzip/snappy/zstd/none
 	CompressType parquet.CompressionCodec
-	//Parquet type of the values in the page
-	DataType *parquet.Type
-	//Parquet converted type of values in page
-	DataConvertedType *parquet.ConvertedType
+	//Schema
+	Schema *parquet.SchemaElement
 	//Path in schema(include the root)
 	Path []string
 	//Maximum of the values
@@ -73,7 +71,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
-	pT, cT := table.Type, table.ConvertedType
+	pT, cT := table.Schema.Type, table.Schema.ConvertedType
 
 	for i < totalLn {
 		j := i + 1
@@ -108,8 +106,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
 		page.MaxVal = maxVal
 		page.MinVal = minVal
-		page.DataType = pT
-		page.DataConvertedType = cT
+		page.Schema = table.Schema
 		page.CompressType = compressType
 		page.Path = table.Path
 		page.Info = table.Info
@@ -159,7 +156,7 @@ func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 	}
 	if encodingMethod == parquet.Encoding_RLE {
 		bitWidth := page.Info.Length
-		return encoding.WriteRLEBitPackedHybrid(valuesBuf, bitWidth, *page.DataType)
+		return encoding.WriteRLEBitPackedHybrid(valuesBuf, bitWidth, *page.Schema.Type)
 
 	} else if encodingMethod == parquet.Encoding_DELTA_BINARY_PACKED {
 		return encoding.WriteDelta(valuesBuf)
@@ -171,7 +168,7 @@ func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 		return encoding.WriteDeltaLengthByteArray(valuesBuf)
 
 	} else {
-		return encoding.WritePlain(valuesBuf, *page.DataType)
+		return encoding.WritePlain(valuesBuf, *page.Schema.Type)
 	}
 	return []byte{}
 }
@@ -235,17 +232,19 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.DataType)
-		if (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_DECIMAL) ||
-			(page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
+		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
+		// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+		// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Max = tmpBuf
 	}
 	if page.MinVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.DataType)
-		if (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_DECIMAL) ||
-			(page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
+		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
+		// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+		// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Min = tmpBuf
@@ -325,17 +324,19 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 
 	page.Header.DataPageHeaderV2.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.DataType)
-		if (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_DECIMAL) ||
-			(page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
+		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
+		// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+		// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Max = tmpBuf
 	}
 	if page.MinVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.DataType)
-		if (page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_DECIMAL) ||
-			(page.DataConvertedType != nil && *page.DataConvertedType == parquet.ConvertedType_UTF8) {
+		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
+		// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+		// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Min = tmpBuf
@@ -406,9 +407,7 @@ func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *sch
 	page.Path = append(page.Path, colMetaData.GetPathInSchema()...)
 	pathIndex := schemaHandler.MapIndex[common.PathToStr(page.Path)]
 	schema := schemaHandler.SchemaElements[pathIndex]
-	pT, cT := schema.GetType(), schema.GetConvertedType()
-	page.DataType = &pT
-	page.DataConvertedType = &cT
+	page.Schema = schema
 	return page, nil
 }
 
@@ -550,7 +549,7 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 	case parquet.PageType_DICTIONARY_PAGE:
 		bytesReader := bytes.NewReader(self.RawData)
 		self.DataTable.Values, err = encoding.ReadPlain(bytesReader,
-			*self.DataType,
+			*self.Schema.Type,
 			uint64(self.Header.DictionaryPageHeader.GetNumValues()),
 			0)
 		if err != nil {
@@ -581,7 +580,7 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 
 		values, err = ReadDataPageValues(bytesReader,
 			encodingType,
-			*self.DataType,
+			*self.Schema.Type,
 			ct,
 			uint64(len(self.DataTable.DefinitionLevels))-numNulls,
 			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))

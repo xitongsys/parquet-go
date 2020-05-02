@@ -42,8 +42,7 @@ func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *schema.Schem
 			res[pathStr].MaxDefinitionLevel, _ = schemaHandler.MaxDefinitionLevel(res[pathStr].Path)
 			res[pathStr].MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(res[pathStr].Path)
 			res[pathStr].RepetitionType = schema.GetRepetitionType()
-			res[pathStr].Type = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].Type
-			res[pathStr].ConvertedType = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]].ConvertedType
+			res[pathStr].Schema =  schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
 			res[pathStr].Info = schemaHandler.Infos[i]
 		}
 	}
