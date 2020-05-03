@@ -1,4 +1,4 @@
-module parquet-go-source
+module github.com/xitongsys/parquet-go-source
 
 go 1.14
 
