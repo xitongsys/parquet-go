@@ -2,6 +2,7 @@ package encoding
 
 import (
 	"bytes"
+	"encoding/binary"
 	"reflect"
 
 	"github.com/xitongsys/parquet-go/common"
@@ -101,14 +102,21 @@ func WritePlainDOUBLE(nums []interface{}) []byte {
 }
 
 func WritePlainBYTE_ARRAY(arrays []interface{}) []byte {
-	bufWriter := new(bytes.Buffer)
-	cnt := len(arrays)
-	for i := 0; i < int(cnt); i++ {
-		ln := int32(len(arrays[i].(string)))
-		BinaryWriteINT32(bufWriter, []interface{}{ln})
-		bufWriter.WriteString(arrays[i].(string))
+	bufLen := 0
+	for i := 0; i < len(arrays); i++ {
+		bufLen += 4 + len(arrays[i].(string))
 	}
-	return bufWriter.Bytes()
+
+	buf := make([]byte, bufLen)
+	pos := 0
+	for i := 0; i < len(arrays); i++ {
+		value := arrays[i].(string)
+		binary.LittleEndian.PutUint32(buf[pos:], uint32(len(value)))
+		pos += 4
+		copy(buf[pos:pos+len(value)], value)
+		pos += len(value)
+	}
+	return buf
 }
 
 func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []interface{}) []byte {
