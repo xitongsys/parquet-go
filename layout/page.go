@@ -178,7 +178,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	ln := len(page.DataTable.DefinitionLevels)
 
 	//values////////////////////////////////////////////
-	valuesBuf := make([]interface{}, 0)
+	valuesBuf := make([]interface{}, 0, ln)
 	for i := 0; i < ln; i++ {
 		if page.DataTable.DefinitionLevels[i] == page.DataTable.MaxDefinitionLevel {
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
@@ -212,7 +212,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	}
 
 	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
-	var dataBuf []byte
+	dataBuf := make([]byte, 0, len(repetitionLevelBuf) + len(definitionLevelBuf) + len(valuesRawBuf))
 	dataBuf = append(dataBuf, repetitionLevelBuf...)
 	dataBuf = append(dataBuf, definitionLevelBuf...)
 	dataBuf = append(dataBuf, valuesRawBuf...)
@@ -254,9 +254,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
 
-	var res []byte
-	res = append(res, pageHeaderBuf...)
-	res = append(res, dataEncodeBuf...)
+	res := append(pageHeaderBuf, dataEncodeBuf...)
 	page.RawData = res
 
 	return res
