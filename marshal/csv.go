@@ -3,8 +3,8 @@ package marshal
 import (
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/schema"
 )
 
 //Marshal function for CSV like data
@@ -16,23 +16,28 @@ func MarshalCSV(records []interface{}, bgn int, end int, schemaHandler *schema.S
 
 	for i := 0; i < len(records[0].([]interface{})); i++ {
 		pathStr := schemaHandler.GetRootInName() + "." + schemaHandler.Infos[i+1].InName
-		res[pathStr] = layout.NewEmptyTable()
-		res[pathStr].Path = common.StrToPath(pathStr)
-		res[pathStr].MaxDefinitionLevel = 1
-		res[pathStr].MaxRepetitionLevel = 0
-		res[pathStr].RepetitionType = parquet.FieldRepetitionType_OPTIONAL
-		res[pathStr].Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
-		res[pathStr].Info = schemaHandler.Infos[i+1]
+		table := layout.NewEmptyTable()
+		res[pathStr] = table
+		table.Path = common.StrToPath(pathStr)
+		table.MaxDefinitionLevel = 1
+		table.MaxRepetitionLevel = 0
+		table.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
+		table.Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
+		table.Info = schemaHandler.Infos[i+1]
+		// Pre-allocate these arrays for efficiency
+		table.Values = make([]interface{}, 0, end-bgn)
+		table.RepetitionLevels = make([]int32, 0, end-bgn)
+		table.DefinitionLevels = make([]int32, 0, end-bgn)
 
 		for j := bgn; j < end; j++ {
 			rec := records[j].([]interface{})[i]
-			res[pathStr].Values = append(res[pathStr].Values, rec)
-			res[pathStr].RepetitionLevels = append(res[pathStr].RepetitionLevels, 0)
+			table.Values = append(table.Values, rec)
+			table.RepetitionLevels = append(table.RepetitionLevels, 0)
 
 			if rec == nil {
-				res[pathStr].DefinitionLevels = append(res[pathStr].DefinitionLevels, 0)
+				table.DefinitionLevels = append(table.DefinitionLevels, 0)
 			} else {
-				res[pathStr].DefinitionLevels = append(res[pathStr].DefinitionLevels, 1)
+				table.DefinitionLevels = append(table.DefinitionLevels, 1)
 			}
 		}
 	}
