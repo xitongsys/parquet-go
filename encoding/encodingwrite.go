@@ -378,7 +378,7 @@ func WriteDeltaLengthByteArray(arrays []interface{}) []byte {
 
 	for i := 0; i < ln; i++ {
 		array := reflect.ValueOf(arrays[i]).String()
-		res = append(res, []byte(array)...)
+		res = append(res, array...)
 	}
 	return res
 }
