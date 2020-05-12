@@ -368,15 +368,13 @@ func WriteDeltaINT64(nums []interface{}) []byte {
 
 func WriteDeltaLengthByteArray(arrays []interface{}) []byte {
 	ln := len(arrays)
-	res := make([]byte, 0)
 	lengthArray := make([]interface{}, ln)
 	for i := 0; i < ln; i++ {
 		array := reflect.ValueOf(arrays[i]).String()
 		lengthArray[i] = int32(len(array))
 	}
 
-	lengthBuf := WriteDeltaINT32(lengthArray)
-	res = append(res, lengthBuf...)
+	res := WriteDeltaINT32(lengthArray)
 
 	for i := 0; i < ln; i++ {
 		array := reflect.ValueOf(arrays[i]).String()
