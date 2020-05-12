@@ -551,19 +551,17 @@ func SizeOf(val reflect.Value) int64 {
 			size += SizeOf(val.MapIndex(keys[i]))
 		}
 		return size
-	}
-	switch val.Type().Name() {
-	case "bool":
+	case reflect.Bool:
 		return 1
-	case "int32":
+	case reflect.Int32:
 		return 4
-	case "int64":
+	case reflect.Int64:
 		return 8
-	case "string":
+	case reflect.String:
 		return int64(val.Len())
-	case "float32":
+	case reflect.Float32:
 		return 4
-	case "float64":
+	case reflect.Float64:
 		return 8
 	}
 	return 4
