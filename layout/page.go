@@ -178,11 +178,22 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	ln := len(page.DataTable.DefinitionLevels)
 
 	//values////////////////////////////////////////////
-	valuesBuf := make([]interface{}, 0, ln)
+	// valuesBuf == nil means "up to i, every item in DefinitionLevels was
+	// MaxDefinitionLevel". This lets us avoid allocating the array for the
+	// (somewhat) common case of "all values present".
+	var valuesBuf []interface{}
 	for i := 0; i < ln; i++ {
 		if page.DataTable.DefinitionLevels[i] == page.DataTable.MaxDefinitionLevel {
-			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
+			if valuesBuf != nil {
+				valuesBuf = append(valuesBuf, page.DataTable.Values[i])
+			}
+		} else if valuesBuf == nil {
+			valuesBuf = make([]interface{}, i, ln)
+			copy(valuesBuf[:i], page.DataTable.Values[:i])
 		}
+	}
+	if valuesBuf == nil {
+		valuesBuf = page.DataTable.Values
 	}
 	//valuesRawBuf := encoding.WritePlain(valuesBuf)
 	valuesRawBuf := page.EncodingValues(valuesBuf)
