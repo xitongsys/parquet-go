@@ -219,7 +219,8 @@ func TestCmp(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		res := Cmp(c.numa, c.numb, c.PT, c.CT)
+		funcTable := FindFuncTable(c.PT, c.CT)
+		res := funcTable.LessThan(c.numa, c.numb)
 		if res != c.expect {
 			t.Errorf("Cmp error %v-%v, %v", c.numa, c.numa, c.str)
 		}
@@ -239,7 +240,8 @@ func TestMax(t *testing.T) {
 		{int32(1), int32(2), parquet.TypePtr(parquet.Type_INT32), nil, int32(2)},
 	}
 	for _, data := range testData {
-		res := Max(data.Num1, data.Num2, data.PT, data.CT)
+		funcTable := FindFuncTable(data.PT, data.CT)
+		res := Max(funcTable, data.Num1, data.Num2)
 		if res != data.Expected {
 			t.Errorf("Max err, expect %v, get %v", data.Expected, res)
 		}
@@ -259,7 +261,8 @@ func TestMin(t *testing.T) {
 		{int32(1), int32(2), parquet.TypePtr(parquet.Type_INT32), nil, int32(1)},
 	}
 	for _, data := range testData {
-		res := Min(data.Num1, data.Num2, data.PT, data.CT)
+		funcTable := FindFuncTable(data.PT, data.CT)
+		res := Min(funcTable, data.Num1, data.Num2)
 		if res != data.Expected {
 			t.Errorf("Min err, expect %v, get %v", data.Expected, res)
 		}

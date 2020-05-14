@@ -295,9 +295,9 @@ func StringToVariableName(str string) string {
 	}
 
 	name := ""
-	for i := 0; i<ln; i++ {
+	for i := 0; i < ln; i++ {
 		c := str[i]
-		if (c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || c == '_' {
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' {
 			name += string(c)
 
 		} else {
@@ -393,136 +393,216 @@ func CmpIntBinary(as string, bs string, order string, signed bool) bool {
 	return false
 }
 
-//Compare two values:
-//a<b return true
-//a>=b return false
-func Cmp(ai interface{}, bi interface{}, pT *parquet.Type, cT *parquet.ConvertedType) bool {
-	if ai == nil && bi != nil {
-		return true
-	} else if ai == nil && bi == nil {
-		return false
-	} else if ai != nil && bi == nil {
-		return false
-	}
-
+func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType) FuncTable {
 	if cT == nil {
 		if *pT == parquet.Type_BOOLEAN {
-			a, b := ai.(bool), bi.(bool)
-			if !a && b {
-				return true
-			}
-			return false
+			return boolFuncTable{}
 		} else if *pT == parquet.Type_INT32 {
-			return ai.(int32) < bi.(int32)
-
+			return int32FuncTable{}
 		} else if *pT == parquet.Type_INT64 {
-			return ai.(int64) < bi.(int64)
-
+			return int64FuncTable{}
 		} else if *pT == parquet.Type_INT96 {
-			a, b := []byte(ai.(string)), []byte(bi.(string))
-			fa, fb := a[11]>>7, b[11]>>7
-			if fa > fb {
-				return true
-			} else if fa < fb {
-				return false
-			}
-			for i := 11; i >= 0; i-- {
-				if a[i] < b[i] {
-					return true
-				} else if a[i] > b[i] {
-					return false
-				}
-			}
-			return false
-
+			return int96FuncTable{}
 		} else if *pT == parquet.Type_FLOAT {
-			return ai.(float32) < bi.(float32)
-
+			return float32FuncTable{}
 		} else if *pT == parquet.Type_DOUBLE {
-			return ai.(float64) < bi.(float64)
-
+			return float64FuncTable{}
 		} else if *pT == parquet.Type_BYTE_ARRAY {
-			return ai.(string) < bi.(string)
-
+			return stringFuncTable{}
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			return ai.(string) < bi.(string)
+			return stringFuncTable{}
 		}
 	}
 
 	if *cT == parquet.ConvertedType_UTF8 || *cT == parquet.ConvertedType_BSON || *cT == parquet.ConvertedType_JSON {
-		return ai.(string) < bi.(string)
-
+		return stringFuncTable{}
 	} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
 		*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
-		return ai.(int32) < bi.(int32)
-
+		return int32FuncTable{}
 	} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
-		return uint32(ai.(int32)) < uint32(bi.(int32))
-
+		return uint32FuncTable{}
 	} else if *cT == parquet.ConvertedType_INT_64 || *cT == parquet.ConvertedType_TIME_MICROS ||
 		*cT == parquet.ConvertedType_TIMESTAMP_MILLIS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS {
-		return ai.(int64) < bi.(int64)
-
+		return int64FuncTable{}
 	} else if *cT == parquet.ConvertedType_UINT_64 {
-		return uint64(ai.(int64)) < uint64(bi.(int64))
-
+		return uint64FuncTable{}
 	} else if *cT == parquet.ConvertedType_INTERVAL {
-		a, b := []byte(ai.(string)), []byte(bi.(string))
-		for i := 11; i >= 0; i-- {
-			if a[i] > b[i] {
-				return false
-			} else if a[i] < b[i] {
-				return true
-			}
-		}
-		return false
-
+		return intervalFuncTable{}
 	} else if *cT == parquet.ConvertedType_DECIMAL {
-		if *pT == parquet.Type_BYTE_ARRAY {
-			as, bs := ai.(string), bi.(string)
-			return CmpIntBinary(as, bs, "BigEndian", true)
-
-		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			as, bs := ai.(string), bi.(string)
-			return CmpIntBinary(as, bs, "BigEndian", true)
-
+		if *pT == parquet.Type_BYTE_ARRAY || *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			return decimalStringFuncTable{}
 		} else if *pT == parquet.Type_INT32 {
-			return ai.(int32) < bi.(int32)
-
+			return int32FuncTable{}
 		} else if *pT == parquet.Type_INT64 {
-			return ai.(int64) < bi.(int64)
+			return int64FuncTable{}
+		}
+	}
+	panic("No known func table in FindFuncTable")
+}
 
+type FuncTable interface {
+	LessThan(a interface{}, b interface{}) bool
+	MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32)
+}
+
+func Min(table FuncTable, a interface{}, b interface{}) interface{} {
+	if a == nil {
+		return b
+	}
+	if b == nil {
+		return a
+	}
+	if table.LessThan(a, b) {
+		return a
+	} else {
+		return b
+	}
+}
+
+func Max(table FuncTable, a interface{}, b interface{}) interface{} {
+	if a == nil {
+		return b
+	}
+	if b == nil {
+		return a
+	}
+	if table.LessThan(a, b) {
+		return b
+	} else {
+		return a
+	}
+}
+
+type boolFuncTable struct{}
+
+func (_ boolFuncTable) LessThan(a interface{}, b interface{}) bool {
+	return !a.(bool) && b.(bool)
+}
+
+func (table boolFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), 1
+}
+
+type int32FuncTable struct{}
+
+func (_ int32FuncTable) LessThan(a interface{}, b interface{}) bool {
+	return a.(int32) < b.(int32)
+}
+
+func (table int32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), 4
+}
+
+type uint32FuncTable struct{}
+
+func (_ uint32FuncTable) LessThan(a interface{}, b interface{}) bool {
+	return uint32(a.(int32)) < uint32(b.(int32))
+}
+
+func (table uint32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), 4
+}
+
+type int64FuncTable struct{}
+
+func (_ int64FuncTable) LessThan(a interface{}, b interface{}) bool {
+	return a.(int64) < b.(int64)
+}
+
+func (table int64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), 8
+}
+
+type uint64FuncTable struct{}
+
+func (_ uint64FuncTable) LessThan(a interface{}, b interface{}) bool {
+	return uint64(a.(int64)) < uint64(b.(int64))
+}
+
+func (table uint64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), 8
+}
+
+type int96FuncTable struct{}
+
+func (_ int96FuncTable) LessThan(ai interface{}, bi interface{}) bool {
+	a, b := []byte(ai.(string)), []byte(bi.(string))
+	fa, fb := a[11]>>7, b[11]>>7
+	if fa > fb {
+		return true
+	} else if fa < fb {
+		return false
+	}
+	for i := 11; i >= 0; i-- {
+		if a[i] < b[i] {
+			return true
+		} else if a[i] > b[i] {
+			return false
 		}
 	}
 	return false
 }
 
-//Get the maximum of two parquet values
-func Max(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
-	if a == nil {
-		return b
-	}
-	if b == nil {
-		return a
-	}
-	if Cmp(a, b, pT, cT) {
-		return b
-	}
-	return a
+func (table int96FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), int32(len(val.(string)))
 }
 
-//Get the minimum of two parquet values
-func Min(a interface{}, b interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
-	if a == nil {
-		return b
+type float32FuncTable struct{}
+
+func (_ float32FuncTable) LessThan(a interface{}, b interface{}) bool {
+	return a.(float32) < b.(float32)
+}
+
+func (table float32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), 4
+}
+
+type float64FuncTable struct{}
+
+func (_ float64FuncTable) LessThan(a interface{}, b interface{}) bool {
+	return a.(float64) < b.(float64)
+}
+
+func (table float64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), 8
+}
+
+type stringFuncTable struct{}
+
+func (_ stringFuncTable) LessThan(a interface{}, b interface{}) bool {
+	return a.(string) < b.(string)
+}
+
+func (table stringFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), int32(len(val.(string)))
+}
+
+type intervalFuncTable struct{}
+
+func (_ intervalFuncTable) LessThan(ai interface{}, bi interface{}) bool {
+	a, b := []byte(ai.(string)), []byte(bi.(string))
+	for i := 11; i >= 0; i-- {
+		if a[i] > b[i] {
+			return false
+		} else if a[i] < b[i] {
+			return true
+		}
 	}
-	if b == nil {
-		return a
-	}
-	if Cmp(a, b, pT, cT) {
-		return a
-	}
-	return b
+	return false
+}
+
+func (table intervalFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), int32(len(val.(string)))
+}
+
+type decimalStringFuncTable struct{}
+
+func (_ decimalStringFuncTable) LessThan(a interface{}, b interface{}) bool {
+	return CmpIntBinary(a.(string), b.(string), "BigEndian", true)
+}
+
+func (table decimalStringFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+	return Min(table, minVal, val), Max(table, maxVal, val), int32(len(val.(string)))
 }
 
 //Get the size of a parquet value

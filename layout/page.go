@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/apache/thrift/lib/go/thrift"
@@ -81,12 +80,14 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		var maxVal interface{} = table.Values[i]
 		var minVal interface{} = table.Values[i]
 
+		funcTable := common.FindFuncTable(pT, cT)
+
 		for j < totalLn && size < pageSize {
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
-				size += int32(common.SizeOf(reflect.ValueOf(table.Values[j])))
-				maxVal = common.Max(maxVal, table.Values[j], pT, cT)
-				minVal = common.Min(minVal, table.Values[j], pT, cT)
+				var elSize int32
+				minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
+				size += elSize
 			}
 			j++
 		}

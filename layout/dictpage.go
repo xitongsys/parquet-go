@@ -2,7 +2,6 @@ package layout
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
@@ -88,12 +87,14 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		var minVal interface{} = table.Values[i]
 		values := make([]interface{}, 0)
 
+		funcTable := common.FindFuncTable(pT, cT)
+
 		for j < totalLn && size < pageSize {
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
-				size += int32(common.SizeOf(reflect.ValueOf(table.Values[j])))
-				maxVal = common.Max(maxVal, table.Values[j], pT, cT)
-				minVal = common.Min(minVal, table.Values[j], pT, cT)
+				var elSize int32
+				minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
+				size += elSize
 				if _, ok := dictRec.DictMap[table.Values[j]]; !ok {
 					dictRec.DictSlice = append(dictRec.DictSlice, table.Values[j])
 					dictRec.DictMap[table.Values[j]] = int32(len(dictRec.DictSlice) - 1)
