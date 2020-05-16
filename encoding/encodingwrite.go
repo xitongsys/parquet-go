@@ -3,9 +3,9 @@ package encoding
 import (
 	"bytes"
 	"encoding/binary"
+	"math/bits"
 	"reflect"
 
-	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -129,7 +129,7 @@ func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []interface{}) []byte {
 }
 
 func WriteUnsignedVarInt(num uint64) []byte {
-	byteNum := (common.BitNum(uint64(num)) + 6) / 7
+	byteNum := (bits.Len64(uint64(num)) + 6) / 7
 	if byteNum == 0 {
 		return make([]byte, 1)
 	}
@@ -326,7 +326,7 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 					maxValue = blockBuf[k].(int32)
 				}
 			}
-			bitWidths[j] = byte(common.BitNum(uint64(maxValue)))
+			bitWidths[j] = byte(bits.Len32(uint32(maxValue)))
 		}
 
 		var minDeltaZigZag uint64 = uint64((minDelta >> 31) ^ (minDelta << 1))
@@ -384,7 +384,7 @@ func WriteDeltaINT64(nums []interface{}) []byte {
 					maxValue = blockBuf[k].(int64)
 				}
 			}
-			bitWidths[j] = byte(common.BitNum(uint64(maxValue)))
+			bitWidths[j] = byte(bits.Len64(uint64(maxValue)))
 		}
 
 		var minDeltaZigZag uint64 = uint64((minDelta >> 63) ^ (minDelta << 1))

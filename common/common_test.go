@@ -30,26 +30,6 @@ func TestHeadToUpper(t *testing.T) {
 	}
 }
 
-func TestBitNum(t *testing.T) {
-	testData := []struct {
-		Num      uint64
-		Expected uint64
-	}{
-		{0, 0},
-		{1, 1},
-		{2, 2},
-		{3, 2},
-		{8, 4},
-	}
-
-	for _, data := range testData {
-		res := BitNum(data.Num)
-		if res != data.Expected {
-			t.Errorf("BitNum err, expect %v, get %v", data.Expected, res)
-		}
-	}
-}
-
 func TestCmpIntBinary(t *testing.T) {
 	cases := []struct {
 		numa int32

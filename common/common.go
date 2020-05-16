@@ -324,15 +324,6 @@ func HeadToUpper(str string) string {
 	return "P_" + str
 }
 
-//Get the number of bits needed by the num; 0 needs 0, 1 need 1, 2 need 2, 3 need 2 ....
-func BitNum(num uint64) uint64 {
-	var bitn uint64 = 0
-	for ; num != 0; num >>= 1 {
-		bitn++
-	}
-	return bitn
-}
-
 func CmpIntBinary(as string, bs string, order string, signed bool) bool {
 	abs, bbs := []byte(as), []byte(bs)
 	la, lb := len(abs), len(bbs)

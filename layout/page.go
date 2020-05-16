@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math/bits"
 	"strings"
 
 	"github.com/apache/thrift/lib/go/thrift"
@@ -171,7 +172,6 @@ func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 	} else {
 		return encoding.WritePlain(valuesBuf, *page.Schema.Type)
 	}
-	return []byte{}
 }
 
 //Compress the data page to parquet file
@@ -204,7 +204,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.DataTable.MaxDefinitionLevel > 0 {
 		definitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
 			page.DataTable.DefinitionLevels,
-			int32(common.BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
+			int32(bits.Len32(uint32(page.DataTable.MaxDefinitionLevel))))
 	}
 
 	//repetitionLevel/////////////////////////////////
@@ -212,7 +212,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.DataTable.MaxRepetitionLevel > 0 {
 		repetitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
 			page.DataTable.RepetitionLevels,
-			int32(common.BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
+			int32(bits.Len32(uint32(page.DataTable.MaxRepetitionLevel))))
 	}
 
 	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
@@ -286,7 +286,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 			numInterfaces[i] = int64(page.DataTable.DefinitionLevels[i])
 		}
 		definitionLevelBuf = encoding.WriteRLE(numInterfaces,
-			int32(common.BitNum(uint64(page.DataTable.MaxDefinitionLevel))),
+			int32(bits.Len32(uint32(page.DataTable.MaxDefinitionLevel))),
 			parquet.Type_INT64)
 	}
 
@@ -302,7 +302,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 			}
 		}
 		repetitionLevelBuf = encoding.WriteRLE(numInterfaces,
-			int32(common.BitNum(uint64(page.DataTable.MaxRepetitionLevel))),
+			int32(bits.Len32(uint32(page.DataTable.MaxRepetitionLevel))),
 			parquet.Type_INT64)
 	}
 
@@ -463,7 +463,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 
 		var repetitionLevels, definitionLevels []interface{}
 		if maxRepetitionLevel > 0 {
-			bitWidth := common.BitNum(uint64(maxRepetitionLevel))
+			bitWidth := uint64(bits.Len32(uint32(maxRepetitionLevel)))
 			if repetitionLevels, err = ReadDataPageValues(bytesReader,
 				parquet.Encoding_RLE,
 				parquet.Type_INT64,
@@ -483,7 +483,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 		}
 
 		if maxDefinitionLevel > 0 {
-			bitWidth := common.BitNum(uint64(maxDefinitionLevel))
+			bitWidth := uint64(bits.Len32(uint32(maxDefinitionLevel)))
 
 			definitionLevels, err = ReadDataPageValues(bytesReader,
 				parquet.Encoding_RLE,
@@ -805,7 +805,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 
 		var repetitionLevels []interface{}
 		if maxRepetitionLevel > 0 {
-			bitWidth := common.BitNum(uint64(maxRepetitionLevel))
+			bitWidth := uint64(bits.Len32(uint32(maxRepetitionLevel)))
 
 			repetitionLevels, err = ReadDataPageValues(bytesReader,
 				parquet.Encoding_RLE,
@@ -829,7 +829,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 
 		var definitionLevels []interface{}
 		if maxDefinitionLevel > 0 {
-			bitWidth := common.BitNum(uint64(maxDefinitionLevel))
+			bitWidth := uint64(bits.Len32(uint32(maxDefinitionLevel)))
 
 			definitionLevels, err = ReadDataPageValues(bytesReader,
 				parquet.Encoding_RLE,

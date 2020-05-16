@@ -2,9 +2,9 @@ package encoding
 
 import (
 	"encoding/json"
+	"math/bits"
 	"testing"
 
-	. "github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -77,7 +77,7 @@ func TestWriteRLE(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := WriteRLE(data.nums, int32(BitNum(uint64(data.nums[len(data.nums)-1].(int64)))), parquet.Type_INT64)
+		res := WriteRLE(data.nums, int32(bits.Len64(uint64(data.nums[len(data.nums)-1].(int64)))), parquet.Type_INT64)
 		if string(res) != string(data.expected) {
 			t.Errorf("WriteRLE error, expect %v, get %v", data.expected, res)
 		}
@@ -94,7 +94,7 @@ func TestWriteBitPacked(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := WriteBitPacked(data.nums, int64(BitNum(uint64(data.nums[len(data.nums)-1].(int)))), true)
+		res := WriteBitPacked(data.nums, int64(bits.Len64(uint64(data.nums[len(data.nums)-1].(int)))), true)
 		if string(res) != string(data.expected) {
 			t.Errorf("WriteRLE error, expect %v, get %v", data.expected, res)
 		}
