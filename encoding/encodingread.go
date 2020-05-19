@@ -333,12 +333,17 @@ func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) ([]interface{}, error) 
 	}
 	res = make([]interface{}, len(lengths))
 	for i := 0; i < len(lengths); i++ {
-		cur, err := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, uint64(lengths[i].(int64)))
-		if err != nil {
-			return res, err
+		res[i] = ""
+		length := uint64(lengths[i].(int64))
+		if length > 0 {
+			cur, err := ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, 1, length)
+			if err != nil {
+				return res, err
+			}
+			res[i] = cur[0]
 		}
-		res[i] = cur[0]
 	}
+	
 	return res, err
 }
 
