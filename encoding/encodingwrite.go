@@ -179,6 +179,39 @@ func WriteRLEBitPackedHybrid(vals []interface{}, bitWidths int32, pt parquet.Typ
 	return res
 }
 
+func WriteRLEInt32(vals []int32, bitWidth int32) []byte {
+	ln := len(vals)
+	i := 0
+	res := make([]byte, 0)
+	for i < ln {
+		j := i + 1
+		for j < ln && vals[j] == vals[i] {
+			j++
+		}
+		num := j - i
+		header := num << 1
+		byteNum := (bitWidth + 7) / 8
+		headerBuf := WriteUnsignedVarInt(uint64(header))
+
+		var valBuf [4]byte
+		binary.LittleEndian.PutUint32(valBuf[:], uint32(vals[i]))
+
+		res = append(res, headerBuf...)
+		res = append(res, valBuf[:byteNum]...)
+		i = j
+	}
+	return res
+}
+
+func WriteRLEBitPackedHybridInt32(vals []int32, bitWidths int32) []byte {
+	rleBuf := WriteRLEInt32(vals, bitWidths)
+	res := make([]byte, 0)
+	lenBuf := WritePlain([]interface{}{int32(len(rleBuf))}, parquet.Type_INT32)
+	res = append(res, lenBuf...)
+	res = append(res, rleBuf...)
+	return res
+}
+
 func WriteBitPacked(vals []interface{}, bitWidth int64, ifHeader bool) []byte {
 	ln := len(vals)
 	if ln <= 0 {

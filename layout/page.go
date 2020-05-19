@@ -202,25 +202,17 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	//definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
 	if page.DataTable.MaxDefinitionLevel > 0 {
-		numInterfaces := make([]interface{}, ln)
-		for i := 0; i < ln; i++ {
-			numInterfaces[i] = int64(page.DataTable.DefinitionLevels[i])
-		}
-		definitionLevelBuf = encoding.WriteRLEBitPackedHybrid(numInterfaces,
-			int32(common.BitNum(uint64(page.DataTable.MaxDefinitionLevel))),
-			parquet.Type_INT64)
+		definitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
+			page.DataTable.DefinitionLevels,
+			int32(common.BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
 	}
 
 	//repetitionLevel/////////////////////////////////
 	var repetitionLevelBuf []byte
 	if page.DataTable.MaxRepetitionLevel > 0 {
-		numInterfaces := make([]interface{}, ln)
-		for i := 0; i < ln; i++ {
-			numInterfaces[i] = int64(page.DataTable.RepetitionLevels[i])
-		}
-		repetitionLevelBuf = encoding.WriteRLEBitPackedHybrid(numInterfaces,
-			int32(common.BitNum(uint64(page.DataTable.MaxRepetitionLevel))),
-			parquet.Type_INT64)
+		repetitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
+			page.DataTable.RepetitionLevels,
+			int32(common.BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
 	}
 
 	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
