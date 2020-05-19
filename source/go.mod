@@ -9,5 +9,4 @@ require (
 	github.com/golang/mock v1.4.3
 	github.com/spf13/afero v1.2.2
 	github.com/xitongsys/parquet-go v1.5.1
-	github.com/xitongsys/parquet-go-source v0.0.0-20200326031722-42b453e70c3b
 )

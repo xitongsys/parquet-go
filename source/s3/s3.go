@@ -82,9 +82,22 @@ func NewS3FileWriter(
 		sessLock.Unlock()
 	}
 
+	return NewS3FileWriterWithClient(
+		ctx, s3.New(activeS3Session, cfgs...), bucket, key, uploaderOptions)
+}
+
+// NewS3FileWriterWithClient is the same as NewS3FileWriter but allows passing
+// your own S3 client.
+func NewS3FileWriterWithClient(
+	ctx context.Context,
+	s3Client s3iface.S3API,
+	bucket string,
+	key string,
+	uploaderOptions []func(*s3manager.Uploader),
+) (source.ParquetFile, error) {
 	file := &S3File{
 		ctx:             ctx,
-		client:          s3.New(activeS3Session, cfgs...),
+		client:          s3Client,
 		writeDone:       make(chan error),
 		uploaderOptions: uploaderOptions,
 		BucketName:      bucket,
@@ -104,7 +117,12 @@ func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aw
 		sessLock.Unlock()
 	}
 
-	s3Client := s3.New(activeS3Session, cfgs...)
+	return NewS3FileReaderWithClient(ctx, s3.New(activeS3Session, cfgs...), bucket, key)
+}
+
+// NewS3FileReaderWithClient is the same as NewS3FileReader but allows passing
+// your own S3 client
+func NewS3FileReaderWithClient(ctx context.Context, s3Client s3iface.S3API, bucket string, key string) (source.ParquetFile, error) {
 	s3Downloader := s3manager.NewDownloaderWithClient(s3Client)
 
 	file := &S3File{
