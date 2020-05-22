@@ -95,11 +95,14 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 				var elSize int32
 				minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
 				size += elSize
-				if _, ok := dictRec.DictMap[table.Values[j]]; !ok {
+				if idx, ok := dictRec.DictMap[table.Values[j]]; ok {
+					values = append(values, idx)
+				} else {
 					dictRec.DictSlice = append(dictRec.DictSlice, table.Values[j])
-					dictRec.DictMap[table.Values[j]] = int32(len(dictRec.DictSlice) - 1)
+					idx := int32(len(dictRec.DictSlice) - 1)
+					dictRec.DictMap[table.Values[j]] = idx
+					values = append(values, idx)
 				}
-				values = append(values, int32(dictRec.DictMap[table.Values[j]]))
 			}
 			j++
 		}
