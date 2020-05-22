@@ -308,7 +308,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) ([]interface{}, error) 
 			}
 			bitWidths[i] = uint64(b)
 		}
-		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
+		for i := 0; uint64(i) < numMiniblocksInBlock && uint64(len(res)) < numValues; i++ {
 			cur, err := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
 			if err != nil {
 				return res, err
