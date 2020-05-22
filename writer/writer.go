@@ -42,12 +42,25 @@ type ParquetWriter struct {
 	MarshalFunc func(src []interface{}, bgn int, end int, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
 }
 
+// Options for ParquetWriter.
+type Options struct {
+	// Number of parallel processors.
+	NumProcessors int64
+	// Metadata key/values for file footer.
+	FooterKeyValue map[string]string
+}
+
 //Create a parquet handler. Obj is a object with tags or JSON schema string.
 func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
+	return NewParquetWriterWithOptions(pFile, obj, Options{ NumProcessors: np })
+}
+
+//Create a parquet handler. Obj is a object with tags or JSON schema string.
+func NewParquetWriterWithOptions(pFile source.ParquetFile, obj interface{}, o Options) (*ParquetWriter, error) {
 	var err error
 
 	res := new(ParquetWriter)
-	res.NP = np
+	res.NP = o.NumProcessors
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
 	res.CompressionType = parquet.CompressionCodec_SNAPPY
@@ -67,6 +80,16 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.Footer.CreatedBy = &createdBy
 	_, err = res.PFile.Write([]byte("PAR1"))
 	res.MarshalFunc = marshal.Marshal
+	if o.FooterKeyValue != nil {
+		res.Footer.KeyValueMetadata = make([]*parquet.KeyValue, 0, len(o.FooterKeyValue))
+		for k, v := range o.FooterKeyValue {
+			val := v
+			res.Footer.KeyValueMetadata = append(res.Footer.KeyValueMetadata, &parquet.KeyValue{
+				Key:   k,
+				Value: &val,
+			})
+		}
+	}
 
 	if obj != nil {
 		if sa, ok := obj.(string); ok {
