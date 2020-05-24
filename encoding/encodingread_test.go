@@ -3,9 +3,9 @@ package encoding
 import (
 	"bytes"
 	"fmt"
+	"math/bits"
 	"testing"
 
-	. "github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
@@ -135,7 +135,7 @@ func TestReadRLEBitPackedHybrid(t *testing.T) {
 	for _, data := range testData {
 		maxVal := uint64(data[len(data)-1].(int64))
 
-		res, err := ReadRLEBitPackedHybrid(bytes.NewReader(WriteRLEBitPackedHybrid(data, int32(BitNum(maxVal)), parquet.Type_INT64)), uint64(BitNum(maxVal)), 0)
+		res, err := ReadRLEBitPackedHybrid(bytes.NewReader(WriteRLEBitPackedHybrid(data, int32(bits.Len64(maxVal)), parquet.Type_INT64)), uint64(bits.Len64(maxVal)), 0)
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadRLEBitpackedHybrid error, expect %v, get %v, err info:%v", data, res, err)
 		}
@@ -187,7 +187,7 @@ func TestReadBitPacked(t *testing.T) {
 	for _, data := range testData {
 		ln := len(data)
 		header := ((ln/8)<<1 | 1)
-		bitWidth := BitNum(uint64(data[ln-1].(int)))
+		bitWidth := uint64(bits.Len(uint(data[ln-1].(int))))
 		res, _ := ReadBitPacked(bytes.NewReader(WriteBitPacked(data, int64(bitWidth), false)), uint64(header), bitWidth)
 		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", data) {
 

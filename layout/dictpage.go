@@ -2,6 +2,7 @@ package layout
 
 import (
 	"context"
+	"math/bits"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
@@ -144,7 +145,7 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	if page.DataTable.MaxDefinitionLevel > 0 {
 		definitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
 			page.DataTable.DefinitionLevels,
-			int32(common.BitNum(uint64(page.DataTable.MaxDefinitionLevel))))
+			int32(bits.Len32(uint32(page.DataTable.MaxDefinitionLevel))))
 	}
 
 	//repetitionLevel/////////////////////////////////
@@ -152,7 +153,7 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	if page.DataTable.MaxRepetitionLevel > 0 {
 		repetitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
 			page.DataTable.RepetitionLevels,
-			int32(common.BitNum(uint64(page.DataTable.MaxRepetitionLevel))))
+			int32(bits.Len32(uint32(page.DataTable.MaxRepetitionLevel))))
 	}
 
 	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
