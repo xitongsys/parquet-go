@@ -86,7 +86,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 
 		var maxVal interface{} = table.Values[i]
 		var minVal interface{} = table.Values[i]
-		values := make([]interface{}, 0)
+		values := make([]int32, 0)
 
 		funcTable := common.FindFuncTable(pT, cT)
 
@@ -115,7 +115,6 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		page.DataTable.Path = table.Path
 		page.DataTable.MaxDefinitionLevel = table.MaxDefinitionLevel
 		page.DataTable.MaxRepetitionLevel = table.MaxRepetitionLevel
-		page.DataTable.Values = values
 		page.DataTable.DefinitionLevels = table.DefinitionLevels[i:j]
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
 		page.MaxVal = maxVal
@@ -125,7 +124,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		page.Path = table.Path
 		page.Info = table.Info
 
-		page.DictDataPageCompress(compressType, bitWidth)
+		page.DictDataPageCompress(compressType, bitWidth, values)
 
 		totSize += int64(len(page.RawData))
 		res = append(res, page)
@@ -135,10 +134,10 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 }
 
 //Compress the data page to parquet file
-func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bitWidth int32) []byte {
+func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bitWidth int32, values []int32) []byte {
 	//values////////////////////////////////////////////
 	valuesRawBuf := []byte{byte(bitWidth)}
-	valuesRawBuf = append(valuesRawBuf, encoding.WriteRLE(page.DataTable.Values, bitWidth, parquet.Type_INT32)...)
+	valuesRawBuf = append(valuesRawBuf, encoding.WriteRLEInt32(values, bitWidth)...)
 
 	//definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
@@ -185,32 +184,4 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	page.RawData = res
 
 	return res
-}
-
-//Convert a table to dict page
-func TableToDictPage(table *Table, pageSize int32, compressType parquet.CompressionCodec) (*Page, int64) {
-	var totSize int64 = 0
-	totalLn := len(table.Values)
-
-	page := NewDataPage()
-	page.PageSize = pageSize
-	page.Header.DataPageHeader.NumValues = int32(totalLn)
-	page.Header.Type = parquet.PageType_DICTIONARY_PAGE
-
-	page.DataTable = new(Table)
-	page.DataTable.RepetitionType = table.RepetitionType
-	page.DataTable.Path = table.Path
-	page.DataTable.MaxDefinitionLevel = table.MaxDefinitionLevel
-	page.DataTable.MaxRepetitionLevel = table.MaxRepetitionLevel
-	page.DataTable.Values = table.Values
-	page.DataTable.DefinitionLevels = table.DefinitionLevels
-	page.DataTable.RepetitionLevels = table.RepetitionLevels
-	page.Schema = table.Schema
-	page.CompressType = compressType
-	page.Path = table.Path
-	page.Info = table.Info
-
-	page.DictPageCompress(compressType, *page.Schema.Type)
-	totSize += int64(len(page.RawData))
-	return page, totSize
 }
