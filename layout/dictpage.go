@@ -120,6 +120,10 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		page.DataTable.MaxRepetitionLevel = table.MaxRepetitionLevel
 		page.DataTable.DefinitionLevels = table.DefinitionLevels[i:j]
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
+
+		//Values in DataTable of a DictPage is nil for optimization.
+		//page.DataTable.Values = values
+
 		page.MaxVal = maxVal
 		page.MinVal = minVal
 		page.Schema = table.Schema
