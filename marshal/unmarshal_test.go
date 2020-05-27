@@ -99,7 +99,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 	stus := make([]interface{}, 0)
 	stus = append(stus, stu01, stu02)
 
-	src, _ := Marshal(stus, 0, len(stus), schemaHandler)
+	src, _ := Marshal(stus, schemaHandler)
 	fmt.Println("Marshal Finished")
 
 	for name, table := range *src {
