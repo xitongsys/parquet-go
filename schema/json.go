@@ -3,6 +3,7 @@ package schema
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -32,7 +33,9 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 	}()
 
 	schema := NewJSONSchemaItem()
-	json.Unmarshal([]byte(str), schema)
+	if err := json.Unmarshal([]byte(str), schema); err != nil {
+		return nil, fmt.Errorf("error in unmarshalling json schema string: %v", err.Error())
+	}
 
 	stack := make([]*JSONSchemaItemType, 0)
 	stack = append(stack, schema)
