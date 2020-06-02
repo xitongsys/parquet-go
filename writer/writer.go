@@ -39,7 +39,7 @@ type ParquetWriter struct {
 
 	DictRecs map[string]*layout.DictRecType
 
-	MarshalFunc func(src []interface{}, bgn int, end int, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
+	MarshalFunc func(src []interface{}, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
 }
 
 //Create a parquet handler. Obj is a object with tags or JSON schema string.
@@ -219,7 +219,7 @@ func (self *ParquetWriter) flushObjs() error {
 				return
 			}
 
-			tableMap, err2 := self.MarshalFunc(self.Objs, b, e, self.SchemaHandler)
+			tableMap, err2 := self.MarshalFunc(self.Objs[b:e], self.SchemaHandler)
 
 			if err2 == nil {
 				for name, table := range *tableMap {

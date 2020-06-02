@@ -14,7 +14,7 @@ import (
 )
 
 //ss is []string
-func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
+func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -48,7 +48,7 @@ func MarshalJSON(ss []interface{}, bgn int, end int, schemaHandler *schema.Schem
 	}
 
 	stack := make([]*Node, 0, 100)
-	for i := bgn; i < end; i++ {
+	for i := 0; i < len(ss); i++ {
 		stack = stack[:0]
 		nodeBuf.Reset()
 
