@@ -61,7 +61,7 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.DictRecs = make(map[string]*layout.DictRecType)
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
-	//include the createdBy to avoid 
+	//include the createdBy to avoid
 	//WARN  CorruptStatistics:118 - Ignoring statistics because created_by is null or empty! See PARQUET-251 and PARQUET-297
 	createdBy := "parquet-go version latest"
 	res.Footer.CreatedBy = &createdBy
@@ -225,13 +225,16 @@ func (self *ParquetWriter) flushObjs() error {
 				for name, table := range *tableMap {
 					if table.Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY ||
 						table.Info.Encoding == parquet.Encoding_RLE_DICTIONARY {
-						lock.Lock()
-						if _, ok := self.DictRecs[name]; !ok {
-							self.DictRecs[name] = layout.NewDictRec(*table.Schema.Type)
-						}
-						pagesMapList[index][name], _ = layout.TableToDictDataPages(self.DictRecs[name],
-							table, int32(self.PageSize), 32, self.CompressionType)
-						lock.Unlock()
+
+						func() {
+							lock.Lock()
+							defer lock.Unlock()
+							if _, ok := self.DictRecs[name]; !ok {
+								self.DictRecs[name] = layout.NewDictRec(*table.Schema.Type)
+							}
+							pagesMapList[index][name], _ = layout.TableToDictDataPages(self.DictRecs[name],
+								table, int32(self.PageSize), 32, self.CompressionType)
+						}()
 
 					} else {
 						pagesMapList[index][name], _ = layout.TableToDataPages(table, int32(self.PageSize),
