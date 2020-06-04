@@ -227,8 +227,10 @@ func (self *ParquetWriter) flushObjs() error {
 						table.Info.Encoding == parquet.Encoding_RLE_DICTIONARY {
 
 						func() {
-							lock.Lock()
-							defer lock.Unlock()
+							if self.NP > 1 {
+								lock.Lock()
+								defer lock.Unlock()
+							}
 							if _, ok := self.DictRecs[name]; !ok {
 								self.DictRecs[name] = layout.NewDictRec(*table.Schema.Type)
 							}
