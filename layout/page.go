@@ -243,6 +243,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Max = tmpBuf
+		page.Header.DataPageHeader.Statistics.MaxValue = tmpBuf
 	}
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
@@ -252,6 +253,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Min = tmpBuf
+		page.Header.DataPageHeader.Statistics.MinValue = tmpBuf
 	}
 
 	ts := thrift.NewTSerializer()
@@ -333,6 +335,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Max = tmpBuf
+		page.Header.DataPageHeaderV2.Statistics.MaxValue = tmpBuf
 	}
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
@@ -342,6 +345,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Min = tmpBuf
+		page.Header.DataPageHeaderV2.Statistics.MinValue = tmpBuf
 	}
 
 	ts := thrift.NewTSerializer()

@@ -64,6 +64,8 @@ func PagesToChunk(pages []*Page) *Chunk {
 		}
 		metaData.Statistics.Max = tmpBufMax
 		metaData.Statistics.Min = tmpBufMin
+		metaData.Statistics.MaxValue = tmpBufMax
+		metaData.Statistics.MinValue = tmpBufMin
 	}
 
 	chunk.ChunkHeader.MetaData = metaData
@@ -126,6 +128,8 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 		}
 		metaData.Statistics.Max = tmpBufMax
 		metaData.Statistics.Min = tmpBufMin
+		metaData.Statistics.MaxValue = tmpBufMax
+		metaData.Statistics.MinValue = tmpBufMin
 	}
 
 	chunk.ChunkHeader.MetaData = metaData
