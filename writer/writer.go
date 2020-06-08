@@ -189,6 +189,8 @@ func (self *ParquetWriter) flushObjs() error {
 	delta := (l + self.NP - 1) / self.NP
 	lock := new(sync.Mutex)
 	var wg sync.WaitGroup
+	var errs []error = make([]error, self.NP)
+
 	for c = 0; c < self.NP; c++ {
 		bgn := c * delta
 		end := bgn + delta
@@ -206,11 +208,11 @@ func (self *ParquetWriter) flushObjs() error {
 				if r := recover(); r != nil {
 					switch x := r.(type) {
 					case string:
-						err = errors.New(x)
+						errs[index] = errors.New(x)
 					case error:
-						err = x
+						errs[index] = x
 					default:
-						err = errors.New("unknown error")
+						errs[index] = errors.New("unknown error")
 					}
 				}
 			}()
@@ -239,13 +241,20 @@ func (self *ParquetWriter) flushObjs() error {
 					}
 				}
 			} else {
-				err = err2
+				errs[index] = err2
 			}
 
 		}(int(bgn), int(end), c)
 	}
 
 	wg.Wait()
+
+	for _, err2 := range errs {
+		if err2 != nil {
+			err = err2
+			break
+		}
+	}
 
 	for _, pagesMap := range pagesMapList {
 		for name, pages := range pagesMap {
