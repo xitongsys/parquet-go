@@ -53,7 +53,7 @@ func main() {
 		}
 
 		data2 := []interface{}{
-			[]byte("Student Name"),
+			"Student Name",
 			int32(20 + i%5),
 			int64(i),
 			float32(50.0 + float32(i)*0.1),
