@@ -57,7 +57,7 @@ func main() {
 			int32(20 + i%5),
 			int64(i),
 			float32(50.0 + float32(i)*0.1),
-			bool(i%2 == 0),
+			i%2 == 0,
 		}
 		if err = pw.Write(data2); err != nil {
 			log.Println("Write error", err)
