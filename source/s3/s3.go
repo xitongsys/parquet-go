@@ -182,7 +182,7 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 	}
 
 	wab := aws.NewWriteAtBuffer(p)
-	bytesDownloaded, err := s.downloader.Download(wab, getObj)
+	bytesDownloaded, err := s.downloader.DownloadWithContext(s.ctx, wab, getObj)
 	if err != nil {
 		return 0, err
 	}
@@ -312,7 +312,7 @@ func (s *S3File) openWrite() {
 		defer close(done)
 
 		// upload data and signal done when complete
-		_, err := uploader.Upload(params)
+		_, err := uploader.UploadWithContext(s.ctx, params)
 		if err != nil {
 			s.lock.Lock()
 			s.err = err
@@ -335,7 +335,7 @@ func (s *S3File) openRead() error {
 		Key:    aws.String(s.Key),
 	}
 
-	hoo, err := s.client.HeadObject(hoi)
+	hoo, err := s.client.HeadObjectWithContext(s.ctx, hoi)
 	if err != nil {
 		return err
 	}
