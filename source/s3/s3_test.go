@@ -270,11 +270,12 @@ func TestOpen(t *testing.T) {
 	key := "test/foobar.parquet"
 	fileSize := int64(123)
 
+	ctx := context.Background()
 	mockClient := mocks.NewMockS3API(ctrl)
-	mockClient.EXPECT().HeadObject(gomock.Any()).
+	mockClient.EXPECT().HeadObjectWithContext(ctx, gomock.Any()).
 		Return(&s3.HeadObjectOutput{ContentLength: aws.Int64(fileSize)}, nil)
 	s := &S3File{
-		ctx:        context.Background(),
+		ctx:        ctx,
 		BucketName: bucket,
 		client:     mockClient,
 	}
@@ -428,9 +429,10 @@ func TestOpenReadFileSizeError(t *testing.T) {
 	bucket := "test-bucket"
 	key := "test/foobar.parquet"
 
+	ctx := context.Background()
 	mockClient := mocks.NewMockS3API(ctrl)
-	mockClient.EXPECT().HeadObject(gomock.Any()).
-		DoAndReturn(func(hoi *s3.HeadObjectInput) (*s3.HeadObjectOutput, error) {
+	mockClient.EXPECT().HeadObjectWithContext(ctx, gomock.Any()).
+		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput) (*s3.HeadObjectOutput, error) {
 			if *hoi.Bucket != bucket {
 				t.Errorf("expected bucket %q but got %q", bucket, *hoi.Bucket)
 			}
@@ -443,6 +445,7 @@ func TestOpenReadFileSizeError(t *testing.T) {
 		})
 
 	s := &S3File{
+		ctx:        ctx,
 		BucketName: bucket,
 		Key:        key,
 		client:     mockClient,
@@ -462,9 +465,10 @@ func TestOpenRead(t *testing.T) {
 	key := "test/foobar.parquet"
 	filesize := int64(123)
 
+	ctx := context.Background()
 	mockClient := mocks.NewMockS3API(ctrl)
-	mockClient.EXPECT().HeadObject(gomock.Any()).
-		DoAndReturn(func(hoi *s3.HeadObjectInput) (*s3.HeadObjectOutput, error) {
+	mockClient.EXPECT().HeadObjectWithContext(ctx, gomock.Any()).
+		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput) (*s3.HeadObjectOutput, error) {
 			if *hoi.Bucket != bucket {
 				t.Errorf("expected bucket %q but got %q", bucket, *hoi.Bucket)
 			}
@@ -477,6 +481,7 @@ func TestOpenRead(t *testing.T) {
 		})
 
 	s := &S3File{
+		ctx:        ctx,
 		BucketName: bucket,
 		Key:        key,
 		client:     mockClient,
