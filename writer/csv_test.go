@@ -6,6 +6,67 @@ import (
 	"github.com/xitongsys/parquet-go-source/buffer"
 )
 
+func TestWriteCSV(t *testing.T) {
+	md := []string{
+		"name=First, type=UTF8, encoding=PLAIN",
+		"name=Middle, type=UTF8, encoding=PLAIN",
+		"name=Last, type=UTF8, encoding=PLAIN",
+		"name=BirthCity, type=UTF8, encoding=PLAIN",
+	}
+
+	fw, err := buffer.NewBufferFile(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pw, err := NewCSVWriter(md, fw, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for j := 0; j < 10000; j++ {
+		if err = pw.Write([]interface{}{"Harry", "S", "Truman", "Lamar"}); err != nil {
+			t.Error(err)
+		}
+	}
+
+	if err := pw.WriteStop(); err != nil {
+		t.Error(err)
+	}
+	if err := fw.Close(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestWriteCSVPlainDictionary(t *testing.T) {
+	md := []string{
+		"name=First, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=Middle, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=Last, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=BirthCity, type=UTF8, encoding=PLAIN_DICTIONARY",
+	}
+	fw, err := buffer.NewBufferFile(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pw, err := NewCSVWriter(md, fw, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for j := 0; j < 10000; j++ {
+		if err = pw.Write([]interface{}{"Harry", "S", "Truman", "Lamar"}); err != nil {
+			t.Error(err)
+		}
+	}
+
+	if err := pw.WriteStop(); err != nil {
+		t.Error(err)
+	}
+	if err := fw.Close(); err != nil {
+		t.Error(err)
+	}
+}
+
 func BenchmarkWriteCSV(b *testing.B) {
 	b.ReportAllocs()
 	md := []string{
