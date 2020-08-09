@@ -1,6 +1,6 @@
 PACKAGES=`go list ./... | grep -v example`
 
-test:
-	go test -v -cover ${PACKAGES}
-
 .PHONEY: test
+test:
+	go test -v -cover -coverprofile=cover.out ${PACKAGES}
+
