@@ -295,9 +295,7 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 
 				}
 			} else {
-				for _, node := range nodes {
-					stack = append(stack, node)
-				}
+				stack = append(stack, nodes...)
 			}
 		}
 	}

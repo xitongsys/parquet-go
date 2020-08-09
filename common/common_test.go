@@ -50,9 +50,10 @@ func TestCmpIntBinary(t *testing.T) {
 
 	for _, c := range cases {
 		abuf, bbuf := new(bytes.Buffer), new(bytes.Buffer)
-		binary.Write(abuf, binary.LittleEndian, c.numa)
-		binary.Write(bbuf, binary.LittleEndian, c.numb)
-		as, bs := string(abuf.Bytes()), string(bbuf.Bytes())
+		// FIXME check errors
+		_ = binary.Write(abuf, binary.LittleEndian, c.numa)
+		_ = binary.Write(bbuf, binary.LittleEndian, c.numb)
+		as, bs := abuf.String(), bbuf.String()
 		if (c.numa < c.numb) != (CmpIntBinary(as, bs, "LittleEndian", true)) {
 			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
 		}
@@ -79,8 +80,9 @@ func TestCmpIntBinary(t *testing.T) {
 		as := StrIntToBinary(c.numa, "LittleEndian", 0, true)
 		bs := StrIntToBinary(c.numb, "LittleEndian", 0, true)
 		an, bn := 0, 0
-		fmt.Sscanf(c.numa, "%d", &an)
-		fmt.Sscanf(c.numb, "%d", &bn)
+		// FIXME check errors
+		_, _ = fmt.Sscanf(c.numa, "%d", &an)
+		_, _ = fmt.Sscanf(c.numb, "%d", &bn)
 		if (an < bn) != (CmpIntBinary(as, bs, "LittleEndian", true)) {
 			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
 		}
@@ -104,8 +106,9 @@ func TestCmpIntBinary(t *testing.T) {
 		as := StrIntToBinary(c.numa, "LittleEndian", 0, false)
 		bs := StrIntToBinary(c.numb, "LittleEndian", 0, false)
 		an, bn := uint64(0), uint64(0)
-		fmt.Sscanf(c.numa, "%d", &an)
-		fmt.Sscanf(c.numb, "%d", &bn)
+		// FIXME check errors
+		_, _ = fmt.Sscanf(c.numa, "%d", &an)
+		_, _ = fmt.Sscanf(c.numb, "%d", &bn)
 		if (an < bn) != (CmpIntBinary(as, bs, "LittleEndian", false)) {
 			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
 		}
@@ -121,9 +124,9 @@ func TestCmp(t *testing.T) {
 		CT     *parquet.ConvertedType
 		expect bool
 	}{
-		{"bool 1", bool(false), bool(true), parquet.TypePtr(parquet.Type_BOOLEAN), nil, true},
-		{"bool 2", bool(true), bool(false), parquet.TypePtr(parquet.Type_BOOLEAN), nil, false},
-		{"bool 3", bool(true), bool(true), parquet.TypePtr(parquet.Type_BOOLEAN), nil, false},
+		{"bool 1", false, true, parquet.TypePtr(parquet.Type_BOOLEAN), nil, true},
+		{"bool 2", true, false, parquet.TypePtr(parquet.Type_BOOLEAN), nil, false},
+		{"bool 3", true, true, parquet.TypePtr(parquet.Type_BOOLEAN), nil, false},
 
 		{"int32 1", int32(1), int32(2), parquet.TypePtr(parquet.Type_INT32), nil, true},
 		{"int32 2", int32(-1), int32(2), parquet.TypePtr(parquet.Type_INT32), nil, true},

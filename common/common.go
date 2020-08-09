@@ -250,9 +250,9 @@ func NewSchemaElementFromTagMap(info *Tag) *parquet.SchemaElement {
 
 func DeepCopy(src, dst interface{}) {
 	var buf bytes.Buffer
-	gob.NewEncoder(&buf).Encode(src)
-	gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
-	return
+	// FIXME
+	_ = gob.NewEncoder(&buf).Encode(src)
+	_ = gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
 }
 
 //Get key tag map for map

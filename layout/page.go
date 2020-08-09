@@ -428,9 +428,16 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 		rll := self.Header.DataPageHeaderV2.GetRepetitionLevelsByteLength()
 		repetitionLevelsBuf, definitionLevelsBuf := make([]byte, rll), make([]byte, dll)
 		dataBuf := make([]byte, len(self.RawData)-int(rll)-int(dll))
-		bytesReader.Read(repetitionLevelsBuf)
-		bytesReader.Read(definitionLevelsBuf)
-		bytesReader.Read(dataBuf)
+
+		if _, err := bytesReader.Read(repetitionLevelsBuf); err != nil {
+			return 0, 0, err
+		}
+		if _, err := bytesReader.Read(definitionLevelsBuf); err != nil {
+			return 0, 0, err
+		}
+		if _, err := bytesReader.Read(dataBuf); err != nil {
+			return 0, 0, err
+		}
 
 		tmpBuf := make([]byte, 0)
 		if rll > 0 {
@@ -549,7 +556,6 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 //Get values from raw data
 func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error {
 	var err error
-	var encodingType parquet.Encoding
 
 	switch self.Header.GetType() {
 	case parquet.PageType_DICTIONARY_PAGE:
@@ -565,10 +571,8 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 		if self.RawData, err = compress.Uncompress(self.RawData, self.CompressType); err != nil {
 			return err
 		}
-		encodingType = self.Header.DataPageHeader.GetEncoding()
 		fallthrough
 	case parquet.PageType_DATA_PAGE:
-		encodingType = self.Header.DataPageHeader.GetEncoding()
 		bytesReader := bytes.NewReader(self.RawData)
 
 		var numNulls uint64 = 0
@@ -585,7 +589,7 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 		}
 
 		values, err = ReadDataPageValues(bytesReader,
-			encodingType,
+			self.Header.DataPageHeader.GetEncoding(),
 			*self.Schema.Type,
 			ct,
 			uint64(len(self.DataTable.DefinitionLevels))-numNulls,
@@ -619,10 +623,8 @@ func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeade
 
 //Read data page values
 func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encoding, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) ([]interface{}, error) {
-	var (
-		res []interface{}
-	)
-	if cnt <= 0 {
+	var res []interface{}
+	if cnt == 0 {
 		return res, nil
 	}
 

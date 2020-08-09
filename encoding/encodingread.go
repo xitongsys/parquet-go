@@ -103,7 +103,10 @@ func ReadPlainBYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, 
 		}
 		ln := binary.LittleEndian.Uint32(buf)
 		cur := make([]byte, ln)
-		bytesReader.Read(cur)
+		_, err = bytesReader.Read(cur)
+		if err != nil {
+			return nil, err
+		}
 		res[i] = string(cur)
 	}
 	return res, err
@@ -204,7 +207,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([
 			resCurNeedBits = bitWidth
 			resCur = 0
 
-			if left <= 0 && i+1 < len(bytesBuf) {
+			if left == 0 && i+1 < len(bytesBuf) {
 				i += 1
 				b = bytesBuf[i]
 				left = 8
@@ -228,7 +231,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([
 //res is INT64
 func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length uint64) ([]interface{}, error) {
 	res := make([]interface{}, 0)
-	if length <= 0 {
+	if length == 0 {
 		lb, err := ReadPlainINT32(bytesReader, 1)
 		if err != nil {
 			return res, err

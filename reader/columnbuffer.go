@@ -169,7 +169,10 @@ func (self *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
 		}
 
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
-			page.GetValueFromRawData(self.SchemaHandler)
+			err = page.GetValueFromRawData(self.SchemaHandler)
+			if err != nil {
+				return nil, err
+			}
 			self.DictPage = page
 			return page, nil
 		}

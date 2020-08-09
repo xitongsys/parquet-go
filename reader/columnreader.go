@@ -56,7 +56,8 @@ func (self *ParquetReader) SkipRowsByIndex(index int64, num int64) {
 		return
 	}
 	pathStr := self.SchemaHandler.ValueColumns[index]
-	self.SkipRowsByPath(pathStr, num)
+	// FIXME
+	_ = self.SkipRowsByPath(pathStr, num)
 }
 
 // ReadColumnByPath reads column by path in schema.

@@ -178,7 +178,7 @@ func (self *ParquetReader) SkipRows(num int64) error {
 		}()
 	}
 
-	for key, _ := range self.ColumnBuffers {
+	for key := range self.ColumnBuffers {
 		taskChan <- key
 	}
 
@@ -297,7 +297,7 @@ func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) err
 	}
 
 	readNum := 0
-	for key, _ := range self.ColumnBuffers {
+	for key := range self.ColumnBuffers {
 		if strings.HasPrefix(key, prefixPath) {
 			taskChan <- key
 			readNum++

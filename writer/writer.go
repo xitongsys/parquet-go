@@ -185,13 +185,12 @@ func (self *ParquetWriter) flushObjs() error {
 		pagesMapList[i] = make(map[string][]*layout.Page)
 	}
 
-	var c int64 = 0
 	delta := (l + self.NP - 1) / self.NP
 	lock := new(sync.Mutex)
 	var wg sync.WaitGroup
 	var errs []error = make([]error, self.NP)
 
-	for c = 0; c < self.NP; c++ {
+	for c := int64(0); c < self.NP; c++ {
 		bgn := c * delta
 		end := bgn + delta
 		if end > l {
