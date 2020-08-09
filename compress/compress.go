@@ -2,7 +2,8 @@ package compress
 
 import (
 	"fmt"
-	"github.com/xitongsys/parquet-go/parquet"
+
+	"github.com/syucream/parquet-go/parquet"
 )
 
 type Compressor struct {

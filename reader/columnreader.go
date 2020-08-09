@@ -3,8 +3,8 @@ package reader
 import (
 	"fmt"
 
+	"github.com/syucream/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/source"
-	"github.com/xitongsys/parquet-go/schema"
 )
 
 // NewParquetColumnReader creates a parquet column reader
@@ -44,7 +44,7 @@ func (self *ParquetReader) SkipRowsByPath(pathStr string, num int64) error {
 	if cb, ok := self.ColumnBuffers[pathStr]; ok {
 		cb.SkipRows(int64(num))
 
-	} else{
+	} else {
 		return errPathNotFound
 	}
 
@@ -68,7 +68,7 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, num int64) (values [
 	if num <= 0 || len(pathStr) <= 0 || err != nil {
 		return []interface{}{}, []int32{}, []int32{}, err
 	}
-	
+
 	if _, ok := self.SchemaHandler.MapIndex[pathStr]; !ok {
 		return []interface{}{}, []int32{}, []int32{}, errPathNotFound
 	}
