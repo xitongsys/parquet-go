@@ -1,8 +1,8 @@
 package schema
 
 import (
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/syucream/parquet-go/common"
+	"github.com/syucream/parquet-go/parquet"
 )
 
 //Create a schema handler from CSV metadata

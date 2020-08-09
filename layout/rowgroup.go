@@ -4,9 +4,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
+	"github.com/syucream/parquet-go/common"
+	"github.com/syucream/parquet-go/parquet"
+	"github.com/syucream/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/source"
 )
 

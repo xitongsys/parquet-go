@@ -6,8 +6,9 @@ package parquet
 import (
 	"bytes"
 	"context"
-	"reflect"
 	"fmt"
+	"reflect"
+
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
@@ -18,7 +19,5 @@ var _ = context.Background
 var _ = reflect.DeepEqual
 var _ = bytes.Equal
 
-
 func init() {
 }
-
