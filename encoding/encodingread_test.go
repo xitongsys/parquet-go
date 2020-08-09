@@ -6,7 +6,7 @@ import (
 	"math/bits"
 	"testing"
 
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/syucream/parquet-go/parquet"
 )
 
 func TestReadPlainBOOLEAN(t *testing.T) {

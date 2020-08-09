@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/syucream/parquet-go/parquet"
 )
 
 func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt uint64, bitWidth uint64) ([]interface{}, error) {
@@ -346,7 +346,7 @@ func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) ([]interface{}, error) 
 			res[i] = cur[0]
 		}
 	}
-	
+
 	return res, err
 }
 
