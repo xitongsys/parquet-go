@@ -1,6 +1,6 @@
 module github.com/xitongsys/parquet-go
 
-go 1.13
+go 1.14
 
 require (
 	github.com/apache/thrift v0.0.0-20181112125854-24918abba929
