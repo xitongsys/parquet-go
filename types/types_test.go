@@ -131,14 +131,20 @@ func TestStrIntToBinary(t *testing.T) {
 
 	for _, c := range cases {
 		buf := new(bytes.Buffer)
+
+		var err error
 		if c.order == "LittleEndian" {
-			binary.Write(buf, binary.LittleEndian, c.num)
+			err = binary.Write(buf, binary.LittleEndian, c.num)
 		} else {
-			binary.Write(buf, binary.BigEndian, c.num)
+			err = binary.Write(buf, binary.BigEndian, c.num)
 		}
-		expect := string(buf.Bytes())
+		expect := buf.String()
 
 		res := StrIntToBinary(c.nums, c.order, c.length, c.signed)
+
+		if err != nil {
+			t.Error(err)
+		}
 
 		if res != expect {
 			t.Errorf("StrIntToBinary error %b, expect %b, get %b", c.num, []byte(expect), []byte(res))

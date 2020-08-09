@@ -14,6 +14,7 @@ func TestParquetPtrMarshal(t *testing.T) {
 	ptrMarshal := &ParquetPtr{}
 	var integer int = 10
 	c := &marshalCases{
+		nullPtr:    nil,
 		integerPtr: &integer,
 	}
 	// case1: null ptr

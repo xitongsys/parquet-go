@@ -181,8 +181,8 @@ func TestReadLengthDeltaByteArray(t *testing.T) {
 
 func TestReadBitPacked(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
-		[]interface{}{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 2, 3, 4, 5, 6, 7, 8},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	}
 	for _, data := range testData {
 		ln := len(data)
@@ -190,7 +190,7 @@ func TestReadBitPacked(t *testing.T) {
 		bitWidth := uint64(bits.Len(uint(data[ln-1].(int))))
 		res, _ := ReadBitPacked(bytes.NewReader(WriteBitPacked(data, int64(bitWidth), false)), uint64(header), bitWidth)
 		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", data) {
-
+			t.Errorf("ReadBitPacked err, expect %v, get %v", data, res)
 		}
 	}
 }

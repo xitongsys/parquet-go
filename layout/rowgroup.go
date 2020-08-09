@@ -25,7 +25,7 @@ func NewRowGroup() *RowGroup {
 
 //Convert a RowGroup to table map
 func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
-	tableMap := make(map[string]*Table, 0)
+	tableMap := map[string]*Table{}
 	for _, chunk := range rowGroup.Chunks {
 		pathStr := ""
 		for _, page := range chunk.Pages {
@@ -94,7 +94,7 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 				thriftReader := source.ConvertToThriftReader(PFile, offset, size)
 				chunk, _ := ReadChunk(thriftReader, schemaHandler, columnChunks[i])
 				chunksList[index] = append(chunksList[index], chunk)
-				PFile.Close()
+				err = PFile.Close()
 			}
 		}(c, bgn, end)
 	}

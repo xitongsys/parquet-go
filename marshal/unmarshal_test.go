@@ -110,7 +110,10 @@ func TestMarshalUnmarshal(t *testing.T) {
 	}
 
 	dst := make([]Student, 0)
-	Unmarshal(src, 0, len(stus), &dst, schemaHandler, "")
+	err := Unmarshal(src, 0, len(stus), &dst, schemaHandler, "")
+	if err != nil {
+		t.Errorf("Unexpected error %v", err)
+	}
 
 	s0 := fmt.Sprint(stus)
 	s1 := fmt.Sprint(dst)

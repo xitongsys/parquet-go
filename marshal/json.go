@@ -58,7 +58,10 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 		// `useNumber`causes the Decoder to unmarshal a number into an interface{} as a Number instead of as a float64.
 		d := json.NewDecoder(strings.NewReader(ss[i].(string)))
 		d.UseNumber()
-		d.Decode(&ui)
+		err = d.Decode(&ui)
+		if err != nil {
+			return nil, err
+		}
 
 		node.Val = reflect.ValueOf(ui)
 		node.PathMap = pathMap
@@ -139,7 +142,7 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 						//ExName to InName
 						keysMap[common.StringToVariableName(keys[j].String())] = j
 					}
-					for key, _ := range node.PathMap.Children {
+					for key := range node.PathMap.Children {
 						ki, ok := keysMap[key]
 						
 						if ok && node.Val.MapIndex(keys[ki]).Elem().IsValid() {
