@@ -6,5 +6,5 @@ test:
 
 .PHONEY: benchmark
 benchmark:
-	go test -bench . -v ./writer -benchmem -cpuprofile cpu.out -memprofile mem.out
+	go test -bench . -v ./writer -benchmem -cpuprofile cpu.out -memprofile mem.out -mutexprofile mutex.out -blockprofile block.out
 

@@ -10,7 +10,9 @@ import (
 //Marshal function for CSV like data
 func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*map[string]*layout.Table, error) {
 	res := make(map[string]*layout.Table)
-	if ln := len(records); ln <= 0 {
+
+	numRecords := len(records)
+	if numRecords <= 0 {
 		return &res, nil
 	}
 
@@ -25,11 +27,11 @@ func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*ma
 		table.Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
 		table.Info = schemaHandler.Infos[i+1]
 		// Pre-allocate these arrays for efficiency
-		table.Values = make([]interface{}, 0, len(records))
-		table.RepetitionLevels = make([]int32, 0, len(records))
-		table.DefinitionLevels = make([]int32, 0, len(records))
+		table.Values = make([]interface{}, 0, numRecords)
+		table.RepetitionLevels = make([]int32, 0, numRecords)
+		table.DefinitionLevels = make([]int32, 0, numRecords)
 
-		for j := 0; j < len(records); j++ {
+		for j := 0; j < numRecords; j++ {
 			rec := records[j].([]interface{})[i]
 			table.Values = append(table.Values, rec)
 			table.RepetitionLevels = append(table.RepetitionLevels, 0)
