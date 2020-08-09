@@ -4,3 +4,7 @@ PACKAGES=`go list ./... | grep -v example`
 test:
 	go test -v -cover -coverprofile=cover.out ${PACKAGES}
 
+.PHONEY: benchmark
+benchmark:
+	go test -bench . -v ./writer -benchmem -cpuprofile cpu.out -memprofile mem.out
+

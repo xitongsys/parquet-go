@@ -34,6 +34,12 @@ jobs:
     - name: Test
       run: make test
 
+    - name: benchmark
+      run: |
+        make benchmark
+        go tool pprof -top cpu.out
+        go tool pprof -top mem.out
+
     - uses: codecov/codecov-action@v1
       with:
         file: ./cover.out
