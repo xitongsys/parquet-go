@@ -9,11 +9,11 @@ import (
 	"github.com/syucream/parquet-go/layout"
 	"github.com/syucream/parquet-go/parquet"
 	"github.com/syucream/parquet-go/schema"
+	"github.com/xitongsys/parquet-go/source"
 )
 
 type ColumnBufferType struct {
-	r ReadSeekCloser
-
+	PFile        source.ParquetFile
 	ThriftReader *thrift.TBufferedTransport
 
 	Footer        *parquet.FileMetaData
@@ -31,23 +31,27 @@ type ColumnBufferType struct {
 	DataTableNumRows int64
 }
 
-func NewColumnBuffer(r ReadSeekCloser, footer *parquet.FileMetaData, schemaHandler *schema.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
+func NewColumnBuffer(pFile source.ParquetFile, footer *parquet.FileMetaData, schemaHandler *schema.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
+	newPFile, err := pFile.Open("")
+	if err != nil {
+		return nil, err
+	}
 	res := &ColumnBufferType{
-		r:                r,
+		PFile:            newPFile,
 		Footer:           footer,
 		SchemaHandler:    schemaHandler,
 		PathStr:          pathStr,
 		DataTableNumRows: -1,
 	}
 
-	if err := res.NextRowGroup(); err != io.EOF {
-		return nil, err
+	if err = res.NextRowGroup(); err == io.EOF {
+		err = nil
 	}
-
-	return res, nil
+	return res, err
 }
 
 func (self *ColumnBufferType) NextRowGroup() error {
+	var err error
 	rowGroups := self.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
 	if self.RowGroupIndex >= ln {
@@ -76,7 +80,8 @@ func (self *ColumnBufferType) NextRowGroup() error {
 
 	self.ChunkHeader = columnChunks[i]
 	if columnChunks[i].FilePath != nil {
-		if err := self.r.Close(); err != nil {
+		self.PFile.Close()
+		if self.PFile, err = self.PFile.Open(*columnChunks[i].FilePath); err != nil {
 			return err
 		}
 	}
@@ -89,12 +94,10 @@ func (self *ColumnBufferType) NextRowGroup() error {
 
 	size := columnChunks[i].MetaData.GetTotalCompressedSize()
 	if self.ThriftReader != nil {
-		if err := self.ThriftReader.Close(); err != nil {
-			return err
-		}
+		self.ThriftReader.Close()
 	}
 
-	self.ThriftReader = ConvertToThriftReader(self.r, offset, size)
+	self.ThriftReader = source.ConvertToThriftReader(self.PFile, offset, size)
 	self.ChunkReadValues = 0
 	self.DictPage = nil
 	return nil
@@ -256,13 +259,4 @@ func (self *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64) {
 	}
 	return res, num
 
-}
-
-//Convert a file reater to Thrift reader
-func ConvertToThriftReader(file io.ReadSeeker, offset int64, size int64) *thrift.TBufferedTransport {
-	// TODO check errors
-	_, _ = file.Seek(offset, 0)
-	thriftReader := thrift.NewStreamTransportR(file)
-	bufferReader := thrift.NewTBufferedTransport(thriftReader, int(size))
-	return bufferReader
 }

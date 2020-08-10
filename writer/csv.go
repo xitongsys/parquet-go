@@ -1,13 +1,12 @@
 package writer
 
 import (
-	"io"
-
 	"github.com/syucream/parquet-go/layout"
 	"github.com/syucream/parquet-go/marshal"
 	"github.com/syucream/parquet-go/parquet"
 	"github.com/syucream/parquet-go/schema"
 	"github.com/syucream/parquet-go/types"
+	"github.com/xitongsys/parquet-go/source"
 )
 
 type CSVWriter struct {
@@ -15,10 +14,10 @@ type CSVWriter struct {
 }
 
 //Create CSV writer
-func NewCSVWriter(md []string, w io.WriteCloser, np int64) (*CSVWriter, error) {
+func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, error) {
 	res := new(CSVWriter)
 	res.SchemaHandler = schema.NewSchemaHandlerFromMetadata(md)
-	res.w = w
+	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
 	res.CompressionType = parquet.CompressionCodec_SNAPPY
@@ -29,7 +28,7 @@ func NewCSVWriter(md []string, w io.WriteCloser, np int64) (*CSVWriter, error) {
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	res.Offset = 4
-	_, err := res.w.Write(magic)
+	_, err := res.PFile.Write([]byte("PAR1"))
 	res.MarshalFunc = marshal.MarshalCSV
 	return res, err
 }

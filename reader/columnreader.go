@@ -4,13 +4,14 @@ import (
 	"fmt"
 
 	"github.com/syucream/parquet-go/schema"
+	"github.com/xitongsys/parquet-go/source"
 )
 
 // NewParquetColumnReader creates a parquet column reader
-func NewParquetColumnReader(r ReadSeekCloser, np int64) (*ParquetReader, error) {
+func NewParquetColumnReader(pFile source.ParquetFile, np int64) (*ParquetReader, error) {
 	res := new(ParquetReader)
 	res.NP = np
-	res.r = r
+	res.PFile = pFile
 	if err := res.ReadFooter(); err != nil {
 		return nil, err
 	}
@@ -35,7 +36,7 @@ func (self *ParquetReader) SkipRowsByPath(pathStr string, num int64) error {
 
 	if _, ok := self.ColumnBuffers[pathStr]; !ok {
 		var err error
-		if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.r, self.Footer, self.SchemaHandler, pathStr); err != nil {
+		if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.PFile, self.Footer, self.SchemaHandler, pathStr); err != nil {
 			return err
 		}
 	}
@@ -74,7 +75,7 @@ func (self *ParquetReader) ReadColumnByPath(pathStr string, num int64) (values [
 
 	if _, ok := self.ColumnBuffers[pathStr]; !ok {
 		var err error
-		if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.r, self.Footer, self.SchemaHandler, pathStr); err != nil {
+		if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.PFile, self.Footer, self.SchemaHandler, pathStr); err != nil {
 			return []interface{}{}, []int32{}, []int32{}, err
 		}
 	}

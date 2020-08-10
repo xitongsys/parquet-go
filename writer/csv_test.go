@@ -1,21 +1,10 @@
 package writer
 
 import (
-	"bytes"
 	"testing"
+
+	"github.com/xitongsys/parquet-go-source/buffer"
 )
-
-type testBuffer struct {
-	buf bytes.Buffer
-}
-
-func (b *testBuffer) Write(p []byte) (int, error) {
-	return b.buf.Write(p)
-}
-
-func (b *testBuffer) Close() error {
-	return nil
-}
 
 func TestWriteCSV(t *testing.T) {
 	md := []string{
@@ -25,8 +14,11 @@ func TestWriteCSV(t *testing.T) {
 		"name=BirthCity, type=UTF8, encoding=PLAIN",
 	}
 
-	buf := &testBuffer{}
-	pw, err := NewCSVWriter(md, buf, 2)
+	fw, err := buffer.NewBufferFile(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pw, err := NewCSVWriter(md, fw, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +32,7 @@ func TestWriteCSV(t *testing.T) {
 	if err := pw.WriteStop(); err != nil {
 		t.Error(err)
 	}
-	if err := buf.Close(); err != nil {
+	if err := fw.Close(); err != nil {
 		t.Error(err)
 	}
 }
@@ -52,9 +44,11 @@ func TestWriteCSVPlainDictionary(t *testing.T) {
 		"name=Last, type=UTF8, encoding=PLAIN_DICTIONARY",
 		"name=BirthCity, type=UTF8, encoding=PLAIN_DICTIONARY",
 	}
-	buf := &testBuffer{}
-
-	pw, err := NewCSVWriter(md, buf, 2)
+	fw, err := buffer.NewBufferFile(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pw, err := NewCSVWriter(md, fw, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +62,7 @@ func TestWriteCSVPlainDictionary(t *testing.T) {
 	if err := pw.WriteStop(); err != nil {
 		t.Error(err)
 	}
-	if err := buf.Close(); err != nil {
+	if err := fw.Close(); err != nil {
 		t.Error(err)
 	}
 }
@@ -81,10 +75,12 @@ func BenchmarkWriteCSV(b *testing.B) {
 		"name=Last, type=UTF8, encoding=PLAIN",
 		"name=BirthCity, type=UTF8, encoding=PLAIN",
 	}
-
 	for i := 0; i < b.N; i++ {
-		buf := &testBuffer{}
-		pw, err := NewCSVWriter(md, buf, 2)
+		fw, err := buffer.NewBufferFile(nil)
+		if err != nil {
+			b.Fatal(err)
+		}
+		pw, err := NewCSVWriter(md, fw, 2)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -98,7 +94,7 @@ func BenchmarkWriteCSV(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		buf.Close()
+		fw.Close()
 	}
 }
 
@@ -111,8 +107,11 @@ func BenchmarkWriteCSVPlainDictionary(b *testing.B) {
 		"name=BirthCity, type=UTF8, encoding=PLAIN_DICTIONARY",
 	}
 	for i := 0; i < b.N; i++ {
-		buf := &testBuffer{}
-		pw, err := NewCSVWriter(md, buf, 2)
+		fw, err := buffer.NewBufferFile(nil)
+		if err != nil {
+			b.Fatal(err)
+		}
+		pw, err := NewCSVWriter(md, fw, 2)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -126,6 +125,6 @@ func BenchmarkWriteCSVPlainDictionary(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		buf.Close()
+		fw.Close()
 	}
 }
