@@ -2,8 +2,6 @@ package source
 
 import (
 	"io"
-
-	"github.com/apache/thrift/lib/go/thrift"
 )
 
 type ParquetFile interface {
@@ -13,13 +11,4 @@ type ParquetFile interface {
 	io.Closer
 	Open(name string) (ParquetFile, error)
 	Create(name string) (ParquetFile, error)
-}
-
-//Convert a file reater to Thrift reader
-func ConvertToThriftReader(file ParquetFile, offset int64, size int64) *thrift.TBufferedTransport {
-	// TODO check errors
-	_, _ = file.Seek(offset, 0)
-	thriftReader := thrift.NewStreamTransportR(file)
-	bufferReader := thrift.NewTBufferedTransport(thriftReader, int(size))
-	return bufferReader
 }
