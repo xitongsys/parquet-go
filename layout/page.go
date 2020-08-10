@@ -362,23 +362,6 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	return res
 }
 
-//This is a test function
-func ReadPage2(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
-	var err error
-	page, err := ReadPageRawData(thriftReader, schemaHandler, colMetaData)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	numValues, numRows, err := page.GetRLDLFromRawData(schemaHandler)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	if err = page.GetValueFromRawData(schemaHandler); err != nil {
-		return page, 0, 0, err
-	}
-	return page, numValues, numRows, nil
-}
-
 //Read page RawData
 func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, error) {
 	var (

@@ -9,7 +9,7 @@ import (
 )
 
 func TestReader_Read(t *testing.T) {
-	expectedRows := [] struct {
+	expectedRows := []struct {
 		Boolean bool
 		Int     int32
 		Long    int64
