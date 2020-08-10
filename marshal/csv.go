@@ -1,6 +1,8 @@
 package marshal
 
 import (
+	"fmt"
+
 	"github.com/syucream/parquet-go/common"
 	"github.com/syucream/parquet-go/layout"
 	"github.com/syucream/parquet-go/parquet"
@@ -9,13 +11,12 @@ import (
 
 //Marshal function for CSV like data
 func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*map[string]*layout.Table, error) {
-	res := make(map[string]*layout.Table)
-
 	numRecords := len(records)
 	if numRecords <= 0 {
-		return &res, nil
+		return nil, fmt.Errorf("given no record")
 	}
 
+	res := make(map[string]*layout.Table, numRecords)
 	for i := 0; i < len(records[0].([]interface{})); i++ {
 		pathStr := schemaHandler.GetRootInName() + "." + schemaHandler.Infos[i+1].InName
 		table := layout.NewEmptyTable()
@@ -41,5 +42,6 @@ func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*ma
 			}
 		}
 	}
+
 	return &res, nil
 }
