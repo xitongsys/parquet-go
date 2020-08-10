@@ -26,20 +26,18 @@ func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*ma
 		table.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
 		table.Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
 		table.Info = schemaHandler.Infos[i+1]
-		// Pre-allocate these arrays for efficiency
-		table.Values = make([]interface{}, 0, numRecords)
-		table.RepetitionLevels = make([]int32, 0, numRecords)
-		table.DefinitionLevels = make([]int32, 0, numRecords)
 
+		table.Values = make([]interface{}, numRecords)
+		table.RepetitionLevels = make([]int32, numRecords)
+		table.DefinitionLevels = make([]int32, numRecords)
 		for j := 0; j < numRecords; j++ {
 			rec := records[j].([]interface{})[i]
-			table.Values = append(table.Values, rec)
-			table.RepetitionLevels = append(table.RepetitionLevels, 0)
-
+			table.Values[j] = rec
+			table.RepetitionLevels[j] = 0
 			if rec == nil {
-				table.DefinitionLevels = append(table.DefinitionLevels, 0)
+				table.DefinitionLevels[j] = 0
 			} else {
-				table.DefinitionLevels = append(table.DefinitionLevels, 1)
+				table.DefinitionLevels[j] = 1
 			}
 		}
 	}
