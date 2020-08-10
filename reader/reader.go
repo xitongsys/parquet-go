@@ -347,10 +347,14 @@ func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) err
 }
 
 //Stop Read
-func (self *ParquetReader) ReadStop() {
+func (self *ParquetReader) ReadStop() error {
 	for _, cb := range self.ColumnBuffers {
 		if cb != nil {
-			cb.PFile.Close()
+			if err := cb.PFile.Close(); err != nil {
+				return err
+			}
 		}
 	}
+
+	return nil
 }

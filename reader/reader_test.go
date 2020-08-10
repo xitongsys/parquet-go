@@ -59,4 +59,8 @@ func TestReader_Read(t *testing.T) {
 	if !reflect.DeepEqual(fmt.Sprint(rows), fmt.Sprint(expectedRows)) {
 		t.Errorf("expected %v, but actual %v", expectedRows, rows)
 	}
+
+	if err := r.ReadStop(); err != nil {
+		t.Error(err)
+	}
 }
