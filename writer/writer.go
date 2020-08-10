@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"io"
 	"reflect"
 	"sync"
 
@@ -13,15 +14,17 @@ import (
 	"github.com/syucream/parquet-go/marshal"
 	"github.com/syucream/parquet-go/parquet"
 	"github.com/syucream/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/source"
 )
+
+var magic = []byte("PAR1")
 
 //ParquetWriter is a writer  parquet file
 type ParquetWriter struct {
+	w io.WriteCloser
+
 	SchemaHandler *schema.SchemaHandler
 	NP            int64 //parallel number
 	Footer        *parquet.FileMetaData
-	PFile         source.ParquetFile
 
 	PageSize        int64
 	RowGroupSize    int64
@@ -43,7 +46,7 @@ type ParquetWriter struct {
 }
 
 //Create a parquet handler. Obj is a object with tags or JSON schema string.
-func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
+func NewParquetWriter(w io.WriteCloser, obj interface{}, np int64) (*ParquetWriter, error) {
 	var err error
 
 	res := new(ParquetWriter)
@@ -56,7 +59,7 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.Size = 0
 	res.NumRows = 0
 	res.Offset = 4
-	res.PFile = pFile
+	res.w = w
 	res.PagesMapBuf = make(map[string][]*layout.Page)
 	res.DictRecs = make(map[string]*layout.DictRecType)
 	res.Footer = parquet.NewFileMetaData()
@@ -65,7 +68,7 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	//WARN  CorruptStatistics:118 - Ignoring statistics because created_by is null or empty! See PARQUET-251 and PARQUET-297
 	createdBy := "parquet-go version latest"
 	res.Footer.CreatedBy = &createdBy
-	_, err = res.PFile.Write([]byte("PAR1"))
+	_, err = res.w.Write(magic)
 	res.MarshalFunc = marshal.Marshal
 
 	if obj != nil {
@@ -128,16 +131,16 @@ func (self *ParquetWriter) WriteStop() error {
 		return err
 	}
 
-	if _, err = self.PFile.Write(footerBuf); err != nil {
+	if _, err = self.w.Write(footerBuf); err != nil {
 		return err
 	}
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
 
-	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
+	if _, err = self.w.Write(footerSizeBuf); err != nil {
 		return err
 	}
-	if _, err = self.PFile.Write([]byte("PAR1")); err != nil {
+	if _, err = self.w.Write(magic); err != nil {
 		return err
 	}
 	return nil
@@ -337,7 +340,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 
 				}
 				data := rowGroup.Chunks[k].Pages[l].RawData
-				if _, err = self.PFile.Write(data); err != nil {
+				if _, err = self.w.Write(data); err != nil {
 					return err
 				}
 				self.Offset += int64(len(data))
