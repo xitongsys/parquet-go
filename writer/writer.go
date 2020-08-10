@@ -200,6 +200,10 @@ func (self *ParquetWriter) flushObjs() error {
 			bgn, end = l, l
 		}
 
+		if end <= bgn {
+			break
+		}
+
 		wg.Add(1)
 		go func(b, e int, index int64) {
 			defer func() {
@@ -215,10 +219,6 @@ func (self *ParquetWriter) flushObjs() error {
 					}
 				}
 			}()
-
-			if e <= b {
-				return
-			}
 
 			tableMap, err2 := self.MarshalFunc(self.Objs[b:e], self.SchemaHandler)
 

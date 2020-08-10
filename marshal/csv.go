@@ -1,6 +1,8 @@
 package marshal
 
 import (
+	"fmt"
+
 	"github.com/syucream/parquet-go/common"
 	"github.com/syucream/parquet-go/layout"
 	"github.com/syucream/parquet-go/parquet"
@@ -9,11 +11,12 @@ import (
 
 //Marshal function for CSV like data
 func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*map[string]*layout.Table, error) {
-	res := make(map[string]*layout.Table)
-	if ln := len(records); ln <= 0 {
-		return &res, nil
+	numRecords := len(records)
+	if numRecords <= 0 {
+		return nil, fmt.Errorf("given no record")
 	}
 
+	res := make(map[string]*layout.Table, numRecords)
 	for i := 0; i < len(records[0].([]interface{})); i++ {
 		pathStr := schemaHandler.GetRootInName() + "." + schemaHandler.Infos[i+1].InName
 		table := layout.NewEmptyTable()
@@ -24,22 +27,21 @@ func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*ma
 		table.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
 		table.Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
 		table.Info = schemaHandler.Infos[i+1]
-		// Pre-allocate these arrays for efficiency
-		table.Values = make([]interface{}, 0, len(records))
-		table.RepetitionLevels = make([]int32, 0, len(records))
-		table.DefinitionLevels = make([]int32, 0, len(records))
 
-		for j := 0; j < len(records); j++ {
+		table.Values = make([]interface{}, numRecords)
+		table.RepetitionLevels = make([]int32, numRecords)
+		table.DefinitionLevels = make([]int32, numRecords)
+		for j := 0; j < numRecords; j++ {
 			rec := records[j].([]interface{})[i]
-			table.Values = append(table.Values, rec)
-			table.RepetitionLevels = append(table.RepetitionLevels, 0)
-
+			table.Values[j] = rec
+			table.RepetitionLevels[j] = 0
 			if rec == nil {
-				table.DefinitionLevels = append(table.DefinitionLevels, 0)
+				table.DefinitionLevels[j] = 0
 			} else {
-				table.DefinitionLevels = append(table.DefinitionLevels, 1)
+				table.DefinitionLevels[j] = 1
 			}
 		}
 	}
+
 	return &res, nil
 }

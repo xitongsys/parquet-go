@@ -3,3 +3,6 @@ example/output/*
 
 # exception to the rule
 !example/output/.gitkeep
+
+# profile results
+*.out
