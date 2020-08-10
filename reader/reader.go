@@ -13,21 +13,14 @@ import (
 	"github.com/syucream/parquet-go/marshal"
 	"github.com/syucream/parquet-go/parquet"
 	"github.com/syucream/parquet-go/schema"
+	"github.com/xitongsys/parquet-go/source"
 )
 
-// ReadSeekCloser is the interface that groups the basic Read, Seek and Close methods.
-type ReadSeekCloser interface {
-	io.Reader
-	io.Seeker
-	io.Closer
-}
-
 type ParquetReader struct {
-	r ReadSeekCloser
-
 	SchemaHandler *schema.SchemaHandler
 	NP            int64 //parallel number
 	Footer        *parquet.FileMetaData
+	PFile         source.ParquetFile
 
 	ColumnBuffers map[string]*ColumnBufferType
 
@@ -37,11 +30,11 @@ type ParquetReader struct {
 }
 
 //Create a parquet reader: obj is a object with schema tags or a JSON schema string
-func NewParquetReader(r ReadSeekCloser, obj interface{}, np int64) (*ParquetReader, error) {
+func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
 	res := new(ParquetReader)
 	res.NP = np
-	res.r = r
+	res.PFile = pFile
 	if err = res.ReadFooter(); err != nil {
 		return nil, err
 	}
@@ -70,7 +63,7 @@ func NewParquetReader(r ReadSeekCloser, obj interface{}, np int64) (*ParquetRead
 		schema := res.SchemaHandler.SchemaElements[i]
 		if schema.GetNumChildren() == 0 {
 			pathStr := res.SchemaHandler.IndexMap[int32(i)]
-			if res.ColumnBuffers[pathStr], err = NewColumnBuffer(r, res.Footer, res.SchemaHandler, pathStr); err != nil {
+			if res.ColumnBuffers[pathStr], err = NewColumnBuffer(pFile, res.Footer, res.SchemaHandler, pathStr); err != nil {
 				return res, err
 			}
 		}
@@ -91,7 +84,7 @@ func (self *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 		schemaElement := self.SchemaHandler.SchemaElements[i]
 		if schemaElement.GetNumChildren() == 0 {
 			pathStr := self.SchemaHandler.IndexMap[int32(i)]
-			if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.r, self.Footer, self.SchemaHandler, pathStr); err != nil {
+			if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.PFile, self.Footer, self.SchemaHandler, pathStr); err != nil {
 				return err
 			}
 		}
@@ -126,10 +119,10 @@ func (self *ParquetReader) GetNumRows() int64 {
 func (self *ParquetReader) GetFooterSize() (uint32, error) {
 	var err error
 	buf := make([]byte, 4)
-	if _, err = self.r.Seek(-8, io.SeekEnd); err != nil {
+	if _, err = self.PFile.Seek(-8, io.SeekEnd); err != nil {
 		return 0, err
 	}
-	if _, err = self.r.Read(buf); err != nil {
+	if _, err = self.PFile.Read(buf); err != nil {
 		return 0, err
 	}
 	size := binary.LittleEndian.Uint32(buf)
@@ -142,12 +135,12 @@ func (self *ParquetReader) ReadFooter() error {
 	if err != nil {
 		return err
 	}
-	if _, err = self.r.Seek(-(int64)(8+size), io.SeekEnd); err != nil {
+	if _, err = self.PFile.Seek(-(int64)(8+size), io.SeekEnd); err != nil {
 		return err
 	}
 	self.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
-	protocol := pf.GetProtocol(thrift.NewStreamTransportR(self.r))
+	protocol := pf.GetProtocol(thrift.NewStreamTransportR(self.PFile))
 	return self.Footer.Read(protocol)
 }
 
@@ -163,7 +156,7 @@ func (self *ParquetReader) SkipRows(num int64) error {
 
 	for _, pathStr := range self.SchemaHandler.ValueColumns {
 		if _, ok := self.ColumnBuffers[pathStr]; !ok {
-			if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.r, self.Footer, self.SchemaHandler, pathStr); err != nil {
+			if self.ColumnBuffers[pathStr], err = NewColumnBuffer(self.PFile, self.Footer, self.SchemaHandler, pathStr); err != nil {
 				return err
 			}
 		}
@@ -354,10 +347,14 @@ func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) err
 }
 
 //Stop Read
-func (self *ParquetReader) ReadStop() {
+func (self *ParquetReader) ReadStop() error {
 	for _, cb := range self.ColumnBuffers {
 		if cb != nil {
-			cb.r.Close()
+			if err := cb.PFile.Close(); err != nil {
+				return err
+			}
 		}
 	}
+
+	return nil
 }
