@@ -28,7 +28,6 @@ func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parque
 	var totSize int64 = 0
 
 	page := NewDataPage()
-	page.PageSize = pageSize
 	page.Header.DataPageHeader.NumValues = int32(len(dictRec.DictSlice))
 	page.Header.Type = parquet.PageType_DICTIONARY_PAGE
 
@@ -109,7 +108,6 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		}
 
 		page := NewDataPage()
-		page.PageSize = pageSize
 		page.Header.DataPageHeader.NumValues = numValues
 		page.Header.Type = parquet.PageType_DATA_PAGE
 

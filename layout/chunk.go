@@ -1,11 +1,24 @@
 package layout
 
 import (
-	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/syucream/parquet-go/common"
 	"github.com/syucream/parquet-go/encoding"
 	"github.com/syucream/parquet-go/parquet"
-	"github.com/syucream/parquet-go/schema"
+)
+
+var (
+	dataEncoding = []parquet.Encoding{
+		parquet.Encoding_RLE,
+		parquet.Encoding_BIT_PACKED,
+		parquet.Encoding_PLAIN,
+	}
+	dictEncoding = []parquet.Encoding{
+		parquet.Encoding_RLE,
+		parquet.Encoding_BIT_PACKED,
+		parquet.Encoding_PLAIN,
+		parquet.Encoding_PLAIN_DICTIONARY,
+		parquet.Encoding_RLE_DICTIONARY,
+	}
 )
 
 //Chunk stores the ColumnChunk in parquet file
@@ -43,10 +56,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 	chunk.ChunkHeader = parquet.NewColumnChunk()
 	metaData := parquet.NewColumnMetaData()
 	metaData.Type = *pages[0].Schema.Type
-	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE)
-	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_BIT_PACKED)
-	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN)
-	//metaData.Encodings = append(metaData.Encodings, parquet.Encoding_DELTA_BINARY_PACKED)
+	metaData.Encodings = dataEncoding
 	metaData.Codec = pages[0].CompressType
 	metaData.NumValues = numValues
 	metaData.TotalCompressedSize = totalCompressedSize
@@ -105,11 +115,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	chunk.ChunkHeader = parquet.NewColumnChunk()
 	metaData := parquet.NewColumnMetaData()
 	metaData.Type = *pages[1].Schema.Type
-	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE)
-	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_BIT_PACKED)
-	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN)
-	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_PLAIN_DICTIONARY)
-	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE_DICTIONARY)
+	metaData.Encodings = dictEncoding
 
 	metaData.Codec = pages[1].CompressType
 	metaData.NumValues = numValues
@@ -134,42 +140,4 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 
 	chunk.ChunkHeader.MetaData = metaData
 	return chunk
-}
-
-//Decode a dict chunk
-func DecodeDictChunk(chunk *Chunk) {
-	dictPage := chunk.Pages[0]
-	numPages := len(chunk.Pages)
-	for i := 1; i < numPages; i++ {
-		numValues := len(chunk.Pages[i].DataTable.Values)
-		for j := 0; j < numValues; j++ {
-			if chunk.Pages[i].DataTable.Values[j] != nil {
-				index := chunk.Pages[i].DataTable.Values[j].(int64)
-				chunk.Pages[i].DataTable.Values[j] = dictPage.DataTable.Values[index]
-			}
-		}
-	}
-	chunk.Pages = chunk.Pages[1:] // delete the head dict page
-}
-
-//Read one chunk from parquet file (Deprecated)
-func ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, chunkHeader *parquet.ColumnChunk) (*Chunk, error) {
-	chunk := new(Chunk)
-	chunk.ChunkHeader = chunkHeader
-
-	var readValues int64 = 0
-	var numValues int64 = chunkHeader.MetaData.GetNumValues()
-	for readValues < numValues {
-		page, cnt, _, err := ReadPage(thriftReader, schemaHandler, chunkHeader.GetMetaData())
-		if err != nil {
-			return nil, err
-		}
-		chunk.Pages = append(chunk.Pages, page)
-		readValues += cnt
-	}
-
-	if len(chunk.Pages) > 0 && chunk.Pages[0].Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
-		DecodeDictChunk(chunk)
-	}
-	return chunk, nil
 }
