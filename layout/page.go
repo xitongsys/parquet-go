@@ -343,10 +343,6 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 
 //Read page RawData
 func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, error) {
-	var (
-		err error
-	)
-
 	pageHeader, err := ReadPageHeader(thriftReader)
 	if err != nil {
 		return nil, err
@@ -440,7 +436,6 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 			if repetitionLevels, err = ReadDataPageValues(bytesReader,
 				parquet.Encoding_RLE,
 				parquet.Type_INT64,
-				-1,
 				numValues,
 				bitWidth); err != nil {
 				return 0, 0, err
@@ -461,7 +456,6 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 			definitionLevels, err = ReadDataPageValues(bytesReader,
 				parquet.Encoding_RLE,
 				parquet.Type_INT64,
-				-1,
 				numValues,
 				bitWidth)
 			if err != nil {
@@ -544,16 +538,9 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 			}
 		}
 		name := strings.Join(self.DataTable.Path, ".")
-		var values []interface{}
-		var ct parquet.ConvertedType = -1
-		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
-			ct = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetConvertedType()
-		}
-
-		values, err = ReadDataPageValues(bytesReader,
+		values, err := ReadDataPageValues(bytesReader,
 			self.Header.DataPageHeader.GetEncoding(),
 			*self.Schema.Type,
-			ct,
 			uint64(len(self.DataTable.DefinitionLevels))-numNulls,
 			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
 		if err != nil {
@@ -584,7 +571,7 @@ func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeade
 }
 
 //Read data page values
-func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encoding, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) ([]interface{}, error) {
+func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encoding, dataType parquet.Type, cnt uint64, bitWidth uint64) ([]interface{}, error) {
 	var res []interface{}
 	if cnt == 0 {
 		return res, nil
@@ -780,7 +767,6 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 			repetitionLevels, err = ReadDataPageValues(bytesReader,
 				parquet.Encoding_RLE,
 				parquet.Type_INT64,
-				-1,
 				numValues,
 				bitWidth)
 			if err != nil {
@@ -804,7 +790,6 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 			definitionLevels, err = ReadDataPageValues(bytesReader,
 				parquet.Encoding_RLE,
 				parquet.Type_INT64,
-				-1,
 				numValues,
 				bitWidth)
 			if err != nil {
@@ -828,15 +813,9 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 			}
 		}
 
-		var values []interface{}
-		var ct parquet.ConvertedType = -1
-		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
-			ct = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetConvertedType()
-		}
-		values, err = ReadDataPageValues(bytesReader,
+		values, err := ReadDataPageValues(bytesReader,
 			encodingType,
 			colMetaData.GetType(),
-			ct,
 			uint64(len(definitionLevels))-numNulls,
 			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
 		if err != nil {
