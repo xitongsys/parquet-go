@@ -53,8 +53,8 @@ func TestPage_EncodingValues(t *testing.T) {
 		page.Schema = &parquet.SchemaElement{
 			Type: c.tpe,
 		}
-		page.Info.Encoding = c.enc
-		page.Info.Length = int32(len(c.v))
+		page.encoding = c.enc
+		page.bitWidths = int32(len(c.v))
 
 		func() {
 			defer func() {

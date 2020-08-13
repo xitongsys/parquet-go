@@ -127,7 +127,9 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		page.Schema = table.Schema
 		page.CompressType = compressType
 		page.Path = table.Path
-		page.Info = table.Info
+
+		page.encoding = table.Info.Encoding
+		page.bitWidths = table.Info.Length
 
 		page.DictDataPageCompress(compressType, bitWidth, values)
 
