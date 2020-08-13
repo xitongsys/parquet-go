@@ -523,6 +523,7 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 		if err != nil {
 			return err
 		}
+
 	case parquet.PageType_DATA_PAGE_V2:
 		if self.RawData, err = compress.Uncompress(self.RawData, self.CompressType); err != nil {
 			return err
@@ -577,10 +578,11 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 		return res, nil
 	}
 
-	if encodingMethod == parquet.Encoding_PLAIN {
+	switch encodingMethod {
+	case parquet.Encoding_PLAIN:
 		return encoding.ReadPlain(bytesReader, dataType, cnt, bitWidth)
 
-	} else if encodingMethod == parquet.Encoding_PLAIN_DICTIONARY || encodingMethod == parquet.Encoding_RLE_DICTIONARY {
+	case parquet.Encoding_PLAIN_DICTIONARY, parquet.Encoding_RLE_DICTIONARY:
 		b, err := bytesReader.ReadByte()
 		if err != nil {
 			return res, err
@@ -593,7 +595,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 		}
 		return buf[:cnt], err
 
-	} else if encodingMethod == parquet.Encoding_RLE {
+	case parquet.Encoding_RLE:
 		values, err := encoding.ReadRLEBitPackedHybrid(bytesReader, bitWidth, 0)
 		if err != nil {
 			return res, err
@@ -605,11 +607,11 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 		}
 		return values[:cnt], nil
 
-	} else if encodingMethod == parquet.Encoding_BIT_PACKED {
+	case parquet.Encoding_BIT_PACKED:
 		//deprecated
 		return res, fmt.Errorf("Unsupported Encoding method BIT_PACKED")
 
-	} else if encodingMethod == parquet.Encoding_DELTA_BINARY_PACKED {
+	case parquet.Encoding_DELTA_BINARY_PACKED:
 		values, err := encoding.ReadDeltaBinaryPackedINT(bytesReader)
 		if err != nil {
 			return res, err
@@ -621,7 +623,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 		}
 		return values[:cnt], nil
 
-	} else if encodingMethod == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
+	case parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY:
 		values, err := encoding.ReadDeltaLengthByteArray(bytesReader)
 		if err != nil {
 			return res, err
@@ -633,7 +635,7 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 		}
 		return values[:cnt], nil
 
-	} else if encodingMethod == parquet.Encoding_DELTA_BYTE_ARRAY {
+	case parquet.Encoding_DELTA_BYTE_ARRAY:
 		values, err := encoding.ReadDeltaByteArray(bytesReader)
 		if err != nil {
 			return res, err
@@ -645,17 +647,14 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 		}
 		return values[:cnt], nil
 
-	} else {
+	default:
 		return res, fmt.Errorf("Unknown Encoding method")
+
 	}
 }
 
 //Read page from parquet file
 func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
-	var (
-		err error
-	)
-
 	pageHeader, err := ReadPageHeader(thriftReader)
 	if err != nil {
 		return nil, 0, 0, err
