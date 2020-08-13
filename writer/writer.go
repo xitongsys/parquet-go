@@ -294,7 +294,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 		chunkMap := make(map[string]*layout.Chunk)
 		for name, pages := range self.PagesMapBuf {
 			if len(pages) > 0 && pages[0].UseDictionaryEncoding() {
-				dictPage, _ := layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressionType)
+				dictPage, _ := layout.DictRecToDictPage(self.DictRecs[name], self.CompressionType)
 				tmp := append([]*layout.Page{dictPage}, pages...)
 				chunkMap[name] = layout.PagesToDictChunk(tmp)
 			} else {

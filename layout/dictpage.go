@@ -24,7 +24,7 @@ func NewDictRec(pT parquet.Type) *DictRecType {
 	return res
 }
 
-func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parquet.CompressionCodec) (*Page, int64) {
+func DictRecToDictPage(dictRec *DictRecType, compressType parquet.CompressionCodec) (*Page, int64) {
 	var totSize int64 = 0
 
 	page := NewDataPage()
