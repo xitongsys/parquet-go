@@ -24,7 +24,7 @@ func NewDictRec(pT parquet.Type) *DictRecType {
 	return res
 }
 
-func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parquet.CompressionCodec) (*Page, int64) {
+func DictRecToDictPage(dictRec *DictRecType, compressType parquet.CompressionCodec) (*Page, int64) {
 	var totSize int64 = 0
 
 	page := NewDataPage()
@@ -127,7 +127,9 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		page.Schema = table.Schema
 		page.CompressType = compressType
 		page.Path = table.Path
-		page.Info = table.Info
+
+		page.encoding = table.Info.Encoding
+		page.bitWidths = table.Info.Length
 
 		page.DictDataPageCompress(compressType, bitWidth, values)
 
