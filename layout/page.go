@@ -776,10 +776,15 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 		page.Header = pageHeader
 		table := new(Table)
 		table.Path = path
+		bitWidth, idx := 0, schemaHandler.MapIndex[name]
+		if colMetaData.GetType() == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+			bitWidth = int(schemaHandler.SchemaElements[idx].GetTypeLength())
+		}
+
 		table.Values, err = encoding.ReadPlain(bytesReader,
 			colMetaData.GetType(),
 			uint64(pageHeader.DictionaryPageHeader.GetNumValues()),
-			0)
+			uint64(bitWidth))
 		if err != nil {
 			return nil, 0, 0, err
 		}
