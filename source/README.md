@@ -20,5 +20,6 @@ Now it supports:
 * GCS (by [AOHUA](https://github.com/AOHUA))
 * MemoryFileSystem (by [daikokoro](https://github.com/daidokoro))
 * MemoryBuffer (by [pmalekn](https://github.com/pmalekn))
+* HTTP Multipart Request Body (by [mcgrawia](https://github.com/mcgrawia))
 
 Thanks for all the contributors !
