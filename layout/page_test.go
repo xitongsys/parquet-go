@@ -6,6 +6,27 @@ import (
 	"github.com/syucream/parquet-go/parquet"
 )
 
+func TestTableToDataPage(t *testing.T) {
+	table := NewEmptyTable()
+	table.Values = []interface{}{int32(1), int32(2)}
+	table.DefinitionLevels = []int32{0, 0}
+	table.RepetitionLevels = []int32{0, 0}
+	table.Schema = &parquet.SchemaElement{
+		Type:          parquet.TypePtr(parquet.Type_INT32),
+		ConvertedType: parquet.ConvertedTypePtr(parquet.ConvertedType_INT_32),
+	}
+
+	// Check unless panic for now
+	func() {
+		defer func() {
+			if err := recover(); err != nil {
+				t.Error(err)
+			}
+		}()
+		_, _ = TableToDataPages(table, 8*1024, parquet.CompressionCodec_GZIP)
+	}()
+}
+
 func TestPage_EncodingValues(t *testing.T) {
 	cases := []struct {
 		tpe *parquet.Type
@@ -56,6 +77,7 @@ func TestPage_EncodingValues(t *testing.T) {
 		page.encoding = c.enc
 		page.bitWidths = int32(len(c.v))
 
+		// Check unless panic for now
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
