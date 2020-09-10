@@ -321,7 +321,7 @@ func HeadToUpper(str string) string {
 		return strings.ToUpper(str[0:1]) + str[1:]
 	}
 	//handle non-alpha prefix such as "_"
-	return "P_" + str
+	return "PARGO_PREFIX_" + str
 }
 
 func CmpIntBinary(as string, bs string, order string, signed bool) bool {
