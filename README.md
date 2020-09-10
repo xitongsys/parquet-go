@@ -305,6 +305,12 @@ md := []string{
 
 [Example of CSV metadata](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
 
+### Tips
+
+* Parquet-go reads data as an object in Golang and every field must be a public field, which start with an upper letter. This field name we call it `InName`. Field name in parquet file we call it `ExName`. Function `common.HeadToUpper` converts `ExName` to `InName`. There are some restriction:
+1. It's not allowed if two field names are only different at their first letter case. Such as `name` and `Name`.
+2. `PARGO_PREFIX_` is a reserved string, which you'd better not use it as a name prefix. ([#294](https://github.com/xitongsys/parquet-go/issues/294))
+
 ## Parallel
 
 Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
