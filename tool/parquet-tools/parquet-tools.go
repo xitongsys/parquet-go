@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
-	"encoding/json"
 
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
@@ -57,18 +57,17 @@ func main() {
 				fmt.Println("Can't cat ", err)
 				return
 			}
-	
+
 			jsonBs, err := json.Marshal(res)
 			if err != nil {
 				fmt.Println("Can't to json ", err)
 				return
 			}
-	
+
 			fmt.Println(string(jsonBs))
 
 			totCnt += cnt
 		}
-		
 
 	default:
 		fmt.Println("Unknown command")

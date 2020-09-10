@@ -28,8 +28,8 @@ func main() {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err := 
-	writer.NewParquetWriter(fw, new(Student), 4)
+	pw, err :=
+		writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer")
 		return

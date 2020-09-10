@@ -5,20 +5,20 @@ import (
 	"time"
 
 	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
-	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type Student struct {
-	Name    string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
-	Age     int32   `parquet:"name=age, type=INT32"`
-	Id      int64   `parquet:"name=id, type=INT64"`
-	Weight  float32 `parquet:"name=weight, type=FLOAT"`
-	Sex     bool    `parquet:"name=sex, type=BOOLEAN"`
-	Day     int32   `parquet:"name=day, type=DATE"`
-	Scores	map[string]int32 `parquet:"name=scores, type=MAP, keytype=UTF8, valuetype=INT32"`
-	Ignored int32   //without parquet tag and won't write
+	Name    string           `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
+	Age     int32            `parquet:"name=age, type=INT32"`
+	Id      int64            `parquet:"name=id, type=INT64"`
+	Weight  float32          `parquet:"name=weight, type=FLOAT"`
+	Sex     bool             `parquet:"name=sex, type=BOOLEAN"`
+	Day     int32            `parquet:"name=day, type=DATE"`
+	Scores  map[string]int32 `parquet:"name=scores, type=MAP, keytype=UTF8, valuetype=INT32"`
+	Ignored int32            //without parquet tag and won't write
 }
 
 func main() {
@@ -48,8 +48,8 @@ func main() {
 			Sex:    bool(i%2 == 0),
 			Day:    int32(time.Now().Unix() / 3600 / 24),
 			Scores: map[string]int32{
-				"math": int32(90 + i%5),
-				"physics": int32(90 + i%3),
+				"math":     int32(90 + i%5),
+				"physics":  int32(90 + i%3),
 				"computer": int32(80 + i%10),
 			},
 		}
@@ -76,7 +76,7 @@ func main() {
 		log.Println("Can't create parquet reader", err)
 		return
 	}
-	
+
 	num = int(pr.GetNumRows())
 	//only read scores
 	res, err := pr.ReadPartialByNumber(num, "parquet_go_root.scores")

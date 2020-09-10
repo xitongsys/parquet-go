@@ -2,8 +2,8 @@ package schema
 
 import (
 	"errors"
-	"reflect"
 	"fmt"
+	"reflect"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -132,7 +132,6 @@ func (self *SchemaHandler) GetRepetitionLevelIndex(path []string, rl int32) (int
 	}
 	return res, fmt.Errorf("rl = %d not found in path = %v", rl, path)
 }
-
 
 // MaxRepetitionLevel returns the max repetition level type of a column by it's schema path
 func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
@@ -410,7 +409,7 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	schemaHandler.Infos = make([]*common.Tag, len(schemas))
 	for i := 0; i < len(schemas); i++ {
 		name := schemas[i].GetName()
-		InName, ExName := common.StringToVariableName(name),  name
+		InName, ExName := common.StringToVariableName(name), name
 		schemaHandler.Infos[i] = &common.Tag{
 			InName: InName,
 			ExName: ExName,

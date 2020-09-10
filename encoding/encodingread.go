@@ -343,7 +343,7 @@ func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) ([]interface{}, error) 
 			res[i] = cur[0]
 		}
 	}
-	
+
 	return res, err
 }
 

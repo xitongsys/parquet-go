@@ -11,10 +11,10 @@ import (
 
 func TestReadPlainBOOLEAN(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{(true)},
-		[]interface{}{(false)},
-		[]interface{}{(false), (false)},
-		[]interface{}{(false), (true)},
+		{(true)},
+		{(false)},
+		{(false), (false)},
+		{(false), (true)},
 	}
 
 	for _, data := range testData {
@@ -129,8 +129,8 @@ func TestReadUnsignedVarInt(t *testing.T) {
 
 func TestReadRLEBitPackedHybrid(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{int64(1), int64(2), int64(3), int64(4)},
-		[]interface{}{int64(0), int64(0), int64(0), int64(0), int64(0)},
+		{int64(1), int64(2), int64(3), int64(4)},
+		{int64(0), int64(0), int64(0), int64(0), int64(0)},
 	}
 	for _, data := range testData {
 		maxVal := uint64(data[len(data)-1].(int64))
@@ -144,8 +144,8 @@ func TestReadRLEBitPackedHybrid(t *testing.T) {
 
 func TestReadDeltaBinaryPackedINT(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{int64(1), int64(2), int64(3), int64(4)},
-		[]interface{}{int64(0), int64(0), int64(0), int64(0), int64(0)},
+		{int64(1), int64(2), int64(3), int64(4)},
+		{int64(0), int64(0), int64(0), int64(0), int64(0)},
 	}
 	for _, data := range testData {
 		res, _ := ReadDeltaBinaryPackedINT(bytes.NewReader(WriteDeltaINT64(data)))
@@ -157,7 +157,7 @@ func TestReadDeltaBinaryPackedINT(t *testing.T) {
 
 func TestReadDeltaByteArray(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{"Hello", "world"},
+		{"Hello", "world"},
 	}
 	for _, data := range testData {
 		res, _ := ReadDeltaByteArray(bytes.NewReader(WriteDeltaByteArray(data)))
@@ -169,7 +169,7 @@ func TestReadDeltaByteArray(t *testing.T) {
 
 func TestReadLengthDeltaByteArray(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{"Hello", "world"},
+		{"Hello", "world"},
 	}
 	for _, data := range testData {
 		res, _ := ReadDeltaLengthByteArray(bytes.NewReader(WriteDeltaLengthByteArray(data)))
@@ -181,8 +181,8 @@ func TestReadLengthDeltaByteArray(t *testing.T) {
 
 func TestReadBitPacked(t *testing.T) {
 	testData := [][]interface{}{
-		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
-		[]interface{}{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 2, 3, 4, 5, 6, 7, 8},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	}
 	for _, data := range testData {
 		ln := len(data)
