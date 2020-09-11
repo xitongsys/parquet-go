@@ -6,6 +6,7 @@ import (
 	"errors"
 	"reflect"
 	"sync"
+	"io"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
@@ -14,6 +15,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go-source/writerfile"
 )
 
 //ParquetWriter is a writer  parquet file
@@ -40,6 +42,11 @@ type ParquetWriter struct {
 	DictRecs map[string]*layout.DictRecType
 
 	MarshalFunc func(src []interface{}, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
+}
+
+func NewParquetWriterFromWriter(w io.Writer, obj interface{}, np int64) (*ParquetWriter, error) {
+	wf := writerfile.NewWriterFile(w)
+	return NewParquetWriter(wf, obj, np)
 }
 
 //Create a parquet handler. Obj is a object with tags or JSON schema string.
