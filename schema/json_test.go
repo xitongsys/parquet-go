@@ -40,3 +40,19 @@ func TestNewSchemaHandlerFromImproperJSON(t *testing.T) {
 	}
 
 }
+
+func TestNewSchemaHandlerFromJSONWithUnknownTags(t *testing.T) {
+	var improperJsonSchema string = `
+	{
+	  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
+	  "Fields": [
+		{"Tag": "dpconf_id=name, name=name, type=UTF8,  repetitiontype=REQUIRED"},
+		{"Tag": "dpconf_id=age,  name=age,  type=INT32, repetitiontype=REQUIRED"}
+	  ]
+	}
+	`
+	if _, err := NewSchemaHandlerFromJSON(improperJsonSchema); err != nil {
+		t.Errorf("expected no error with dpconf_id in the tags, but got '%s'", err)
+	}
+
+}
