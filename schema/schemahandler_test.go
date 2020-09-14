@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -21,5 +20,5 @@ type Student struct {
 
 func TestNewSchemaHandlerFromStruct(t *testing.T) {
 	schemaMap, _ := NewSchemaHandlerFromStruct(new(Student))
-	fmt.Println(schemaMap)
+	_ = schemaMap
 }
