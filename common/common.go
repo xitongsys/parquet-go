@@ -205,7 +205,7 @@ func StringToTag(tag string) *Tag {
 				panic(fmt.Errorf("Unknown valueencoding type: '%v'", val))
 			}
 		default:
-			panic(fmt.Errorf("Unrecognized tag '%v'", key))
+			// Don't do anything. People can add random tags to the JSON strings if they want!
 		}
 	}
 	return mp
