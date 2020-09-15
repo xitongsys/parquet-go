@@ -153,8 +153,14 @@ func (self *ParquetWriter) Write(src interface{}) error {
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 		src = val.Interface()
+	} else if val.Kind() == reflect.Slice {
+		for i := 0; i < val.Len(); i++ {
+			if err := self.Write(val.Index(i).Interface()); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
-
 	if self.CheckSizeCritical <= ln {
 		self.ObjSize = (self.ObjSize+common.SizeOf(val))/2 + 1
 	}
