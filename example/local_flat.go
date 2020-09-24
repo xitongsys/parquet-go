@@ -36,6 +36,7 @@ func main() {
 	}
 
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.PageSize = 8 * 1024 //8K
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 100
 	for i := 0; i < num; i++ {

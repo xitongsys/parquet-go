@@ -72,7 +72,7 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 
 All types
 
-#### PLAIN_DICTIONARY:
+#### PLAIN_DICTIONARY/RLE_DICTIONARY:
 
 All types
 
@@ -91,7 +91,7 @@ BYTE_ARRAY, UTF8
 ### Tips
 
 * Some platforms don't support all kinds of encodings. If you are not sure, just use PLAIN and PLAIN_DICTIONARY.
-* If the fields have many different values, please don't use PLAIN_DICTIONARY encoding. Because it will record all the different values in a map which will use a lot of memory.
+* If the fields have many different values, please don't use PLAIN_DICTIONARY encoding. Because it will record all the different values in a map which will use a lot of memory. Actually it use a 32-bit integer to store the index. It can not used if your unique values number is larger than 32-bit.
 
 ## Repetition Type
 
@@ -201,6 +201,12 @@ Two Readers are supported: ParquetReader, ColumnReader
 ### Tips
 
 * If the parquet file is very big (even the size of parquet file is small, the uncompressed size may be very large), please don't read all rows at one time, which may induce the OOM. You can read a small portion of the data at a time like a stream-oriented file.
+
+* `RowGroupSize` and `PageSize` may influence the final parquet file size. You can find the details from [here](https://github.com/apache/parquet-format). You can reset them in ParquetWriter
+```go
+	pw.RowGroupSize = 128 * 1024 * 1024 // default 128M
+	pw.PageSize = 8 * 1024 // default 8K
+```
 
 ## Schema
 
@@ -345,5 +351,5 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 
 * [parquet-tools](https://github.com/xitongsys/parquet-go/blob/master/tool/parquet-tools): Command line tools that aid in the inspection of Parquet files
 
-Please start to use it and give feedback or start it! Help is needed and anything is welcome.
+Please start to use it and give feedback or just star it! Help is needed and anything is welcome.
 
