@@ -66,6 +66,8 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 ### Tips
 * Although DECIMAL can be stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY.
 
+* Parquet-go supports type alias such `type MyString string`. But the base type must follow the table instructions.
+
 ## Encoding
 
 #### PLAIN:
@@ -344,6 +346,7 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 |[csv_write.go](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)|special csv writer|
 |[column_read.go](https://github.com/xitongsys/parquet-go/blob/master/example/column_read.go)|read raw column data and return value,repetitionLevel,definitionLevel|
 |[type.go](https://github.com/xitongsys/parquet-go/blob/master/example/type.go)|example for schema of types|
+|[type_alias.go](https://github.com/xitongsys/parquet-go/blob/master/example/type_alias.go)|example for type alias|
 |[writer.go](https://github.com/xitongsys/parquet-go/blob/master/example/writer.go)|create ParquetWriter from io.Writer|
 
 
