@@ -225,7 +225,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 					po = po.FieldByName(path[index])
 
 				} else {
-					po.Set(reflect.ValueOf(types.ParquetTypeToGoType(val, pT, cT)))
+					po.Set(reflect.ValueOf(types.ParquetTypeToGoType(val, pT, cT)).Convert(po.Type()))
 					break
 				}
 			}
