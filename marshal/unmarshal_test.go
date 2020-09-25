@@ -17,7 +17,7 @@ type Student struct {
 type Class struct {
 	Name     string   `parquet:"name=name, type=UTF8"`
 	ID       *int64   `parquet:"name=id, type=INT64"`
-	Required []string `parquet:"name=required, type=UTF8"`
+	Required []string `parquet:"name=required, valuetype=UTF8"`
 }
 
 func (c Class) String() string {
@@ -99,8 +99,8 @@ func TestMarshalUnmarshal(t *testing.T) {
 	stus := make([]interface{}, 0)
 	stus = append(stus, stu01, stu02)
 
-	src, _ := Marshal(stus, schemaHandler)
-	fmt.Println("Marshal Finished")
+	src, err := Marshal(stus, schemaHandler)
+	fmt.Println("Marshal Finished", err)
 
 	for name, table := range *src {
 		fmt.Println(name)

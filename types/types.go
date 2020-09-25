@@ -238,6 +238,10 @@ func GoTypeToParquetTypeBase(src interface{}, pT *parquet.Type) interface{} {
 		return src
 	}
 
+	if pT == nil {
+		return src
+	}
+
 	switch *pT {
 	case parquet.Type_BOOLEAN:
 		if _, ok := src.(bool); ok {
