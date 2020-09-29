@@ -613,7 +613,7 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeader, error) {
 	protocol := thrift.NewTCompactProtocol(thriftReader)
 	pageHeader := parquet.NewPageHeader()
-	err := pageHeader.Read(protocol)
+	err := pageHeader.Read(context.TODO(),protocol)
 	return pageHeader, err
 }
 
