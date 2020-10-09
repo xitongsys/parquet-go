@@ -123,7 +123,7 @@ func (self *ParquetReader) GetFooterSize() (uint32, error) {
 	if _, err = self.PFile.Seek(-8, io.SeekEnd); err != nil {
 		return 0, err
 	}
-	if _, err = self.PFile.Read(buf); err != nil {
+	if _, err = io.ReadFull(self.PFile, buf); err != nil {
 		return 0, err
 	}
 	size := binary.LittleEndian.Uint32(buf)
