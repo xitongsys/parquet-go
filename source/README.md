@@ -21,5 +21,6 @@ Now it supports:
 * MemoryFileSystem (by [daikokoro](https://github.com/daidokoro))
 * MemoryBuffer (by [pmalekn](https://github.com/pmalekn))
 * HTTP Multipart Request Body (by [mcgrawia](https://github.com/mcgrawia))
+* Azure Blobs (by [davigust](https://github.com/davigust))
 
 Thanks for all the contributors !
