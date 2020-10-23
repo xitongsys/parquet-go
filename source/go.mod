@@ -9,6 +9,7 @@ require (
 	github.com/aws/aws-sdk-go v1.30.19
 	github.com/colinmarc/hdfs/v2 v2.1.1
 	github.com/golang/mock v1.4.3
+	github.com/ncw/swift v1.0.52
 	github.com/spf13/afero v1.2.2
 	github.com/xitongsys/parquet-go v1.5.1
 )
