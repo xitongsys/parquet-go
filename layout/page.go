@@ -71,7 +71,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
-	pT, cT := table.Schema.Type, table.Schema.ConvertedType
+	pT, cT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Info.OmitStats
 
 	for i < totalLn {
 		j := i + 1
@@ -87,7 +87,11 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
 				var elSize int32
-				minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
+				if omitStats {
+					_, _, elSize = funcTable.MinMaxSize(nil, nil, table.Values[j])
+				} else {
+					minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
+				}
 				size += elSize
 			}
 			j++
@@ -106,8 +110,10 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.DataTable.Values = table.Values[i:j]
 		page.DataTable.DefinitionLevels = table.DefinitionLevels[i:j]
 		page.DataTable.RepetitionLevels = table.RepetitionLevels[i:j]
-		page.MaxVal = maxVal
-		page.MinVal = minVal
+		if !omitStats {
+			page.MaxVal = maxVal
+			page.MinVal = minVal
+		}
 		page.Schema = table.Schema
 		page.CompressType = compressType
 		page.Path = table.Path
@@ -216,7 +222,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	}
 
 	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
-	dataBuf := make([]byte, 0, len(repetitionLevelBuf) + len(definitionLevelBuf) + len(valuesRawBuf))
+	dataBuf := make([]byte, 0, len(repetitionLevelBuf)+len(definitionLevelBuf)+len(valuesRawBuf))
 	dataBuf = append(dataBuf, repetitionLevelBuf...)
 	dataBuf = append(dataBuf, definitionLevelBuf...)
 	dataBuf = append(dataBuf, valuesRawBuf...)
@@ -238,8 +244,8 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.MaxVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-		// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-		// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
+			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Max = tmpBuf
@@ -248,8 +254,8 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-		// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-		// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
+			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Min = tmpBuf
@@ -330,8 +336,8 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.MaxVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-		// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-		// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
+			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Max = tmpBuf
@@ -340,8 +346,8 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-		// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-		// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
+			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Min = tmpBuf
@@ -613,7 +619,7 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeader, error) {
 	protocol := thrift.NewTCompactProtocol(thriftReader)
 	pageHeader := parquet.NewPageHeader()
-	err := pageHeader.Read(context.TODO(),protocol)
+	err := pageHeader.Read(context.TODO(), protocol)
 	return pageHeader, err
 }
 

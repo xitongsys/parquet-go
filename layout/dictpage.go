@@ -77,7 +77,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	res := make([]*Page, 0)
 	i := 0
 
-	pT, cT := table.Schema.Type, table.Schema.ConvertedType
+	pT, cT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Info.OmitStats
 
 	for i < totalLn {
 		j := i
@@ -94,7 +94,11 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
 				var elSize int32
-				minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
+				if omitStats {
+					_, _, elSize = funcTable.MinMaxSize(nil, nil, table.Values[j])
+				} else {
+					minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
+				}
 				size += elSize
 				if idx, ok := dictRec.DictMap[table.Values[j]]; ok {
 					values = append(values, idx)
@@ -124,8 +128,10 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		//Values in DataTable of a DictPage is nil for optimization.
 		//page.DataTable.Values = values
 
-		page.MaxVal = maxVal
-		page.MinVal = minVal
+		if !omitStats {
+			page.MaxVal = maxVal
+			page.MinVal = minVal
+		}
 		page.Schema = table.Schema
 		page.CompressType = compressType
 		page.Path = table.Path
