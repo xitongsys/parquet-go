@@ -44,6 +44,10 @@ type Tag struct {
 	KeyEncoding   parquet.Encoding
 	ValueEncoding parquet.Encoding
 
+	OmitStats      bool
+	KeyOmitStats   bool
+	ValueOmitStats bool
+
 	RepetitionType      parquet.FieldRepetitionType
 	KeyRepetitionType   parquet.FieldRepetitionType
 	ValueRepetitionType parquet.FieldRepetitionType
@@ -76,6 +80,14 @@ func StringToTag(tag string) *Tag {
 				panic(err)
 			}
 			return int32(valInt)
+		}
+
+		valBoolean := func() bool {
+			valBoolean, err := strconv.ParseBool(val)
+			if err != nil {
+				panic(err)
+			}
+			return valBoolean
 		}
 
 		switch key {
@@ -122,6 +134,12 @@ func StringToTag(tag string) *Tag {
 			mp.ExName = val
 		case "inname":
 			mp.InName = val
+		case "omitstats":
+			mp.OmitStats = valBoolean()
+		case "keyomitstats":
+			mp.KeyOmitStats = valBoolean()
+		case "valueomitstats":
+			mp.ValueOmitStats = valBoolean()
 		case "repetitiontype":
 			switch strings.ToLower(val) {
 			case "repeated":
@@ -267,6 +285,7 @@ func GetKeyTagMap(src *Tag) *Tag {
 	res.Precision = src.KeyPrecision
 	res.FieldID = src.KeyFieldID
 	res.Encoding = src.KeyEncoding
+	res.OmitStats = src.KeyOmitStats
 	res.RepetitionType = parquet.FieldRepetitionType_REQUIRED
 	return res
 }
@@ -283,6 +302,7 @@ func GetValueTagMap(src *Tag) *Tag {
 	res.Precision = src.ValuePrecision
 	res.FieldID = src.ValueFieldID
 	res.Encoding = src.ValueEncoding
+	res.OmitStats = src.ValueOmitStats
 	res.RepetitionType = src.ValueRepetitionType
 	return res
 }
