@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"math/bits"
 	"strings"
 
@@ -407,7 +408,7 @@ func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *sch
 
 	compressedPageSize := pageHeader.GetCompressedPageSize()
 	buf := make([]byte, compressedPageSize)
-	if _, err := thriftReader.Read(buf); err != nil {
+	if _, err := io.ReadFull(thriftReader, buf); err != nil {
 		return nil, err
 	}
 
@@ -728,13 +729,13 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 		definitionLevelsBuf := make([]byte, dll)
 		dataBuf := make([]byte, compressedPageSize-rll-dll)
 
-		if _, err = thriftReader.Read(repetitionLevelsBuf); err != nil {
+		if _, err = io.ReadFull(thriftReader, repetitionLevelsBuf); err != nil {
 			return nil, 0, 0, err
 		}
-		if _, err = thriftReader.Read(definitionLevelsBuf); err != nil {
+		if _, err = io.ReadFull(thriftReader, definitionLevelsBuf); err != nil {
 			return nil, 0, 0, err
 		}
-		if _, err = thriftReader.Read(dataBuf); err != nil {
+		if _, err = io.ReadFull(thriftReader, dataBuf); err != nil {
 			return nil, 0, 0, err
 		}
 
@@ -762,7 +763,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 
 	} else {
 		buf = make([]byte, compressedPageSize)
-		if _, err = thriftReader.Read(buf); err != nil {
+		if _, err = io.ReadFull(thriftReader, buf); err != nil {
 			return nil, 0, 0, err
 		}
 		codec := colMetaData.GetCodec()

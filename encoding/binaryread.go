@@ -9,7 +9,7 @@ import (
 
 func BinaryReadINT32(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*4)
-	n, err := r.Read(buf)
+	n, err := io.ReadFull(r, buf)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func BinaryReadINT32(r io.Reader, nums []interface{}) error {
 
 func BinaryReadINT64(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*8)
-	n, err := r.Read(buf)
+	n, err := io.ReadFull(r, ,buf)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func BinaryReadINT64(r io.Reader, nums []interface{}) error {
 
 func BinaryReadFLOAT32(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*4)
-	n, err := r.Read(buf)
+	n, err := io.ReadFull(r, buf)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func BinaryReadFLOAT32(r io.Reader, nums []interface{}) error {
 
 func BinaryReadFLOAT64(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*8)
-	n, err := r.Read(buf)
+	n, err := io.ReadFull(r, buf)
 	if err != nil {
 		return err
 	}
