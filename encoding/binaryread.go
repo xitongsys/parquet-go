@@ -28,7 +28,7 @@ func BinaryReadINT32(r io.Reader, nums []interface{}) error {
 
 func BinaryReadINT64(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*8)
-	n, err := io.ReadFull(r, ,buf)
+	n, err := io.ReadFull(r, buf)
 	if err != nil {
 		return err
 	}
