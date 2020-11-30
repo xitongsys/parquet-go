@@ -47,10 +47,6 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionTyp
 			v := int32(0)
 			return reflect.TypeOf(&v)
 
-		} else if *pT == parquet.Type_INT32 {
-			v := int8(0)
-			return reflect.TypeOf(&v)
-
 		} else if *pT == parquet.Type_INT64 {
 			v := int64(0)
 			return reflect.TypeOf(&v)
