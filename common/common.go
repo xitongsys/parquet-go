@@ -271,7 +271,7 @@ func NewSchemaElementFromTagMap(info *Tag) *parquet.SchemaElement {
 		schema.Type = &t
 
 	} else {
-		panic(err)
+		panic("type " + info.Type + ": " + err.Error())
 	}
 
 	if ct, err := parquet.ConvertedTypeFromString(info.ConvertedType); err == nil {
