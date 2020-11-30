@@ -9,6 +9,7 @@ import (
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/types"
 )
 
 type Node struct {
@@ -264,7 +265,9 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 				}
 			} else {
 				table := res[node.PathMap.Path]
-				table.Values = append(table.Values, node.Val.Interface())
+				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
+				schema := schemaHandler.SchemaElements[schemaIndex]
+				table.Values = append(table.Values, types.InterfaceToParquetType(node.Val.Interface(), schema.Type))
 				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 				table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
 				continue

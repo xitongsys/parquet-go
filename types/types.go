@@ -203,6 +203,65 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 	}
 }
 
+func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
+	if src == nil {
+		return src
+	}
+
+	if pT == nil {
+		return src
+	}
+
+	switch *pT {
+	case parquet.Type_BOOLEAN:
+		if _, ok := src.(bool); ok {
+			return src
+		}else{
+			return reflect.ValueOf(src).Bool()
+		}
+
+	case parquet.Type_INT32:
+		if _, ok := src.(int32); ok {
+			return src
+		}else{
+			return int32(reflect.ValueOf(src).Int())
+		}
+
+	case parquet.Type_INT64:
+		if _, ok := src.(int64); ok {
+			return src
+		}else{
+			return reflect.ValueOf(src).Int()
+		}
+	
+	case parquet.Type_FLOAT:
+		if _, ok := src.(float32); ok {
+			return src
+		}else {
+			return float32(reflect.ValueOf(src).Float())
+		}
+
+	case parquet.Type_DOUBLE:
+		if _, ok := src.(float64); ok {
+			return src
+		}else {
+			return reflect.ValueOf(src).Float()
+		}
+
+	case parquet.Type_INT96: fallthrough
+	case parquet.Type_BYTE_ARRAY: fallthrough
+	case parquet.Type_FIXED_LEN_BYTE_ARRAY:
+		if _, ok := src.(string); ok {
+			return src
+		}else{
+			return reflect.ValueOf(src).String()
+		}
+
+	default:
+		return src
+	}
+}
+
 //order=LittleEndian or BigEndian; length is byte num
 func StrIntToBinary(num string, order string, length int, signed bool) string {
 	bigNum := new(big.Int)
