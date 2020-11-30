@@ -72,7 +72,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
-	pT, cT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Info.OmitStats
+	pT, cT, logT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Schema.LogicalType, table.Info.OmitStats
 
 	for i < totalLn {
 		j := i + 1
@@ -82,7 +82,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		var maxVal interface{} = table.Values[i]
 		var minVal interface{} = table.Values[i]
 
-		funcTable := common.FindFuncTable(pT, cT)
+		funcTable := common.FindFuncTable(pT, cT, logT)
 
 		for j < totalLn && size < pageSize {
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {

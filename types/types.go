@@ -8,106 +8,15 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-func TypeNameToParquetType(name string, baseName string) (*parquet.Type, *parquet.ConvertedType) {
-	if name == "BOOLEAN" {
-		return parquet.TypePtr(parquet.Type_BOOLEAN), nil
-	} else if name == "INT32" {
-		return parquet.TypePtr(parquet.Type_INT32), nil
-	} else if name == "INT64" {
-		return parquet.TypePtr(parquet.Type_INT64), nil
-	} else if name == "INT96" {
-		return parquet.TypePtr(parquet.Type_INT96), nil
-	} else if name == "FLOAT" {
-		return parquet.TypePtr(parquet.Type_FLOAT), nil
-	} else if name == "DOUBLE" {
-		return parquet.TypePtr(parquet.Type_DOUBLE), nil
-	} else if name == "BYTE_ARRAY" {
-		return parquet.TypePtr(parquet.Type_BYTE_ARRAY), nil
-	} else if name == "FIXED_LEN_BYTE_ARRAY" {
-		return parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), nil
-	} else if name == "UTF8" {
-		return parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_UTF8)
-	} else if name == "INT_8" {
-		return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_8)
-	} else if name == "INT_16" {
-		return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_16)
-	} else if name == "INT_32" {
-		return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_32)
-	} else if name == "INT_64" {
-		return parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_64)
-	} else if name == "UINT_8" {
-		return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8)
-	} else if name == "UINT_16" {
-		return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_16)
-	} else if name == "UINT_32" {
-		return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_32)
-	} else if name == "UINT_64" {
-		return parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_64)
-	} else if name == "DATE" {
-		return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DATE)
-	} else if name == "TIME_MILLIS" {
-		return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MILLIS)
-	} else if name == "TIME_MICROS" {
-		return parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MICROS)
-	} else if name == "TIMESTAMP_MILLIS" {
-		return parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MILLIS)
-	} else if name == "TIMESTAMP_MICROS" {
-		return parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MICROS)
-	} else if name == "INTERVAL" {
-		return parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL)
-	} else if name == "DECIMAL" {
-		if baseName == "INT32" {
-			return parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)
-		} else if baseName == "INT64" {
-			return parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)
-		} else if baseName == "FIXED_LEN_BYTE_ARRAY" {
-			return parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)
-		} else {
-			return parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)
-		}
-	}
-	panic(fmt.Errorf("Unknown data type: '%s'", name))
-}
-
-func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT *parquet.FieldRepetitionType) reflect.Type {
+func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionType) reflect.Type {
 	if rT == nil || *rT != parquet.FieldRepetitionType_OPTIONAL {
 		if *pT == parquet.Type_BOOLEAN {
 			return reflect.TypeOf(true)
 
-		} else if *pT == parquet.Type_INT32 && cT == nil {
-			return reflect.TypeOf(int32(0))
-
-		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_8 {
-			return reflect.TypeOf(int8(0))
-
-		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_16 {
-			return reflect.TypeOf(int16(0))
-
-		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_32 {
-			return reflect.TypeOf(int32(0))
-
-		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_8 {
-			return reflect.TypeOf(uint8(0))
-
-		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_16 {
-			return reflect.TypeOf(uint16(0))
-
-		}else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
-			return reflect.TypeOf(uint32(0))
-
 		} else if *pT == parquet.Type_INT32 {
 			return reflect.TypeOf(int32(0))
 
-		}else if *pT == parquet.Type_INT64 && cT == nil {
-			return reflect.TypeOf(int64(0))
-
-		}else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_INT_64 {
-			return reflect.TypeOf(int64(0))
-		
-		}else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_UINT_64 {
-			return reflect.TypeOf(uint64(0))
-
-		} else if *pT == parquet.Type_INT64 {
+		}else if *pT == parquet.Type_INT64 {
 			return reflect.TypeOf(int64(0))
 
 		} else if *pT == parquet.Type_INT96 {
@@ -134,48 +43,12 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 			v := true
 			return reflect.TypeOf(&v)
 
-		} else if *pT == parquet.Type_INT32 && cT == nil{
-			v := int32(0)
-			return reflect.TypeOf(&v)
-
-		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_8 {
-			v := int8(0)
-			return reflect.TypeOf(&v)
-
-		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_16 {
-			v := int16(0)
-			return reflect.TypeOf(&v)
-
-		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_INT_32 {
-			v := int32(0)
-			return reflect.TypeOf(&v)
-		
-		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_8 {
-			v := uint8(0)
-			return reflect.TypeOf(&v)
-
-		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_16 {
-			v := uint16(0)
-			return reflect.TypeOf(&v)
-
-		} else if *pT == parquet.Type_INT32 && *cT == parquet.ConvertedType_UINT_32 {
-			v := uint32(0)
-			return reflect.TypeOf(&v)
-
 		} else if *pT == parquet.Type_INT32 {
 			v := int32(0)
 			return reflect.TypeOf(&v)
 
-		} else if *pT == parquet.Type_INT64 && cT == nil {
-			v := int64(0)
-			return reflect.TypeOf(&v)
-
-		} else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_INT_64 {
-			v := int64(0)
-			return reflect.TypeOf(&v)
-
-		} else if *pT == parquet.Type_INT64 && *cT == parquet.ConvertedType_UINT_64 {
-			v := uint64(0)
+		} else if *pT == parquet.Type_INT32 {
+			v := int8(0)
 			return reflect.TypeOf(&v)
 
 		} else if *pT == parquet.Type_INT64 {
@@ -205,147 +78,6 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, cT *parquet.ConvertedType, rT 
 		} else {
 			return nil
 		}
-	}
-}
-
-func ParquetTypeToGoType(src interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
-	if src == nil {
-		return nil
-	}
-	if cT == nil {
-		return src
-	}
-
-	if *cT == parquet.ConvertedType_INT_8 {
-		return int8(src.(int32))
-	} else if *cT == parquet.ConvertedType_INT_16 {
-		return int16(src.(int32))
-	} else if *cT == parquet.ConvertedType_UINT_8 {
-		return uint8(src.(int32))
-	} else if *cT == parquet.ConvertedType_UINT_16 {
-		return uint16(src.(int32))
-	} else if *cT == parquet.ConvertedType_UINT_32 {
-		return uint32(src.(int32))
-	} else if *cT == parquet.ConvertedType_UINT_64 {
-		return uint64(src.(int64))
-	} else {
-		return src
-	}
-}
-
-func GoTypeToParquetTypeBase(src interface{}, pT *parquet.Type) interface{} {
-	if src == nil {
-		return src
-	}
-
-	if pT == nil {
-		return src
-	}
-
-	switch *pT {
-	case parquet.Type_BOOLEAN:
-		if _, ok := src.(bool); ok {
-			return src
-		}else{
-			return reflect.ValueOf(src).Bool()
-		}
-
-	case parquet.Type_INT32:
-		if _, ok := src.(int32); ok {
-			return src
-		}else{
-			return int32(reflect.ValueOf(src).Int())
-		}
-
-	case parquet.Type_INT64:
-		if _, ok := src.(int64); ok {
-			return src
-		}else{
-			return reflect.ValueOf(src).Int()
-		}
-	
-	case parquet.Type_FLOAT:
-		if _, ok := src.(float32); ok {
-			return src
-		}else {
-			return float32(reflect.ValueOf(src).Float())
-		}
-
-	case parquet.Type_DOUBLE:
-		if _, ok := src.(float64); ok {
-			return src
-		}else {
-			return reflect.ValueOf(src).Float()
-		}
-
-	case parquet.Type_INT96: fallthrough
-	case parquet.Type_BYTE_ARRAY: fallthrough
-	case parquet.Type_FIXED_LEN_BYTE_ARRAY:
-		if _, ok := src.(string); ok {
-			return src
-		}else{
-			return reflect.ValueOf(src).String()
-		}
-
-	default:
-		return src
-	}
-}
-
-func GoTypeToParquetType(src interface{}, pT *parquet.Type, cT *parquet.ConvertedType) interface{} {
-	if src == nil {
-		return nil
-	}
-	
-	if cT == nil {
-		return GoTypeToParquetTypeBase(src, pT)
-	}
-
-	switch *cT {
-	case parquet.ConvertedType_INT_8:
-		if v, ok := src.(int8); ok {
-			return int32(v)
-		}else{
-			return int32(reflect.ValueOf(src).Int())
-		}
-
-	case parquet.ConvertedType_INT_16:
-		if v, ok := src.(int16); ok {
-			return int32(v)
-		}else{
-			return int32(reflect.ValueOf(src).Int())
-		}
-
-	case parquet.ConvertedType_UINT_8:
-		if v, ok := src.(uint8); ok {
-			return int32(v)
-		}else{
-			return int32(reflect.ValueOf(src).Uint())
-		}
-
-	case parquet.ConvertedType_UINT_16:
-		if v, ok := src.(uint16); ok {
-			return int32(v)
-		}else{
-			return int32(reflect.ValueOf(src).Uint())
-		}
-
-	case parquet.ConvertedType_UINT_32:
-		if v, ok := src.(uint32); ok {
-			return int32(v)
-		}else {
-			return int32(reflect.ValueOf(src).Uint())
-		}
-		
-	case parquet.ConvertedType_UINT_64:
-		if v, ok := src.(uint64); ok {
-			return int64(v)
-		}else {
-			return int64(reflect.ValueOf(src).Uint())
-		}
-
-	default:
-		return GoTypeToParquetTypeBase(src, pT)
 	}
 }
 

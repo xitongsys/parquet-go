@@ -9,7 +9,6 @@ import (
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/types"
 )
 
 //Record Map KeyValue pair
@@ -111,7 +110,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 			po, index := root, prefixIndex
 			for index < len(path) {
 				schemaIndex := schemaIndexs[index]
-				pT, cT := schemaHandler.SchemaElements[schemaIndex].Type, schemaHandler.SchemaElements[schemaIndex].ConvertedType
+				_, cT := schemaHandler.SchemaElements[schemaIndex].Type, schemaHandler.SchemaElements[schemaIndex].ConvertedType
 
 				if po.Type().Kind() == reflect.Slice && (cT == nil || *cT != parquet.ConvertedType_LIST) {
 					if po.IsNil() {
@@ -225,7 +224,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 					po = po.FieldByName(path[index])
 
 				} else {
-					po.Set(reflect.ValueOf(types.ParquetTypeToGoType(val, pT, cT)).Convert(po.Type()))
+					po.Set(reflect.ValueOf(val).Convert(po.Type()))
 					break
 				}
 			}

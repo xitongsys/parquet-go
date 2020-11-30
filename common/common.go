@@ -20,9 +20,9 @@ type Tag struct {
 	KeyType   string
 	ValueType string
 
-	BaseType      string
-	KeyBaseType   string
-	ValueBaseType string
+	ConvertedType      string
+	KeyConvertedType   string
+	ValueConvertedType string
 
 	Length      int32
 	KeyLength   int32
@@ -36,6 +36,10 @@ type Tag struct {
 	KeyPrecision   int32
 	ValuePrecision int32
 
+	IsAdjustedToUTC bool
+	KeyIsAdjustedToUTC bool
+	ValueIsAdjustedToUTC bool
+
 	FieldID      int32
 	KeyFieldID   int32
 	ValueFieldID int32
@@ -48,17 +52,13 @@ type Tag struct {
 	KeyOmitStats   bool
 	ValueOmitStats bool
 
-	IsAdjustedToUTC bool
-	KeyIsAdjustedToUTC bool 
-	ValueIsAdjustedToUTC bool
-
 	RepetitionType      parquet.FieldRepetitionType
 	KeyRepetitionType   parquet.FieldRepetitionType
 	ValueRepetitionType parquet.FieldRepetitionType
 
-	LogicalTypeFields map[string]string
-	KeyLogicalTypeFields map[string]string
-	ValueLogicalTypeFields map[string]string
+	LogicalTypeFields 		map[string]string
+	KeyLogicalTypeFields 	map[string]string
+	ValueLogicalTypeFields 	map[string]string
 }
 
 func NewTag() *Tag {
@@ -109,12 +109,12 @@ func StringToTag(tag string) *Tag {
 			mp.KeyType = val
 		case "valuetype":
 			mp.ValueType = val
-		case "basetype":
-			mp.BaseType = val
-		case "keybasetype":
-			mp.KeyBaseType = val
-		case "valuebasetype":
-			mp.ValueBaseType = val
+		case "convertedtype":
+			mp.ConvertedType = val
+		case "keyconvertedtype":
+			mp.KeyConvertedType = val
+		case "valueconvertedtype":
+			mp.ValueConvertedType = val
 		case "length":
 			mp.Length = valInt32()
 		case "keylength":
@@ -139,6 +139,12 @@ func StringToTag(tag string) *Tag {
 			mp.KeyFieldID = valInt32()
 		case "valuefieldid":
 			mp.ValueFieldID = valInt32()
+		case "isadjustedtoutc":
+			mp.IsAdjustedToUTC = valBoolean()
+		case "keyisadjustedtoutc":
+			mp.KeyIsAdjustedToUTC = valBoolean()
+		case "valueisadjustedtoutc":
+			mp.ValueIsAdjustedToUTC = valBoolean()
 		case "name":
 			if mp.InName == "" {
 				mp.InName = StringToVariableName(val)
@@ -152,12 +158,6 @@ func StringToTag(tag string) *Tag {
 			mp.KeyOmitStats = valBoolean()
 		case "valueomitstats":
 			mp.ValueOmitStats = valBoolean()
-		case "isadjustedtoutc":
-			mp.IsAdjustedToUTC = valBoolean()
-		case "keyisadjustedtoutc":
-			mp.KeyIsAdjustedToUTC = valBoolean()
-		case "valueisadjustedtoutc":
-			mp.ValueIsAdjustedToUTC = valBoolean()
 		case "repetitiontype":
 			switch strings.ToLower(val) {
 			case "repeated":
@@ -267,30 +267,15 @@ func NewSchemaElementFromTagMap(info *Tag) *parquet.SchemaElement {
 	schema.RepetitionType = &info.RepetitionType
 	schema.NumChildren = nil
 
-	typeName := info.Type
-	if t, err := parquet.TypeFromString(typeName); err == nil {
+	if t, err := parquet.TypeFromString(info.Type); err == nil {
 		schema.Type = &t
 
 	} else {
-		ct, _ := parquet.ConvertedTypeFromString(typeName)
+		panic(err)
+	}
+
+	if ct, err := parquet.ConvertedTypeFromString(info.ConvertedType); err == nil {
 		schema.ConvertedType = &ct
-		if typeName == "INT_8" || typeName == "INT_16" || typeName == "INT_32" ||
-			typeName == "UINT_8" || typeName == "UINT_16" || typeName == "UINT_32" ||
-			typeName == "DATE" || typeName == "TIME_MILLIS" {
-			schema.Type = parquet.TypePtr(parquet.Type_INT32)
-		} else if typeName == "INT_64" || typeName == "UINT_64" ||
-			typeName == "TIME_MICROS" || typeName == "TIMESTAMP_MICROS" || typeName == "TIMESTAMP_MILLIS" {
-			schema.Type = parquet.TypePtr(parquet.Type_INT64)
-		} else if typeName == "UTF8" || typeName == "JSON" || typeName == "BSON" {
-			schema.Type = parquet.TypePtr(parquet.Type_BYTE_ARRAY)
-		} else if typeName == "INTERVAL" {
-			schema.Type = parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY)
-			var ln int32 = 12
-			schema.TypeLength = &ln
-		} else if typeName == "DECIMAL" {
-			t, _ = parquet.TypeFromString(info.BaseType)
-			schema.Type = &t
-		}
 	}
 
 	var logicalType *parquet.LogicalType
@@ -320,7 +305,7 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) *parquet.LogicalType {
 			logicalType.LIST = parquet.NewListType()
 		case "ENUM":
 			logicalType.ENUM = parquet.NewEnumType()
-			
+
 		case "DECIMAL":
 			logicalType.DECIMAL = parquet.NewDecimalType()
 			logicalType.DECIMAL.Precision = Str2Int32(mp["logicaltype.precision"])
@@ -384,7 +369,6 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) *parquet.LogicalType {
 		return logicalType
 	}
 }
-
 
 func NewLogicalTypeFromConvertedType(schemaElement *parquet.SchemaElement, info *Tag) *parquet.LogicalType {
 	_, ct := schemaElement.Type, schemaElement.ConvertedType
@@ -497,7 +481,8 @@ func GetKeyTagMap(src *Tag) *Tag {
 	res.InName = "Key"
 	res.ExName = "key"
 	res.Type = src.KeyType
-	res.BaseType = src.KeyBaseType
+	res.ConvertedType = src.KeyConvertedType
+	res.IsAdjustedToUTC = src.KeyIsAdjustedToUTC
 	res.Length = src.KeyLength
 	res.Scale = src.KeyScale
 	res.Precision = src.KeyPrecision
@@ -514,7 +499,8 @@ func GetValueTagMap(src *Tag) *Tag {
 	res.InName = "Value"
 	res.ExName = "value"
 	res.Type = src.ValueType
-	res.BaseType = src.ValueBaseType
+	res.ConvertedType = src.ValueConvertedType
+	res.IsAdjustedToUTC = src.ValueIsAdjustedToUTC
 	res.Length = src.ValueLength
 	res.Scale = src.ValueScale
 	res.Precision = src.ValuePrecision
@@ -622,8 +608,8 @@ func CmpIntBinary(as string, bs string, order string, signed bool) bool {
 	return false
 }
 
-func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType) FuncTable {
-	if cT == nil {
+func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType, logT *parquet.LogicalType) FuncTable {
+	if cT == nil && logT == nil {
 		if *pT == parquet.Type_BOOLEAN {
 			return boolFuncTable{}
 		} else if *pT == parquet.Type_INT32 {
@@ -643,29 +629,66 @@ func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType) FuncTable {
 		}
 	}
 
-	if *cT == parquet.ConvertedType_UTF8 || *cT == parquet.ConvertedType_BSON || *cT == parquet.ConvertedType_JSON {
-		return stringFuncTable{}
-	} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
-		*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
-		return int32FuncTable{}
-	} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
-		return uint32FuncTable{}
-	} else if *cT == parquet.ConvertedType_INT_64 || *cT == parquet.ConvertedType_TIME_MICROS ||
-		*cT == parquet.ConvertedType_TIMESTAMP_MILLIS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS {
-		return int64FuncTable{}
-	} else if *cT == parquet.ConvertedType_UINT_64 {
-		return uint64FuncTable{}
-	} else if *cT == parquet.ConvertedType_INTERVAL {
-		return intervalFuncTable{}
-	} else if *cT == parquet.ConvertedType_DECIMAL {
-		if *pT == parquet.Type_BYTE_ARRAY || *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
-			return decimalStringFuncTable{}
-		} else if *pT == parquet.Type_INT32 {
+	if cT != nil {
+		if *cT == parquet.ConvertedType_UTF8 || *cT == parquet.ConvertedType_BSON || *cT == parquet.ConvertedType_JSON {
+			return stringFuncTable{}
+		} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
+			*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {
 			return int32FuncTable{}
-		} else if *pT == parquet.Type_INT64 {
+		} else if *cT == parquet.ConvertedType_UINT_8 || *cT == parquet.ConvertedType_UINT_16 || *cT == parquet.ConvertedType_UINT_32 {
+			return uint32FuncTable{}
+		} else if *cT == parquet.ConvertedType_INT_64 || *cT == parquet.ConvertedType_TIME_MICROS ||
+			*cT == parquet.ConvertedType_TIMESTAMP_MILLIS || *cT == parquet.ConvertedType_TIMESTAMP_MICROS {
 			return int64FuncTable{}
+		} else if *cT == parquet.ConvertedType_UINT_64 {
+			return uint64FuncTable{}
+		} else if *cT == parquet.ConvertedType_INTERVAL {
+			return intervalFuncTable{}
+		} else if *cT == parquet.ConvertedType_DECIMAL {
+			if *pT == parquet.Type_BYTE_ARRAY || *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+				return decimalStringFuncTable{}
+			} else if *pT == parquet.Type_INT32 {
+				return int32FuncTable{}
+			} else if *pT == parquet.Type_INT64 {
+				return int64FuncTable{}
+			}
 		}
 	}
+
+	if logT != nil {
+		if logT.TIME != nil {
+			return FindFuncTable(pT, nil, nil)
+
+		} else if logT.DATE != nil {
+			return int32FuncTable{}
+
+		} else if logT.INTEGER != nil {
+			if logT.INTEGER.IsSigned {
+				return FindFuncTable(pT, nil, nil)
+
+			} else {
+				if *pT == parquet.Type_INT32 {
+					return uint32FuncTable{}
+
+				} else if *pT == parquet.Type_INT64 {
+					return uint64FuncTable{}
+				}
+			}
+
+		} else if logT.DECIMAL != nil {
+			if *pT == parquet.Type_BYTE_ARRAY || *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
+				return decimalStringFuncTable{}
+			} else if *pT == parquet.Type_INT32 {
+				return int32FuncTable{}
+			} else if *pT == parquet.Type_INT64 {
+				return int64FuncTable{}
+			}
+
+		} else if logT.BSON != nil || logT.JSON != nil || logT.STRING != nil || logT.UUID != nil {
+			return stringFuncTable{}
+		}
+	}
+
 	panic("No known func table in FindFuncTable")
 }
 
