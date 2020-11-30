@@ -656,7 +656,7 @@ func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType, logT *parquet.Lo
 	}
 
 	if logT != nil {
-		if logT.TIME != nil {
+		if logT.TIME != nil || logT.TIMESTAMP != nil {
 			return FindFuncTable(pT, nil, nil)
 
 		} else if logT.DATE != nil {
