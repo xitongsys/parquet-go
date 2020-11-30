@@ -62,7 +62,11 @@ type Tag struct {
 }
 
 func NewTag() *Tag {
-	return &Tag{}
+	return &Tag{
+		LogicalTypeFields: make(map[string]string),
+		KeyLogicalTypeFields: make(map[string]string),
+		ValueLogicalTypeFields: make(map[string]string),
+	}
 }
 
 func StringToTag(tag string) *Tag {
@@ -308,68 +312,69 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) *parquet.LogicalType {
 	} else {
 		logicalType := parquet.NewLogicalType()
 		switch val {
-		case "string":
+		case "STRING":
 			logicalType.STRING = parquet.NewStringType()
-		case "map":
+		case "MAP":
 			logicalType.MAP = parquet.NewMapType()
-		case "list":
+		case "LIST":
 			logicalType.LIST = parquet.NewListType()
-		case "enum":
+		case "ENUM":
 			logicalType.ENUM = parquet.NewEnumType()
-		case "decimal":
+			
+		case "DECIMAL":
 			logicalType.DECIMAL = parquet.NewDecimalType()
 			logicalType.DECIMAL.Precision = Str2Int32(mp["logicaltype.precision"])
 			logicalType.DECIMAL.Scale = Str2Int32(mp["logicaltype.scale"])
 
-		case "date":
+		case "DATE":
 			logicalType.DATE = parquet.NewDateType()
 
-		case "time":
+		case "TIME":
 			logicalType.TIME = parquet.NewTimeType()
 			logicalType.TIME.IsAdjustedToUTC = Str2Bool(mp["logicaltype.isadjustedtoutc"])
 			switch mp["logicaltype.unit"] {
-			case "millis":
+			case "MILLIS":
 				logicalType.TIME.Unit = parquet.NewTimeUnit()
 				logicalType.TIME.Unit.MILLIS = parquet.NewMilliSeconds()
-			case "micros":
+			case "MICROS":
 				logicalType.TIME.Unit = parquet.NewTimeUnit()
 				logicalType.TIME.Unit.MICROS = parquet.NewMicroSeconds()
-			case "nanos":
+			case "NANOS":
 				logicalType.TIME.Unit = parquet.NewTimeUnit()
 				logicalType.TIME.Unit.NANOS = parquet.NewNanoSeconds()
 			default:
 				panic("logicaltype time error")
 			}
 			
-		case "timestamp":
+		case "TIMESTAMP":
 			logicalType.TIMESTAMP = parquet.NewTimestampType()
 			logicalType.TIMESTAMP.IsAdjustedToUTC = Str2Bool(mp["logicaltype.isadjustedtoutc"])
 			switch mp["logicaltype.unit"] {
-			case "millis":
+			case "MILLIS":
 				logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
 				logicalType.TIMESTAMP.Unit.MILLIS = parquet.NewMilliSeconds()
-			case "micros":
+			case "MICROS":
 				logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
 				logicalType.TIMESTAMP.Unit.MICROS = parquet.NewMicroSeconds()
-			case "nanos":
+			case "NANOS":
 				logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
 				logicalType.TIMESTAMP.Unit.NANOS = parquet.NewNanoSeconds()
 			default:
 				panic("logicaltype time error")
 			}
 
-		case "integer":
+		case "INTEGER":
 			logicalType.INTEGER = parquet.NewIntType()
 			logicalType.INTEGER.BitWidth = int8(Str2Int32(mp["logicaltype.bitwidth"]))
 			logicalType.INTEGER.IsSigned = Str2Bool(mp["logicaltype.issigned"])
 
-		case "json":
+		case "JSON":
 			logicalType.JSON = parquet.NewJsonType()
 
-		case "bson":
+		case "BSON":
 			logicalType.BSON = parquet.NewBsonType()
 
-		case "uuid":
+		case "UUID":
 			logicalType.UUID = parquet.NewUUIDType()
 
 		default:
@@ -386,7 +391,7 @@ func NewLogicalTypeFromConvertedType(schemaElement *parquet.SchemaElement, info 
 	if ct == nil {
 		return nil
 	}
-	
+
 	logicalType := parquet.NewLogicalType()
 	switch *ct {
 	case parquet.ConvertedType_INT_8:
