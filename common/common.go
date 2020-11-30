@@ -48,9 +48,17 @@ type Tag struct {
 	KeyOmitStats   bool
 	ValueOmitStats bool
 
+	IsAdjustedToUTC bool
+	KeyIsAdjustedToUTC bool 
+	ValueIsAdjustedToUTC bool
+
 	RepetitionType      parquet.FieldRepetitionType
 	KeyRepetitionType   parquet.FieldRepetitionType
 	ValueRepetitionType parquet.FieldRepetitionType
+
+	LogicalTypeFields map[string]string
+	KeyLogicalTypeFields map[string]string
+	ValueLogicalTypeFields map[string]string
 }
 
 func NewTag() *Tag {
@@ -140,6 +148,12 @@ func StringToTag(tag string) *Tag {
 			mp.KeyOmitStats = valBoolean()
 		case "valueomitstats":
 			mp.ValueOmitStats = valBoolean()
+		case "isadjustedtoutc":
+			mp.IsAdjustedToUTC = valBoolean()
+		case "keyisadjustedtoutc":
+			mp.KeyIsAdjustedToUTC = valBoolean()
+		case "valueisadjustedtoutc":
+			mp.ValueIsAdjustedToUTC = valBoolean()
 		case "repetitiontype":
 			switch strings.ToLower(val) {
 			case "repeated":
@@ -223,7 +237,17 @@ func StringToTag(tag string) *Tag {
 				panic(fmt.Errorf("Unknown valueencoding type: '%v'", val))
 			}
 		default:
-			panic(fmt.Errorf("Unrecognized tag '%v'", key))
+			if strings.HasPrefix(key, "logicaltype") {
+				mp.LogicalTypeFields[key] = val
+			} else if strings.HasPrefix(key, "keylogicaltype") {
+				newKey := key[3:]
+				mp.KeyLogicalTypeFields[newKey] = val
+			} else if strings.HasPrefix(key, "valuelogicaltype") {
+				newKey := key[5:]
+				mp.ValueLogicalTypeFields[newKey] = val
+			} else {
+				panic(fmt.Errorf("Unrecognized tag '%v'", key))
+			}
 		}
 	}
 	return mp
@@ -242,6 +266,7 @@ func NewSchemaElementFromTagMap(info *Tag) *parquet.SchemaElement {
 	typeName := info.Type
 	if t, err := parquet.TypeFromString(typeName); err == nil {
 		schema.Type = &t
+
 	} else {
 		ct, _ := parquet.ConvertedTypeFromString(typeName)
 		schema.ConvertedType = &ct
@@ -263,7 +288,195 @@ func NewSchemaElementFromTagMap(info *Tag) *parquet.SchemaElement {
 			schema.Type = &t
 		}
 	}
+
+	var logicalType *parquet.LogicalType
+	if len(info.LogicalTypeFields) > 0 {
+		logicalType = NewLogicalTypeFromFieldsMap(info.LogicalTypeFields)
+	} else {
+		logicalType = NewLogicalTypeFromConvertedType(schema, info)
+	}
+
+	schema.LogicalType = logicalType
+
 	return schema
+}
+
+func NewLogicalTypeFromFieldsMap(mp map[string]string) *parquet.LogicalType {
+	if val, ok := mp["logicaltype"]; !ok {
+		return nil
+
+	} else {
+		logicalType := parquet.NewLogicalType()
+		switch val {
+		case "string":
+			logicalType.STRING = parquet.NewStringType()
+		case "map":
+			logicalType.MAP = parquet.NewMapType()
+		case "list":
+			logicalType.LIST = parquet.NewListType()
+		case "enum":
+			logicalType.ENUM = parquet.NewEnumType()
+		case "decimal":
+			logicalType.DECIMAL = parquet.NewDecimalType()
+			logicalType.DECIMAL.Precision = Str2Int32(mp["logicaltype.precision"])
+			logicalType.DECIMAL.Scale = Str2Int32(mp["logicaltype.scale"])
+
+		case "date":
+			logicalType.DATE = parquet.NewDateType()
+
+		case "time":
+			logicalType.TIME = parquet.NewTimeType()
+			logicalType.TIME.IsAdjustedToUTC = Str2Bool(mp["logicaltype.isadjustedtoutc"])
+			switch mp["logicaltype.unit"] {
+			case "millis":
+				logicalType.TIME.Unit = parquet.NewTimeUnit()
+				logicalType.TIME.Unit.MILLIS = parquet.NewMilliSeconds()
+			case "micros":
+				logicalType.TIME.Unit = parquet.NewTimeUnit()
+				logicalType.TIME.Unit.MICROS = parquet.NewMicroSeconds()
+			case "nanos":
+				logicalType.TIME.Unit = parquet.NewTimeUnit()
+				logicalType.TIME.Unit.NANOS = parquet.NewNanoSeconds()
+			default:
+				panic("logicaltype time error")
+			}
+			
+		case "timestamp":
+			logicalType.TIMESTAMP = parquet.NewTimestampType()
+			logicalType.TIMESTAMP.IsAdjustedToUTC = Str2Bool(mp["logicaltype.isadjustedtoutc"])
+			switch mp["logicaltype.unit"] {
+			case "millis":
+				logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
+				logicalType.TIMESTAMP.Unit.MILLIS = parquet.NewMilliSeconds()
+			case "micros":
+				logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
+				logicalType.TIMESTAMP.Unit.MICROS = parquet.NewMicroSeconds()
+			case "nanos":
+				logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
+				logicalType.TIMESTAMP.Unit.NANOS = parquet.NewNanoSeconds()
+			default:
+				panic("logicaltype time error")
+			}
+
+		case "integer":
+			logicalType.INTEGER = parquet.NewIntType()
+			logicalType.INTEGER.BitWidth = int8(Str2Int32(mp["logicaltype.bitwidth"]))
+			logicalType.INTEGER.IsSigned = Str2Bool(mp["logicaltype.issigned"])
+
+		case "json":
+			logicalType.JSON = parquet.NewJsonType()
+
+		case "bson":
+			logicalType.BSON = parquet.NewBsonType()
+
+		case "uuid":
+			logicalType.UUID = parquet.NewUUIDType()
+
+		default:
+			panic("unknow logicaltype: " + val)
+		}
+
+		return logicalType
+	}
+}
+
+
+func NewLogicalTypeFromConvertedType(schemaElement *parquet.SchemaElement, info *Tag) *parquet.LogicalType {
+	_, ct := schemaElement.Type, schemaElement.ConvertedType
+	if ct == nil {
+		return nil
+	}
+	
+	logicalType := parquet.NewLogicalType()
+	switch *ct {
+	case parquet.ConvertedType_INT_8:
+		logicalType.INTEGER = parquet.NewIntType()
+		logicalType.INTEGER.BitWidth = 8
+		logicalType.INTEGER.IsSigned = true
+	case parquet.ConvertedType_INT_16:
+		logicalType.INTEGER = parquet.NewIntType()
+		logicalType.INTEGER.BitWidth = 16
+		logicalType.INTEGER.IsSigned = true
+	case parquet.ConvertedType_INT_32:
+		logicalType.INTEGER = parquet.NewIntType()
+		logicalType.INTEGER.BitWidth = 32
+		logicalType.INTEGER.IsSigned = true
+	case parquet.ConvertedType_INT_64:
+		logicalType.INTEGER = parquet.NewIntType()
+		logicalType.INTEGER.BitWidth = 64
+		logicalType.INTEGER.IsSigned = true
+	case parquet.ConvertedType_UINT_8:
+		logicalType.INTEGER = parquet.NewIntType()
+		logicalType.INTEGER.BitWidth = 8
+		logicalType.INTEGER.IsSigned = false
+	case parquet.ConvertedType_UINT_16:
+		logicalType.INTEGER = parquet.NewIntType()
+		logicalType.INTEGER.BitWidth = 16
+		logicalType.INTEGER.IsSigned = false
+	case parquet.ConvertedType_UINT_32:
+		logicalType.INTEGER = parquet.NewIntType()
+		logicalType.INTEGER.BitWidth = 32
+		logicalType.INTEGER.IsSigned = false
+	case parquet.ConvertedType_UINT_64:
+		logicalType.INTEGER = parquet.NewIntType()
+		logicalType.INTEGER.BitWidth = 64
+		logicalType.INTEGER.IsSigned = false
+
+	case parquet.ConvertedType_DECIMAL:
+		logicalType.DECIMAL = parquet.NewDecimalType()
+		logicalType.DECIMAL.Precision = info.Precision
+		logicalType.DECIMAL.Scale = info.Scale
+
+	case parquet.ConvertedType_DATE:
+		logicalType.DATE = parquet.NewDateType()
+	
+	case parquet.ConvertedType_TIME_MICROS:
+		logicalType.TIME = parquet.NewTimeType()
+		logicalType.TIME.IsAdjustedToUTC = info.IsAdjustedToUTC
+		logicalType.TIME.Unit = parquet.NewTimeUnit()
+		logicalType.TIME.Unit.MICROS = parquet.NewMicroSeconds()
+
+	case parquet.ConvertedType_TIME_MILLIS:
+		logicalType.TIME = parquet.NewTimeType()
+		logicalType.TIME.IsAdjustedToUTC = info.IsAdjustedToUTC
+		logicalType.TIME.Unit = parquet.NewTimeUnit()
+		logicalType.TIME.Unit.MILLIS = parquet.NewMilliSeconds()
+
+	case parquet.ConvertedType_TIMESTAMP_MICROS:
+		logicalType.TIMESTAMP = parquet.NewTimestampType()
+		logicalType.TIMESTAMP.IsAdjustedToUTC = info.IsAdjustedToUTC
+		logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
+		logicalType.TIMESTAMP.Unit.MICROS = parquet.NewMicroSeconds()
+
+	case parquet.ConvertedType_TIMESTAMP_MILLIS:
+		logicalType.TIMESTAMP = parquet.NewTimestampType()
+		logicalType.TIMESTAMP.IsAdjustedToUTC = info.IsAdjustedToUTC
+		logicalType.TIMESTAMP.Unit = parquet.NewTimeUnit()
+		logicalType.TIMESTAMP.Unit.MILLIS = parquet.NewMilliSeconds()
+
+	case parquet.ConvertedType_BSON:
+		logicalType.BSON = parquet.NewBsonType()
+
+	case parquet.ConvertedType_ENUM:
+		logicalType.ENUM = parquet.NewEnumType()
+
+	case parquet.ConvertedType_JSON:
+		logicalType.JSON = parquet.NewJsonType()
+
+	case parquet.ConvertedType_LIST:
+		logicalType.LIST = parquet.NewListType()
+
+	case parquet.ConvertedType_MAP:
+		logicalType.MAP = parquet.NewMapType()
+
+	case parquet.ConvertedType_UTF8:
+		logicalType.STRING = parquet.NewStringType()
+
+	default:
+		return nil
+	}
+
+	return logicalType
 }
 
 func DeepCopy(src, dst interface{}) {
@@ -449,6 +662,22 @@ func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType) FuncTable {
 		}
 	}
 	panic("No known func table in FindFuncTable")
+}
+
+func Str2Int32(val string) int32 {
+	valInt, err := strconv.Atoi(val)
+	if err != nil {
+		panic(err)
+	}
+	return int32(valInt)
+}
+
+func Str2Bool(val string) bool {
+	valBoolean, err := strconv.ParseBool(val)
+	if err != nil {
+		panic(err)
+	}
+	return valBoolean
 }
 
 type FuncTable interface {
