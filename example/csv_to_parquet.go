@@ -13,8 +13,8 @@ import (
 )
 
 type Shoe struct {
-	ShoeBrand string `parquet:"name=shoe_brand, type=UTF8"`
-	ShoeName  string `parquet:"name=shoe_name, type=UTF8"`
+	ShoeBrand string `parquet:"name=shoe_brand, type=BYTE_ARRAY, convertedtype=UTF8"`
+	ShoeName  string `parquet:"name=shoe_name, type=BYTE_ARRAY, convertedtype=UTF8"`
 }
 
 func main() {

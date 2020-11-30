@@ -33,20 +33,20 @@ var jsonSchema string = `
 {
   "Tag": "name=parquet_go_root, repetitiontype=REQUIRED",
   "Fields": [
-    {"Tag": "name=name, inname=NameIn, type=UTF8, repetitiontype=REQUIRED"},
+    {"Tag": "name=name, inname=NameIn, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
     {"Tag": "name=age, inname=Age, type=INT32, repetitiontype=REQUIRED"},
     {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"},
     {"Tag": "name=weight, inname=Weight, type=FLOAT, repetitiontype=REQUIRED"},
     {"Tag": "name=sex, inname=Sex, type=BOOLEAN, repetitiontype=REQUIRED"},
 
     {"Tag": "name=classes, inname=Classes, type=LIST, repetitiontype=REQUIRED",
-     "Fields": [{"Tag": "name=element, type=UTF8, repetitiontype=REQUIRED"}]
+     "Fields": [{"Tag": "name=element, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"}]
     },
 
     {
       "Tag": "name=scores, inname=Scores, type=MAP, repetitiontype=REQUIRED",
       "Fields": [
-        {"Tag": "name=key, type=UTF8, repetitiontype=REQUIRED"},
+        {"Tag": "name=key, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
         {"Tag": "name=value, type=LIST, repetitiontype=REQUIRED",
          "Fields": [{"Tag": "name=element, type=FLOAT, repetitiontype=REQUIRED"}]
         }
@@ -58,7 +58,7 @@ var jsonSchema string = `
       "Fields": [
        {"Tag": "name=element, repetitiontype=REQUIRED",
         "Fields": [
-         {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+         {"Tag": "name=name, inname=Name, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
          {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"}
         ]}
       ]
@@ -67,7 +67,7 @@ var jsonSchema string = `
     {
       "Tag": "name=teachers, inname=Teachers, repetitiontype=REPEATED",
       "Fields": [
-        {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+        {"Tag": "name=name, inname=Name, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
         {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"}
       ]
     }

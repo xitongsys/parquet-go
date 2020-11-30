@@ -13,7 +13,7 @@ type NameString string
 type AgeInt int32
 
 type Student struct {
-	Name    NameString  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
+	Name    NameString  `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
 	Age     AgeInt   `parquet:"name=age, type=INT32, encoding=PLAIN"`
 }
 

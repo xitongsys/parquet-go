@@ -10,16 +10,16 @@ import (
 )
 
 type Student struct {
-	Name    string               `parquet:"name=name, type=UTF8"`
+	Name    string               `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8"`
 	Age     int32                `parquet:"name=age, type=INT32"`
 	Weight  *int32               `parquet:"name=weight, type=INT32"`
-	Classes *map[string][]*Class `parquet:"name=classes, type=MAP, keytype=UTF8"`
+	Classes *map[string][]*Class `parquet:"name=classes, type=MAP, keytype=BYTE_ARRAY, keyconvertedtype=UTF8"`
 }
 
 type Class struct {
-	Name     string   `parquet:"name=name, type=UTF8"`
+	Name     string   `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8"`
 	Id       *int32   `parquet:"name=id, type=INT32"`
-	Required []string `parquet:"name=required, type=LIST, valuetype=UTF8"`
+	Required []string `parquet:"name=required, type=LIST, valuetype=BYTE_ARRAY, valueconvertedtype=UTF8"`
 	Ignored  string
 }
 
