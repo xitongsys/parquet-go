@@ -2,42 +2,41 @@ package types
 
 import (
 	"encoding/binary"
-	"math/big"
 	"time"
 )
 
 func TimeToTIME_MILLIS(t time.Time, adjustedToUTC bool) int64 {
-	return TimeToTIME_MICROS(t, adjustedToUTC) / 1000
+	return TimeToTIME_MICROS(t, adjustedToUTC) / time.Millisecond.Microseconds()
 }
 
 func TimeToTIME_MICROS(t time.Time, adjustedToUTC bool) int64 {
 	if adjustedToUTC {
 		tu := t.UTC()
 		h, m, s, ns := int64(tu.Hour()), int64(tu.Minute()), int64(tu.Second()), int64(tu.Nanosecond())
-		nanos := h * int64(time.Hour) + m * int64(time.Minute) + s * int64(time.Second) + ns * int64(time.Nanosecond)
-		return nanos / 1000
+		nanos := h * time.Hour.Nanoseconds() + m * time.Minute.Nanoseconds() + s * time.Second.Nanoseconds() + ns * time.Nanosecond.Nanoseconds()
+		return nanos / time.Microsecond.Nanoseconds()
 
 	} else {
 		h, m, s, ns := int64(t.Hour()), int64(t.Minute()), int64(t.Second()), int64(t.Nanosecond())
-		nanos := h * int64(time.Hour) + m * int64(time.Minute) + s * int64(time.Second) + ns * int64(time.Nanosecond)
-		return nanos / 1000
+		nanos := h * time.Hour.Nanoseconds() + m * time.Minute.Nanoseconds() + s * time.Second.Nanoseconds() + ns * time.Nanosecond.Nanoseconds()
+		return nanos / time.Microsecond.Nanoseconds()
 	}
 }
 
 func TimeToTIMESTAMP_MILLIS(t time.Time, adjustedToUTC bool) int64 {
-	return TimeToTIMESTAMP_MICROS(t, adjustedToUTC) / 1000
+	return TimeToTIMESTAMP_MICROS(t, adjustedToUTC) / time.Millisecond.Microseconds()
 }
 
 func TIMESTAMP_MILLISToTime(millis int64, adjustedToUTC bool) time.Time {
-	return TIMESTAMP_MICROSToTime(millis * 1000, adjustedToUTC)
+	return TIMESTAMP_MICROSToTime(millis * time.Millisecond.Microseconds(), adjustedToUTC)
 } 
 
 func TimeToTIMESTAMP_MICROS(t time.Time, adjustedToUTC bool) int64 {
-	return TimeToTIMESTAMP_NANOS(t, adjustedToUTC) / 1000
+	return TimeToTIMESTAMP_NANOS(t, adjustedToUTC) / time.Microsecond.Nanoseconds()
 }
 
 func TIMESTAMP_MICROSToTime(micros int64, adjustedToUTC bool) time.Time {
-	return TIMESTAMP_NANOSToTime(micros * 1000, adjustedToUTC)
+	return TIMESTAMP_NANOSToTime(micros * time.Microsecond.Nanoseconds(), adjustedToUTC)
 }
 
 func TimeToTIMESTAMP_NANOS(t time.Time, adjustedToUTC bool) int64 {
@@ -60,55 +59,53 @@ func TIMESTAMP_NANOSToTime(nanos int64, adjustedToUTC bool) time.Time {
 	}
 }
 
-// Reports the Julian Day Number for t. Note that Julian days start at 12:00 UTC.
-//
-// Code from https://github.com/rickar/cal/blob/6dbb2c016a010db6388f3ffc6b408e05306c4f9d/v2/cal_funcs.go#L122
-func julianDayNumber(t time.Time) int {
-	utc := t.UTC()
-	a := (14 - int(utc.Month())) / 12
-	y := utc.Year() + 4800 - a
-	m := int(utc.Month()) + 12*a - 3
+//From Spark
+//https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L47
+const (
+	JULIAN_DAY_OF_EPOCH int64 = 2440588
+	MICROS_PER_DAY int64 = 3600 * 24 * 1000 * 1000
+)
 
-	jdn := utc.Day() + (153*m+2)/5 + 365*y + y/4 - y/100 + y/400 - 32045
-	if utc.Hour() < 12 {
-		jdn--
-	}
-	return jdn
+//From Spark
+//https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L180
+func toJulianDay(t time.Time) (int32, int64) {
+	utc := t.UTC()
+	nanos := utc.UnixNano()
+	micros := nanos / time.Microsecond.Nanoseconds()
+
+	julianUs := micros + JULIAN_DAY_OF_EPOCH * MICROS_PER_DAY
+	days := int32(julianUs / MICROS_PER_DAY)
+	us := (julianUs % MICROS_PER_DAY) * 1000
+	return days, us
+}
+
+//From Spark
+//https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L170
+func fromJulianDay(days int32, nanos int64) time.Time {
+	nanos = ((int64(days) - JULIAN_DAY_OF_EPOCH) * MICROS_PER_DAY + nanos / 1000) * 1000
+	sec, nsec := nanos / time.Second.Nanoseconds(), nanos % time.Second.Nanoseconds()
+	t := time.Unix(sec, nsec)
+	return t.UTC()
 }
 
 // Reports the INT96 Timestamp in string format as required by Spark for Parquet files.
-//
 // Reference: https://stackoverflow.com/questions/53103762/cast-int96-timestamp-from-parquet-to-golang/53104516#53104516
 func TimeToINT96(t time.Time) string {
-	utc := t.UTC()
-	jdn := julianDayNumber(utc)
-	seconds := time.Duration(utc.Hour()*3600+utc.Minute()*60+utc.Second()) * time.Second
+	days, nanos := toJulianDay(t)
 
-	bs1 := make([]byte, 4)
-	binary.BigEndian.PutUint32(bs1, uint32(jdn))
+	bs1 := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bs1, uint64(nanos))
 
-	bs2 := make([]byte, 8)
-	binary.BigEndian.PutUint64(bs2, uint64(seconds.Nanoseconds()))
+	bs2 := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bs2, uint32(days))
 
 	bs := append(bs1, bs2...)
-	return new(big.Int).SetBytes(bs).String()
+	return string(bs)
 }
 
 func INT96ToTime(int96 string) time.Time {
-	nano := binary.LittleEndian.Uint64([]byte(int96[:8]))
-	dt := binary.LittleEndian.Uint32([]byte(int96[8:]))
+	nanos := binary.LittleEndian.Uint64([]byte(int96[:8]))
+	days := binary.LittleEndian.Uint32([]byte(int96[8:]))
 
-	l := dt + 68569
-	n := 4 * l / 146097
-	l = l - (146097*n+3)/4
-	i := 4000 * (l + 1) / 1461001
-	l = l - 1461*i/4 + 31
-	j := 80 * l / 2447
-	k := l - 2447*j/80
-	l = j / 11
-	j = j + 2 - 12*l
-	i = 100*(n-49) + i + l
-	tm := time.Date(int(i), time.Month(j), int(k), 0, 0, 0, 0, time.UTC)
-	tm = tm.Add(time.Duration(nano))
-	return tm
+	return fromJulianDay(int32(days), int64(nanos))
 }
