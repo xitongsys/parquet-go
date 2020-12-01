@@ -1,8 +1,9 @@
 package types
 
 import (
-	"time"
 	"encoding/binary"
+	"math/big"
+	"time"
 )
 
 func TimeToTIME_MILLIS(t time.Time, adjustedToUTC bool) int64 {
@@ -59,8 +60,38 @@ func TIMESTAMP_NANOSToTime(nanos int64, adjustedToUTC bool) time.Time {
 	}
 }
 
+// Reports the Julian Day Number for t. Note that Julian days start at 12:00 UTC.
+//
+// Code from https://github.com/rickar/cal/blob/6dbb2c016a010db6388f3ffc6b408e05306c4f9d/v2/cal_funcs.go#L122
+func julianDayNumber(t time.Time) int {
+	utc := t.UTC()
+	a := (14 - int(utc.Month())) / 12
+	y := utc.Year() + 4800 - a
+	m := int(utc.Month()) + 12*a - 3
+
+	jdn := utc.Day() + (153*m+2)/5 + 365*y + y/4 - y/100 + y/400 - 32045
+	if utc.Hour() < 12 {
+		jdn--
+	}
+	return jdn
+}
+
+// Reports the INT96 Timestamp in string format as required by Spark for Parquet files.
+//
+// Reference: https://stackoverflow.com/questions/53103762/cast-int96-timestamp-from-parquet-to-golang/53104516#53104516
 func TimeToINT96(t time.Time) string {
-	return ""
+	utc := t.UTC()
+	jdn := julianDayNumber(utc)
+	seconds := time.Duration(utc.Hour()*3600+utc.Minute()*60+utc.Second()) * time.Second
+
+	bs1 := make([]byte, 4)
+	binary.BigEndian.PutUint32(bs1, uint32(jdn))
+
+	bs2 := make([]byte, 8)
+	binary.BigEndian.PutUint64(bs2, uint64(seconds.Nanoseconds()))
+
+	bs := append(bs1, bs2...)
+	return new(big.Int).SetBytes(bs).String()
 }
 
 func INT96ToTime(int96 string) time.Time {
