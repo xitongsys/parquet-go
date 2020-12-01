@@ -88,8 +88,6 @@ func fromJulianDay(days int32, nanos int64) time.Time {
 	return t.UTC()
 }
 
-// Reports the INT96 Timestamp in string format as required by Spark for Parquet files.
-// Reference: https://stackoverflow.com/questions/53103762/cast-int96-timestamp-from-parquet-to-golang/53104516#53104516
 func TimeToINT96(t time.Time) string {
 	days, nanos := toJulianDay(t)
 
