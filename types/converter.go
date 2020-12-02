@@ -2,6 +2,9 @@ package types
 
 import (
 	"encoding/binary"
+	"math"
+	"math/big"
+	"strconv"
 	"time"
 )
 
@@ -106,4 +109,26 @@ func INT96ToTime(int96 string) time.Time {
 	days := binary.LittleEndian.Uint32([]byte(int96[8:]))
 
 	return fromJulianDay(int32(days), int64(nanos))
+}
+
+func DECIMAL_INT_ToString(dec int64, precision int, scale int) string {
+	s := int(math.Pow10(scale))
+	integer, fraction := int(dec) / s, int(dec) % s
+	ans := strconv.Itoa(integer)
+	if scale > 0 {
+		ans += "." + strconv.Itoa(fraction)
+	}
+	return ans
+}
+
+func DECIMAL_BYTE_ARRAY_ToString(dec []byte, precision int, scale int) string {
+	a := new(big.Int)
+	a.SetBytes(dec)
+	sa := a.Text(10)
+
+	if scale > 0 {
+		ln := len(sa)
+		sa = sa[:ln - scale] + "." + sa[ln-scale:]
+	}
+	return sa
 }
