@@ -96,18 +96,6 @@ func ParquetTypeToGoTypeStr(pT *parquet.Type, cT *parquet.ConvertedType) string 
 			res = "string"
 		}
 	}
-	if cT != nil {
-		switch *cT {
-		case parquet.ConvertedType_UINT_8:
-			res = "uint32"
-		case parquet.ConvertedType_UINT_16:
-			res = "uint32"
-		case parquet.ConvertedType_UINT_32:
-			res = "uint32"
-		case parquet.ConvertedType_UINT_64:
-			res = "uint64"
-		}
-	}
 	return res
 }
 
@@ -138,6 +126,7 @@ func (self *Node) OutputJsonSchema() string {
 
 	pTStr, cTStr := ParquetTypeToParquetTypeStr(pT, cT)
 	tagStr := "\"name=%s, type=%s, repetitiontype=%s\""
+	
 	name := self.SE.GetName()
 
 	if len(self.Children) == 0 {
@@ -150,19 +139,21 @@ func (self *Node) OutputJsonSchema() string {
 			scale, precision := self.SE.GetScale(), self.SE.GetPrecision()
 			if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 				length := self.SE.GetTypeLength()
-				tagStr = "\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\""
-				res += fmt.Sprintf(tagStr, name, cTStr, pTStr, scale, precision, length, rTStr) + "}"
+				tagStr = "\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\""
+				res += fmt.Sprintf(tagStr, name, pTStr, cTStr, scale, precision, length, rTStr) + "}"
 			} else {
-				tagStr = "\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, repetitiontype\""
-				res += fmt.Sprintf(tagStr, name, cTStr, pTStr, scale, precision, rTStr) + "}"
+				tagStr = "\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, repetitiontype\""
+				res += fmt.Sprintf(tagStr, name, pTStr, cTStr, scale, precision, rTStr) + "}"
 			}
 
 		} else {
-			typeStr := pTStr
 			if cT != nil {
-				typeStr = cTStr
+				tagStr := "\"name=%s, type=%s, convertedtype=%s, repetitiontype=%s\""
+				res += fmt.Sprintf(tagStr, name, pTStr, cTStr, rTStr) + "}"
+
+			} else {
+				res += fmt.Sprintf(tagStr, name, pTStr, rTStr) + "}"
 			}
-			res += fmt.Sprintf(tagStr, name, typeStr, rTStr) + "}"
 
 		}
 	} else {
@@ -247,11 +238,11 @@ func (self *Node) getStructTags() string {
 		scale, precision := self.SE.GetScale(), self.SE.GetPrecision()
 		if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			length := self.SE.GetTypeLength()
-			tagStr := "`parquet:\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\"`"
-			tags = fmt.Sprintf(tagStr, self.SE.Name, cTStr, pTStr, scale, precision, length, rTStr)
+			tagStr := "`parquet:\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\"`"
+			tags = fmt.Sprintf(tagStr, self.SE.Name, pTStr, cTStr, scale, precision, length, rTStr)
 		} else {
-			tagStr := "`parquet:\"name=%s, type=%s, basetype=%s, scale=%d, precision=%d, repetitiontype\"`"
-			tags = fmt.Sprintf(tagStr, self.SE.Name, self.SE.Type, pTStr, scale, precision, rTStr)
+			tagStr := "`parquet:\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, repetitiontype\"`"
+			tags = fmt.Sprintf(tagStr, self.SE.Name, pTStr, self.SE.Type, scale, precision, rTStr)
 		}
 	}
 

@@ -36,7 +36,7 @@ parquet_go_root struct{
   "Tag": "name=parquet_go_root, repetitiontype=REQUIRED",
   "Fields": [
     {
-      "Tag": "name=name, type=UTF8, repetitiontype=REQUIRED",
+      "Tag": "name=name, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED",
       "Fields": null
     },
     {
