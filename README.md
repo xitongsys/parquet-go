@@ -1,5 +1,7 @@
 # parquet-go
 
+# Notice: There is a big change recently, please update your code and help to test the master branch. Thanks !
+
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -71,6 +73,8 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 
 ### Tips
 * Parquet-go supports type alias such `type MyString string`. But the base type must follow the table instructions.
+
+* Some type convert functions: [converter.go](https://github.com/xitongsys/parquet-go/blob/master/types/converter.go)
 
 ## Encoding
 
