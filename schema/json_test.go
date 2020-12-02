@@ -7,7 +7,7 @@ func TestNewSchemaHandlerFromJSON(t *testing.T) {
 	{
 	  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
 	  "Fields": [
-		{"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+		{"Tag": "name=name, inname=Name, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
 		{"Tag": "name=age, inname=Age, type=INT32, repetitiontype=REQUIRED"}
 	  ]
 	}
@@ -28,7 +28,7 @@ func TestNewSchemaHandlerFromImproperJSON(t *testing.T) {
 	{
 	  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
 	  "Fields": [
-		{"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+		{"Tag": "name=name, inname=Name, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
 		{"Tag": "name=age, inname=Age, type=INT32, repetitiontype=REQUIRED"}
 		,,
 	  ]

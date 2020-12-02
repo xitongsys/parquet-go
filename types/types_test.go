@@ -59,51 +59,6 @@ func TestStrToParquetType(t *testing.T) {
 	}
 }
 
-func TestTypeNameToParquetType(t *testing.T) {
-	testData := []struct {
-		name     string
-		baseName string
-		PT       *parquet.Type
-		CT       *parquet.ConvertedType
-	}{
-		{"BOOLEAN", "", parquet.TypePtr(parquet.Type_BOOLEAN), nil},
-		{"INT32", "", parquet.TypePtr(parquet.Type_INT32), nil},
-		{"INT64", "", parquet.TypePtr(parquet.Type_INT64), nil},
-		{"INT96", "", parquet.TypePtr(parquet.Type_INT96), nil},
-		{"FLOAT", "", parquet.TypePtr(parquet.Type_FLOAT), nil},
-		{"DOUBLE", "", parquet.TypePtr(parquet.Type_DOUBLE), nil},
-		{"BYTE_ARRAY", "", parquet.TypePtr(parquet.Type_BYTE_ARRAY), nil},
-		{"FIXED_LEN_BYTE_ARRAY", "", parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), nil},
-
-		{"UTF8", "", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_UTF8)},
-		{"INT_8", "", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_8)},
-		{"INT_16", "", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_16)},
-		{"INT_32", "", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_32)},
-		{"INT_64", "", parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_INT_64)},
-		{"UINT_8", "", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_8)},
-		{"UINT_16", "", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_16)},
-		{"UINT_32", "", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_32)},
-		{"UINT_64", "", parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_UINT_64)},
-		{"DATE", "", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DATE)},
-		{"TIME_MILLIS", "", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MILLIS)},
-		{"TIME_MICROS", "", parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIME_MICROS)},
-		{"TIMESTAMP_MICROS", "", parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MICROS)},
-		{"TIMESTAMP_MILLIS", "", parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MILLIS)},
-		{"INTERVAL", "", parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL)},
-		{"DECIMAL", "INT32", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
-		{"DECIMAL", "INT64", parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
-		{"DECIMAL", "FIXED_LEN_BYTE_ARRAY", parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
-		{"DECIMAL", "BYTE_ARRAY", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL)},
-	}
-
-	for _, data := range testData {
-		pT, cT := TypeNameToParquetType(data.name, data.baseName)
-		if *pT != *data.PT || (cT != nil && *cT != *data.CT) {
-			t.Errorf("TypeNameToParquetType err, expect %v-%v, get %v-%v", *pT, *cT, *data.PT, *data.CT)
-		}
-	}
-}
-
 func TestStrIntToBinary(t *testing.T) {
 	cases := []struct {
 		num    int32

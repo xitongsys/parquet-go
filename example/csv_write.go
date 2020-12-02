@@ -11,7 +11,7 @@ import (
 func main() {
 	var err error
 	md := []string{
-		"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=Name, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY",
 		"name=Age, type=INT32",
 		"name=Id, type=INT64",
 		"name=Weight, type=FLOAT",

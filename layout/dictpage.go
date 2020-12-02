@@ -77,7 +77,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	res := make([]*Page, 0)
 	i := 0
 
-	pT, cT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Info.OmitStats
+	pT, cT, logT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Schema.LogicalType, table.Info.OmitStats
 
 	for i < totalLn {
 		j := i
@@ -88,7 +88,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		var minVal interface{} = table.Values[i]
 		values := make([]int32, 0)
 
-		funcTable := common.FindFuncTable(pT, cT)
+		funcTable := common.FindFuncTable(pT, cT, logT)
 
 		for j < totalLn && size < pageSize {
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {

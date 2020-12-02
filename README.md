@@ -1,5 +1,7 @@
 # parquet-go
 
+# Notice: There is a big change recently, please update your code and help to test the master branch. Thanks !
+
 [![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
@@ -32,27 +34,33 @@ The `local_flat.go` code shows how it's easy to output `structs` from Go program
 
 ## Type
 
-There are two types in Parquet: Primitive Type and Logical Type. Logical types are stored as primitive types. The following list is the currently implemented data types:
+There are two types in Parquet: Primitive Type and Logical Type. Logical types are stored as primitive types. 
 
-|Parquet Type|Primitive Type|Go Type|
+### Primitive Type
+|Primitive Type|Go Type|
+|-|-|
+|BOOLEAN|bool|
+|INT32|int32|
+|INT64|int64|
+|INT96|string|
+|FLOAT|float32|
+|DOUBLE|float64|
+|BYTE_ARRAY|string|
+|FIXED_LEN_BYTE_ARRAY|string|
+
+
+### Logical Type
+|Logical Type|Primitive Type|Go Type|
 |-|-|-|
-|BOOLEAN|BOOLEAN|bool|
-|INT32|INT32|int32|
-|INT64|INT64|int64|
-|INT96|INT96|string|
-|FLOAT|FLOAT|float32|
-|DOUBLE|DOUBLE|float64|
-|BYTE_ARRAY|BYTE_ARRAY|string|
-|FIXED_LEN_BYTE_ARRAY|FIXED_LEN_BYTE_ARRAY|string|
 |UTF8|BYTE_ARRAY|string|
-|INT_8|INT32|int8|
-|INT_16|INT32|int16|
+|INT_8|INT32|int32|
+|INT_16|INT32|int32|
 |INT_32|INT32|int32|
 |INT_64|INT64|int64|
-|UINT_8|INT32|uint8|
-|UINT_16|INT32|uint16|
-|UINT_32|INT32|uint32|
-|UINT_64|INT64|uint64|
+|UINT_8|INT32|int32|
+|UINT_16|INT32|int32|
+|UINT_32|INT32|int32|
+|UINT_64|INT64|int64|
 |DATE|INT32|int32|
 |TIME_MILLIS|INT32|int32|
 |TIME_MICROS|INT64|int64|
@@ -60,13 +68,13 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 |TIMESTAMP_MICROS|INT64|int64|
 |INTERVAL|FIXED_LEN_BYTE_ARRAY|string|
 |DECIMAL|INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY|int32,int64,string,string|
-|LIST||slice||
-|MAP||map||
+|LIST|-|slice||
+|MAP|-|map||
 
 ### Tips
-* Although DECIMAL can be stored as INT32,INT64,FIXED_LEN_BYTE_ARRAY,BYTE_ARRAY, Currently I suggest to use FIXED_LEN_BYTE_ARRAY.
-
 * Parquet-go supports type alias such `type MyString string`. But the base type must follow the table instructions.
+
+* Some type convert functions: [converter.go](https://github.com/xitongsys/parquet-go/blob/master/types/converter.go)
 
 ## Encoding
 
@@ -114,39 +122,46 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 ## Example of Type and Encoding
 
 ```golang
-Bool              bool    `parquet:"name=bool, type=BOOLEAN"`
-Int32             int32   `parquet:"name=int32, type=INT32"`
-Int64             int64   `parquet:"name=int64, type=INT64"`
-Int96             string  `parquet:"name=int96, type=INT96"`
-Float             float32 `parquet:"name=float, type=FLOAT"`
-Double            float64 `parquet:"name=double, type=DOUBLE"`
-ByteArray         string  `parquet:"name=bytearray, type=BYTE_ARRAY"`
-FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
+	Bool              bool    `parquet:"name=bool, type=BOOLEAN"`
+	Int32             int32   `parquet:"name=int32, type=INT32"`
+	Int64             int64   `parquet:"name=int64, type=INT64"`
+	Int96             string  `parquet:"name=int96, type=INT96"`
+	Float             float32 `parquet:"name=float, type=FLOAT"`
+	Double            float64 `parquet:"name=double, type=DOUBLE"`
+	ByteArray         string  `parquet:"name=bytearray, type=BYTE_ARRAY"`
+	FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
 
-Utf8            string `parquet:"name=utf8, type=UTF8, encoding=PLAIN_DICTIONARY"`
-Int_8           int8  `parquet:"name=int_8, type=INT_8"`
-Int_16          int16  `parquet:"name=int_16, type=INT_16"`
-Int_32          int32  `parquet:"name=int_32, type=INT_32"`
-Int_64          int64  `parquet:"name=int_64, type=INT_64"`
-Uint_8          uint8 `parquet:"name=uint_8, type=UINT_8"`
-Uint_16         uint16 `parquet:"name=uint_16, type=UINT_16"`
-Uint_32         uint32 `parquet:"name=uint_32, type=UINT_32"`
-Uint_64         uint64 `parquet:"name=uint_64, type=UINT_64"`
-Date            int32  `parquet:"name=date, type=DATE"`
-TimeMillis      int32  `parquet:"name=timemillis, type=TIME_MILLIS"`
-TimeMicros      int64  `parquet:"name=timemicros, type=TIME_MICROS"`
-TimestampMillis int64  `parquet:"name=timestampmillis, type=TIMESTAMP_MILLIS"`
-TimestampMicros int64  `parquet:"name=timestampmicros, type=TIMESTAMP_MICROS"`
-Interval        string `parquet:"name=interval, type=INTERVAL"`
+	Utf8             string `parquet:"name=utf8, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+	Int_8            int32   `parquet:"name=int_8, type=INT32, convertedtype=INT32, convertedtype=INT_8"`
+	Int_16           int32  `parquet:"name=int_16, type=INT32, convertedtype=INT_16"`
+	Int_32           int32  `parquet:"name=int_32, type=INT32, convertedtype=INT_32"`
+	Int_64           int64  `parquet:"name=int_64, type=INT64, convertedtype=INT_64"`
+	Uint_8           int32  `parquet:"name=uint_8, type=INT32, convertedtype=UINT_8"`
+	Uint_16          int32 `parquet:"name=uint_16, type=INT32, convertedtype=UINT_16"`
+	Uint_32          int32 `parquet:"name=uint_32, type=INT32, convertedtype=UINT_32"`
+	Uint_64          int64 `parquet:"name=uint_64, type=INT64, convertedtype=UINT_64"`
+	Date             int32  `parquet:"name=date, type=INT32, convertedtype=DATE"`
+	Date2            int32  `parquet:"name=date2, type=INT32, convertedtype=DATE, logicaltype=DATE"`
+	TimeMillis       int32  `parquet:"name=timemillis, type=INT32, convertedtype=TIME_MILLIS"`
+	TimeMillis2      int32  `parquet:"name=timemillis2, type=INT32, logicaltype=TIME, logicaltype.isadjustedtoutc=true, logicaltype.unit=MILLIS"`
+	TimeMicros       int64  `parquet:"name=timemicros, type=INT64, convertedtype=TIME_MICROS"`
+	TimeMicros2      int64  `parquet:"name=timemicros2, type=INT64, logicaltype=TIME, logicaltype.isadjustedtoutc=false, logicaltype.unit=MICROS"`
+	TimestampMillis  int64  `parquet:"name=timestampmillis, type=INT64, convertedtype=TIMESTAMP_MILLIS"`
+	TimestampMillis2 int64  `parquet:"name=timestampmillis2, type=INT64, logicaltype=TIMESTAMP, logicaltype.isadjustedtoutc=true, logicaltype.unit=MILLIS"`
+	TimestampMicros  int64  `parquet:"name=timestampmicros, type=INT64, convertedtype=TIMESTAMP_MICROS"`
+	TimestampMicros2 int64  `parquet:"name=timestampmicros2, type=INT64, logicaltype=TIMESTAMP, logicaltype.isadjustedtoutc=false, logicaltype.unit=MICROS"`
+	Interval         string `parquet:"name=interval, type=BYTE_ARRAY, convertedtype=INTERVAL"`
 
-Decimal1 int32  `parquet:"name=decimal1, type=DECIMAL, scale=2, precision=9, basetype=INT32"`
-Decimal2 int64  `parquet:"name=decimal2, type=DECIMAL, scale=2, precision=18, basetype=INT64"`
-Decimal3 string `parquet:"name=decimal3, type=DECIMAL, scale=2, precision=10, basetype=FIXED_LEN_BYTE_ARRAY, length=12"`
-Decimal4 string `parquet:"name=decimal4, type=DECIMAL, scale=2, precision=20, basetype=BYTE_ARRAY"`
+	Decimal1 int32  `parquet:"name=decimal1, type=INT32, convertedtype=DECIMAL, scale=2, precision=9"`
+	Decimal2 int64  `parquet:"name=decimal2, type=INT64, convertedtype=DECIMAL, scale=2, precision=18"`
+	Decimal3 string `parquet:"name=decimal3, type=FIXED_LEN_BYTE_ARRAY, convertedtype=DECIMAL, scale=2, precision=10, length=12"`
+	Decimal4 string `parquet:"name=decimal4, type=BYTE_ARRAY, convertedtype=DECIMAL, scale=2, precision=20"`
 
-Map      map[string]int32 `parquet:"name=map, type=MAP, keytype=UTF8, valuetype=INT32"`
-List     []string         `parquet:"name=list, type=LIST, valuetype=UTF8"`
-Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=REPEATED"`
+	Decimal5 int32 `parquet:"name=decimal5, type=INT32, logicaltype=DECIMAL, logicaltype.precision=10, logicaltype.scale=2"`
+
+	Map      map[string]int32 `parquet:"name=map, type=MAP, convertedtype=MAP, keytype=BYTE_ARRAY, keyconvertedtype=UTF8, valuetype=INT32"`
+	List     []string         `parquet:"name=list, type=MAP, convertedtype=LIST, valuetype=BYTE_ARRAY, valueconvertedtype=UTF8"`
+	Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=REPEATED"`
 ```
 
 ## Compression Type
@@ -219,12 +234,13 @@ There are three methods to define the schema: go struct tags, Json, CSV metadata
 
 ```golang
 type Student struct {
-	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
-	Age    int32   `parquet:"name=age, type=INT32"`
-	Id     int64   `parquet:"name=id, type=INT64"`
-	Weight float32 `parquet:"name=weight, type=FLOAT"`
-	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
-	Day    int32   `parquet:"name=day, type=DATE"`
+	Name    string  `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+	Age     int32   `parquet:"name=age, type=INT32, encoding=PLAIN"`
+	Id      int64   `parquet:"name=id, type=INT64"`
+	Weight  float32 `parquet:"name=weight, type=FLOAT"`
+	Sex     bool    `parquet:"name=sex, type=BOOLEAN"`
+	Day     int32   `parquet:"name=day, type=INT32, convertedtype=DATE"`
+	Ignored int32   //without parquet tag and won't write
 }
 ```
 
@@ -236,13 +252,14 @@ JSON schema can be used to define some complicated schema, which can't be define
 
 ```golang
 type Student struct {
-	Name    string
+	NameIn    string
 	Age     int32
 	Id      int64
 	Weight  float32
 	Sex     bool
 	Classes []string
 	Scores  map[string][]float32
+	Ignored string
 
 	Friends []struct {
 		Name string
@@ -256,40 +273,43 @@ type Student struct {
 
 var jsonSchema string = `
 {
-  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
+  "Tag": "name=parquet_go_root, repetitiontype=REQUIRED",
   "Fields": [
-    {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+    {"Tag": "name=name, inname=NameIn, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
     {"Tag": "name=age, inname=Age, type=INT32, repetitiontype=REQUIRED"},
     {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"},
     {"Tag": "name=weight, inname=Weight, type=FLOAT, repetitiontype=REQUIRED"},
     {"Tag": "name=sex, inname=Sex, type=BOOLEAN, repetitiontype=REQUIRED"},
 
     {"Tag": "name=classes, inname=Classes, type=LIST, repetitiontype=REQUIRED",
-     "Fields": [{"Tag": "name=element, type=UTF8, repetitiontype=REQUIRED"}]
+     "Fields": [{"Tag": "name=element, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"}]
     },
+
     {
       "Tag": "name=scores, inname=Scores, type=MAP, repetitiontype=REQUIRED",
       "Fields": [
-        {"Tag": "name=key, type=UTF8, repetitiontype=REQUIRED"},
+        {"Tag": "name=key, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
         {"Tag": "name=value, type=LIST, repetitiontype=REQUIRED",
          "Fields": [{"Tag": "name=element, type=FLOAT, repetitiontype=REQUIRED"}]
         }
       ]
     },
+
     {
       "Tag": "name=friends, inname=Friends, type=LIST, repetitiontype=REQUIRED",
       "Fields": [
        {"Tag": "name=element, repetitiontype=REQUIRED",
         "Fields": [
-         {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+         {"Tag": "name=name, inname=Name, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
          {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"}
         ]}
       ]
     },
+
     {
       "Tag": "name=teachers, inname=Teachers, repetitiontype=REPEATED",
       "Fields": [
-        {"Tag": "name=name, inname=Name, type=UTF8, repetitiontype=REQUIRED"},
+        {"Tag": "name=name, inname=Name, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=REQUIRED"},
         {"Tag": "name=id, inname=Id, type=INT64, repetitiontype=REQUIRED"}
       ]
     }
@@ -303,13 +323,13 @@ var jsonSchema string = `
 ### CSV metadata
 
 ```golang
-md := []string{
-	"name=Name, type=UTF8, encoding=PLAIN_DICTIONARY",
-	"name=Age, type=INT32",
-	"name=Id, type=INT64",
-	"name=Weight, type=FLOAT",
-	"name=Sex, type=BOOLEAN",
-}
+	md := []string{
+		"name=Name, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=Age, type=INT32",
+		"name=Id, type=INT64",
+		"name=Weight, type=FLOAT",
+		"name=Sex, type=BOOLEAN",
+	}
 ```
 
 [Example of CSV metadata](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)

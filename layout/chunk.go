@@ -23,8 +23,8 @@ func PagesToChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[0].MaxVal
 	var minVal interface{} = pages[0].MinVal
-	pT, cT, omitStats := pages[0].Schema.Type, pages[0].Schema.ConvertedType, pages[0].Info.OmitStats
-	funcTable := common.FindFuncTable(pT, cT)
+	pT, cT, logT, omitStats := pages[0].Schema.Type, pages[0].Schema.ConvertedType, pages[0].Schema.LogicalType, pages[0].Info.OmitStats
+	funcTable := common.FindFuncTable(pT, cT, logT)
 
 	for i := 0; i < ln; i++ {
 		if pages[i].Header.DataPageHeader != nil {
@@ -85,8 +85,8 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[1].MaxVal
 	var minVal interface{} = pages[1].MinVal
-	pT, cT, omitStats := pages[1].Schema.Type, pages[1].Schema.ConvertedType, pages[0].Info.OmitStats
-	funcTable := common.FindFuncTable(pT, cT)
+	pT, cT, logT, omitStats := pages[1].Schema.Type, pages[1].Schema.ConvertedType, pages[1].Schema.LogicalType, pages[0].Info.OmitStats
+	funcTable := common.FindFuncTable(pT, cT, logT)
 
 	for i := 0; i < len(pages); i++ {
 		if pages[i].Header.DataPageHeader != nil {

@@ -14,19 +14,19 @@ func main() {
     {
         "Tag":"name=parquet-go-root",
         "Fields":[
-		    {"Tag":"name=name, type=UTF8, repetitiontype=OPTIONAL"},
+		    {"Tag":"name=name, type=BYTE_ARRAY, convertedtype=UTF8, repetitiontype=OPTIONAL"},
 		    {"Tag":"name=age, type=INT32"},
 		    {"Tag":"name=id, type=INT64"},
 		    {"Tag":"name=weight, type=FLOAT"},
 		    {"Tag":"name=sex, type=BOOLEAN"},
             {"Tag":"name=classes, type=LIST",
              "Fields":[
-                  {"Tag":"name=element, type=UTF8"}
+                  {"Tag":"name=element, type=BYTE_ARRAY, convertedtype=UTF8"}
               ]
             },
             {"Tag":"name=scores, type=MAP",
              "Fields":[
-                 {"Tag":"name=key, type=UTF8"},
+                 {"Tag":"name=key, type=BYTE_ARRAY, convertedtype=UTF8"},
                  {"Tag":"name=value, type=LIST",
                   "Fields":[{"Tag":"name=element, type=FLOAT"}]
                  }
@@ -36,7 +36,7 @@ func main() {
              "Fields":[
                  {"Tag":"name=element",
                   "Fields":[
-                      {"Tag":"name=name, type=UTF8"},
+                      {"Tag":"name=name, type=BYTE_ARRAY, convertedtype=UTF8"},
                       {"Tag":"name=id, type=INT64"}
                   ]
                  }
@@ -44,7 +44,7 @@ func main() {
             },
             {"Tag":"name=teachers, repetitiontype=REPEATED",
              "Fields":[
-                 {"Tag":"name=name, type=UTF8"},
+                 {"Tag":"name=name, type=BYTE_ARRAY, convertedtype=UTF8"},
                  {"Tag":"name=id, type=INT64"}
              ]
             }
