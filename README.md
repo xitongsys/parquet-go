@@ -340,7 +340,7 @@ var jsonSchema string = `
 
 ## Parallel
 
-Read/Write initial functions have a parallel parameters np which is the number of goroutines in reading/writing.
+Marshal/Unmarshal is the most time consuming process in writing/reading. To improve the performance, parquet-go can use multiple goroutines to marshal/unmarshal the objects. You can set the concurrent number parameter `np` in the Read/Write initial functions.
 
 ```golang
 func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error)
