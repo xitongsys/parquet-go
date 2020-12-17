@@ -4,18 +4,19 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"io"
 	"reflect"
 	"sync"
-	"io"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/xitongsys/parquet-go-source/writerfile"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/marshal"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/source"
-	"github.com/xitongsys/parquet-go-source/writerfile"
 )
 
 //ParquetWriter is a writer  parquet file
@@ -40,6 +41,9 @@ type ParquetWriter struct {
 	NumRows     int64
 
 	DictRecs map[string]*layout.DictRecType
+
+	ColumnIndexes []*parquet.ColumnIndex
+	OffsetIndexes []*parquet.OffsetIndex
 
 	MarshalFunc func(src []interface{}, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
 }
@@ -68,6 +72,8 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.DictRecs = make(map[string]*layout.DictRecType)
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
+	res.ColumnIndexes = make([]*parquet.ColumnIndex, 0)
+	res.OffsetIndexes = make([]*parquet.OffsetIndex, 0)
 	//include the createdBy to avoid
 	//WARN  CorruptStatistics:118 - Ignoring statistics because created_by is null or empty! See PARQUET-251 and PARQUET-297
 	createdBy := "parquet-go version latest"
@@ -130,6 +136,54 @@ func (self *ParquetWriter) WriteStop() error {
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	self.RenameSchema()
+
+	// write ColumnIndex
+	idx := 0
+	for _, rowGroup := range self.Footer.RowGroups {
+		for _, columnChunk := range rowGroup.Columns {
+			columnIndexBuf, err := ts.Write(context.TODO(), self.ColumnIndexes[idx])
+			if err != nil {
+				return err
+			}
+			if _, err = self.PFile.Write(columnIndexBuf); err != nil {
+				return err
+			}
+
+			idx++
+
+			pos := self.Offset
+			columnChunk.ColumnIndexOffset = &pos
+			columnIndexBufSize := int32(len(columnIndexBuf))
+			columnChunk.ColumnIndexLength = &columnIndexBufSize
+
+			self.Offset += int64(columnIndexBufSize)
+		}
+	}
+
+	// write OffsetIndex
+	idx = 0
+	for _, rowGroup := range self.Footer.RowGroups {
+		for _, columnChunk := range rowGroup.Columns {
+			offsetIndexBuf, err := ts.Write(context.TODO(), self.OffsetIndexes[idx])
+			if err != nil {
+				return err
+			}
+			if _, err = self.PFile.Write(offsetIndexBuf); err != nil {
+				return err
+			}
+
+			idx++
+
+			pos := self.Offset
+			columnChunk.OffsetIndexOffset = &pos
+			offsetIndexBufSize := int32(len(offsetIndexBuf))
+			columnChunk.OffsetIndexLength = &offsetIndexBufSize
+
+			self.Offset += int64(offsetIndexBufSize)
+		}
+	}	
+
+
 	footerBuf, err := ts.Write(context.TODO(), self.Footer)
 	if err != nil {
 		return err
@@ -336,7 +390,24 @@ func (self *ParquetWriter) Flush(flag bool) error {
 			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = -1
 			rowGroup.Chunks[k].ChunkHeader.FileOffset = self.Offset
 
-			for l := 0; l < len(rowGroup.Chunks[k].Pages); l++ {
+			pageCount := len(rowGroup.Chunks[k].Pages)
+
+			//add ColumnIndex 
+			columnIndex := parquet.NewColumnIndex()
+			columnIndex.NullPages = make([]bool, pageCount)
+			columnIndex.MinValues = make([][]byte, pageCount)
+			columnIndex.MaxValues = make([][]byte, pageCount)
+			columnIndex.BoundaryOrder = parquet.BoundaryOrder_UNORDERED
+			self.ColumnIndexes = append(self.ColumnIndexes, columnIndex)
+
+			//add OffsetIndex
+			offsetIndex := parquet.NewOffsetIndex()
+			offsetIndex.PageLocations = make([]*parquet.PageLocation, 0)
+			self.OffsetIndexes = append(self.OffsetIndexes, offsetIndex)
+
+			firstRowIndex := int64(0)
+
+			for l := 0; l < pageCount; l++ {
 				if rowGroup.Chunks[k].Pages[l].Header.Type == parquet.PageType_DICTIONARY_PAGE {
 					tmp := self.Offset
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DictionaryPageOffset = &tmp
@@ -344,6 +415,26 @@ func (self *ParquetWriter) Flush(flag bool) error {
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
 
 				}
+
+				page := rowGroup.Chunks[k].Pages[l]
+				//TODO: support DataPageHeaderV2
+				if page.Header.DataPageHeader == nil {
+					fmt.Println(page.Header.DictionaryPageHeader)
+					panic(errors.New("unsupported data page" + page.Header.String()))
+				}
+
+				columnIndex.MinValues[l] = page.Header.DataPageHeader.Statistics.Min
+				columnIndex.MaxValues[l] = page.Header.DataPageHeader.Statistics.Max
+
+				pageLocation := parquet.NewPageLocation()
+				pageLocation.Offset = self.Offset
+				pageLocation.FirstRowIndex = firstRowIndex
+				pageLocation.CompressedPageSize = page.Header.CompressedPageSize
+
+				offsetIndex.PageLocations = append(offsetIndex.PageLocations, pageLocation)
+
+				firstRowIndex += int64(page.Header.DataPageHeader.NumValues)
+
 				data := rowGroup.Chunks[k].Pages[l].RawData
 				if _, err = self.PFile.Write(data); err != nil {
 					return err
