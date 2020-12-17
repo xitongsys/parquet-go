@@ -245,8 +245,6 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.MaxVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Max = tmpBuf
@@ -255,8 +253,6 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Min = tmpBuf
@@ -337,8 +333,6 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.MaxVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Max = tmpBuf
@@ -347,8 +341,6 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeaderV2.Statistics.Min = tmpBuf

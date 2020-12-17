@@ -191,8 +191,6 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	if page.MaxVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Max = tmpBuf
@@ -201,8 +199,6 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	if page.MinVal != nil {
 		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
-			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
-			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
 			tmpBuf = tmpBuf[4:]
 		}
 		page.Header.DataPageHeader.Statistics.Min = tmpBuf

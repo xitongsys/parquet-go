@@ -59,8 +59,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 	if !omitStats && maxVal != nil && minVal != nil {
 		tmpBufMax := encoding.WritePlain([]interface{}{maxVal}, *pT)
 		tmpBufMin := encoding.WritePlain([]interface{}{minVal}, *pT)
-		if (cT != nil && *cT == parquet.ConvertedType_UTF8) ||
-			(cT != nil && *cT == parquet.ConvertedType_DECIMAL && *pT == parquet.Type_BYTE_ARRAY) {
+		if *pT == parquet.Type_BYTE_ARRAY {
 			tmpBufMax = tmpBufMax[4:]
 			tmpBufMin = tmpBufMin[4:]
 		}
@@ -123,8 +122,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	if !omitStats && maxVal != nil && minVal != nil {
 		tmpBufMax := encoding.WritePlain([]interface{}{maxVal}, *pT)
 		tmpBufMin := encoding.WritePlain([]interface{}{minVal}, *pT)
-		if (cT != nil && *cT == parquet.ConvertedType_UTF8) ||
-			(cT != nil && *cT == parquet.ConvertedType_DECIMAL && *pT == parquet.Type_BYTE_ARRAY) {
+		if  *pT == parquet.Type_BYTE_ARRAY {
 			tmpBufMax = tmpBufMax[4:]
 			tmpBufMin = tmpBufMin[4:]
 		}
