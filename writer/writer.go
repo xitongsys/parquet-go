@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"reflect"
 	"sync"
@@ -417,23 +416,35 @@ func (self *ParquetWriter) Flush(flag bool) error {
 				}
 
 				page := rowGroup.Chunks[k].Pages[l]
-				//TODO: support DataPageHeaderV2
-				if page.Header.DataPageHeader == nil {
-					fmt.Println(page.Header.DictionaryPageHeader)
-					panic(errors.New("unsupported data page" + page.Header.String()))
+				//only record DataPage
+				if page.Header.Type != parquet.PageType_DICTIONARY_PAGE {
+					if page.Header.DataPageHeader == nil && page.Header.DataPageHeaderV2 == nil {
+						panic(errors.New("unsupported data page: " + page.Header.String()))
+					}
+
+					var minVal []byte
+					var maxVal []byte
+					if page.Header.DataPageHeader != nil && page.Header.DataPageHeader.Statistics != nil {
+						minVal = page.Header.DataPageHeader.Statistics.Min
+						maxVal = page.Header.DataPageHeader.Statistics.Max
+
+					} else if page.Header.DataPageHeaderV2 != nil && page.Header.DataPageHeaderV2.Statistics != nil {
+						minVal = page.Header.DataPageHeaderV2.Statistics.Min
+						maxVal = page.Header.DataPageHeaderV2.Statistics.Max
+					}
+
+					columnIndex.MinValues[l] = minVal
+					columnIndex.MaxValues[l] = maxVal
+
+					pageLocation := parquet.NewPageLocation()
+					pageLocation.Offset = self.Offset
+					pageLocation.FirstRowIndex = firstRowIndex
+					pageLocation.CompressedPageSize = page.Header.CompressedPageSize
+
+					offsetIndex.PageLocations = append(offsetIndex.PageLocations, pageLocation)
+
+					firstRowIndex += int64(page.Header.DataPageHeader.NumValues)
 				}
-
-				columnIndex.MinValues[l] = page.Header.DataPageHeader.Statistics.Min
-				columnIndex.MaxValues[l] = page.Header.DataPageHeader.Statistics.Max
-
-				pageLocation := parquet.NewPageLocation()
-				pageLocation.Offset = self.Offset
-				pageLocation.FirstRowIndex = firstRowIndex
-				pageLocation.CompressedPageSize = page.Header.CompressedPageSize
-
-				offsetIndex.PageLocations = append(offsetIndex.PageLocations, pageLocation)
-
-				firstRowIndex += int64(page.Header.DataPageHeader.NumValues)
 
 				data := rowGroup.Chunks[k].Pages[l].RawData
 				if _, err = self.PFile.Write(data); err != nil {
@@ -442,6 +453,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 				self.Offset += int64(len(data))
 			}
 		}
+
 		self.Footer.RowGroups = append(self.Footer.RowGroups, rowGroup.RowGroupHeader)
 		self.Size = 0
 		self.PagesMapBuf = make(map[string][]*layout.Page)

@@ -187,6 +187,28 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	page.Header.DataPageHeader.RepetitionLevelEncoding = parquet.Encoding_RLE
 	page.Header.DataPageHeader.Encoding = parquet.Encoding_PLAIN_DICTIONARY
 
+	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
+	if page.MaxVal != nil {
+		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
+			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
+			tmpBuf = tmpBuf[4:]
+		}
+		page.Header.DataPageHeader.Statistics.Max = tmpBuf
+		page.Header.DataPageHeader.Statistics.MaxValue = tmpBuf
+	}
+	if page.MinVal != nil {
+		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
+			// if (page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_DECIMAL) ||
+			// 	(page.Schema.ConvertedType != nil && *page.Schema.ConvertedType == parquet.ConvertedType_UTF8) {
+			tmpBuf = tmpBuf[4:]
+		}
+		page.Header.DataPageHeader.Statistics.Min = tmpBuf
+		page.Header.DataPageHeader.Statistics.MinValue = tmpBuf
+	}
+
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
