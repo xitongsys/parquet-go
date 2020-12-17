@@ -338,7 +338,7 @@ var jsonSchema string = `
 1. It's not allowed if two field names are only different at their first letter case. Such as `name` and `Name`.
 2. `PARGO_PREFIX_` is a reserved string, which you'd better not use it as a name prefix. ([#294](https://github.com/xitongsys/parquet-go/issues/294))
 
-## Parallel
+## Concurrency
 
 Marshal/Unmarshal is the most time consuming process in writing/reading. To improve the performance, parquet-go can use multiple goroutines to marshal/unmarshal the objects. You can set the concurrent number parameter `np` in the Read/Write initial functions.
 
