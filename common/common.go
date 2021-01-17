@@ -77,7 +77,7 @@ func StringToTag(tag string) *Tag {
 	for _, tag := range tags {
 		tag = strings.TrimSpace(tag)
 
-		kv := strings.Split(tag, "=")
+		kv := strings.SplitN(tag, "=", 2)
 
 		key := kv[0]
 		key = strings.ToLower(key)
