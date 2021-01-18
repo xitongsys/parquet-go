@@ -339,11 +339,12 @@ func (self *ParquetReader) read(dstInterface interface{}, prefixPath string) err
 
 	wg.Wait()
 
-	resTmp := reflect.MakeSlice(reflect.SliceOf(ot), 0, num)
+	dstValue := reflect.ValueOf(dstInterface).Elem()
+	dstValue.SetLen(0)
 	for _, dst := range dstList {
-		resTmp = reflect.AppendSlice(resTmp, reflect.ValueOf(dst).Elem())
+		dstValue.Set(reflect.AppendSlice(dstValue, reflect.ValueOf(dst).Elem()))
 	}
-	reflect.ValueOf(dstInterface).Elem().Set(resTmp)
+
 	return err
 }
 
