@@ -53,6 +53,8 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
 				return res, err
 			}
+
+			res.ObjType = reflect.TypeOf(obj).Elem()
 		}
 
 	} else {
@@ -204,7 +206,7 @@ func (self *ParquetReader) ReadByNumber(maxReadNumber int) ([]interface{}, error
 			return nil, err
 		}
 	}
-
+	
 	vs := reflect.MakeSlice(reflect.SliceOf(self.ObjType), maxReadNumber, maxReadNumber)
 	res := reflect.New(vs.Type())
 	res.Elem().Set(vs)
