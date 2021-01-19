@@ -3,6 +3,7 @@ package reader
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"reflect"
 	"strings"
@@ -53,6 +54,8 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
 				return res, err
 			}
+
+			res.ObjType = reflect.TypeOf(obj).Elem()
 		}
 
 	} else {
@@ -204,6 +207,8 @@ func (self *ParquetReader) ReadByNumber(maxReadNumber int) ([]interface{}, error
 			return nil, err
 		}
 	}
+
+	fmt.Println(self.ObjType)
 
 	vs := reflect.MakeSlice(reflect.SliceOf(self.ObjType), maxReadNumber, maxReadNumber)
 	res := reflect.New(vs.Type())
