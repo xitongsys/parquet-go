@@ -7,8 +7,8 @@ import (
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/types"
 )
 
@@ -249,6 +249,12 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 			tk := node.Val.Type().Kind()
 			var m Marshaler
 
+			schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
+			if tk == reflect.Interface && schemaHandler.SchemaElements[schemaIndex].GetNumChildren() > 0 {
+				node.Val = node.Val.Elem()
+				tk = node.Val.Type().Kind()
+			}
+
 			if tk == reflect.Ptr {
 				m = &ParquetPtr{}
 			} else if tk == reflect.Struct {
@@ -265,7 +271,6 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 				}
 			} else {
 				table := res[node.PathMap.Path]
-				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
 				schema := schemaHandler.SchemaElements[schemaIndex]
 				table.Values = append(table.Values, types.InterfaceToParquetType(node.Val.Interface(), schema.Type))
 				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
