@@ -91,30 +91,59 @@ func (p *ParquetStruct) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 	return nodes
 }
 
-type ParquetMapStruct struct{}
+type ParquetMapStruct struct {
+	schemaHandler *schema.SchemaHandler
+}
 
 func (p *ParquetMapStruct) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 	var ok bool
 
-	nodes := make([]*Node, 0)
+	nodes := make([]*Node, 0, len(node.PathMap.Children))
 	keys := node.Val.MapKeys()
 	if len(keys) <= 0 {
 		return nodes
 	}
 
+	missingKeys := make(map[string]bool)
+	for k := range node.PathMap.Children {
+		missingKeys[k] = true
+	}
 	for j := len(keys) - 1; j >= 0; j-- {
 		key := keys[j]
 		newNode := nodeBuf.GetNode()
 
 		//some ignored item
-		if newNode.PathMap, ok = node.PathMap.Children[key.String()]; !ok {
+		k := key.String()
+		if newNode.PathMap, ok = node.PathMap.Children[k]; !ok {
 			continue
 		}
-
-		newNode.Val = node.Val.MapIndex(key)
+		missingKeys[k] = false
+		v := node.Val.MapIndex(key)
 		newNode.RL = node.RL
 		newNode.DL = node.DL
+		if v.Type().Kind() == reflect.Interface {
+			newNode.Val = v.Elem()
+			if newNode.Val.IsValid() {
+				if *p.schemaHandler.SchemaElements[p.schemaHandler.MapIndex[newNode.PathMap.Path]].RepetitionType != parquet.FieldRepetitionType_REQUIRED {
+					newNode.DL++
+				}
+			}
+		} else {
+			newNode.Val = v
+		}
 		nodes = append(nodes, newNode)
+	}
+
+	var null interface{}
+	for k, isMissing := range missingKeys {
+		if isMissing {
+			newNode := nodeBuf.GetNode()
+			newNode.PathMap = node.PathMap.Children[k]
+			newNode.Val = reflect.ValueOf(null)
+			newNode.RL = node.RL
+			newNode.DL = node.DL
+			nodes = append(nodes, newNode)
+		}
 	}
 	return nodes
 }
@@ -140,7 +169,12 @@ func (p *ParquetSlice) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 	for j := ln - 1; j >= 0; j-- {
 		newNode := nodeBuf.GetNode()
 		newNode.PathMap = pathMap
-		newNode.Val = node.Val.Index(j)
+		v := node.Val.Index(j)
+		if v.Type().Kind() == reflect.Interface {
+			newNode.Val = v.Elem()
+		} else {
+			newNode.Val = v
+		}
 		if j == 0 {
 			newNode.RL = node.RL
 		} else {
@@ -246,14 +280,13 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 			node := stack[ln-1]
 			stack = stack[:ln-1]
 
-			tk := node.Val.Type().Kind()
+			tk := reflect.Interface
+			if node.Val.IsValid() {
+				tk = node.Val.Type().Kind()
+			}
 			var m Marshaler
 
 			schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
-			if tk == reflect.Interface && schemaHandler.SchemaElements[schemaIndex].GetNumChildren() > 0 {
-				node.Val = node.Val.Elem()
-				tk = node.Val.Type().Kind()
-			}
 
 			if tk == reflect.Ptr {
 				m = &ParquetPtr{}
@@ -265,14 +298,18 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
 				sele := schemaHandler.SchemaElements[schemaIndex]
 				if !sele.IsSetConvertedType() {
-					m = &ParquetMapStruct{}
+					m = &ParquetMapStruct{schemaHandler: schemaHandler}
 				} else {
 					m = &ParquetMap{schemaHandler: schemaHandler}
 				}
 			} else {
 				table := res[node.PathMap.Path]
 				schema := schemaHandler.SchemaElements[schemaIndex]
-				table.Values = append(table.Values, types.InterfaceToParquetType(node.Val.Interface(), schema.Type))
+				var v interface{}
+				if node.Val.IsValid() {
+					v = node.Val.Interface()
+				}
+				table.Values = append(table.Values, types.InterfaceToParquetType(v, schema.Type))
 				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 				table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
 				continue
