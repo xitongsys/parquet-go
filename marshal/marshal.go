@@ -105,8 +105,10 @@ func (p *ParquetMapStruct) Marshal(node *Node, nodeBuf *NodeBufType) []*Node {
 	}
 
 	missingKeys := make(map[string]bool)
-	for k := range node.PathMap.Children {
-		missingKeys[k] = true
+	for k, typ := range node.PathMap.Children {
+		if len(typ.Children) == 0 {
+			missingKeys[k] = true
+		}
 	}
 	for j := len(keys) - 1; j >= 0; j-- {
 		key := keys[j]
