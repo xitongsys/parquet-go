@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"math/bits"
-	"strings"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go/common"
@@ -510,7 +509,7 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 
 		table := new(Table)
 		table.Path = self.Path
-		name := strings.Join(self.Path, ".")
+		name := common.PathToStr(self.Path)
 		table.RepetitionType = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
 		table.MaxRepetitionLevel = maxRepetitionLevel
 		table.MaxDefinitionLevel = maxDefinitionLevel
@@ -576,7 +575,7 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 				numNulls++
 			}
 		}
-		name := strings.Join(self.DataTable.Path, ".")
+		name := common.PathToStr(self.DataTable.Path)
 		var values []interface{}
 		var ct parquet.ConvertedType = -1
 		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
@@ -768,7 +767,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 	path := make([]string, 0)
 	path = append(path, schemaHandler.GetRootInName())
 	path = append(path, colMetaData.GetPathInSchema()...)
-	name := strings.Join(path, ".")
+	name := common.PathToStr(path)
 
 	if pageHeader.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		page = NewDictPage()

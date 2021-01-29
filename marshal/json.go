@@ -86,11 +86,11 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 				keys := node.Val.MapKeys()
 
 				if schema.GetConvertedType() == parquet.ConvertedType_MAP { //real map
-					pathStr = pathStr + ".Key_value"
+					pathStr = pathStr + common.PAR_GO_PATH_DELIMITER + "Key_value"
 					if len(keys) <= 0 {
 						for key, table := range res {
 							if strings.HasPrefix(key, node.PathMap.Path) &&
-							(len(key) == len(node.PathMap.Path) || key[len(node.PathMap.Path)] == '.'){
+							(len(key) == len(node.PathMap.Path) || key[len(node.PathMap.Path)] == common.PAR_GO_PATH_DELIMITER[0]){
 								table.Values = append(table.Values, nil)
 								table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 								table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
@@ -160,7 +160,7 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 							newPathStr := node.PathMap.Children[key].Path
 							for path, table := range res {
 								if strings.HasPrefix(path, newPathStr) &&
-									(len(path) == len(newPathStr) || path[len(newPathStr)] == '.') {
+									(len(path) == len(newPathStr) || path[len(newPathStr)] == common.PAR_GO_PATH_DELIMITER[0]) {
 
 									table.Values = append(table.Values, nil)
 									table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
@@ -175,11 +175,11 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 				ln := node.Val.Len()
 
 				if schema.GetConvertedType() == parquet.ConvertedType_LIST { // real LIST
-					pathStr = pathStr + ".List" + ".Element"
+					pathStr = pathStr + common.PAR_GO_PATH_DELIMITER + "List" + common.PAR_GO_PATH_DELIMITER + "Element"
 					if ln <= 0 {
 						for key, table := range res {
 							if strings.HasPrefix(key, node.PathMap.Path) &&
-							(len(key) == len(node.PathMap.Path) || key[len(node.PathMap.Path)] == '.'){
+							(len(key) == len(node.PathMap.Path) || key[len(node.PathMap.Path)] == common.PAR_GO_PATH_DELIMITER[0]){
 								table.Values = append(table.Values, nil)
 								table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 								table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
@@ -213,7 +213,7 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 					if ln <= 0 {
 						for key, table := range res {
 							if strings.HasPrefix(key, node.PathMap.Path) &&
-							(len(key) == len(node.PathMap.Path) || key[len(node.PathMap.Path)] == '.'){
+							(len(key) == len(node.PathMap.Path) || key[len(node.PathMap.Path)] == common.PAR_GO_PATH_DELIMITER[0]){
 								table.Values = append(table.Values, nil)
 								table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 								table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
