@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
 )
@@ -72,15 +73,15 @@ func main() {
 	}
 	num = int64(pr.GetNumRows())
 
-	pr.SkipRowsByPath("parquet_go_root.name", 5) //skip the first five rows
-	names, rls, dls, err = pr.ReadColumnByPath("parquet_go_root.name", num)
+	pr.SkipRowsByPath(common.ReformPathStr("parquet_go_root.name"), 5) //skip the first five rows
+	names, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.name"), num)
 	log.Println("name", names, rls, dls, err)
 
-	classes, rls, dls, err = pr.ReadColumnByPath("parquet_go_root.class.list.element", num)
+	classes, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.class.list.element"), num)
 	log.Println("class", classes, rls, dls, err)
 
-	scores_key, rls, dls, err = pr.ReadColumnByPath("parquet_go_root.score.key_value.key", num)
-	scores_value, rls, dls, err = pr.ReadColumnByPath("parquet_go_root.score.key_value.value", num)
+	scores_key, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.score.key_value.key"), num)
+	scores_value, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.score.key_value.value"), num)
 	log.Println("parquet_go_root.scores_key", scores_key, err)
 	log.Println("parquet_go_root.scores_value", scores_value, err)
 

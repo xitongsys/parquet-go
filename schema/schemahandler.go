@@ -38,7 +38,7 @@ func (self *PathMapType) Add(path []string) {
 	}
 	c := path[1]
 	if _, ok := self.Children[c]; !ok {
-		self.Children[c] = NewPathMap(self.Path + "." + c)
+		self.Children[c] = NewPathMap(self.Path + common.PAR_GO_PATH_DELIMITER + c)
 	}
 	self.Children[c].Add(path[1:])
 }
