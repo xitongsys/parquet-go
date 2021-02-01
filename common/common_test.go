@@ -313,8 +313,8 @@ func TestPathToStr(t *testing.T) {
 		Path     []string
 		Expected string
 	}{
-		{[]string{"a", "b", "c"}, "a.b.c"},
-		{[]string{"a", "", "c"}, "a..c"},
+		{[]string{"a", "b", "c"}, "a\x01b\x01c"},
+		{[]string{"a", "", "c"}, "a\x01\x01c"},
 	}
 
 	for _, data := range testData {
@@ -330,8 +330,8 @@ func TestStrToPath(t *testing.T) {
 		Str      string
 		Expected []string
 	}{
-		{"a.b.c", []string{"a", "b", "c"}},
-		{"a..c", []string{"a", "", "c"}},
+		{"a\x01b\x01c", []string{"a", "b", "c"}},
+		{"a\x01\x01c", []string{"a", "", "c"}},
 	}
 
 	for _, data := range testData {
