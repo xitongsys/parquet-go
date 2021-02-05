@@ -289,9 +289,7 @@ func ReadDeltaBinaryPackedINT32(bytesReader *bytes.Reader) ([]interface{}, error
 	if err != nil {
 		return res, err
 	}
-	// if firstValueZigZag > math.MaxInt32 {
-	// 	return res, fmt.Errorf("int32 first value out of range:%d", firstValueZigZag)
-	// }
+
 	fv32 := int32(firstValueZigZag)
 	var firstValue int32 = int32(uint32(fv32)>>1) ^ -(fv32 & 1)
 	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
@@ -303,9 +301,7 @@ func ReadDeltaBinaryPackedINT32(bytesReader *bytes.Reader) ([]interface{}, error
 		if err != nil {
 			return res, err
 		}
-		// if minDeltaZigZag > math.MaxInt32 {
-		// 	return res, fmt.Errorf("int32 min delta value out of range:%d", minDeltaZigZag)
-		// }
+
 		md32 := int32(minDeltaZigZag)
 		var minDelta int32 = int32(uint32(md32)>>1) ^ -(md32 & 1)
 		var bitWidths = make([]uint64, numMiniblocksInBlock)

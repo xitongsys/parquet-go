@@ -167,10 +167,8 @@ func TestReadDeltaBinaryPackedINT(t *testing.T) {
 }
 
 func TestReadDeltaINT32(t *testing.T) {
-
 	bInt32 := func(n int32) string { return strconv.FormatUint(uint64(*(*uint32)(unsafe.Pointer(&n))), 2) }
 	buInt64 := func(n uint64) string { return strconv.FormatUint(n, 2) }
-
 	testData := []int32{1, -1570499385, 3, -11, 1570499385, 111, 222, 333, 0}
 	for _, data := range testData {
 		fmt.Println("SRC32:", bInt32(data), data)
@@ -180,18 +178,12 @@ func TestReadDeltaINT32(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		// if resZigZag > math.MaxInt32 {
-		// 	fmt.Println("RES64:", buInt64(resZigZag))
-
-		// 	t.Errorf("int32 first value out of range:%d", resZigZag)
-		// }
 		res32 := int32(resZigZag)
 		var res int32 = int32(uint32(res32)>>1) ^ -(res32 & 1)
 		fmt.Println("RES32:", bInt32(res), res)
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadUnsignedVarInt err, %v", data)
 		}
-		fmt.Println("------------------------")
 	}
 }
 
