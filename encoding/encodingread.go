@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
+	"math"
 
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -265,8 +267,7 @@ func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length u
 	return res, nil
 }
 
-//res is INT64
-func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) ([]interface{}, error) {
+func ReadDeltaBinaryPackedINT32(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var (
 		err error
 		res []interface{}
@@ -288,7 +289,71 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) ([]interface{}, error) 
 	if err != nil {
 		return res, err
 	}
-	var firstValue int64 = int64(firstValueZigZag>>1) ^ (-int64(firstValueZigZag & 1))
+	// if firstValueZigZag > math.MaxInt32 {
+	// 	return res, fmt.Errorf("int32 first value out of range:%d", firstValueZigZag)
+	// }
+	fv32 := int32(firstValueZigZag)
+	var firstValue int32 = int32(uint32(fv32)>>1) ^ -(fv32 & 1)
+	fmt.Println("firstValue:", firstValue)
+	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
+
+	res = make([]interface{}, 0)
+	res = append(res, firstValue)
+	for uint64(len(res)) < numValues {
+		minDeltaZigZag, err := ReadUnsignedVarInt(bytesReader)
+		if err != nil {
+			return res, err
+		}
+		// if minDeltaZigZag > math.MaxInt32 {
+		// 	return res, fmt.Errorf("int32 min delta value out of range:%d", minDeltaZigZag)
+		// }
+		md32 := int32(minDeltaZigZag)
+		var minDelta int32 = int32(uint32(md32)>>1) ^ -(md32 & 1)
+		var bitWidths = make([]uint64, numMiniblocksInBlock)
+		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
+			b, err := bytesReader.ReadByte()
+			if err != nil {
+				return res, err
+			}
+			bitWidths[i] = uint64(b)
+		}
+		for i := 0; uint64(i) < numMiniblocksInBlock && uint64(len(res)) < numValues; i++ {
+			cur, err := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
+			if err != nil {
+				return res, err
+			}
+			for j := 0; j < len(cur) && len(res) < int(numValues); j++ {
+				res = append(res, int32(res[len(res)-1].(int32)+int32(cur[j].(int64))+minDelta))
+			}
+		}
+	}
+	return res[:numValues], err
+}
+
+//res is INT64
+func ReadDeltaBinaryPackedINT64(bytesReader *bytes.Reader) ([]interface{}, error) {
+	var (
+		err error
+		res []interface{}
+	)
+
+	blockSize, err := ReadUnsignedVarInt(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	numMiniblocksInBlock, err := ReadUnsignedVarInt(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	numValues, err := ReadUnsignedVarInt(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	firstValueZigZag, err := ReadUnsignedVarInt(bytesReader)
+	if err != nil {
+		return res, err
+	}
+	var firstValue int64 = int64(firstValueZigZag>>1) ^ -(int64(firstValueZigZag) & 1)
 
 	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
 
@@ -299,7 +364,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) ([]interface{}, error) 
 		if err != nil {
 			return res, err
 		}
-		var minDelta int64 = int64(minDeltaZigZag>>1) ^ (-int64(minDeltaZigZag & 1))
+		var minDelta int64 = int64(minDeltaZigZag>>1) ^ -(int64(minDeltaZigZag) & 1)
 		var bitWidths = make([]uint64, numMiniblocksInBlock)
 		for i := 0; uint64(i) < numMiniblocksInBlock; i++ {
 			b, err := bytesReader.ReadByte()
@@ -308,6 +373,7 @@ func ReadDeltaBinaryPackedINT(bytesReader *bytes.Reader) ([]interface{}, error) 
 			}
 			bitWidths[i] = uint64(b)
 		}
+
 		for i := 0; uint64(i) < numMiniblocksInBlock && uint64(len(res)) < numValues; i++ {
 			cur, err := ReadBitPacked(bytesReader, (numValuesInMiniBlock/8)<<1, bitWidths[i])
 			if err != nil {
@@ -327,7 +393,7 @@ func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) ([]interface{}, error) 
 		err error
 	)
 
-	lengths, err := ReadDeltaBinaryPackedINT(bytesReader)
+	lengths, err := ReadDeltaBinaryPackedINT64(bytesReader)
 	if err != nil {
 		return res, err
 	}
@@ -343,7 +409,7 @@ func ReadDeltaLengthByteArray(bytesReader *bytes.Reader) ([]interface{}, error) 
 			res[i] = cur[0]
 		}
 	}
-	
+
 	return res, err
 }
 
@@ -353,7 +419,7 @@ func ReadDeltaByteArray(bytesReader *bytes.Reader) ([]interface{}, error) {
 		err error
 	)
 
-	prefixLengths, err := ReadDeltaBinaryPackedINT(bytesReader)
+	prefixLengths, err := ReadDeltaBinaryPackedINT64(bytesReader)
 	if err != nil {
 		return res, err
 	}
@@ -370,5 +436,55 @@ func ReadDeltaByteArray(bytesReader *bytes.Reader) ([]interface{}, error) {
 		suffix := suffixes[i].(string)
 		res[i] = prefix + suffix
 	}
+	return res, err
+}
+
+func ReadByteStreamSplitFloat32(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+
+	res := make([]interface{}, cnt)
+	buf := make([]byte, cnt*4)
+
+	n, err := io.ReadFull(bytesReader, buf)
+	if err != nil {
+		return res, err
+	}
+	if cnt*4 != uint64(n) {
+		return res, io.ErrUnexpectedEOF
+	}
+
+	for i := uint64(0); i < cnt; i++ {
+		res[i] = math.Float32frombits(uint32(buf[i]) |
+			uint32(buf[cnt+i])<<8 |
+			uint32(buf[cnt*2+i])<<16 |
+			uint32(buf[cnt*3+i])<<24)
+	}
+
+	return res, err
+}
+
+func ReadByteStreamSplitFloat64(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, error) {
+
+	res := make([]interface{}, cnt)
+	buf := make([]byte, cnt*8)
+
+	n, err := io.ReadFull(bytesReader, buf)
+	if err != nil {
+		return res, err
+	}
+	if cnt*8 != uint64(n) {
+		return res, io.ErrUnexpectedEOF
+	}
+
+	for i := uint64(0); i < cnt; i++ {
+		res[i] = math.Float64frombits(uint64(buf[i]) |
+			uint64(buf[cnt+i])<<8 |
+			uint64(buf[cnt*2+i])<<16 |
+			uint64(buf[cnt*3+i])<<24 |
+			uint64(buf[cnt*4+i])<<32 |
+			uint64(buf[cnt*5+i])<<40 |
+			uint64(buf[cnt*6+i])<<48 |
+			uint64(buf[cnt*7+i])<<56)
+	}
+
 	return res, err
 }
