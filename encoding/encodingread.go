@@ -294,7 +294,6 @@ func ReadDeltaBinaryPackedINT32(bytesReader *bytes.Reader) ([]interface{}, error
 	// }
 	fv32 := int32(firstValueZigZag)
 	var firstValue int32 = int32(uint32(fv32)>>1) ^ -(fv32 & 1)
-	fmt.Println("firstValue:", firstValue)
 	numValuesInMiniBlock := blockSize / numMiniblocksInBlock
 
 	res = make([]interface{}, 0)
