@@ -5,9 +5,10 @@ import (
 	"time"
 
 	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/common"
+	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
-	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type Student struct {
@@ -80,7 +81,7 @@ func main() {
 	num = int(pr.GetNumRows())
 	//only read scores
 	scores := make([]map[string]int32, num)
-	pr.ReadPartial(&scores, "parquet_go_root.scores")
+	pr.ReadPartial(&scores, common.ReformPathStr("parquet_go_root.scores"))
 	log.Println(scores)
 
 	pr.ReadStop()

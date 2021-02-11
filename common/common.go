@@ -915,17 +915,24 @@ func SizeOf(val reflect.Value) int64 {
 	return 4
 }
 
+const PAR_GO_PATH_DELIMITER = "\x01"
+
+// . -> \x01
+func ReformPathStr(pathStr string) string {
+	return strings.ReplaceAll(pathStr, ".", "\x01")
+}
+
 //Convert path slice to string
 func PathToStr(path []string) string {
-	return strings.Join(path, ".")
+	return strings.Join(path, PAR_GO_PATH_DELIMITER)
 }
 
 //Convert string to path slice
 func StrToPath(str string) []string {
-	return strings.Split(str, ".")
+	return strings.Split(str, PAR_GO_PATH_DELIMITER)
 }
 
 //Get the pathStr index in a path
 func PathStrIndex(str string) int {
-	return len(strings.Split(str, "."))
+	return len(strings.Split(str, PAR_GO_PATH_DELIMITER))
 }
