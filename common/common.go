@@ -36,8 +36,8 @@ type Tag struct {
 	KeyPrecision   int32
 	ValuePrecision int32
 
-	IsAdjustedToUTC bool
-	KeyIsAdjustedToUTC bool
+	IsAdjustedToUTC      bool
+	KeyIsAdjustedToUTC   bool
 	ValueIsAdjustedToUTC bool
 
 	FieldID      int32
@@ -56,15 +56,15 @@ type Tag struct {
 	KeyRepetitionType   parquet.FieldRepetitionType
 	ValueRepetitionType parquet.FieldRepetitionType
 
-	LogicalTypeFields 		map[string]string
-	KeyLogicalTypeFields 	map[string]string
-	ValueLogicalTypeFields 	map[string]string
+	LogicalTypeFields      map[string]string
+	KeyLogicalTypeFields   map[string]string
+	ValueLogicalTypeFields map[string]string
 }
 
 func NewTag() *Tag {
 	return &Tag{
-		LogicalTypeFields: make(map[string]string),
-		KeyLogicalTypeFields: make(map[string]string),
+		LogicalTypeFields:      make(map[string]string),
+		KeyLogicalTypeFields:   make(map[string]string),
 		ValueLogicalTypeFields: make(map[string]string),
 	}
 }
@@ -207,6 +207,8 @@ func StringToTag(tag string) *Tag {
 				mp.Encoding = parquet.Encoding_PLAIN_DICTIONARY
 			case "rle_dictionary":
 				mp.Encoding = parquet.Encoding_RLE_DICTIONARY
+			case "byte_stream_split":
+				mp.Encoding = parquet.Encoding_BYTE_STREAM_SPLIT
 			default:
 				panic(fmt.Errorf("Unknown encoding type: '%v'", val))
 			}
@@ -222,6 +224,8 @@ func StringToTag(tag string) *Tag {
 				mp.KeyEncoding = parquet.Encoding_DELTA_BYTE_ARRAY
 			case "plain_dictionary":
 				mp.KeyEncoding = parquet.Encoding_PLAIN_DICTIONARY
+			case "byte_stream_split":
+				mp.KeyEncoding = parquet.Encoding_BYTE_STREAM_SPLIT
 			default:
 				panic(fmt.Errorf("Unknown keyencoding type: '%v'", val))
 			}
@@ -237,6 +241,8 @@ func StringToTag(tag string) *Tag {
 				mp.ValueEncoding = parquet.Encoding_DELTA_BYTE_ARRAY
 			case "plain_dictionary":
 				mp.ValueEncoding = parquet.Encoding_PLAIN_DICTIONARY
+			case "byte_stream_split":
+				mp.ValueEncoding = parquet.Encoding_BYTE_STREAM_SPLIT
 			default:
 				panic(fmt.Errorf("Unknown valueencoding type: '%v'", val))
 			}
@@ -330,7 +336,7 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) *parquet.LogicalType {
 			default:
 				panic("logicaltype time error")
 			}
-			
+
 		case "TIMESTAMP":
 			logicalType.TIMESTAMP = parquet.NewTimestampType()
 			logicalType.TIMESTAMP.IsAdjustedToUTC = Str2Bool(mp["logicaltype.isadjustedtoutc"])
@@ -418,7 +424,7 @@ func NewLogicalTypeFromConvertedType(schemaElement *parquet.SchemaElement, info 
 
 	case parquet.ConvertedType_DATE:
 		logicalType.DATE = parquet.NewDateType()
-	
+
 	case parquet.ConvertedType_TIME_MICROS:
 		logicalType.TIME = parquet.NewTimeType()
 		logicalType.TIME.IsAdjustedToUTC = info.IsAdjustedToUTC

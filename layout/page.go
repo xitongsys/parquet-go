@@ -175,6 +175,9 @@ func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 	} else if encodingMethod == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
 		return encoding.WriteDeltaLengthByteArray(valuesBuf)
 
+	} else if encodingMethod == parquet.Encoding_BYTE_STREAM_SPLIT {
+		return encoding.WriteByteStreamSplit(valuesBuf)
+
 	} else {
 		return encoding.WritePlain(valuesBuf, *page.Schema.Type)
 	}
@@ -657,16 +660,15 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 		return res, fmt.Errorf("Unsupported Encoding method BIT_PACKED")
 
 	} else if encodingMethod == parquet.Encoding_DELTA_BINARY_PACKED {
-		values, err := encoding.ReadDeltaBinaryPackedINT(bytesReader)
-		if err != nil {
-			return res, err
-		}
+
 		if dataType == parquet.Type_INT32 {
-			for i := 0; i < len(values); i++ {
-				values[i] = int32(values[i].(int64))
-			}
+			return encoding.ReadDeltaBinaryPackedINT32(bytesReader)
+
+		} else if dataType == parquet.Type_INT64 {
+			return encoding.ReadDeltaBinaryPackedINT64(bytesReader)
+
 		}
-		return values[:cnt], nil
+		return res, fmt.Errorf("The encoding method DELTA_BINARY_PACKED can only be used with int32 and int64 types")
 
 	} else if encodingMethod == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
 		values, err := encoding.ReadDeltaLengthByteArray(bytesReader)
@@ -691,6 +693,13 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 			}
 		}
 		return values[:cnt], nil
+	} else if encodingMethod == parquet.Encoding_BYTE_STREAM_SPLIT {
+		if dataType == parquet.Type_FLOAT {
+			return encoding.ReadByteStreamSplitFloat32(bytesReader, cnt)
+		} else if dataType == parquet.Type_DOUBLE {
+			return encoding.ReadByteStreamSplitFloat64(bytesReader, cnt)
+		}
+		return res, fmt.Errorf("The encoding method BYTE_STREAM_SPLIT can only be used with Float and double types")
 
 	} else {
 		return res, fmt.Errorf("Unknown Encoding method")

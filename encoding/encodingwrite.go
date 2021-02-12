@@ -3,6 +3,7 @@ package encoding
 import (
 	"bytes"
 	"encoding/binary"
+	"math"
 	"math/bits"
 	"reflect"
 
@@ -498,4 +499,56 @@ func WriteDeltaByteArray(arrays []interface{}) []byte {
 	res = append(res, prefixBuf...)
 	res = append(res, suffixBuf...)
 	return res
+}
+
+func WriteByteStreamSplit(nums []interface{}) []byte {
+	ln := len(nums)
+	if ln <= 0 {
+		return []byte{}
+	}
+
+	if _, ok := nums[0].(float32); ok {
+		return WriteByteStreamSplitFloat32(nums)
+	} else if _, ok := nums[0].(float64); ok {
+		return WriteByteStreamSplitFloat64(nums)
+	} else {
+		return []byte{}
+	}
+}
+
+func WriteByteStreamSplitFloat32(vals []interface{}) []byte {
+	ln := len(vals)
+	if ln <= 0 {
+		return []byte{}
+	}
+	buf := make([]byte, ln*4)
+	for i, n := range vals {
+		v := math.Float32bits(n.(float32))
+		buf[i] = byte(v)
+		buf[ln+i] = byte(v >> 8)
+		buf[ln*2+i] = byte(v >> 16)
+		buf[ln*3+i] = byte(v >> 24)
+	}
+	return buf
+}
+
+func WriteByteStreamSplitFloat64(vals []interface{}) []byte {
+	ln := len(vals)
+	if ln <= 0 {
+		return []byte{}
+	}
+
+	buf := make([]byte, ln*8)
+	for i, n := range vals {
+		v := math.Float64bits(n.(float64))
+		buf[i] = byte(v)
+		buf[ln+i] = byte(v >> 8)
+		buf[ln*2+i] = byte(v >> 16)
+		buf[ln*3+i] = byte(v >> 24)
+		buf[ln*4+i] = byte(v >> 32)
+		buf[ln*5+i] = byte(v >> 40)
+		buf[ln*6+i] = byte(v >> 48)
+		buf[ln*7+i] = byte(v >> 56)
+	}
+	return buf
 }
