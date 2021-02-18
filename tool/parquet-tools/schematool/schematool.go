@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/schema"
 )
 
 func ParquetTypeToParquetTypeStr(pT *parquet.Type, cT *parquet.ConvertedType) (string, string) {
@@ -126,7 +126,7 @@ func (self *Node) OutputJsonSchema() string {
 
 	pTStr, cTStr := ParquetTypeToParquetTypeStr(pT, cT)
 	tagStr := "\"name=%s, type=%s, repetitiontype=%s\""
-	
+
 	name := self.SE.GetName()
 
 	if len(self.Children) == 0 {
@@ -142,7 +142,7 @@ func (self *Node) OutputJsonSchema() string {
 				tagStr = "\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\""
 				res += fmt.Sprintf(tagStr, name, pTStr, cTStr, scale, precision, length, rTStr) + "}"
 			} else {
-				tagStr = "\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, repetitiontype\""
+				tagStr = "\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, repetitiontype=%s\""
 				res += fmt.Sprintf(tagStr, name, pTStr, cTStr, scale, precision, rTStr) + "}"
 			}
 
