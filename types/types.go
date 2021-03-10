@@ -223,8 +223,12 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 	case parquet.Type_INT32:
 		if _, ok := src.(int32); ok {
 			return src
-		}else{
-			return int32(reflect.ValueOf(src).Int())
+		} else {
+			v := reflect.ValueOf(src)
+			if v.Kind() == reflect.Uint8 {
+				return int32(v.Uint())
+			}
+			return int32(v.Int())
 		}
 
 	case parquet.Type_INT64:
