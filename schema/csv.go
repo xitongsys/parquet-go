@@ -27,7 +27,7 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 	for _, md := range mds {
 		info := common.StringToTag(md)
 		infos = append(infos, info)
-		schema := common.NewSchemaElementFromTagMap(info)		
+		schema := common.NewSchemaElementFromTagMap(info)
 		schemaList = append(schemaList, schema)
 	}
 	res := NewSchemaHandlerFromSchemaList(schemaList)
