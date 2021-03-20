@@ -33,6 +33,8 @@ type Page struct {
 	MaxVal interface{}
 	//Minimum of the values
 	MinVal interface{}
+	//NullCount
+	NullCount *int64
 	//Tag info
 	Info *common.Tag
 
@@ -80,6 +82,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 
 		var maxVal interface{} = table.Values[i]
 		var minVal interface{} = table.Values[i]
+		var nullCount = int64(0)
 
 		funcTable := common.FindFuncTable(pT, cT, logT)
 
@@ -93,6 +96,9 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 					minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
 				}
 				size += elSize
+			}
+			if table.Values[j] == nil {
+				nullCount++
 			}
 			j++
 		}
@@ -113,6 +119,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		if !omitStats {
 			page.MaxVal = maxVal
 			page.MinVal = minVal
+			page.NullCount = &nullCount
 		}
 		page.Schema = table.Schema
 		page.CompressType = compressType
@@ -261,6 +268,8 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 		page.Header.DataPageHeader.Statistics.MinValue = tmpBuf
 	}
 
+	page.Header.DataPageHeader.Statistics.NullCount = page.NullCount
+
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
@@ -348,6 +357,8 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 		page.Header.DataPageHeaderV2.Statistics.Min = tmpBuf
 		page.Header.DataPageHeaderV2.Statistics.MinValue = tmpBuf
 	}
+
+	page.Header.DataPageHeaderV2.Statistics.NullCount = page.NullCount
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)

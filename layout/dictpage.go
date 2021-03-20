@@ -86,6 +86,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 
 		var maxVal interface{} = table.Values[i]
 		var minVal interface{} = table.Values[i]
+		var nullCount int64 = 0
 		values := make([]int32, 0)
 
 		funcTable := common.FindFuncTable(pT, cT, logT)
@@ -109,6 +110,9 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 					values = append(values, idx)
 				}
 			}
+			if table.Values[i] == nil {
+				nullCount++
+			}
 			j++
 		}
 
@@ -131,6 +135,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 		if !omitStats {
 			page.MaxVal = maxVal
 			page.MinVal = minVal
+			page.NullCount = &nullCount
 		}
 		page.Schema = table.Schema
 		page.CompressType = compressType
@@ -204,6 +209,8 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 		page.Header.DataPageHeader.Statistics.Min = tmpBuf
 		page.Header.DataPageHeader.Statistics.MinValue = tmpBuf
 	}
+
+	page.Header.DataPageHeader.Statistics.NullCount = page.NullCount
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)

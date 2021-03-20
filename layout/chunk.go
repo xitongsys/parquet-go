@@ -23,6 +23,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[0].MaxVal
 	var minVal interface{} = pages[0].MinVal
+	var nullCount int64 = 0
 	pT, cT, logT, omitStats := pages[0].Schema.Type, pages[0].Schema.ConvertedType, pages[0].Schema.LogicalType, pages[0].Info.OmitStats
 	funcTable := common.FindFuncTable(pT, cT, logT)
 
@@ -37,6 +38,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 		if !omitStats {
 			minVal = common.Min(funcTable, minVal, pages[i].MinVal)
 			maxVal = common.Max(funcTable, maxVal, pages[i].MaxVal)
+			nullCount += *pages[i].NullCount
 		}
 	}
 
@@ -69,6 +71,10 @@ func PagesToChunk(pages []*Page) *Chunk {
 		metaData.Statistics.MinValue = tmpBufMin
 	}
 
+	if !omitStats {
+		metaData.Statistics.NullCount = &nullCount
+	}
+
 	chunk.ChunkHeader.MetaData = metaData
 	return chunk
 }
@@ -84,6 +90,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 
 	var maxVal interface{} = pages[1].MaxVal
 	var minVal interface{} = pages[1].MinVal
+	var nullCount int64 = 0
 	pT, cT, logT, omitStats := pages[1].Schema.Type, pages[1].Schema.ConvertedType, pages[1].Schema.LogicalType, pages[0].Info.OmitStats
 	funcTable := common.FindFuncTable(pT, cT, logT)
 
@@ -98,6 +105,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 		if !omitStats && i > 0 {
 			minVal = common.Min(funcTable, minVal, pages[i].MinVal)
 			maxVal = common.Max(funcTable, maxVal, pages[i].MaxVal)
+			nullCount += *pages[i].NullCount
 		}
 	}
 
@@ -130,6 +138,10 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 		metaData.Statistics.Min = tmpBufMin
 		metaData.Statistics.MaxValue = tmpBufMax
 		metaData.Statistics.MinValue = tmpBufMin
+	}
+
+	if !omitStats {
+		metaData.Statistics.NullCount = &nullCount
 	}
 
 	chunk.ChunkHeader.MetaData = metaData
