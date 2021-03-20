@@ -13,8 +13,8 @@ type NameString string
 type AgeInt int32
 
 type Student struct {
-	Name    NameString  `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	Age     AgeInt   `parquet:"name=age, type=INT32, encoding=PLAIN"`
+	Name NameString `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+	Age  AgeInt     `parquet:"name=age, type=INT32, encoding=PLAIN"`
 }
 
 func main() {
@@ -33,13 +33,13 @@ func main() {
 	}
 
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
-	pw.PageSize = 8 * 1024 //8K
+	pw.PageSize = 8 * 1024              //8K
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
-			Name:   "StudentName",
-			Age:    AgeInt(20 + i%5),
+			Name: "StudentName",
+			Age:  AgeInt(20 + i%5),
 		}
 		if err = pw.Write(stu); err != nil {
 			log.Println("Write error", err)

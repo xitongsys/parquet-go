@@ -180,8 +180,7 @@ func (self *ParquetWriter) WriteStop() error {
 
 			self.Offset += int64(offsetIndexBufSize)
 		}
-	}	
-
+	}
 
 	footerBuf, err := ts.Write(context.TODO(), self.Footer)
 	if err != nil {
@@ -391,7 +390,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 
 			pageCount := len(rowGroup.Chunks[k].Pages)
 
-			//add ColumnIndex 
+			//add ColumnIndex
 			columnIndex := parquet.NewColumnIndex()
 			columnIndex.NullPages = make([]bool, pageCount)
 			columnIndex.MinValues = make([][]byte, pageCount)

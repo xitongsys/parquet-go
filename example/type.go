@@ -20,14 +20,14 @@ type TypeList struct {
 	FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
 
 	Utf8             string `parquet:"name=utf8, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	Int_8            int32   `parquet:"name=int_8, type=INT32, convertedtype=INT32, convertedtype=INT_8"`
+	Int_8            int32  `parquet:"name=int_8, type=INT32, convertedtype=INT32, convertedtype=INT_8"`
 	Int_16           int32  `parquet:"name=int_16, type=INT32, convertedtype=INT_16"`
 	Int_32           int32  `parquet:"name=int_32, type=INT32, convertedtype=INT_32"`
 	Int_64           int64  `parquet:"name=int_64, type=INT64, convertedtype=INT_64"`
 	Uint_8           int32  `parquet:"name=uint_8, type=INT32, convertedtype=UINT_8"`
-	Uint_16          int32 `parquet:"name=uint_16, type=INT32, convertedtype=UINT_16"`
-	Uint_32          int32 `parquet:"name=uint_32, type=INT32, convertedtype=UINT_32"`
-	Uint_64          int64 `parquet:"name=uint_64, type=INT64, convertedtype=UINT_64"`
+	Uint_16          int32  `parquet:"name=uint_16, type=INT32, convertedtype=UINT_16"`
+	Uint_32          int32  `parquet:"name=uint_32, type=INT32, convertedtype=UINT_32"`
+	Uint_64          int64  `parquet:"name=uint_64, type=INT64, convertedtype=UINT_64"`
 	Date             int32  `parquet:"name=date, type=INT32, convertedtype=DATE"`
 	Date2            int32  `parquet:"name=date2, type=INT32, convertedtype=DATE, logicaltype=DATE"`
 	TimeMillis       int32  `parquet:"name=timemillis, type=INT32, convertedtype=TIME_MILLIS"`

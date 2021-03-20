@@ -93,10 +93,10 @@ func main() {
 		return
 	}
 	cn := pr.GetNumRows()
-	v1, _, _, _ := pr.ReadColumnByPath("parquet_go_root\x01b.c",cn)
-	v2, _, _, _ := pr.ReadColumnByPath("parquet_go_root\x01b\x01c",cn)
+	v1, _, _, _ := pr.ReadColumnByPath("parquet_go_root\x01b.c", cn)
+	v2, _, _, _ := pr.ReadColumnByPath("parquet_go_root\x01b\x01c", cn)
 	v3, _, _, _ := pr.ReadColumnByPath("parquet_go_root\x01c", cn)
-	log.Println(v1,v2,v3)
+	log.Println(v1, v2, v3)
 
 	pr.ReadStop()
 	fr.Close()

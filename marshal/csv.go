@@ -28,7 +28,7 @@ func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*ma
 
 		if isOptional {
 			table.MaxDefinitionLevel = 1
-		}else{
+		} else {
 			table.MaxDefinitionLevel = 0
 		}
 
