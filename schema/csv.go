@@ -27,7 +27,8 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 	for _, md := range mds {
 		info := common.StringToTag(md)
 		infos = append(infos, info)
-		schema := common.NewSchemaElementFromTagMap(info)		
+		schema := common.NewSchemaElementFromTagMap(info)
+		//schema.RepetitionType = parquet.FieldRepetitionTypePtr(parquet.FieldRepetitionType_OPTIONAL)
 		schemaList = append(schemaList, schema)
 	}
 	res := NewSchemaHandlerFromSchemaList(schemaList)
