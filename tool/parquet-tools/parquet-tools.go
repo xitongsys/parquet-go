@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
@@ -23,14 +24,14 @@ func main() {
 
 	fr, err := local.NewLocalFileReader(*fileName)
 	if err != nil {
-		fmt.Println("Can't open file ", *fileName)
-		return
+		fmt.Fprintf(os.Stderr, "Can't open file %s\n", *fileName)
+		os.Exit(1)
 	}
 
 	pr, err := reader.NewParquetReader(fr, nil, 1)
 	if err != nil {
-		fmt.Println("Can't create parquet reader ", err)
-		return
+		fmt.Fprintf(os.Stderr, "Can't create parquet reader: %s\n", err)
+		os.Exit(1)
 	}
 
 	switch *cmd {
@@ -54,14 +55,14 @@ func main() {
 
 			res, err := pr.ReadByNumber(cnt)
 			if err != nil {
-				fmt.Println("Can't cat ", err)
-				return
+				fmt.Fprintf(os.Stderr, "Can't cat: %s\n", err)
+				os.Exit(1)
 			}
 
 			jsonBs, err := json.Marshal(res)
 			if err != nil {
-				fmt.Println("Can't to json ", err)
-				return
+				fmt.Fprintf(os.Stderr, "Can't to json: %s\n", err)
+				os.Exit(1)
 			}
 
 			fmt.Println(string(jsonBs))
@@ -70,7 +71,8 @@ func main() {
 		}
 
 	default:
-		fmt.Println("Unknown command")
+		fmt.Fprintf(os.Stderr, "Unknown command %s\n", *cmd)
+		os.Exit(1)
 	}
 
 }
