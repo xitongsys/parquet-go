@@ -29,8 +29,15 @@ func main() {
 	withPrettySize := flag.Bool("pretty", false, "show pretty size")
 	uncompressedSize := flag.Bool("uncompressed", false, "show uncompressed size")
 	catCount := flag.Int("count", 1000, "max count to cat. If it is nil, only show first 1000 records.")
+	schemaFormat := flag.String("schema-format", "json", "schema format go/json (default to JSON schema)")
 
 	flag.Parse()
+
+	// validate schema output format
+	if *schemaFormat != "json" && *schemaFormat != "go" {
+		fmt.Fprintf(os.Stderr, "schema format can only be json or go\n")
+		os.Exit(1)
+	}
 
 	// validate file name
 	if *fileName == "" {
@@ -89,10 +96,11 @@ func main() {
 	switch *cmd {
 	case "schema":
 		tree := schematool.CreateSchemaTree(pr.SchemaHandler.SchemaElements)
-		fmt.Println("----- Go struct -----")
-		fmt.Printf("%s\n", tree.OutputStruct(*withTags))
-		fmt.Println("----- Json schema -----")
-		fmt.Printf("%s\n", tree.OutputJsonSchema())
+		if *schemaFormat == "go" {
+			fmt.Printf("%s\n", tree.OutputStruct(*withTags))
+		} else {
+			fmt.Printf("%s\n", tree.OutputJsonSchema())
+		}
 	case "rowcount":
 		fmt.Println(pr.GetNumRows())
 	case "size":
