@@ -16,7 +16,7 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionTyp
 		} else if *pT == parquet.Type_INT32 {
 			return reflect.TypeOf(int32(0))
 
-		}else if *pT == parquet.Type_INT64 {
+		} else if *pT == parquet.Type_INT64 {
 			return reflect.TypeOf(int64(0))
 
 		} else if *pT == parquet.Type_INT96 {
@@ -216,7 +216,7 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 	case parquet.Type_BOOLEAN:
 		if _, ok := src.(bool); ok {
 			return src
-		}else{
+		} else {
 			return reflect.ValueOf(src).Bool()
 		}
 
@@ -234,30 +234,32 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 	case parquet.Type_INT64:
 		if _, ok := src.(int64); ok {
 			return src
-		}else{
+		} else {
 			return reflect.ValueOf(src).Int()
 		}
-	
+
 	case parquet.Type_FLOAT:
 		if _, ok := src.(float32); ok {
 			return src
-		}else {
+		} else {
 			return float32(reflect.ValueOf(src).Float())
 		}
 
 	case parquet.Type_DOUBLE:
 		if _, ok := src.(float64); ok {
 			return src
-		}else {
+		} else {
 			return reflect.ValueOf(src).Float()
 		}
 
-	case parquet.Type_INT96: fallthrough
-	case parquet.Type_BYTE_ARRAY: fallthrough
+	case parquet.Type_INT96:
+		fallthrough
+	case parquet.Type_BYTE_ARRAY:
+		fallthrough
 	case parquet.Type_FIXED_LEN_BYTE_ARRAY:
 		if _, ok := src.(string); ok {
 			return src
-		}else{
+		} else {
 			return reflect.ValueOf(src).String()
 		}
 

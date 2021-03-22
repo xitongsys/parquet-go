@@ -4,13 +4,13 @@ import (
 	"log"
 
 	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
-	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type Student struct {
-	NameIn    string
+	NameIn  string
 	Age     int32
 	Id      int64
 	Weight  float32
@@ -95,7 +95,7 @@ func main() {
 	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
-			NameIn:    "StudentName",
+			NameIn:  "StudentName",
 			Age:     int32(20 + i%5),
 			Id:      int64(i),
 			Weight:  float32(50.0 + float32(i)*0.1),
@@ -155,7 +155,7 @@ func main() {
 		log.Println("Can't create parquet reader", err)
 		return
 	}
-	
+
 	num = int(pr.GetNumRows())
 	for i := 0; i < num; i++ {
 		stus := make([]Student, 1)

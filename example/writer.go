@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	"time"
 	"os"
+	"time"
 
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/parquet"

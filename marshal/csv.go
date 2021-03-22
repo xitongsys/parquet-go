@@ -19,7 +19,19 @@ func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*ma
 		table := layout.NewEmptyTable()
 		res[pathStr] = table
 		table.Path = common.StrToPath(pathStr)
-		table.MaxDefinitionLevel = 1
+
+		schema := schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
+		isOptional := true
+		if *schema.RepetitionType != parquet.FieldRepetitionType_OPTIONAL {
+			isOptional = false
+		}
+
+		if isOptional {
+			table.MaxDefinitionLevel = 1
+		} else {
+			table.MaxDefinitionLevel = 0
+		}
+
 		table.MaxRepetitionLevel = 0
 		table.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
 		table.Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
@@ -32,9 +44,9 @@ func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*ma
 		for j := 0; j < len(records); j++ {
 			rec := records[j].([]interface{})[i]
 			table.Values = append(table.Values, rec)
-			table.RepetitionLevels = append(table.RepetitionLevels, 0)
 
-			if rec == nil {
+			table.RepetitionLevels = append(table.RepetitionLevels, 0)
+			if rec == nil || !isOptional {
 				table.DefinitionLevels = append(table.DefinitionLevels, 0)
 			} else {
 				table.DefinitionLevels = append(table.DefinitionLevels, 1)
