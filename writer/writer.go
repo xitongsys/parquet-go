@@ -100,25 +100,25 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	return res, err
 }
 
-func (self *ParquetWriter) SetSchemaHandlerFromJSON(jsonSchema string) error {
+func (pw *ParquetWriter) SetSchemaHandlerFromJSON(jsonSchema string) error {
 	var err error
-	if self.SchemaHandler, err = schema.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
+	if pw.SchemaHandler, err = schema.NewSchemaHandlerFromJSON(jsonSchema); err != nil {
 		return err
 	}
-	self.Footer.Schema = self.Footer.Schema[:0]
-	self.Footer.Schema = append(self.Footer.Schema, self.SchemaHandler.SchemaElements...)
+	pw.Footer.Schema = pw.Footer.Schema[:0]
+	pw.Footer.Schema = append(pw.Footer.Schema, pw.SchemaHandler.SchemaElements...)
 	return nil
 }
 
 //Rename schema name to exname in tags
-func (self *ParquetWriter) RenameSchema() {
-	for i := 0; i < len(self.Footer.Schema); i++ {
-		self.Footer.Schema[i].Name = self.SchemaHandler.Infos[i].ExName
+func (pw *ParquetWriter) RenameSchema() {
+	for i := 0; i < len(pw.Footer.Schema); i++ {
+		pw.Footer.Schema[i].Name = pw.SchemaHandler.Infos[i].ExName
 	}
-	for _, rowGroup := range self.Footer.RowGroups {
+	for _, rowGroup := range pw.Footer.RowGroups {
 		for _, chunk := range rowGroup.Columns {
 			inPathStr := common.PathToStr(chunk.MetaData.PathInSchema)
-			exPathStr := self.SchemaHandler.InPathToExPath[inPathStr]
+			exPathStr := pw.SchemaHandler.InPathToExPath[inPathStr]
 			exPath := common.StrToPath(exPathStr)[1:]
 			chunk.MetaData.PathInSchema = exPath
 		}
@@ -126,77 +126,77 @@ func (self *ParquetWriter) RenameSchema() {
 }
 
 //Write the footer and stop writing
-func (self *ParquetWriter) WriteStop() error {
+func (pw *ParquetWriter) WriteStop() error {
 	var err error
 
-	if err = self.Flush(true); err != nil {
+	if err = pw.Flush(true); err != nil {
 		return err
 	}
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
-	self.RenameSchema()
+	pw.RenameSchema()
 
 	// write ColumnIndex
 	idx := 0
-	for _, rowGroup := range self.Footer.RowGroups {
+	for _, rowGroup := range pw.Footer.RowGroups {
 		for _, columnChunk := range rowGroup.Columns {
-			columnIndexBuf, err := ts.Write(context.TODO(), self.ColumnIndexes[idx])
+			columnIndexBuf, err := ts.Write(context.TODO(), pw.ColumnIndexes[idx])
 			if err != nil {
 				return err
 			}
-			if _, err = self.PFile.Write(columnIndexBuf); err != nil {
+			if _, err = pw.PFile.Write(columnIndexBuf); err != nil {
 				return err
 			}
 
 			idx++
 
-			pos := self.Offset
+			pos := pw.Offset
 			columnChunk.ColumnIndexOffset = &pos
 			columnIndexBufSize := int32(len(columnIndexBuf))
 			columnChunk.ColumnIndexLength = &columnIndexBufSize
 
-			self.Offset += int64(columnIndexBufSize)
+			pw.Offset += int64(columnIndexBufSize)
 		}
 	}
 
 	// write OffsetIndex
 	idx = 0
-	for _, rowGroup := range self.Footer.RowGroups {
+	for _, rowGroup := range pw.Footer.RowGroups {
 		for _, columnChunk := range rowGroup.Columns {
-			offsetIndexBuf, err := ts.Write(context.TODO(), self.OffsetIndexes[idx])
+			offsetIndexBuf, err := ts.Write(context.TODO(), pw.OffsetIndexes[idx])
 			if err != nil {
 				return err
 			}
-			if _, err = self.PFile.Write(offsetIndexBuf); err != nil {
+			if _, err = pw.PFile.Write(offsetIndexBuf); err != nil {
 				return err
 			}
 
 			idx++
 
-			pos := self.Offset
+			pos := pw.Offset
 			columnChunk.OffsetIndexOffset = &pos
 			offsetIndexBufSize := int32(len(offsetIndexBuf))
 			columnChunk.OffsetIndexLength = &offsetIndexBufSize
 
-			self.Offset += int64(offsetIndexBufSize)
+			pw.Offset += int64(offsetIndexBufSize)
 		}
 	}
 
-	footerBuf, err := ts.Write(context.TODO(), self.Footer)
+	footerBuf, err := ts.Write(context.TODO(), pw.Footer)
 	if err != nil {
 		return err
 	}
 
-	if _, err = self.PFile.Write(footerBuf); err != nil {
+	if _, err = pw.PFile.Write(footerBuf); err != nil {
 		return err
 	}
 	footerSizeBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(footerSizeBuf, uint32(len(footerBuf)))
 
-	if _, err = self.PFile.Write(footerSizeBuf); err != nil {
+	if _, err = pw.PFile.Write(footerSizeBuf); err != nil {
 		return err
 	}
-	if _, err = self.PFile.Write([]byte("PAR1")); err != nil {
+	if _, err = pw.PFile.Write([]byte("PAR1")); err != nil {
 		return err
 	}
 	return nil
@@ -204,9 +204,9 @@ func (self *ParquetWriter) WriteStop() error {
 }
 
 //Write one object to parquet file
-func (self *ParquetWriter) Write(src interface{}) error {
+func (pw *ParquetWriter) Write(src interface{}) error {
 	var err error
-	ln := int64(len(self.Objs))
+	ln := int64(len(pw.Objs))
 
 	val := reflect.ValueOf(src)
 	if val.Kind() == reflect.Ptr {
@@ -214,43 +214,43 @@ func (self *ParquetWriter) Write(src interface{}) error {
 		src = val.Interface()
 	}
 
-	if self.CheckSizeCritical <= ln {
-		self.ObjSize = (self.ObjSize+common.SizeOf(val))/2 + 1
+	if pw.CheckSizeCritical <= ln {
+		pw.ObjSize = (pw.ObjSize+common.SizeOf(val))/2 + 1
 	}
-	self.ObjsSize += self.ObjSize
-	self.Objs = append(self.Objs, src)
+	pw.ObjsSize += pw.ObjSize
+	pw.Objs = append(pw.Objs, src)
 
-	criSize := self.NP * self.PageSize * self.SchemaHandler.GetColumnNum()
+	criSize := pw.NP * pw.PageSize * pw.SchemaHandler.GetColumnNum()
 
-	if self.ObjsSize >= criSize {
-		err = self.Flush(false)
+	if pw.ObjsSize >= criSize {
+		err = pw.Flush(false)
 
 	} else {
-		dln := (criSize - self.ObjsSize + self.ObjSize - 1) / self.ObjSize / 2
-		self.CheckSizeCritical = dln + ln
+		dln := (criSize - pw.ObjsSize + pw.ObjSize - 1) / pw.ObjSize / 2
+		pw.CheckSizeCritical = dln + ln
 	}
 	return err
 
 }
 
-func (self *ParquetWriter) flushObjs() error {
+func (pw *ParquetWriter) flushObjs() error {
 	var err error
-	l := int64(len(self.Objs))
+	l := int64(len(pw.Objs))
 	if l <= 0 {
 		return nil
 	}
-	pagesMapList := make([]map[string][]*layout.Page, self.NP)
-	for i := 0; i < int(self.NP); i++ {
+	pagesMapList := make([]map[string][]*layout.Page, pw.NP)
+	for i := 0; i < int(pw.NP); i++ {
 		pagesMapList[i] = make(map[string][]*layout.Page)
 	}
 
 	var c int64 = 0
-	delta := (l + self.NP - 1) / self.NP
+	delta := (l + pw.NP - 1) / pw.NP
 	lock := new(sync.Mutex)
 	var wg sync.WaitGroup
-	var errs []error = make([]error, self.NP)
+	var errs []error = make([]error, pw.NP)
 
-	for c = 0; c < self.NP; c++ {
+	for c = 0; c < pw.NP; c++ {
 		bgn := c * delta
 		end := bgn + delta
 		if end > l {
@@ -280,7 +280,7 @@ func (self *ParquetWriter) flushObjs() error {
 				return
 			}
 
-			tableMap, err2 := self.MarshalFunc(self.Objs[b:e], self.SchemaHandler)
+			tableMap, err2 := pw.MarshalFunc(pw.Objs[b:e], pw.SchemaHandler)
 
 			if err2 == nil {
 				for name, table := range *tableMap {
@@ -288,20 +288,20 @@ func (self *ParquetWriter) flushObjs() error {
 						table.Info.Encoding == parquet.Encoding_RLE_DICTIONARY {
 
 						func() {
-							if self.NP > 1 {
+							if pw.NP > 1 {
 								lock.Lock()
 								defer lock.Unlock()
 							}
-							if _, ok := self.DictRecs[name]; !ok {
-								self.DictRecs[name] = layout.NewDictRec(*table.Schema.Type)
+							if _, ok := pw.DictRecs[name]; !ok {
+								pw.DictRecs[name] = layout.NewDictRec(*table.Schema.Type)
 							}
-							pagesMapList[index][name], _ = layout.TableToDictDataPages(self.DictRecs[name],
-								table, int32(self.PageSize), 32, self.CompressionType)
+							pagesMapList[index][name], _ = layout.TableToDictDataPages(pw.DictRecs[name],
+								table, int32(pw.PageSize), 32, pw.CompressionType)
 						}()
 
 					} else {
-						pagesMapList[index][name], _ = layout.TableToDataPages(table, int32(self.PageSize),
-							self.CompressionType)
+						pagesMapList[index][name], _ = layout.TableToDataPages(table, int32(pw.PageSize),
+							pw.CompressionType)
 					}
 				}
 			} else {
@@ -322,36 +322,36 @@ func (self *ParquetWriter) flushObjs() error {
 
 	for _, pagesMap := range pagesMapList {
 		for name, pages := range pagesMap {
-			if _, ok := self.PagesMapBuf[name]; !ok {
-				self.PagesMapBuf[name] = pages
+			if _, ok := pw.PagesMapBuf[name]; !ok {
+				pw.PagesMapBuf[name] = pages
 			} else {
-				self.PagesMapBuf[name] = append(self.PagesMapBuf[name], pages...)
+				pw.PagesMapBuf[name] = append(pw.PagesMapBuf[name], pages...)
 			}
 			for _, page := range pages {
-				self.Size += int64(len(page.RawData))
+				pw.Size += int64(len(page.RawData))
 				page.DataTable = nil //release memory
 			}
 		}
 	}
 
-	self.NumRows += int64(len(self.Objs))
+	pw.NumRows += int64(len(pw.Objs))
 	return err
 }
 
 //Flush the write buffer to parquet file
-func (self *ParquetWriter) Flush(flag bool) error {
+func (pw *ParquetWriter) Flush(flag bool) error {
 	var err error
 
-	if err = self.flushObjs(); err != nil {
+	if err = pw.flushObjs(); err != nil {
 		return err
 	}
 
-	if (self.Size+self.ObjsSize >= self.RowGroupSize || flag) && len(self.PagesMapBuf) > 0 {
+	if (pw.Size+pw.ObjsSize >= pw.RowGroupSize || flag) && len(pw.PagesMapBuf) > 0 {
 		//pages -> chunk
 		chunkMap := make(map[string]*layout.Chunk)
-		for name, pages := range self.PagesMapBuf {
+		for name, pages := range pw.PagesMapBuf {
 			if len(pages) > 0 && (pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY || pages[0].Info.Encoding == parquet.Encoding_RLE_DICTIONARY) {
-				dictPage, _ := layout.DictRecToDictPage(self.DictRecs[name], int32(self.PageSize), self.CompressionType)
+				dictPage, _ := layout.DictRecToDictPage(pw.DictRecs[name], int32(pw.PageSize), pw.CompressionType)
 				tmp := append([]*layout.Page{dictPage}, pages...)
 				chunkMap[name] = layout.PagesToDictChunk(tmp)
 			} else {
@@ -360,19 +360,19 @@ func (self *ParquetWriter) Flush(flag bool) error {
 			}
 		}
 
-		self.DictRecs = make(map[string]*layout.DictRecType) //clean records for next chunks
+		pw.DictRecs = make(map[string]*layout.DictRecType) //clean records for next chunks
 
 		//chunks -> rowGroup
 		rowGroup := layout.NewRowGroup()
 		rowGroup.RowGroupHeader.Columns = make([]*parquet.ColumnChunk, 0)
 
-		for k := 0; k < len(self.SchemaHandler.SchemaElements); k++ {
+		for k := 0; k < len(pw.SchemaHandler.SchemaElements); k++ {
 			//for _, chunk := range chunkMap {
-			schema := self.SchemaHandler.SchemaElements[k]
+			schema := pw.SchemaHandler.SchemaElements[k]
 			if schema.GetNumChildren() > 0 {
 				continue
 			}
-			chunk := chunkMap[self.SchemaHandler.IndexMap[int32(k)]]
+			chunk := chunkMap[pw.SchemaHandler.IndexMap[int32(k)]]
 			if chunk == nil {
 				continue
 			}
@@ -381,12 +381,12 @@ func (self *ParquetWriter) Flush(flag bool) error {
 			rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalUncompressedSize
 			rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
 		}
-		rowGroup.RowGroupHeader.NumRows = self.NumRows
-		self.NumRows = 0
+		rowGroup.RowGroupHeader.NumRows = pw.NumRows
+		pw.NumRows = 0
 
 		for k := 0; k < len(rowGroup.Chunks); k++ {
 			rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = -1
-			rowGroup.Chunks[k].ChunkHeader.FileOffset = self.Offset
+			rowGroup.Chunks[k].ChunkHeader.FileOffset = pw.Offset
 
 			pageCount := len(rowGroup.Chunks[k].Pages)
 
@@ -396,21 +396,21 @@ func (self *ParquetWriter) Flush(flag bool) error {
 			columnIndex.MinValues = make([][]byte, pageCount)
 			columnIndex.MaxValues = make([][]byte, pageCount)
 			columnIndex.BoundaryOrder = parquet.BoundaryOrder_UNORDERED
-			self.ColumnIndexes = append(self.ColumnIndexes, columnIndex)
+			pw.ColumnIndexes = append(pw.ColumnIndexes, columnIndex)
 
 			//add OffsetIndex
 			offsetIndex := parquet.NewOffsetIndex()
 			offsetIndex.PageLocations = make([]*parquet.PageLocation, 0)
-			self.OffsetIndexes = append(self.OffsetIndexes, offsetIndex)
+			pw.OffsetIndexes = append(pw.OffsetIndexes, offsetIndex)
 
 			firstRowIndex := int64(0)
 
 			for l := 0; l < pageCount; l++ {
 				if rowGroup.Chunks[k].Pages[l].Header.Type == parquet.PageType_DICTIONARY_PAGE {
-					tmp := self.Offset
+					tmp := pw.Offset
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DictionaryPageOffset = &tmp
 				} else if rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset <= 0 {
-					rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = self.Offset
+					rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = pw.Offset
 
 				}
 
@@ -436,7 +436,7 @@ func (self *ParquetWriter) Flush(flag bool) error {
 					columnIndex.MaxValues[l] = maxVal
 
 					pageLocation := parquet.NewPageLocation()
-					pageLocation.Offset = self.Offset
+					pageLocation.Offset = pw.Offset
 					pageLocation.FirstRowIndex = firstRowIndex
 					pageLocation.CompressedPageSize = page.Header.CompressedPageSize
 
@@ -446,20 +446,20 @@ func (self *ParquetWriter) Flush(flag bool) error {
 				}
 
 				data := rowGroup.Chunks[k].Pages[l].RawData
-				if _, err = self.PFile.Write(data); err != nil {
+				if _, err = pw.PFile.Write(data); err != nil {
 					return err
 				}
-				self.Offset += int64(len(data))
+				pw.Offset += int64(len(data))
 			}
 		}
 
-		self.Footer.RowGroups = append(self.Footer.RowGroups, rowGroup.RowGroupHeader)
-		self.Size = 0
-		self.PagesMapBuf = make(map[string][]*layout.Page)
+		pw.Footer.RowGroups = append(pw.Footer.RowGroups, rowGroup.RowGroupHeader)
+		pw.Size = 0
+		pw.PagesMapBuf = make(map[string][]*layout.Page)
 	}
-	self.Footer.NumRows += int64(len(self.Objs))
-	self.Objs = self.Objs[:0]
-	self.ObjsSize = 0
+	pw.Footer.NumRows += int64(len(pw.Objs))
+	pw.Objs = pw.Objs[:0]
+	pw.ObjsSize = 0
 	return nil
 
 }
