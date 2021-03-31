@@ -49,7 +49,7 @@ type Table struct {
 }
 
 //Merge several tables to one table(the first table)
-func (self *Table) Merge(tables ...*Table) {
+func (t *Table) Merge(tables ...*Table) {
 	ln := len(tables)
 	if ln <= 0 {
 		return
@@ -58,46 +58,46 @@ func (self *Table) Merge(tables ...*Table) {
 		if tables[i] == nil {
 			continue
 		}
-		self.Values = append(self.Values, tables[i].Values...)
-		self.RepetitionLevels = append(self.RepetitionLevels, tables[i].RepetitionLevels...)
-		self.DefinitionLevels = append(self.DefinitionLevels, tables[i].DefinitionLevels...)
-		if tables[i].MaxDefinitionLevel > self.MaxDefinitionLevel {
-			self.MaxDefinitionLevel = tables[i].MaxDefinitionLevel
+		t.Values = append(t.Values, tables[i].Values...)
+		t.RepetitionLevels = append(t.RepetitionLevels, tables[i].RepetitionLevels...)
+		t.DefinitionLevels = append(t.DefinitionLevels, tables[i].DefinitionLevels...)
+		if tables[i].MaxDefinitionLevel > t.MaxDefinitionLevel {
+			t.MaxDefinitionLevel = tables[i].MaxDefinitionLevel
 		}
-		if tables[i].MaxRepetitionLevel > self.MaxRepetitionLevel {
-			self.MaxRepetitionLevel = tables[i].MaxRepetitionLevel
+		if tables[i].MaxRepetitionLevel > t.MaxRepetitionLevel {
+			t.MaxRepetitionLevel = tables[i].MaxRepetitionLevel
 		}
 	}
 }
 
-func (self *Table) Pop(numRows int64) *Table {
-	res := NewTableFromTable(self)
+func (t *Table) Pop(numRows int64) *Table {
+	res := NewTableFromTable(t)
 	endIndex := int64(0)
-	ln := int64(len(self.Values))
+	ln := int64(len(t.Values))
 	i, num := int64(0), int64(-1)
 	for i = 0; i < ln; i++ {
-		if self.RepetitionLevels[i] == 0 {
+		if t.RepetitionLevels[i] == 0 {
 			num++
 			if num >= numRows {
 				break
 			}
 		}
-		if res.MaxRepetitionLevel < self.RepetitionLevels[i] {
-			res.MaxRepetitionLevel = self.RepetitionLevels[i]
+		if res.MaxRepetitionLevel < t.RepetitionLevels[i] {
+			res.MaxRepetitionLevel = t.RepetitionLevels[i]
 		}
-		if res.MaxDefinitionLevel < self.DefinitionLevels[i] {
-			res.MaxDefinitionLevel = self.DefinitionLevels[i]
+		if res.MaxDefinitionLevel < t.DefinitionLevels[i] {
+			res.MaxDefinitionLevel = t.DefinitionLevels[i]
 		}
 	}
 	endIndex = i
 
-	res.RepetitionLevels = self.RepetitionLevels[:endIndex]
-	res.DefinitionLevels = self.DefinitionLevels[:endIndex]
-	res.Values = self.Values[:endIndex]
+	res.RepetitionLevels = t.RepetitionLevels[:endIndex]
+	res.DefinitionLevels = t.DefinitionLevels[:endIndex]
+	res.Values = t.Values[:endIndex]
 
-	self.RepetitionLevels = self.RepetitionLevels[endIndex:]
-	self.DefinitionLevels = self.DefinitionLevels[endIndex:]
-	self.Values = self.Values[endIndex:]
+	t.RepetitionLevels = t.RepetitionLevels[endIndex:]
+	t.DefinitionLevels = t.DefinitionLevels[endIndex:]
+	t.Values = t.Values[endIndex:]
 
 	return res
 }

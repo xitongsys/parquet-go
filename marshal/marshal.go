@@ -36,16 +36,16 @@ func NewNodeBuf(ln int) *NodeBufType {
 	return nodeBuf
 }
 
-func (self *NodeBufType) GetNode() *Node {
-	if self.Index >= len(self.Buf) {
-		self.Buf = append(self.Buf, new(Node))
+func (nbt *NodeBufType) GetNode() *Node {
+	if nbt.Index >= len(nbt.Buf) {
+		nbt.Buf = append(nbt.Buf, new(Node))
 	}
-	self.Index++
-	return self.Buf[self.Index-1]
+	nbt.Index++
+	return nbt.Buf[nbt.Index-1]
 }
 
-func (self *NodeBufType) Reset() {
-	self.Index = 0
+func (nbt *NodeBufType) Reset() {
+	nbt.Index = 0
 }
 
 ////////for improve performance///////////////////////////////////

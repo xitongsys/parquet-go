@@ -9,8 +9,8 @@ import (
 )
 
 // Get object type from schema by reflect
-func (self *SchemaHandler) GetTypes() []reflect.Type {
-	ln := int32(len(self.SchemaElements))
+func (sh *SchemaHandler) GetTypes() []reflect.Type {
+	ln := int32(len(sh.SchemaElements))
 	elements := make([][]int32, ln)
 	for i := 0; i < int(ln); i++ {
 		elements[i] = []int32{}
@@ -27,16 +27,16 @@ func (self *SchemaHandler) GetTypes() []reflect.Type {
 				idx := stack[len(stack)-1][0]
 				elements[idx] = append(elements[idx], pos)
 			}
-			item := [2]int32{pos, self.SchemaElements[pos].GetNumChildren()}
+			item := [2]int32{pos, sh.SchemaElements[pos].GetNumChildren()}
 			stack = append(stack, item)
 			pos++
 
 		} else {
 			curlen := len(stack) - 1
 			idx := stack[curlen][0]
-			nc := self.SchemaElements[idx].GetNumChildren()
-			pT, cT := self.SchemaElements[idx].Type, self.SchemaElements[idx].ConvertedType
-			rT := self.SchemaElements[idx].RepetitionType
+			nc := sh.SchemaElements[idx].GetNumChildren()
+			pT, cT := sh.SchemaElements[idx].Type, sh.SchemaElements[idx].ConvertedType
+			rT := sh.SchemaElements[idx].RepetitionType
 
 			if nc == 0 {
 				if *rT != parquet.FieldRepetitionType_REPEATED {
@@ -49,18 +49,18 @@ func (self *SchemaHandler) GetTypes() []reflect.Type {
 			} else {
 				if cT != nil && *cT == parquet.ConvertedType_LIST &&
 					len(elements[idx]) == 1 &&
-					self.GetInName(int(elements[idx][0])) == "List" &&
+					sh.GetInName(int(elements[idx][0])) == "List" &&
 					len(elements[elements[idx][0]]) == 1 &&
-					self.GetInName(int(elements[elements[idx][0]][0])) == "Element" {
+					sh.GetInName(int(elements[elements[idx][0]][0])) == "Element" {
 					cidx := elements[elements[idx][0]][0]
 					elementTypes[idx] = reflect.SliceOf(elementTypes[cidx])
 
 				} else if cT != nil && *cT == parquet.ConvertedType_MAP &&
 					len(elements[idx]) == 1 &&
-					self.GetInName(int(elements[idx][0])) == "Key_value" &&
+					sh.GetInName(int(elements[idx][0])) == "Key_value" &&
 					len(elements[elements[idx][0]]) == 2 &&
-					self.GetInName(int(elements[elements[idx][0]][0])) == "Key" &&
-					self.GetInName(int(elements[elements[idx][0]][1])) == "Value" {
+					sh.GetInName(int(elements[elements[idx][0]][0])) == "Key" &&
+					sh.GetInName(int(elements[elements[idx][0]][1])) == "Value" {
 					kIdx, vIdx := elements[elements[idx][0]][0], elements[elements[idx][0]][1]
 					kT, vT := elementTypes[kIdx], elementTypes[vIdx]
 					elementTypes[idx] = reflect.MapOf(kT, vT)
@@ -69,7 +69,7 @@ func (self *SchemaHandler) GetTypes() []reflect.Type {
 					fields := []reflect.StructField{}
 					for _, ci := range elements[idx] {
 						fields = append(fields, reflect.StructField{
-							Name: self.Infos[ci].InName,
+							Name: sh.Infos[ci].InName,
 							Type: elementTypes[ci],
 						})
 					}
@@ -95,14 +95,14 @@ func (self *SchemaHandler) GetTypes() []reflect.Type {
 	return elementTypes
 }
 
-func (self *SchemaHandler) GetType(prefixPath string) (reflect.Type, error) {
-	prefixPath, err := self.ConvertToInPathStr(prefixPath)
+func (sh *SchemaHandler) GetType(prefixPath string) (reflect.Type, error) {
+	prefixPath, err := sh.ConvertToInPathStr(prefixPath)
 	if err != nil {
 		return nil, err
 	}
 
-	ts := self.GetTypes()
-	if idx, ok := self.MapIndex[prefixPath]; !ok {
+	ts := sh.GetTypes()
+	if idx, ok := sh.MapIndex[prefixPath]; !ok {
 		return nil, fmt.Errorf("[GetType] Can't find %v", prefixPath)
 	} else {
 		return ts[idx], nil

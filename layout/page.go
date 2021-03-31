@@ -430,16 +430,16 @@ func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *sch
 }
 
 //Get RepetitionLevels and Definitions from RawData
-func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64, int64, error) {
+func (p *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64, int64, error) {
 	var err error
-	bytesReader := bytes.NewReader(self.RawData)
+	bytesReader := bytes.NewReader(p.RawData)
 	buf := make([]byte, 0)
 
-	if self.Header.GetType() == parquet.PageType_DATA_PAGE_V2 {
-		dll := self.Header.DataPageHeaderV2.GetDefinitionLevelsByteLength()
-		rll := self.Header.DataPageHeaderV2.GetRepetitionLevelsByteLength()
+	if p.Header.GetType() == parquet.PageType_DATA_PAGE_V2 {
+		dll := p.Header.DataPageHeaderV2.GetDefinitionLevelsByteLength()
+		rll := p.Header.DataPageHeaderV2.GetRepetitionLevelsByteLength()
 		repetitionLevelsBuf, definitionLevelsBuf := make([]byte, rll), make([]byte, dll)
-		dataBuf := make([]byte, len(self.RawData)-int(rll)-int(dll))
+		dataBuf := make([]byte, len(p.RawData)-int(rll)-int(dll))
 		bytesReader.Read(repetitionLevelsBuf)
 		bytesReader.Read(definitionLevelsBuf)
 		bytesReader.Read(dataBuf)
@@ -460,22 +460,22 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 		buf = append(buf, dataBuf...)
 
 	} else {
-		if buf, err = compress.Uncompress(self.RawData, self.CompressType); err != nil {
+		if buf, err = compress.Uncompress(p.RawData, p.CompressType); err != nil {
 			return 0, 0, fmt.Errorf("Unsupported compress method")
 		}
 	}
 
 	bytesReader = bytes.NewReader(buf)
-	if self.Header.GetType() == parquet.PageType_DATA_PAGE_V2 || self.Header.GetType() == parquet.PageType_DATA_PAGE {
+	if p.Header.GetType() == parquet.PageType_DATA_PAGE_V2 || p.Header.GetType() == parquet.PageType_DATA_PAGE {
 		var numValues uint64
-		if self.Header.GetType() == parquet.PageType_DATA_PAGE {
-			numValues = uint64(self.Header.DataPageHeader.GetNumValues())
+		if p.Header.GetType() == parquet.PageType_DATA_PAGE {
+			numValues = uint64(p.Header.DataPageHeader.GetNumValues())
 		} else {
-			numValues = uint64(self.Header.DataPageHeaderV2.GetNumValues())
+			numValues = uint64(p.Header.DataPageHeaderV2.GetNumValues())
 		}
 
-		maxDefinitionLevel, _ := schemaHandler.MaxDefinitionLevel(self.Path)
-		maxRepetitionLevel, _ := schemaHandler.MaxRepetitionLevel(self.Path)
+		maxDefinitionLevel, _ := schemaHandler.MaxDefinitionLevel(p.Path)
+		maxRepetitionLevel, _ := schemaHandler.MaxRepetitionLevel(p.Path)
 
 		var repetitionLevels, definitionLevels []interface{}
 		if maxRepetitionLevel > 0 {
@@ -522,8 +522,8 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 		}
 
 		table := new(Table)
-		table.Path = self.Path
-		name := common.PathToStr(self.Path)
+		table.Path = p.Path
+		name := common.PathToStr(p.Path)
 		table.RepetitionType = schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetRepetitionType()
 		table.MaxRepetitionLevel = maxRepetitionLevel
 		table.MaxDefinitionLevel = maxDefinitionLevel
@@ -541,16 +541,16 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 				numRows++
 			}
 		}
-		self.DataTable = table
-		self.RawData = buf[len(buf)-bytesReader.Len():]
+		p.DataTable = table
+		p.RawData = buf[len(buf)-bytesReader.Len():]
 
 		return int64(numValues), numRows, nil
 
-	} else if self.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
+	} else if p.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
 		table := new(Table)
-		table.Path = self.Path
-		self.DataTable = table
-		self.RawData = buf
+		table.Path = p.Path
+		p.DataTable = table
+		p.RawData = buf
 		return 0, 0, nil
 
 	} else {
@@ -559,37 +559,37 @@ func (self *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64
 }
 
 //Get values from raw data
-func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error {
+func (p *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error {
 	var err error
 	var encodingType parquet.Encoding
 
-	switch self.Header.GetType() {
+	switch p.Header.GetType() {
 	case parquet.PageType_DICTIONARY_PAGE:
-		bytesReader := bytes.NewReader(self.RawData)
-		self.DataTable.Values, err = encoding.ReadPlain(bytesReader,
-			*self.Schema.Type,
-			uint64(self.Header.DictionaryPageHeader.GetNumValues()),
+		bytesReader := bytes.NewReader(p.RawData)
+		p.DataTable.Values, err = encoding.ReadPlain(bytesReader,
+			*p.Schema.Type,
+			uint64(p.Header.DictionaryPageHeader.GetNumValues()),
 			0)
 		if err != nil {
 			return err
 		}
 	case parquet.PageType_DATA_PAGE_V2:
-		if self.RawData, err = compress.Uncompress(self.RawData, self.CompressType); err != nil {
+		if p.RawData, err = compress.Uncompress(p.RawData, p.CompressType); err != nil {
 			return err
 		}
-		encodingType = self.Header.DataPageHeader.GetEncoding()
+		encodingType = p.Header.DataPageHeader.GetEncoding()
 		fallthrough
 	case parquet.PageType_DATA_PAGE:
-		encodingType = self.Header.DataPageHeader.GetEncoding()
-		bytesReader := bytes.NewReader(self.RawData)
+		encodingType = p.Header.DataPageHeader.GetEncoding()
+		bytesReader := bytes.NewReader(p.RawData)
 
 		var numNulls uint64 = 0
-		for i := 0; i < len(self.DataTable.DefinitionLevels); i++ {
-			if self.DataTable.DefinitionLevels[i] != self.DataTable.MaxDefinitionLevel {
+		for i := 0; i < len(p.DataTable.DefinitionLevels); i++ {
+			if p.DataTable.DefinitionLevels[i] != p.DataTable.MaxDefinitionLevel {
 				numNulls++
 			}
 		}
-		name := common.PathToStr(self.DataTable.Path)
+		name := common.PathToStr(p.DataTable.Path)
 		var values []interface{}
 		var ct parquet.ConvertedType = -1
 		if schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].IsSetConvertedType() {
@@ -598,21 +598,21 @@ func (self *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error
 
 		values, err = ReadDataPageValues(bytesReader,
 			encodingType,
-			*self.Schema.Type,
+			*p.Schema.Type,
 			ct,
-			uint64(len(self.DataTable.DefinitionLevels))-numNulls,
+			uint64(len(p.DataTable.DefinitionLevels))-numNulls,
 			uint64(schemaHandler.SchemaElements[schemaHandler.MapIndex[name]].GetTypeLength()))
 		if err != nil {
 			return err
 		}
 		j := 0
-		for i := 0; i < len(self.DataTable.DefinitionLevels); i++ {
-			if self.DataTable.DefinitionLevels[i] == self.DataTable.MaxDefinitionLevel {
-				self.DataTable.Values[i] = values[j]
+		for i := 0; i < len(p.DataTable.DefinitionLevels); i++ {
+			if p.DataTable.DefinitionLevels[i] == p.DataTable.MaxDefinitionLevel {
+				p.DataTable.Values[i] = values[j]
 				j++
 			}
 		}
-		self.RawData = []byte{}
+		p.RawData = []byte{}
 		return nil
 
 	default:

@@ -31,16 +31,16 @@ func NewPathMap(path string) *PathMapType {
 	return pathMap
 }
 
-func (self *PathMapType) Add(path []string) {
+func (pmt *PathMapType) Add(path []string) {
 	ln := len(path)
 	if ln <= 1 {
 		return
 	}
 	c := path[1]
-	if _, ok := self.Children[c]; !ok {
-		self.Children[c] = NewPathMap(self.Path + common.PAR_GO_PATH_DELIMITER + c)
+	if _, ok := pmt.Children[c]; !ok {
+		pmt.Children[c] = NewPathMap(pmt.Path + common.PAR_GO_PATH_DELIMITER + c)
 	}
-	self.Children[c].Add(path[1:])
+	pmt.Children[c].Add(path[1:])
 }
 
 /////////////////pathMap///////////////////////////
@@ -60,49 +60,49 @@ type SchemaHandler struct {
 }
 
 // setValueColumns collects leaf nodes' full path in SchemaHandler.ValueColumns
-func (self *SchemaHandler) setValueColumns() {
-	for i := 0; i < len(self.SchemaElements); i++ {
-		schema := self.SchemaElements[i]
+func (sh *SchemaHandler) setValueColumns() {
+	for i := 0; i < len(sh.SchemaElements); i++ {
+		schema := sh.SchemaElements[i]
 		numChildren := schema.GetNumChildren()
 		if numChildren == 0 {
-			pathStr := self.IndexMap[int32(i)]
-			self.ValueColumns = append(self.ValueColumns, pathStr)
+			pathStr := sh.IndexMap[int32(i)]
+			sh.ValueColumns = append(sh.ValueColumns, pathStr)
 		}
 	}
 }
 
-func (self *SchemaHandler) GetColumnNum() int64 {
-	return int64(len(self.ValueColumns))
+func (sh *SchemaHandler) GetColumnNum() int64 {
+	return int64(len(sh.ValueColumns))
 }
 
 // setPathMap builds the PathMap from leaf SchemaElement
-func (self *SchemaHandler) setPathMap() {
-	self.PathMap = NewPathMap(self.GetRootInName())
-	for i := 0; i < len(self.SchemaElements); i++ {
-		schema := self.SchemaElements[i]
+func (sh *SchemaHandler) setPathMap() {
+	sh.PathMap = NewPathMap(sh.GetRootInName())
+	for i := 0; i < len(sh.SchemaElements); i++ {
+		schema := sh.SchemaElements[i]
 		numChildren := schema.GetNumChildren()
 		if numChildren == 0 {
-			pathStr := self.IndexMap[int32(i)]
-			self.PathMap.Add(common.StrToPath(pathStr))
+			pathStr := sh.IndexMap[int32(i)]
+			sh.PathMap.Add(common.StrToPath(pathStr))
 		}
 	}
 }
 
 // GetRepetitionType returns the repetition type of a column by it's schema path
-func (self *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepetitionType, error) {
+func (sh *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepetitionType, error) {
 	pathStr := common.PathToStr(path)
-	if index, ok := self.MapIndex[pathStr]; ok {
-		return self.SchemaElements[index].GetRepetitionType(), nil
+	if index, ok := sh.MapIndex[pathStr]; ok {
+		return sh.SchemaElements[index].GetRepetitionType(), nil
 	}
 	return 0, errors.New("Name Not In Schema")
 }
 
 // MaxDefinitionLevel returns the max definition level type of a column by it's schema path
-func (self *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
+func (sh *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
 	for i := 2; i <= ln; i++ {
-		rt, err := self.GetRepetitionType(path[:i])
+		rt, err := sh.GetRepetitionType(path[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -114,11 +114,11 @@ func (self *SchemaHandler) MaxDefinitionLevel(path []string) (int32, error) {
 }
 
 // MaxRepetitionLevel returns the max repetition level type of a column by it's schema path
-func (self *SchemaHandler) GetRepetitionLevelIndex(path []string, rl int32) (int32, error) {
+func (sh *SchemaHandler) GetRepetitionLevelIndex(path []string, rl int32) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
 	for i := 2; i <= ln; i++ {
-		rt, err := self.GetRepetitionType(path[:i])
+		rt, err := sh.GetRepetitionType(path[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -134,11 +134,11 @@ func (self *SchemaHandler) GetRepetitionLevelIndex(path []string, rl int32) (int
 }
 
 // MaxRepetitionLevel returns the max repetition level type of a column by it's schema path
-func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
+func (sh *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	var res int32 = 0
 	ln := len(path)
 	for i := 2; i <= ln; i++ {
-		rt, err := self.GetRepetitionType(path[:i])
+		rt, err := sh.GetRepetitionType(path[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -149,18 +149,18 @@ func (self *SchemaHandler) MaxRepetitionLevel(path []string) (int32, error) {
 	return res, nil
 }
 
-func (self *SchemaHandler) GetInName(index int) string {
-	return self.Infos[index].InName
+func (sh *SchemaHandler) GetInName(index int) string {
+	return sh.Infos[index].InName
 }
 
-func (self *SchemaHandler) GetExName(index int) string {
-	return self.Infos[index].ExName
+func (sh *SchemaHandler) GetExName(index int) string {
+	return sh.Infos[index].ExName
 }
 
-func (self *SchemaHandler) CreateInExMap() {
+func (sh *SchemaHandler) CreateInExMap() {
 	//use DFS get path of schema
-	self.ExPathToInPath, self.InPathToExPath = map[string]string{}, map[string]string{}
-	schemas := self.SchemaElements
+	sh.ExPathToInPath, sh.InPathToExPath = map[string]string{}, map[string]string{}
+	schemas := sh.SchemaElements
 	ln := int32(len(schemas))
 	var pos int32 = 0
 	stack := make([][2]int32, 0) // stack item[0]: index of schemas; item[1]: numChildren
@@ -175,12 +175,12 @@ func (self *SchemaHandler) CreateInExMap() {
 		} else { // leaf node
 			inPath, exPath := make([]string, 0), make([]string, 0)
 			for i := 0; i < len(stack); i++ {
-				inPath = append(inPath, self.Infos[stack[i][0]].InName)
-				exPath = append(exPath, self.Infos[stack[i][0]].ExName)
+				inPath = append(inPath, sh.Infos[stack[i][0]].InName)
+				exPath = append(exPath, sh.Infos[stack[i][0]].ExName)
 
 				inPathStr, exPathStr := common.PathToStr(inPath), common.PathToStr(exPath)
-				self.ExPathToInPath[exPathStr] = inPathStr
-				self.InPathToExPath[inPathStr] = exPathStr
+				sh.ExPathToInPath[exPathStr] = inPathStr
+				sh.InPathToExPath[inPathStr] = exPathStr
 			}
 			stack = stack[:len(stack)-1]
 		}
@@ -188,12 +188,12 @@ func (self *SchemaHandler) CreateInExMap() {
 }
 
 //Convert a path to internal path
-func (self *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
-	if _, ok := self.InPathToExPath[pathStr]; ok {
+func (sh *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
+	if _, ok := sh.InPathToExPath[pathStr]; ok {
 		return pathStr, nil
 	}
 
-	if res, ok := self.ExPathToInPath[pathStr]; ok {
+	if res, ok := sh.ExPathToInPath[pathStr]; ok {
 		return res, nil
 	}
 
@@ -201,18 +201,18 @@ func (self *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
 }
 
 //Get root name from the schema handler
-func (self *SchemaHandler) GetRootInName() string {
-	if len(self.SchemaElements) <= 0 {
+func (sh *SchemaHandler) GetRootInName() string {
+	if len(sh.SchemaElements) <= 0 {
 		return ""
 	}
-	return self.Infos[0].InName
+	return sh.Infos[0].InName
 }
 
-func (self *SchemaHandler) GetRootExName() string {
-	if len(self.SchemaElements) <= 0 {
+func (sh *SchemaHandler) GetRootExName() string {
+	if len(sh.SchemaElements) <= 0 {
 		return ""
 	}
-	return self.Infos[0].ExName
+	return sh.Infos[0].ExName
 }
 
 type Item struct {
