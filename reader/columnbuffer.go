@@ -50,38 +50,38 @@ func NewColumnBuffer(pFile source.ParquetFile, footer *parquet.FileMetaData, sch
 	return res, err
 }
 
-func (self *ColumnBufferType) NextRowGroup() error {
+func (cbt *ColumnBufferType) NextRowGroup() error {
 	var err error
-	rowGroups := self.Footer.GetRowGroups()
+	rowGroups := cbt.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
-	if self.RowGroupIndex >= ln {
-		self.DataTableNumRows++ //very important, because DataTableNumRows is one smaller than real rows number
+	if cbt.RowGroupIndex >= ln {
+		cbt.DataTableNumRows++ //very important, because DataTableNumRows is one smaller than real rows number
 		return io.EOF
 	}
 
-	self.RowGroupIndex++
+	cbt.RowGroupIndex++
 
-	columnChunks := rowGroups[self.RowGroupIndex-1].GetColumns()
+	columnChunks := rowGroups[cbt.RowGroupIndex-1].GetColumns()
 	i := int64(0)
 	ln = int64(len(columnChunks))
 	for i = 0; i < ln; i++ {
 		path := make([]string, 0)
-		path = append(path, self.SchemaHandler.GetRootInName())
+		path = append(path, cbt.SchemaHandler.GetRootInName())
 		path = append(path, columnChunks[i].MetaData.GetPathInSchema()...)
 
-		if self.PathStr == common.PathToStr(path) {
+		if cbt.PathStr == common.PathToStr(path) {
 			break
 		}
 	}
 
 	if i >= ln {
-		return fmt.Errorf("[NextRowGroup] Column not found: %v", self.PathStr)
+		return fmt.Errorf("[NextRowGroup] Column not found: %v", cbt.PathStr)
 	}
 
-	self.ChunkHeader = columnChunks[i]
+	cbt.ChunkHeader = columnChunks[i]
 	if columnChunks[i].FilePath != nil {
-		self.PFile.Close()
-		if self.PFile, err = self.PFile.Open(*columnChunks[i].FilePath); err != nil {
+		cbt.PFile.Close()
+		if cbt.PFile, err = cbt.PFile.Open(*columnChunks[i].FilePath); err != nil {
 			return err
 		}
 	}
@@ -93,37 +93,37 @@ func (self *ColumnBufferType) NextRowGroup() error {
 	}
 
 	size := columnChunks[i].MetaData.GetTotalCompressedSize()
-	if self.ThriftReader != nil {
-		self.ThriftReader.Close()
+	if cbt.ThriftReader != nil {
+		cbt.ThriftReader.Close()
 	}
 
-	self.ThriftReader = source.ConvertToThriftReader(self.PFile, offset, size)
-	self.ChunkReadValues = 0
-	self.DictPage = nil
+	cbt.ThriftReader = source.ConvertToThriftReader(cbt.PFile, offset, size)
+	cbt.ChunkReadValues = 0
+	cbt.DictPage = nil
 	return nil
 }
 
-func (self *ColumnBufferType) ReadPage() error {
-	if self.ChunkHeader != nil && self.ChunkHeader.MetaData != nil && self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
-		page, numValues, numRows, err := layout.ReadPage(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
+func (cbt *ColumnBufferType) ReadPage() error {
+	if cbt.ChunkHeader != nil && cbt.ChunkHeader.MetaData != nil && cbt.ChunkReadValues < cbt.ChunkHeader.MetaData.NumValues {
+		page, numValues, numRows, err := layout.ReadPage(cbt.ThriftReader, cbt.SchemaHandler, cbt.ChunkHeader.MetaData)
 		if err != nil {
 			//data is nil and rl/dl=0, no pages in file
 			if err == io.EOF {
-				if self.DataTable == nil {
-					index := self.SchemaHandler.MapIndex[self.PathStr]
-					self.DataTable = layout.NewEmptyTable()
-					self.DataTable.Schema = self.SchemaHandler.SchemaElements[index]
-					self.DataTable.Path = common.StrToPath(self.PathStr)
+				if cbt.DataTable == nil {
+					index := cbt.SchemaHandler.MapIndex[cbt.PathStr]
+					cbt.DataTable = layout.NewEmptyTable()
+					cbt.DataTable.Schema = cbt.SchemaHandler.SchemaElements[index]
+					cbt.DataTable.Path = common.StrToPath(cbt.PathStr)
 
 				}
 
-				self.DataTableNumRows = self.ChunkHeader.MetaData.NumValues
+				cbt.DataTableNumRows = cbt.ChunkHeader.MetaData.NumValues
 
-				for self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
-					self.DataTable.Values = append(self.DataTable.Values, nil)
-					self.DataTable.RepetitionLevels = append(self.DataTable.RepetitionLevels, int32(0))
-					self.DataTable.DefinitionLevels = append(self.DataTable.DefinitionLevels, int32(0))
-					self.ChunkReadValues++
+				for cbt.ChunkReadValues < cbt.ChunkHeader.MetaData.NumValues {
+					cbt.DataTable.Values = append(cbt.DataTable.Values, nil)
+					cbt.DataTable.RepetitionLevels = append(cbt.DataTable.RepetitionLevels, int32(0))
+					cbt.DataTable.DefinitionLevels = append(cbt.DataTable.DefinitionLevels, int32(0))
+					cbt.ChunkReadValues++
 				}
 			}
 
@@ -131,128 +131,128 @@ func (self *ColumnBufferType) ReadPage() error {
 		}
 
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
-			self.DictPage = page
+			cbt.DictPage = page
 			return nil
 		}
 
-		page.Decode(self.DictPage)
+		page.Decode(cbt.DictPage)
 
-		if self.DataTable == nil {
-			self.DataTable = layout.NewTableFromTable(page.DataTable)
+		if cbt.DataTable == nil {
+			cbt.DataTable = layout.NewTableFromTable(page.DataTable)
 		}
 
-		self.DataTable.Merge(page.DataTable)
-		self.ChunkReadValues += numValues
+		cbt.DataTable.Merge(page.DataTable)
+		cbt.ChunkReadValues += numValues
 
-		self.DataTableNumRows += numRows
+		cbt.DataTableNumRows += numRows
 	} else {
-		if err := self.NextRowGroup(); err != nil {
+		if err := cbt.NextRowGroup(); err != nil {
 			return err
 		}
 
-		return self.ReadPage()
+		return cbt.ReadPage()
 	}
 
 	return nil
 }
 
-func (self *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
-	if self.ChunkHeader != nil && self.ChunkHeader.MetaData != nil && self.ChunkReadValues < self.ChunkHeader.MetaData.NumValues {
-		page, err := layout.ReadPageRawData(self.ThriftReader, self.SchemaHandler, self.ChunkHeader.MetaData)
+func (cbt *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
+	if cbt.ChunkHeader != nil && cbt.ChunkHeader.MetaData != nil && cbt.ChunkReadValues < cbt.ChunkHeader.MetaData.NumValues {
+		page, err := layout.ReadPageRawData(cbt.ThriftReader, cbt.SchemaHandler, cbt.ChunkHeader.MetaData)
 		if err != nil {
 			return nil, err
 		}
 
-		numValues, numRows, err := page.GetRLDLFromRawData(self.SchemaHandler)
+		numValues, numRows, err := page.GetRLDLFromRawData(cbt.SchemaHandler)
 		if err != nil {
 			return nil, err
 		}
 
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
-			page.GetValueFromRawData(self.SchemaHandler)
-			self.DictPage = page
+			page.GetValueFromRawData(cbt.SchemaHandler)
+			cbt.DictPage = page
 			return page, nil
 		}
 
-		if self.DataTable == nil {
-			self.DataTable = layout.NewTableFromTable(page.DataTable)
+		if cbt.DataTable == nil {
+			cbt.DataTable = layout.NewTableFromTable(page.DataTable)
 		}
 
-		self.DataTable.Merge(page.DataTable)
-		self.ChunkReadValues += numValues
-		self.DataTableNumRows += numRows
+		cbt.DataTable.Merge(page.DataTable)
+		cbt.ChunkReadValues += numValues
+		cbt.DataTableNumRows += numRows
 		return page, nil
 
 	} else {
-		if err := self.NextRowGroup(); err != nil {
+		if err := cbt.NextRowGroup(); err != nil {
 			return nil, err
 		}
 
-		return self.ReadPageForSkip()
+		return cbt.ReadPageForSkip()
 	}
 }
 
-func (self *ColumnBufferType) SkipRows(num int64) int64 {
+func (cbt *ColumnBufferType) SkipRows(num int64) int64 {
 	var (
 		err  error
 		page *layout.Page
 	)
 
-	for self.DataTableNumRows < num && err == nil {
-		page, err = self.ReadPageForSkip()
+	for cbt.DataTableNumRows < num && err == nil {
+		page, err = cbt.ReadPageForSkip()
 	}
 
-	if num > self.DataTableNumRows {
-		num = self.DataTableNumRows
+	if num > cbt.DataTableNumRows {
+		num = cbt.DataTableNumRows
 	}
 
 	if page != nil {
-		if err = page.GetValueFromRawData(self.SchemaHandler); err != nil {
+		if err = page.GetValueFromRawData(cbt.SchemaHandler); err != nil {
 			return 0
 		}
 
-		page.Decode(self.DictPage)
-		i, j := len(self.DataTable.Values)-1, len(page.DataTable.Values)-1
+		page.Decode(cbt.DictPage)
+		i, j := len(cbt.DataTable.Values)-1, len(page.DataTable.Values)-1
 		for i >= 0 && j >= 0 {
-			self.DataTable.Values[i] = page.DataTable.Values[j]
+			cbt.DataTable.Values[i] = page.DataTable.Values[j]
 			i, j = i-1, j-1
 		}
 	}
 
-	self.DataTable.Pop(num)
-	self.DataTableNumRows -= num
-	if self.DataTableNumRows <= 0 {
-		tmp := self.DataTable
-		self.DataTable = layout.NewTableFromTable(tmp)
-		self.DataTable.Merge(tmp)
+	cbt.DataTable.Pop(num)
+	cbt.DataTableNumRows -= num
+	if cbt.DataTableNumRows <= 0 {
+		tmp := cbt.DataTable
+		cbt.DataTable = layout.NewTableFromTable(tmp)
+		cbt.DataTable.Merge(tmp)
 	}
 
 	return num
 }
 
-func (self *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64) {
+func (cbt *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64) {
 	var err error
 
-	for self.DataTableNumRows < num && err == nil {
-		err = self.ReadPage()
+	for cbt.DataTableNumRows < num && err == nil {
+		err = cbt.ReadPage()
 	}
 
-	if self.DataTableNumRows < 0 {
-		self.DataTableNumRows = 0
-		self.DataTable = layout.NewEmptyTable()
+	if cbt.DataTableNumRows < 0 {
+		cbt.DataTableNumRows = 0
+		cbt.DataTable = layout.NewEmptyTable()
 	}
 
-	if num > self.DataTableNumRows {
-		num = self.DataTableNumRows
+	if num > cbt.DataTableNumRows {
+		num = cbt.DataTableNumRows
 	}
 
-	res := self.DataTable.Pop(num)
-	self.DataTableNumRows -= num
+	res := cbt.DataTable.Pop(num)
+	cbt.DataTableNumRows -= num
 
-	if self.DataTableNumRows <= 0 { //release previous slice memory
-		tmp := self.DataTable
-		self.DataTable = layout.NewTableFromTable(tmp)
-		self.DataTable.Merge(tmp)
+	if cbt.DataTableNumRows <= 0 { //release previous slice memory
+		tmp := cbt.DataTable
+		cbt.DataTable = layout.NewTableFromTable(tmp)
+		cbt.DataTable.Merge(tmp)
 	}
 	return res, num
 
