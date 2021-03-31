@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/apache/thrift v0.13.1-0.20201008052519-daf620915714
+	github.com/aws/aws-sdk-go v1.30.19 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.1
