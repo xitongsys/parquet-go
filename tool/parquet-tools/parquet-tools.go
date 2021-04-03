@@ -18,6 +18,7 @@ import (
 	"github.com/xitongsys/parquet-go-source/s3"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/source"
+	"github.com/xitongsys/parquet-go/tool/parquet-tools/metadatatool"
 	"github.com/xitongsys/parquet-go/tool/parquet-tools/schematool"
 	"github.com/xitongsys/parquet-go/tool/parquet-tools/sizetool"
 )
@@ -129,6 +130,14 @@ func main() {
 
 			totCnt += cnt
 		}
+	case "metadata":
+		metadata, err := metadatatool.GetMetadata(pr)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Can't to get metadata: %s\n", err)
+			os.Exit(1)
+		}
+		buf, _ := json.MarshalIndent(metadata, "", "  ")
+		fmt.Println(string(buf))
 
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", *cmd)
