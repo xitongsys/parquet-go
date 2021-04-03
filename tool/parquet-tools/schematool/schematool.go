@@ -241,7 +241,7 @@ func (n *Node) getStructTags() string {
 			tagStr := "`parquet:\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, length=%d, repetitiontype=%s\"`"
 			tags = fmt.Sprintf(tagStr, n.SE.Name, pTStr, cTStr, scale, precision, length, rTStr)
 		} else {
-			tagStr := "`parquet:\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, repetitiontype\"`"
+			tagStr := "`parquet:\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, repetitiontype=%s\"`"
 			tags = fmt.Sprintf(tagStr, n.SE.Name, pTStr, n.SE.Type, scale, precision, rTStr)
 		}
 	}
