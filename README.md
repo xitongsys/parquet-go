@@ -110,7 +110,7 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 |-|-|-|
 |REQUIRED|```V1 int32 `parquet:"name=v1, type=INT32"` ```|No extra description|
 |OPTIONAL|```V1 *int32 `parquet:"name=v1, type=INT32"` ```|Declare as pointer|
-|REPEATED|```V1 []int32 `parquet:"name=v1, type=INT32, repetitontype=REPEATED"` ```|Add 'repetitiontype=REPEATED' in tags|
+|REPEATED|```V1 []int32 `parquet:"name=v1, type=INT32, repetitiontype=REPEATED"` ```|Add 'repetitiontype=REPEATED' in tags|
 
 ### Tips
 
