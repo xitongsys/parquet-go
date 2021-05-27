@@ -12,4 +12,5 @@ require (
 	github.com/ncw/swift v1.0.52
 	github.com/spf13/afero v1.2.2
 	github.com/xitongsys/parquet-go v1.5.1
+	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
 )
