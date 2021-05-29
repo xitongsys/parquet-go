@@ -1,6 +1,9 @@
 package schema
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestNewSchemaHandlerFromJSON(t *testing.T) {
 	var jsonSchema string = `
@@ -37,6 +40,48 @@ func TestNewSchemaHandlerFromImproperJSON(t *testing.T) {
 	_, err := NewSchemaHandlerFromJSON(improperJsonSchema)
 	if err == nil {
 		t.Errorf("failing test, expected error as we provided an improperly formatted json string, but got no error!")
+	}
+
+}
+
+func TestNewSchemaHandlerFromImproperJSON_MAP(t *testing.T) {
+	var improperJsonSchema string = `
+	{
+	  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
+	  "Fields": [
+		{
+		  "Tag": "name=name, inname=Name, type=MAP, repetitiontype=REQUIRED",
+		  "Fields": []
+		}
+	  ]
+	}
+	`
+	_, err := NewSchemaHandlerFromJSON(improperJsonSchema)
+	if err == nil {
+		t.Errorf("failing test, expected error as we provided an improperly formatted json string, but got no error!")
+	} else if !strings.Contains(err.Error(), "MAP needs exact 2 fields") {
+		t.Errorf(`failing test, expect error like "MAP needs exact 2 fields" but got "%s"`, err.Error())
+	}
+
+}
+
+func TestNewSchemaHandlerFromImproperJSON_LIST(t *testing.T) {
+	var improperJsonSchema string = `
+	{
+	  "Tag": "name=parquet-go-root, repetitiontype=REQUIRED",
+	  "Fields": [
+		{
+		  "Tag": "name=name, inname=Name, type=LIST, repetitiontype=REQUIRED",
+		  "Fields": []
+		}
+	  ]
+	}
+	`
+	_, err := NewSchemaHandlerFromJSON(improperJsonSchema)
+	if err == nil {
+		t.Errorf("failing test, expected error as we provided an improperly formatted json string, but got no error!")
+	} else if !strings.Contains(err.Error(), "LIST needs exact 1 field") {
+		t.Errorf(`failing test, expect error like "LIST needs exact 1 field" but got "%s"`, err.Error())
 	}
 
 }

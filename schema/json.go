@@ -94,6 +94,9 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			newInfo.InName, newInfo.ExName = "List", "list"
 			infos = append(infos, newInfo)
 
+			if len(item.Fields) != 1 {
+				return nil, fmt.Errorf("LIST needs exact 1 field to define element type")
+			}
 			stack = append(stack, item.Fields[0])
 
 		} else if info.Type == "MAP" { //map
@@ -126,6 +129,9 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			newInfo.InName, newInfo.ExName = "Key_value", "key_value"
 			infos = append(infos, newInfo)
 
+			if len(item.Fields) != 2 {
+				return nil, fmt.Errorf("MAP needs exact 2 fields to define key and value type")
+			}
 			stack = append(stack, item.Fields[1]) //put value
 			stack = append(stack, item.Fields[0]) //put key
 
