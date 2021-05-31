@@ -171,7 +171,7 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 |CompressionCodec_GZIP|YES|
 |CompressionCodec_LZO|NO|
 |CompressionCodec_BROTLI|NO|
-|CompressionCodec_LZ4 |NO|
+|CompressionCodec_LZ4 |YES|
 |CompressionCodec_ZSTD|YES|
 
 ## ParquetFile
@@ -378,4 +378,3 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 * [parquet-tools](https://github.com/xitongsys/parquet-go/blob/master/tool/parquet-tools): Command line tools that aid in the inspection of Parquet files
 
 Please start to use it and give feedback or just star it! Help is needed and anything is welcome.
-
