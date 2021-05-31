@@ -189,9 +189,10 @@ func (s *AzBlockBlob) Open(URL string) (source.ParquetFile, error) {
 
 	fileSize := int64(-1)
 	props, err := blobURL.GetProperties(s.ctx, azblob.BlobAccessConditions{})
-	if err == nil {
-		fileSize = props.ContentLength()
+	if err != nil {
+		return &AzBlockBlob{}, err
 	}
+	fileSize = props.ContentLength()
 
 	pf := &AzBlockBlob{
 		ctx:           s.ctx,
