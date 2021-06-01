@@ -1,14 +1,15 @@
 // +build !no_lz4
+
 package compress
 
 import (
 	"bytes"
-	"github.com/pierrec/lz4/v4"
-	"github.com/xitongsys/parquet-go/parquet"
 	"io/ioutil"
 	"sync"
-)
 
+	"github.com/pierrec/lz4/v4"
+	"github.com/xitongsys/parquet-go/parquet"
+)
 
 func init() {
 	lz4WriterPool := sync.Pool{
