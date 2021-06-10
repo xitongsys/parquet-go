@@ -10,8 +10,8 @@ import (
 )
 
 type JSONSchemaItemType struct {
-	Tag    string
-	Fields []*JSONSchemaItemType
+	Tag    string                `json:"Tag"`
+	Fields []*JSONSchemaItemType `json:"Fields,omitempty"`
 }
 
 func NewJSONSchemaItem() *JSONSchemaItemType {

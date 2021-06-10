@@ -1,4 +1,5 @@
 // +build !no_lz4
+
 package compress
 
 import (
