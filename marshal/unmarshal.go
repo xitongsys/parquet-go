@@ -27,7 +27,7 @@ type SliceRecord struct {
 	Index  int
 }
 
-//Convert the table map to objects slice. desInterface is a slice of pointers of objects
+//Convert the table map to objects slice. dstInterface is a slice of pointers of objects
 func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *schema.SchemaHandler, prefixPath string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -105,127 +105,142 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 			rc.Index = -1
 		}
 
+		var prevType reflect.Type
+		var prevFieldName string
+		var prevFieldIndex []int
+
+		var prevSlicePo reflect.Value
+		var prevSliceRecord *SliceRecord
+
 		for i := bgn; i < end; i++ {
 			rl, dl, val := table.RepetitionLevels[i], table.DefinitionLevels[i], table.Values[i]
 			po, index := root, prefixIndex
+OuterLoop:
 			for index < len(path) {
 				schemaIndex := schemaIndexs[index]
 				_, cT := schemaHandler.SchemaElements[schemaIndex].Type, schemaHandler.SchemaElements[schemaIndex].ConvertedType
 
-				if po.Type().Kind() == reflect.Slice && (cT == nil || *cT != parquet.ConvertedType_LIST) {
+				poType := po.Type()
+				switch poType.Kind() {
+				case reflect.Slice:
+					cTIsList := cT != nil && *cT == parquet.ConvertedType_LIST
+
 					if po.IsNil() {
-						po.Set(reflect.MakeSlice(po.Type(), 0, 0))
+						po.Set(reflect.MakeSlice(poType, 0, 0))
 					}
 
-					if _, ok := sliceRecords[po]; !ok {
-						sliceRecords[po] = &SliceRecord{
-							Values: []reflect.Value{},
-							Index:  -1,
+					sliceRec := prevSliceRecord
+					if prevSlicePo != po {
+						prevSlicePo = po
+						var ok bool
+						sliceRec, ok = sliceRecords[po]
+						if !ok {
+							sliceRec = &SliceRecord{
+								Values: []reflect.Value{},
+								Index:  -1,
+							}
+							sliceRecords[po] = sliceRec
+							sliceRecordsStack = append(sliceRecordsStack, po)
 						}
-						sliceRecordsStack = append(sliceRecordsStack, po)
+						prevSliceRecord = sliceRec
 					}
 
-					if rl == repetitionLevels[index] || sliceRecords[po].Index < 0 {
-						sliceRecords[po].Index++
-					}
-
-					if sliceRecords[po].Index >= len(sliceRecords[po].Values) {
-						sliceRecords[po].Values = append(sliceRecords[po].Values, reflect.New(po.Type().Elem()).Elem())
-					}
-
-					po = sliceRecords[po].Values[sliceRecords[po].Index]
-
-				} else if po.Type().Kind() == reflect.Slice && cT != nil && *cT == parquet.ConvertedType_LIST {
-					if po.IsNil() {
-						po.Set(reflect.MakeSlice(po.Type(), 0, 0))
-					}
-
-					if _, ok := sliceRecords[po]; !ok {
-						sliceRecords[po] = &SliceRecord{
-							Values: []reflect.Value{},
-							Index:  -1,
+					if cTIsList {
+						index++
+						if definitionLevels[index] > dl {
+							break OuterLoop
 						}
-						sliceRecordsStack = append(sliceRecordsStack, po)
 					}
 
-					index++
-					if definitionLevels[index] > dl {
-						break
+					if rl == repetitionLevels[index] || sliceRec.Index < 0 {
+						sliceRec.Index++
 					}
 
-					if rl == repetitionLevels[index] || sliceRecords[po].Index < 0 {
-						sliceRecords[po].Index++
+					if sliceRec.Index >= len(sliceRec.Values) {
+						sliceRec.Values = append(sliceRec.Values, reflect.New(poType.Elem()).Elem())
 					}
 
-					if sliceRecords[po].Index >= len(sliceRecords[po].Values) {
-						sliceRecords[po].Values = append(sliceRecords[po].Values, reflect.New(po.Type().Elem()).Elem())
-					}
+					po = sliceRec.Values[sliceRec.Index]
 
-					po = sliceRecords[po].Values[sliceRecords[po].Index]
-					index++
-					if definitionLevels[index] > dl {
-						break
+					if cTIsList {
+						index++
+						if definitionLevels[index] > dl {
+							break OuterLoop
+						}
 					}
-
-				} else if po.Type().Kind() == reflect.Map {
+				case reflect.Map:
 					if po.IsNil() {
-						po.Set(reflect.MakeMap(po.Type()))
+						po.Set(reflect.MakeMap(poType))
 					}
 
-					if _, ok := mapRecords[po]; !ok {
-						mapRecords[po] = &MapRecord{
+					mapRec, ok := mapRecords[po];
+					if !ok {
+						mapRec = &MapRecord{
 							KeyValues: []KeyValue{},
 							Index:     -1,
 						}
+						mapRecords[po] = mapRec
 						mapRecordsStack = append(mapRecordsStack, po)
 					}
 
 					index++
 					if definitionLevels[index] > dl {
-						break
+						break OuterLoop
 					}
 
-					if rl == repetitionLevels[index] || mapRecords[po].Index < 0 {
-						mapRecords[po].Index++
+					if rl == repetitionLevels[index] || mapRec.Index < 0 {
+						mapRec.Index++
 					}
 
-					if mapRecords[po].Index >= len(mapRecords[po].KeyValues) {
-						mapRecords[po].KeyValues = append(mapRecords[po].KeyValues,
+					if mapRec.Index >= len(mapRec.KeyValues) {
+						mapRec.KeyValues = append(mapRec.KeyValues,
 							KeyValue{
-								Key:   reflect.New(po.Type().Key()).Elem(),
-								Value: reflect.New(po.Type().Elem()).Elem(),
+								Key:   reflect.New(poType.Key()).Elem(),
+								Value: reflect.New(poType.Elem()).Elem(),
 							})
 					}
 
 					if strings.ToLower(path[index+1]) == "key" {
-						po = mapRecords[po].KeyValues[mapRecords[po].Index].Key
+						po = mapRec.KeyValues[mapRec.Index].Key
 
 					} else {
-						po = mapRecords[po].KeyValues[mapRecords[po].Index].Value
+						po = mapRec.KeyValues[mapRec.Index].Value
 					}
 
 					index++
 					if definitionLevels[index] > dl {
-						break
+						break OuterLoop
 					}
 
-				} else if po.Type().Kind() == reflect.Ptr {
+				case reflect.Ptr:
 					if po.IsNil() {
-						po.Set(reflect.New(po.Type().Elem()))
+						po.Set(reflect.New(poType.Elem()))
 					}
 
 					po = po.Elem()
 
-				} else if po.Type().Kind() == reflect.Struct {
+				case reflect.Struct:
 					index++
 					if definitionLevels[index] > dl {
-						break
+						break OuterLoop
 					}
-					po = po.FieldByName(path[index])
+					name := path[index]
 
-				} else {
-					po.Set(reflect.ValueOf(val).Convert(po.Type()))
-					break
+					if prevType != poType || name != prevFieldName {
+						prevType = poType
+						prevFieldName = name
+						f, _  := prevType.FieldByName(name)
+						prevFieldIndex = f.Index
+					}
+					po = po.FieldByIndex(prevFieldIndex)
+
+				default:
+					value := reflect.ValueOf(val)
+					if po.Kind() != value.Kind() {
+						value = value.Convert(poType)
+					}
+					po.Set(value)
+					break OuterLoop
 				}
 			}
 		}
