@@ -1,7 +1,6 @@
 package reader
 
 import (
-	"context"
 	"encoding/binary"
 	"io"
 	"reflect"
@@ -144,7 +143,7 @@ func (pr *ParquetReader) ReadFooter() error {
 	pr.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
 	protocol := pf.GetProtocol(thrift.NewStreamTransportR(pr.PFile))
-	return pr.Footer.Read(context.TODO(), protocol)
+	return pr.Footer.Read(protocol)
 }
 
 //Skip rows of parquet file

@@ -2,7 +2,6 @@ package layout
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"math/bits"
@@ -272,7 +271,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
-	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
+	pageHeaderBuf, _ := ts.Write(page.Header)
 
 	res := append(pageHeaderBuf, dataEncodeBuf...)
 	page.RawData = res
@@ -362,7 +361,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
-	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
+	pageHeaderBuf, _ := ts.Write(page.Header)
 
 	var res []byte
 	res = append(res, pageHeaderBuf...)
@@ -625,7 +624,7 @@ func (p *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error {
 func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeader, error) {
 	protocol := thrift.NewTCompactProtocol(thriftReader)
 	pageHeader := parquet.NewPageHeader()
-	err := pageHeader.Read(context.TODO(), protocol)
+	err := pageHeader.Read(protocol)
 	return pageHeader, err
 }
 

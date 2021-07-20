@@ -1,7 +1,6 @@
 package writer
 
 import (
-	"context"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -140,7 +139,7 @@ func (pw *ParquetWriter) WriteStop() error {
 	idx := 0
 	for _, rowGroup := range pw.Footer.RowGroups {
 		for _, columnChunk := range rowGroup.Columns {
-			columnIndexBuf, err := ts.Write(context.TODO(), pw.ColumnIndexes[idx])
+			columnIndexBuf, err := ts.Write(pw.ColumnIndexes[idx])
 			if err != nil {
 				return err
 			}
@@ -163,7 +162,7 @@ func (pw *ParquetWriter) WriteStop() error {
 	idx = 0
 	for _, rowGroup := range pw.Footer.RowGroups {
 		for _, columnChunk := range rowGroup.Columns {
-			offsetIndexBuf, err := ts.Write(context.TODO(), pw.OffsetIndexes[idx])
+			offsetIndexBuf, err := ts.Write(pw.OffsetIndexes[idx])
 			if err != nil {
 				return err
 			}
@@ -182,7 +181,7 @@ func (pw *ParquetWriter) WriteStop() error {
 		}
 	}
 
-	footerBuf, err := ts.Write(context.TODO(), pw.Footer)
+	footerBuf, err := ts.Write(pw.Footer)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package layout
 
 import (
-	"context"
 	"math/bits"
 
 	"github.com/apache/thrift/lib/go/thrift"
@@ -61,7 +60,7 @@ func (page *Page) DictPageCompress(compressType parquet.CompressionCodec, pT par
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
-	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
+	pageHeaderBuf, _ := ts.Write(page.Header)
 
 	var res []byte
 	res = append(res, pageHeaderBuf...)
@@ -214,7 +213,7 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 
 	ts := thrift.NewTSerializer()
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
-	pageHeaderBuf, _ := ts.Write(context.TODO(), page.Header)
+	pageHeaderBuf, _ := ts.Write(page.Header)
 
 	var res []byte
 	res = append(res, pageHeaderBuf...)
