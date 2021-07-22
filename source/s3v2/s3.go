@@ -1,6 +1,6 @@
-package s3
+package s3v2
 
-//go:generate mockgen -destination=./mocks/mock_s3.go -package=mocks github.com/aws/aws-sdk-go/service/s3/s3iface S3API
+//go:generate mockgen -destination=./mocks/mock_s3.go -package=mocks github.com/xitongsys/parquet-go-source/s3v2 S3API
 
 import (
 	"context"
@@ -9,18 +9,26 @@ import (
 	"io"
 	"sync"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/xitongsys/parquet-go/source"
 )
+
+type S3API interface {
+	PutObject(context.Context, *s3.PutObjectInput, ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+	UploadPart(context.Context, *s3.UploadPartInput, ...func(*s3.Options)) (*s3.UploadPartOutput, error)
+	CreateMultipartUpload(context.Context, *s3.CreateMultipartUploadInput, ...func(*s3.Options)) (*s3.CreateMultipartUploadOutput, error)
+	CompleteMultipartUpload(context.Context, *s3.CompleteMultipartUploadInput, ...func(*s3.Options)) (*s3.CompleteMultipartUploadOutput, error)
+	AbortMultipartUpload(context.Context, *s3.AbortMultipartUploadInput, ...func(*s3.Options)) (*s3.AbortMultipartUploadOutput, error)
+	GetObject(context.Context, *s3.GetObjectInput, ...func(*s3.Options)) (*s3.GetObjectOutput, error)
+	HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error)
+}
 
 // S3File is ParquetFile for AWS S3
 type S3File struct {
 	ctx    context.Context
-	client s3iface.S3API
+	client S3API
 	offset int64
 	whence int
 
@@ -29,13 +37,13 @@ type S3File struct {
 	writeDone       chan error
 	pipeReader      *io.PipeReader
 	pipeWriter      *io.PipeWriter
-	uploader        *s3manager.Uploader
-	uploaderOptions []func(*s3manager.Uploader)
+	uploader        *manager.Uploader
+	uploaderOptions []func(*manager.Uploader)
 
 	// read-related fields
 	readOpened bool
 	fileSize   int64
-	downloader *s3manager.Downloader
+	downloader *manager.Downloader
 
 	lock       sync.RWMutex
 	err        error
@@ -52,48 +60,33 @@ var (
 	errWhence        = errors.New("Seek: invalid whence")
 	errInvalidOffset = errors.New("Seek: invalid offset")
 	errFailedUpload  = errors.New("Write: failed upload")
-	activeS3Session  *session.Session
-	sessLock         sync.Mutex
 )
-
-// SetActiveSession sets the current session. If this is unset, the functions
-// of this package will implicitly create a new session.Session and use that.
-// This allows you to control what session is used, particularly useful for
-// testing with a system like localstack.
-func SetActiveSession(sess *session.Session) {
-	sessLock.Lock()
-	activeS3Session = sess
-	sessLock.Unlock()
-}
 
 // NewS3FileWriter creates an S3 FileWriter, to be used with NewParquetWriter
 func NewS3FileWriter(
 	ctx context.Context,
 	bucket string,
 	key string,
-	uploaderOptions []func(*s3manager.Uploader),
+	uploaderOptions []func(*manager.Uploader),
 	cfgs ...*aws.Config,
 ) (source.ParquetFile, error) {
-	if activeS3Session == nil {
-		sessLock.Lock()
-		if activeS3Session == nil {
-			activeS3Session = session.Must(session.NewSession())
-		}
-		sessLock.Unlock()
-	}
-
 	return NewS3FileWriterWithClient(
-		ctx, s3.New(activeS3Session, cfgs...), bucket, key, uploaderOptions)
+		ctx,
+		s3.NewFromConfig(getConfig()),
+		bucket,
+		key,
+		uploaderOptions,
+	)
 }
 
 // NewS3FileWriterWithClient is the same as NewS3FileWriter but allows passing
 // your own S3 client.
 func NewS3FileWriterWithClient(
 	ctx context.Context,
-	s3Client s3iface.S3API,
+	s3Client S3API,
 	bucket string,
 	key string,
-	uploaderOptions []func(*s3manager.Uploader),
+	uploaderOptions []func(*manager.Uploader),
 ) (source.ParquetFile, error) {
 	file := &S3File{
 		ctx:             ctx,
@@ -109,21 +102,13 @@ func NewS3FileWriterWithClient(
 
 // NewS3FileReader creates an S3 FileReader, to be used with NewParquetReader
 func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (source.ParquetFile, error) {
-	if activeS3Session == nil {
-		sessLock.Lock()
-		if activeS3Session == nil {
-			activeS3Session = session.Must(session.NewSession())
-		}
-		sessLock.Unlock()
-	}
-
-	return NewS3FileReaderWithClient(ctx, s3.New(activeS3Session, cfgs...), bucket, key)
+	return NewS3FileReaderWithClient(ctx, s3.NewFromConfig(getConfig()), bucket, key)
 }
 
 // NewS3FileReaderWithClient is the same as NewS3FileReader but allows passing
 // your own S3 client
-func NewS3FileReaderWithClient(ctx context.Context, s3Client s3iface.S3API, bucket string, key string) (source.ParquetFile, error) {
-	s3Downloader := s3manager.NewDownloaderWithClient(s3Client)
+func NewS3FileReaderWithClient(ctx context.Context, s3Client S3API, bucket string, key string) (source.ParquetFile, error) {
+	s3Downloader := manager.NewDownloader(s3Client)
 
 	file := &S3File{
 		ctx:        ctx,
@@ -181,8 +166,8 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 		getObj.Range = aws.String(getObjRange)
 	}
 
-	wab := aws.NewWriteAtBuffer(p)
-	bytesDownloaded, err := s.downloader.DownloadWithContext(s.ctx, wab, getObj)
+	wab := manager.NewWriteAtBuffer(p)
+	bytesDownloaded, err := s.downloader.Download(s.ctx, wab, getObj)
 	if err != nil {
 		return 0, err
 	}
@@ -294,7 +279,7 @@ func (s *S3File) Create(key string) (source.ParquetFile, error) {
 // Calling Close signals write completion.
 func (s *S3File) openWrite() {
 	pr, pw := io.Pipe()
-	uploader := s3manager.NewUploaderWithClient(s.client, s.uploaderOptions...)
+	uploader := manager.NewUploader(s.client, s.uploaderOptions...)
 	s.lock.Lock()
 	s.pipeReader = pr
 	s.pipeWriter = pw
@@ -302,17 +287,17 @@ func (s *S3File) openWrite() {
 	s.uploader = uploader
 	s.lock.Unlock()
 
-	uploadParams := &s3manager.UploadInput{
+	uploadParams := &s3.PutObjectInput{
 		Bucket: aws.String(s.BucketName),
 		Key:    aws.String(s.Key),
 		Body:   s.pipeReader,
 	}
 
-	go func(uploader *s3manager.Uploader, params *s3manager.UploadInput, done chan error) {
+	go func(uploader *manager.Uploader, params *s3.PutObjectInput, done chan error) {
 		defer close(done)
 
 		// upload data and signal done when complete
-		_, err := uploader.UploadWithContext(s.ctx, params)
+		_, err := uploader.Upload(s.ctx, params)
 		if err != nil {
 			s.lock.Lock()
 			s.err = err
@@ -335,15 +320,15 @@ func (s *S3File) openRead() error {
 		Key:    aws.String(s.Key),
 	}
 
-	hoo, err := s.client.HeadObjectWithContext(s.ctx, hoi)
+	hoo, err := s.client.HeadObject(s.ctx, hoi)
 	if err != nil {
 		return err
 	}
 
 	s.lock.Lock()
 	s.readOpened = true
-	if hoo.ContentLength != nil {
-		s.fileSize = *hoo.ContentLength
+	if hoo.ContentLength != 0 {
+		s.fileSize = hoo.ContentLength
 	}
 	s.lock.Unlock()
 
