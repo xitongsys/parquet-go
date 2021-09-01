@@ -287,6 +287,7 @@ func (s *S3File) Create(key string) (source.ParquetFile, error) {
 		client:          s.client,
 		uploaderOptions: s.uploaderOptions,
 		BucketName:      s.BucketName,
+		ACL:             s.ACL,
 		Key:             key,
 		writeDone:       make(chan error),
 	}
