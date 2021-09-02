@@ -1,6 +1,7 @@
 package marshal
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"reflect"
@@ -55,8 +56,15 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 		node := nodeBuf.GetNode()
 		var ui interface{}
 
+		var d *json.Decoder
+
+		switch t := ss[i].(type) {
+		case string:
+			d = json.NewDecoder(strings.NewReader(t))
+		case []byte:
+			d = json.NewDecoder(bytes.NewReader(t))
+		}
 		// `useNumber`causes the Decoder to unmarshal a number into an interface{} as a Number instead of as a float64.
-		d := json.NewDecoder(strings.NewReader(ss[i].(string)))
 		d.UseNumber()
 		d.Decode(&ui)
 
