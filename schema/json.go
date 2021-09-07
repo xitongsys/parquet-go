@@ -46,7 +46,10 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 		ln := len(stack)
 		item := stack[ln-1]
 		stack = stack[:ln-1]
-		info := common.StringToTag(item.Tag)
+		info, err := common.StringToTag(item.Tag)
+		if err != nil {
+			return nil, fmt.Errorf("failed parse tag: %s", err.Error())
+		}
 		var newInfo *common.Tag
 		if info.Type == "" { //struct
 			schema := parquet.NewSchemaElement()
@@ -136,7 +139,10 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			stack = append(stack, item.Fields[0]) //put key
 
 		} else { //normal variable
-			schema := common.NewSchemaElementFromTagMap(info)
+			schema, err := common.NewSchemaElementFromTagMap(info)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
+			}
 			schemaElements = append(schemaElements, schema)
 
 			newInfo = common.NewTag()
