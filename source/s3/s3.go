@@ -41,6 +41,7 @@ type S3File struct {
 	err        error
 	BucketName string
 	Key        string
+	ACL        string
 }
 
 const (
@@ -71,6 +72,7 @@ func NewS3FileWriter(
 	ctx context.Context,
 	bucket string,
 	key string,
+	acl string,
 	uploaderOptions []func(*s3manager.Uploader),
 	cfgs ...*aws.Config,
 ) (source.ParquetFile, error) {
@@ -83,7 +85,7 @@ func NewS3FileWriter(
 	}
 
 	return NewS3FileWriterWithClient(
-		ctx, s3.New(activeS3Session, cfgs...), bucket, key, uploaderOptions)
+		ctx, s3.New(activeS3Session, cfgs...), bucket, key, acl, uploaderOptions)
 }
 
 // NewS3FileWriterWithClient is the same as NewS3FileWriter but allows passing
@@ -93,6 +95,7 @@ func NewS3FileWriterWithClient(
 	s3Client s3iface.S3API,
 	bucket string,
 	key string,
+	acl string,
 	uploaderOptions []func(*s3manager.Uploader),
 ) (source.ParquetFile, error) {
 	file := &S3File{
@@ -102,6 +105,7 @@ func NewS3FileWriterWithClient(
 		uploaderOptions: uploaderOptions,
 		BucketName:      bucket,
 		Key:             key,
+		ACL:             acl,
 	}
 
 	return file.Create(key)
@@ -283,6 +287,7 @@ func (s *S3File) Create(key string) (source.ParquetFile, error) {
 		client:          s.client,
 		uploaderOptions: s.uploaderOptions,
 		BucketName:      s.BucketName,
+		ACL:             s.ACL,
 		Key:             key,
 		writeDone:       make(chan error),
 	}
@@ -305,6 +310,7 @@ func (s *S3File) openWrite() {
 	uploadParams := &s3manager.UploadInput{
 		Bucket: aws.String(s.BucketName),
 		Key:    aws.String(s.Key),
+		ACL:    aws.String(s.ACL),
 		Body:   s.pipeReader,
 	}
 
