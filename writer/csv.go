@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/xitongsys/parquet-go-source/writerfile"
@@ -23,8 +24,12 @@ func NewCSVWriterFromWriter(md []string, w io.Writer, np int64) (*CSVWriter, err
 
 //Create CSV writer
 func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, error) {
+	var err error
 	res := new(CSVWriter)
-	res.SchemaHandler = schema.NewSchemaHandlerFromMetadata(md)
+	res.SchemaHandler, err = schema.NewSchemaHandlerFromMetadata(md)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create schema from metadata: %s", err.Error())
+	}
 	res.PFile = pfile
 	res.PageSize = 8 * 1024              //8K
 	res.RowGroupSize = 128 * 1024 * 1024 //128M
@@ -36,7 +41,7 @@ func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, 
 	res.Footer.Version = 1
 	res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	res.Offset = 4
-	_, err := res.PFile.Write([]byte("PAR1"))
+	_, err = res.PFile.Write([]byte("PAR1"))
 	res.MarshalFunc = marshal.MarshalCSV
 	return res, err
 }

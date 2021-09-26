@@ -282,7 +282,10 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 				}
 
 				newItem := NewItem()
-				newItem.Info = common.StringToTag(tagStr)
+				newItem.Info, err = common.StringToTag(tagStr)
+				if err != nil {
+					return nil, fmt.Errorf("failed parse tag: %s", err.Error())
+				}
 				newItem.Info.InName = f.Name
 				newItem.GoType = f.Type
 				if f.Type.Kind() == reflect.Ptr {
@@ -383,7 +386,10 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			stack = append(stack, newItem)
 
 		} else {
-			schema := common.NewSchemaElementFromTagMap(item.Info)
+			schema, err := common.NewSchemaElementFromTagMap(item.Info)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
+			}
 			schemaElements = append(schemaElements, schema)
 			newInfo = common.NewTag()
 			common.DeepCopy(item.Info, newInfo)

@@ -1,12 +1,14 @@
 package schema
 
 import (
+	"fmt"
+
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
 //Create a schema handler from CSV metadata
-func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
+func NewSchemaHandlerFromMetadata(mds []string) (*SchemaHandler, error) {
 	schemaList := make([]*parquet.SchemaElement, 0)
 	infos := make([]*common.Tag, 0)
 
@@ -25,14 +27,20 @@ func NewSchemaHandlerFromMetadata(mds []string) *SchemaHandler {
 	infos = append(infos, rootInfo)
 
 	for _, md := range mds {
-		info := common.StringToTag(md)
+		info, err := common.StringToTag(md)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse metadata: %s", err.Error())
+		}
 		infos = append(infos, info)
-		schema := common.NewSchemaElementFromTagMap(info)
+		schema, err := common.NewSchemaElementFromTagMap(info)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
+		}
 		//schema.RepetitionType = parquet.FieldRepetitionTypePtr(parquet.FieldRepetitionType_OPTIONAL)
 		schemaList = append(schemaList, schema)
 	}
 	res := NewSchemaHandlerFromSchemaList(schemaList)
 	res.Infos = infos
 	res.CreateInExMap()
-	return res
+	return res, nil
 }
