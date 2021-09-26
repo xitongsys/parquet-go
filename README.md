@@ -1,6 +1,6 @@
 # parquet-go
 
-[![Travis Status for xitongsys/parquet-go](https://travis-ci.org/xitongsys/parquet-go.svg?branch=master&label=linux+build)](https://travis-ci.org/xitongsys/parquet-go)
+[![Travis Status for xitongsys/parquet-go](https://app.travis-ci.com/xitongsys/parquet-go.svg?branch=master)](https://app.travis-ci.com/github/xitongsys/parquet-go)
 [![godoc for xitongsys/parquet-go](https://godoc.org/github.com/nathany/looper?status.svg)](http://godoc.org/github.com/xitongsys/parquet-go)
 
 parquet-go is a pure-go implementation of reading and writing the parquet format file.
