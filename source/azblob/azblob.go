@@ -116,7 +116,7 @@ func (s *AzBlockBlob) Read(p []byte) (n int, err error) {
 	}
 
 	count := int64(len(p))
-	resp, err := s.blockBlobURL.Download(s.ctx, s.offset, count, azblob.BlobAccessConditions{}, false)
+	resp, err := s.blockBlobURL.Download(s.ctx, s.offset, count, azblob.BlobAccessConditions{}, false, azblob.ClientProvidedKeyOptions{})
 	if err != nil {
 		return 0, err
 	}
@@ -188,7 +188,7 @@ func (s *AzBlockBlob) Open(URL string) (source.ParquetFile, error) {
 	blobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(s.credential, azblob.PipelineOptions{HTTPSender: s.readerOptions.HTTPSender, Retry: s.readerOptions.RetryOptions, Log: s.readerOptions.Log}))
 
 	fileSize := int64(-1)
-	props, err := blobURL.GetProperties(s.ctx, azblob.BlobAccessConditions{})
+	props, err := blobURL.GetProperties(s.ctx, azblob.BlobAccessConditions{}, azblob.ClientProvidedKeyOptions{})
 	if err != nil {
 		return &AzBlockBlob{}, err
 	}
