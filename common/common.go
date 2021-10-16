@@ -9,7 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/apache/arrow/go/arrow"
+	"github.com/apache/arrow/go/arrow/array"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/types"
 )
 
 // `parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`
@@ -988,4 +991,299 @@ func StrToPath(str string) []string {
 //Get the pathStr index in a path
 func PathStrIndex(str string) int {
 	return len(strings.Split(str, PAR_GO_PATH_DELIMITER))
+}
+
+// NewTable creates empty table with transposed columns and records
+func NewTable(rowLen, colLen int) [][]interface{} {
+	tableLen := make([]interface{}, rowLen*colLen)
+	// Need to reconsinder to avoid allocation and memcopy.
+	newTable := make([][]interface{}, rowLen)
+	lo, hi := 0, colLen
+	for i := range newTable {
+		newTable[i] = tableLen[lo:hi:hi]
+		lo, hi = hi, hi+colLen
+	}
+	return newTable
+}
+
+// TransposeTable transposes a table's rows and columns once per arrow record.
+// We need to transpose the rows and columns because parquet-go library writes
+// data row by row while the arrow library provides the data column by column.
+func TransposeTable(table [][]interface{}) [][]interface{} {
+	transposedTable := NewTable(len(table[0]), len(table))
+	for i := 0; i < len(transposedTable); i++ {
+		row := transposedTable[i]
+		for j := 0; j < len(row); j++ {
+			row[j] = table[j][i]
+		}
+	}
+	return transposedTable
+}
+
+// ArrowColToParquetCol creates column with native parquet values from column
+// with arrow values.
+//
+// If a single record is not valid by the arrow definitions we assign it
+// default value which we chose.
+func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
+	el *parquet.SchemaElement) []interface{} {
+	recs := make([]interface{}, len)
+	switch field.Type.(type) {
+	case *arrow.Int8Type:
+		arr := col.(*array.Int8)
+		var rec int8
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Int16Type:
+		arr := col.(*array.Int16)
+		var rec int16
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Int32Type:
+		arr := col.(*array.Int32)
+		var rec int32
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Int64Type:
+		arr := col.(*array.Int64)
+		var rec int64
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Uint8Type:
+		arr := col.(*array.Uint8)
+		var rec uint8
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Uint16Type:
+		arr := col.(*array.Uint16)
+		var rec uint16
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Uint32Type:
+		arr := col.(*array.Uint32)
+		var rec int32
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = int32(arr.Value(i))
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Uint64Type:
+		arr := col.(*array.Uint64)
+		var rec int64
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = int64(arr.Value(i))
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Float32Type:
+		arr := col.(*array.Float32)
+		var rec float32
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Float64Type:
+		arr := col.(*array.Float64)
+		var rec float64
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Date32Type:
+		arr := col.(*array.Date32)
+		var rec arrow.Date32
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Date64Type:
+		arr := col.(*array.Date64)
+		var rec arrow.Date64
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.BinaryType:
+		arr := col.(*array.Binary)
+		var rec []byte
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = []byte("")
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.StringType:
+		arr := col.(*array.String)
+		var rec string
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = ""
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.BooleanType:
+		arr := col.(*array.Boolean)
+		var rec bool
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = false
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.Time32Type:
+		arr := col.(*array.Time32)
+		var rec arrow.Time32
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	case *arrow.TimestampType:
+		arr := col.(*array.Timestamp)
+		var rec arrow.Timestamp
+		for i := 0; i < arr.Len(); i++ {
+			if arr.IsValid(i) {
+				rec = arr.Value(i)
+			} else {
+				rec = 0
+			}
+			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+				el.Type,
+				el.ConvertedType,
+				int(el.GetTypeLength()),
+				int(el.GetScale()))
+		}
+	}
+	return recs
 }

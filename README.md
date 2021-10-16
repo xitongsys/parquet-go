@@ -193,7 +193,7 @@ Using this interface, parquet-go can read/write parquet file on different platfo
 
 ## Writer
 
-Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
+Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter, ArrowWriter.
 
 * ParquetWriter is used to write predefined Golang structs.
 [Example of ParquetWriter](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
@@ -203,6 +203,9 @@ Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter.
 
 * CSVWriter is used to write data format similar with CSV(not nested)
 [Example of CSVWriter](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
+
+* ArrowWriter is used to write parquet files using Arrow Schemas
+[Example of ArrowWriter](https://github.com/xitongsys/parquet-go/blob/master/example/arrow_to_parquet.go)
 
 ## Reader
 
@@ -226,7 +229,7 @@ Two Readers are supported: ParquetReader, ColumnReader
 
 ## Schema
 
-There are three methods to define the schema: go struct tags, Json, CSV metadata. Only items in schema will be written and others will be ignored.
+There are three methods to define the schema: go struct tags, Json, CSV, Arrow metadata. Only items in schema will be written and others will be ignored.
 
 ### Tag
 
@@ -332,6 +335,21 @@ var jsonSchema string = `
 
 [Example of CSV metadata](https://github.com/xitongsys/parquet-go/blob/master/example/csv_write.go)
 
+### Arrow metadata
+
+```golang
+	schema := arrow.NewSchema(
+		[]arrow.Field{
+			{Name: "int64", Type: arrow.PrimitiveTypes.Int64},
+			{Name: "float64", Type: arrow.PrimitiveTypes.Float64},
+			{Name: "str", Type: arrow.BinaryTypes.String},
+		},
+		nil,
+	)
+```
+
+[Example of Arrow metadata](https://github.com/xitongsys/parquet-go/blob/master/example/arrow_to_parquet.go)
+
 ### Tips
 
 * Parquet-go reads data as an object in Golang and every field must be a public field, which start with an upper letter. This field name we call it `InName`. Field name in parquet file we call it `ExName`. Function `common.HeadToUpper` converts `ExName` to `InName`. There are some restriction:
@@ -348,6 +366,7 @@ func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) 
 func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error)
 func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*JSONWriter, error)
 func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error)
+func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile, np int64) (*ArrowWriter error)
 ```
 
 ## Examples
@@ -370,6 +389,7 @@ func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWri
 |[writer.go](https://github.com/xitongsys/parquet-go/blob/master/example/writer.go)|create ParquetWriter from io.Writer|
 |[keyvalue_metadata.go](https://github.com/xitongsys/parquet-go/blob/master/example/keyvalue_metadata.go)|write keyvalue metadata|
 |[dot_in_name.go](https://github.com/xitongsys/parquet-go/blob/master/example/dot_in_name.go)|`.` in filed name|
+|[arrow_to_parquet.go](https://github.com/xitongsys/parquet-go/blob/master/example/arrow_to_parquet.go)|write/read parquet file using arrow definition|
 
 
 
