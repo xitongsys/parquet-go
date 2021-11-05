@@ -29,6 +29,7 @@ func main() {
 	withPrettySize := flag.Bool("pretty", false, "show pretty size")
 	uncompressedSize := flag.Bool("uncompressed", false, "show uncompressed size")
 	catCount := flag.Int("count", 1000, "max count to cat. If it is nil, only show first 1000 records.")
+	skipCount := flag.Int64("skip", 0, "skip count with cat. If it is nil,skip 0 records.")
 	schemaFormat := flag.String("schema-format", "json", "schema format go/json (default to JSON schema)")
 
 	flag.Parse()
@@ -111,6 +112,12 @@ func main() {
 			cnt := *catCount - totCnt
 			if cnt > 1000 {
 				cnt = 1000
+			}
+			
+			err = pr.SkipRows(*skipCount)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Can't skip[: %s\n", err)
+				os.Exit(1)
 			}
 
 			res, err := pr.ReadByNumber(cnt)
