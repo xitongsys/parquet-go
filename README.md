@@ -40,7 +40,7 @@ There are two types in Parquet: Primitive Type and Logical Type. Logical types a
 |BOOLEAN|bool|
 |INT32|int32|
 |INT64|int64|
-|INT96|string|
+|INT96([deprecated](https://github.com/xitongsys/parquet-go/issues/420))|string|
 |FLOAT|float32|
 |DOUBLE|float64|
 |BYTE_ARRAY|string|
