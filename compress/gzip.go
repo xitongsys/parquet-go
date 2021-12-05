@@ -1,3 +1,4 @@
+//go:build !no_gzip
 // +build !no_gzip
 
 package compress
