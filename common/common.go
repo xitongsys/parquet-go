@@ -1026,7 +1026,8 @@ func TransposeTable(table [][]interface{}) [][]interface{} {
 // If a single record is not valid by the arrow definitions we assign it
 // default value which we chose.
 func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
-	el *parquet.SchemaElement) []interface{} {
+	el *parquet.SchemaElement) ([]interface{}, error) {
+	var err error
 	recs := make([]interface{}, len)
 	switch field.Type.(type) {
 	case *arrow.Int8Type:
@@ -1038,11 +1039,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Int16Type:
 		arr := col.(*array.Int16)
@@ -1053,11 +1057,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Int32Type:
 		arr := col.(*array.Int32)
@@ -1068,11 +1075,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Int64Type:
 		arr := col.(*array.Int64)
@@ -1083,11 +1093,15 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Uint8Type:
 		arr := col.(*array.Uint8)
@@ -1098,11 +1112,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Uint16Type:
 		arr := col.(*array.Uint16)
@@ -1113,11 +1130,15 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Uint32Type:
 		arr := col.(*array.Uint32)
@@ -1128,11 +1149,15 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Uint64Type:
 		arr := col.(*array.Uint64)
@@ -1143,11 +1168,15 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Float32Type:
 		arr := col.(*array.Float32)
@@ -1158,11 +1187,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Float64Type:
 		arr := col.(*array.Float64)
@@ -1173,11 +1205,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Date32Type:
 		arr := col.(*array.Date32)
@@ -1188,11 +1223,15 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Date64Type:
 		arr := col.(*array.Date64)
@@ -1203,11 +1242,15 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.BinaryType:
 		arr := col.(*array.Binary)
@@ -1218,11 +1261,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = []byte("")
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.StringType:
 		arr := col.(*array.String)
@@ -1233,11 +1279,15 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = ""
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.BooleanType:
 		arr := col.(*array.Boolean)
@@ -1248,11 +1298,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = false
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.Time32Type:
 		arr := col.(*array.Time32)
@@ -1263,11 +1316,14 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	case *arrow.TimestampType:
 		arr := col.(*array.Timestamp)
@@ -1278,12 +1334,15 @@ func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
 			} else {
 				rec = 0
 			}
-			recs[i] = types.StrToParquetType(fmt.Sprintf("%v", rec),
+			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
 				el.Type,
 				el.ConvertedType,
 				int(el.GetTypeLength()),
 				int(el.GetScale()))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
-	return recs
+	return recs, nil
 }

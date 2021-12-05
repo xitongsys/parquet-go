@@ -51,7 +51,8 @@ func TestStrToParquetType(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := fmt.Sprintf("%v", StrToParquetType(data.StrData, data.PT, data.CT, data.Length, data.Scale))
+		pt, _ := StrToParquetType(data.StrData, data.PT, data.CT, data.Length, data.Scale)
+		res := fmt.Sprintf("%v", pt)
 		expect := fmt.Sprintf("%v", data.GoData)
 		if res != expect {
 			t.Errorf("StrToParquetType err %v-%v, expect %s, got %s", data.PT, data.CT, expect, res)

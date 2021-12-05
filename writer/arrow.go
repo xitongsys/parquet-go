@@ -64,11 +64,16 @@ func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile,
 func (w *ArrowWriter) WriteArrow(record array.Record) error {
 	table := make([][]interface{}, 0)
 	for i, column := range record.Columns() {
-		columnFromRecord := common.ArrowColToParquetCol(
+		columnFromRecord, err := common.ArrowColToParquetCol(
 			record.Schema().Field(i),
 			column,
 			column.Len(),
 			w.SchemaHandler.SchemaElements[i+1])
+
+		if err != nil {
+			return err
+		}
+
 		if len(columnFromRecord) > 0 {
 			table = append(table, columnFromRecord)
 		}
