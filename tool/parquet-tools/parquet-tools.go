@@ -113,7 +113,7 @@ func main() {
 			if cnt > 1000 {
 				cnt = 1000
 			}
-			
+
 			err = pr.SkipRows(*skipCount)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Can't skip[: %s\n", err)

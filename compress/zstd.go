@@ -1,3 +1,4 @@
+//go:build !no_zstd
 // +build !no_zstd
 
 package compress

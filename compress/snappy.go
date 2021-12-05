@@ -1,3 +1,4 @@
+//go:build !no_snappy
 // +build !no_snappy
 
 package compress

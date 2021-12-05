@@ -1,3 +1,4 @@
+//go:build !no_lz4
 // +build !no_lz4
 
 package compress

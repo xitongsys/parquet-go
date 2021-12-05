@@ -115,7 +115,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 		for i := bgn; i < end; i++ {
 			rl, dl, val := table.RepetitionLevels[i], table.DefinitionLevels[i], table.Values[i]
 			po, index := root, prefixIndex
-OuterLoop:
+		OuterLoop:
 			for index < len(path) {
 				schemaIndex := schemaIndexs[index]
 				_, cT := schemaHandler.SchemaElements[schemaIndex].Type, schemaHandler.SchemaElements[schemaIndex].ConvertedType
@@ -173,7 +173,7 @@ OuterLoop:
 						po.Set(reflect.MakeMap(poType))
 					}
 
-					mapRec, ok := mapRecords[po];
+					mapRec, ok := mapRecords[po]
 					if !ok {
 						mapRec = &MapRecord{
 							KeyValues: []KeyValue{},
@@ -229,7 +229,7 @@ OuterLoop:
 					if prevType != poType || name != prevFieldName {
 						prevType = poType
 						prevFieldName = name
-						f, _  := prevType.FieldByName(name)
+						f, _ := prevType.FieldByName(name)
 						prevFieldIndex = f.Index
 					}
 					po = po.FieldByIndex(prevFieldIndex)
