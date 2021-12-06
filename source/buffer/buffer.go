@@ -42,7 +42,7 @@ func (bf BufferFile) Open(string) (source.ParquetFile, error) {
 }
 
 // Seek seeks in the underlying memory buffer.
-func (bf BufferFile) Seek(offset int64, whence int) (int64, error) {
+func (bf *BufferFile) Seek(offset int64, whence int) (int64, error) {
 	newLoc := bf.loc
 	switch whence {
 	case io.SeekStart:
@@ -67,7 +67,7 @@ func (bf BufferFile) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Read reads data form BufferFile into p.
-func (bf BufferFile) Read(p []byte) (n int, err error) {
+func (bf *BufferFile) Read(p []byte) (n int, err error) {
 	n = copy(p, bf.buff[bf.loc:len(bf.buff)])
 	bf.loc += n
 
