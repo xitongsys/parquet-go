@@ -37,4 +37,9 @@ func TestDECIMAL(t *testing.T) {
 		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a3, sa3)
 	}
 
+	a4, _ := StrToParquetType("-123.456", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 9, 3)
+	sa4 := DECIMAL_BYTE_ARRAY_ToString([]byte(a4.(string)), 9, 3)
+	if sa4 != "-123.456" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a4, sa4)
+	}
 }
