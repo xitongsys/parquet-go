@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -136,6 +137,10 @@ func DECIMAL_BYTE_ARRAY_ToString(dec []byte, precision int, scale int) string {
 
 	if scale > 0 {
 		ln := len(sa)
+		if ln < scale+1 {
+			sa = strings.Repeat("0", scale+1-ln) + sa
+			ln = scale + 1
+		}
 		sa = sa[:ln-scale] + "." + sa[ln-scale:]
 	}
 	return sign + sa
