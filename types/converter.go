@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -122,13 +123,25 @@ func DECIMAL_INT_ToString(dec int64, precision int, scale int) string {
 }
 
 func DECIMAL_BYTE_ARRAY_ToString(dec []byte, precision int, scale int) string {
+	sign := ""
+	if dec[0] > 0x7f {
+		sign = "-"
+		for i := range dec {
+			dec[i] = dec[i] ^ 0xff
+		}
+		dec[len(dec)-1] += 1
+	}
 	a := new(big.Int)
 	a.SetBytes(dec)
 	sa := a.Text(10)
 
 	if scale > 0 {
 		ln := len(sa)
+		if ln < scale+1 {
+			sa = strings.Repeat("0", scale+1-ln) + sa
+			ln = scale + 1
+		}
 		sa = sa[:ln-scale] + "." + sa[ln-scale:]
 	}
-	return sa
+	return sign + sa
 }

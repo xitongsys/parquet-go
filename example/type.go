@@ -129,6 +129,8 @@ func main() {
 		if err = pr.Read(&tps); err != nil {
 			log.Println("Read error", err)
 		}
+		tps[0].Decimal3 = types.DECIMAL_BYTE_ARRAY_ToString([]byte(tps[0].Decimal3), 10, 2)
+		tps[0].Decimal4 = types.DECIMAL_BYTE_ARRAY_ToString([]byte(tps[0].Decimal4), 20, 2)
 		log.Println(tps)
 	}
 	pr.ReadStop()
