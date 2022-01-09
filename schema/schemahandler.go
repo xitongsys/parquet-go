@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -234,6 +235,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			case string:
 				err = errors.New(x)
 			case error:
+				fmt.Printf("RECOVER PANIC FROM PARQUET-GO: %s: %s", x, debug.Stack())
 				err = x
 			default:
 				err = errors.New("error occurred")
