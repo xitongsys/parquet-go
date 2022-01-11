@@ -41,6 +41,7 @@ type S3File struct {
 	err        error
 	BucketName string
 	Key        string
+	VersionId  *string
 	ACL        string
 }
 
@@ -113,31 +114,13 @@ func NewS3FileWriterWithClient(
 
 // NewS3FileReader creates an S3 FileReader, to be used with NewParquetReader
 func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (source.ParquetFile, error) {
-	if activeS3Session == nil {
-		sessLock.Lock()
-		if activeS3Session == nil {
-			activeS3Session = session.Must(session.NewSession())
-		}
-		sessLock.Unlock()
-	}
-
-	return NewS3FileReaderWithClient(ctx, s3.New(activeS3Session, cfgs...), bucket, key)
+	return NewS3FileReaderVersioned(ctx, bucket, key, nil)
 }
 
 // NewS3FileReaderWithClient is the same as NewS3FileReader but allows passing
 // your own S3 client
 func NewS3FileReaderWithClient(ctx context.Context, s3Client s3iface.S3API, bucket string, key string) (source.ParquetFile, error) {
-	s3Downloader := s3manager.NewDownloaderWithClient(s3Client)
-
-	file := &S3File{
-		ctx:        ctx,
-		client:     s3Client,
-		downloader: s3Downloader,
-		BucketName: bucket,
-		Key:        key,
-	}
-
-	return file.Open(key)
+	return NewS3FileReaderVersionedWithClient(ctx, s3Client, bucket, key, nil)
 }
 
 // Seek tracks the offset for the next Read. Has no effect on Write.
@@ -178,8 +161,9 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 	numBytes := len(p)
 	getObjRange := s.getBytesRange(numBytes)
 	getObj := &s3.GetObjectInput{
-		Bucket: aws.String(s.BucketName),
-		Key:    aws.String(s.Key),
+		Bucket:    aws.String(s.BucketName),
+		Key:       aws.String(s.Key),
+		VersionId: s.VersionId,
 	}
 	if len(getObjRange) > 0 {
 		getObj.Range = aws.String(getObjRange)
@@ -273,6 +257,7 @@ func (s *S3File) Open(name string) (source.ParquetFile, error) {
 		downloader: s.downloader,
 		BucketName: s.BucketName,
 		Key:        name,
+		VersionId:  s.VersionId,
 		readOpened: s.readOpened,
 		fileSize:   s.fileSize,
 		offset:     0,
@@ -337,8 +322,9 @@ func (s *S3File) openWrite() {
 // tracks the file size
 func (s *S3File) openRead() error {
 	hoi := &s3.HeadObjectInput{
-		Bucket: aws.String(s.BucketName),
-		Key:    aws.String(s.Key),
+		Bucket:    aws.String(s.BucketName),
+		Key:       aws.String(s.Key),
+		VersionId: s.VersionId,
 	}
 
 	hoo, err := s.client.HeadObjectWithContext(s.ctx, hoi)
@@ -396,4 +382,34 @@ func (s *S3File) getBytesRange(numBytes int) string {
 
 	byteRange = fmt.Sprintf(rangeHeader, begin, end)
 	return byteRange
+}
+
+// NewS3FileReaderVersioned creates an S3 FileReader for a versioned of S3 object, to be used with NewParquetReader
+func NewS3FileReaderVersioned(ctx context.Context, bucket string, key string, version *string, cfgs ...*aws.Config) (source.ParquetFile, error) {
+	if activeS3Session == nil {
+		sessLock.Lock()
+		if activeS3Session == nil {
+			activeS3Session = session.Must(session.NewSession())
+		}
+		sessLock.Unlock()
+	}
+
+	return NewS3FileReaderVersionedWithClient(ctx, s3.New(activeS3Session, cfgs...), bucket, key, version)
+}
+
+// NewS3FileReaderVersionedWithClient is the same as NewS3FileReaderVersioned but allows passing
+// your own S3 client
+func NewS3FileReaderVersionedWithClient(ctx context.Context, s3Client s3iface.S3API, bucket string, key string, version *string) (source.ParquetFile, error) {
+	s3Downloader := s3manager.NewDownloaderWithClient(s3Client)
+
+	file := &S3File{
+		ctx:        ctx,
+		client:     s3Client,
+		downloader: s3Downloader,
+		BucketName: bucket,
+		Key:        key,
+		VersionId:  version,
+	}
+
+	return file.Open(key)
 }
