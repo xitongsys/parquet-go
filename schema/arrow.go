@@ -76,6 +76,10 @@ func ConvertArrowToParquetSchema(schema *arrow.Schema) ([]string, error) {
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate, v.Name,
 				parquet.Type_INT32, parquet.ConvertedType_TIME_MILLIS)
 		case arrow.FixedWidthTypes.Timestamp_ms.Name():
+			tsType := fieldType.(*arrow.TimestampType)
+			if tsType.Unit != arrow.Millisecond {
+				return nil, fmt.Errorf("Unsupported arrow format: %s", tsType.String())
+			}
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate, v.Name,
 				parquet.Type_INT64, parquet.ConvertedType_TIMESTAMP_MILLIS)
 		default:
