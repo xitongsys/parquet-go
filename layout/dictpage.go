@@ -5,6 +5,7 @@ import (
 	"math/bits"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/compress"
 	"github.com/xitongsys/parquet-go/encoding"
@@ -77,7 +78,8 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	res := make([]*Page, 0)
 	i := 0
 
-	pT, cT, logT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Schema.LogicalType, table.Info.OmitStats
+	info := table.Info
+	pT, cT, logT, omitStats, bloomFilter := table.Schema.Type, table.Schema.ConvertedType, table.Schema.LogicalType, info.OmitStats, info.BloomFilter
 
 	for i < totalLn {
 		j := i
@@ -91,6 +93,11 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 
 		funcTable := common.FindFuncTable(pT, cT, logT)
 
+		var filter *bloom.BloomFilter
+		if bloomFilter {
+			filter = bloom.NewWithEstimates(uint(info.BloomFilterItems), float64(info.BloomFilterFalsePositiveRate))
+		}
+
 		for j < totalLn && size < pageSize {
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
@@ -99,6 +106,9 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 					_, _, elSize = funcTable.MinMaxSize(nil, nil, table.Values[j])
 				} else {
 					minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
+				}
+				if bloomFilter {
+					filter.Add([]byte(table.Values[j].(string)))
 				}
 				size += elSize
 				if idx, ok := dictRec.DictMap[table.Values[j]]; ok {
@@ -136,6 +146,9 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 			page.MaxVal = maxVal
 			page.MinVal = minVal
 			page.NullCount = &nullCount
+		}
+		if bloomFilter {
+			page.Filter = filter
 		}
 		page.Schema = table.Schema
 		page.CompressType = compressType

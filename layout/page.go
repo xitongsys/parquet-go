@@ -8,6 +8,7 @@ import (
 	"math/bits"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/compress"
 	"github.com/xitongsys/parquet-go/encoding"
@@ -39,6 +40,9 @@ type Page struct {
 	Info *common.Tag
 
 	PageSize int32
+
+	//Bloom filter
+	Filter *bloom.BloomFilter
 }
 
 //Create a new page
@@ -73,7 +77,8 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
 	i := 0
-	pT, cT, logT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Schema.LogicalType, table.Info.OmitStats
+	info := table.Info
+	pT, cT, logT, omitStats, bloomFilter := table.Schema.Type, table.Schema.ConvertedType, table.Schema.LogicalType, info.OmitStats, info.BloomFilter
 
 	for i < totalLn {
 		j := i + 1
@@ -86,6 +91,11 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 
 		funcTable := common.FindFuncTable(pT, cT, logT)
 
+		var filter *bloom.BloomFilter
+		if bloomFilter {
+			filter = bloom.NewWithEstimates(uint(info.BloomFilterItems), float64(info.BloomFilterFalsePositiveRate))
+		}
+
 		for j < totalLn && size < pageSize {
 			if table.DefinitionLevels[j] == table.MaxDefinitionLevel {
 				numValues++
@@ -94,6 +104,9 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 					_, _, elSize = funcTable.MinMaxSize(nil, nil, table.Values[j])
 				} else {
 					minVal, maxVal, elSize = funcTable.MinMaxSize(minVal, maxVal, table.Values[j])
+				}
+				if bloomFilter {
+					filter.Add([]byte(table.Values[j].(string)))
 				}
 				size += elSize
 			}
@@ -120,6 +133,9 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 			page.MaxVal = maxVal
 			page.MinVal = minVal
 			page.NullCount = &nullCount
+		}
+		if bloomFilter {
+			page.Filter = filter
 		}
 		page.Schema = table.Schema
 		page.CompressType = compressType

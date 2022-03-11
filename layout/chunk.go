@@ -2,6 +2,7 @@ package layout
 
 import (
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/encoding"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -12,6 +13,7 @@ import (
 type Chunk struct {
 	Pages       []*Page
 	ChunkHeader *parquet.ColumnChunk
+	BloomFilter *bloom.BloomFilter
 }
 
 //Convert several pages to one chunk
@@ -24,8 +26,14 @@ func PagesToChunk(pages []*Page) *Chunk {
 	var maxVal interface{} = pages[0].MaxVal
 	var minVal interface{} = pages[0].MinVal
 	var nullCount int64 = 0
-	pT, cT, logT, omitStats := pages[0].Schema.Type, pages[0].Schema.ConvertedType, pages[0].Schema.LogicalType, pages[0].Info.OmitStats
+	info := pages[0].Info
+	pT, cT, logT, omitStats, bloomFilter := pages[1].Schema.Type, pages[1].Schema.ConvertedType, pages[1].Schema.LogicalType, info.OmitStats, info.BloomFilter
 	funcTable := common.FindFuncTable(pT, cT, logT)
+
+	var filter *bloom.BloomFilter
+	if bloomFilter {
+		filter = bloom.NewWithEstimates(uint(info.BloomFilterItems), float64(info.BloomFilterFalsePositiveRate))
+	}
 
 	for i := 0; i < ln; i++ {
 		if pages[i].Header.DataPageHeader != nil {
@@ -40,11 +48,16 @@ func PagesToChunk(pages []*Page) *Chunk {
 			maxVal = common.Max(funcTable, maxVal, pages[i].MaxVal)
 			nullCount += *pages[i].NullCount
 		}
+		if bloomFilter {
+			filter.Merge(pages[i].Filter)
+			// TODO handle error
+		}
 	}
 
 	chunk := new(Chunk)
 	chunk.Pages = pages
 	chunk.ChunkHeader = parquet.NewColumnChunk()
+	chunk.BloomFilter = filter
 	metaData := parquet.NewColumnMetaData()
 	metaData.Type = *pages[0].Schema.Type
 	metaData.Encodings = append(metaData.Encodings, parquet.Encoding_RLE)
@@ -91,8 +104,14 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	var maxVal interface{} = pages[1].MaxVal
 	var minVal interface{} = pages[1].MinVal
 	var nullCount int64 = 0
-	pT, cT, logT, omitStats := pages[1].Schema.Type, pages[1].Schema.ConvertedType, pages[1].Schema.LogicalType, pages[0].Info.OmitStats
+	info := pages[0].Info
+	pT, cT, logT, omitStats, bloomFilter := pages[1].Schema.Type, pages[1].Schema.ConvertedType, pages[1].Schema.LogicalType, info.OmitStats, info.BloomFilter
 	funcTable := common.FindFuncTable(pT, cT, logT)
+
+	var filter *bloom.BloomFilter
+	if bloomFilter {
+		filter = bloom.NewWithEstimates(uint(info.BloomFilterItems), float64(info.BloomFilterFalsePositiveRate))
+	}
 
 	for i := 0; i < len(pages); i++ {
 		if pages[i].Header.DataPageHeader != nil {
@@ -106,6 +125,10 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 			minVal = common.Min(funcTable, minVal, pages[i].MinVal)
 			maxVal = common.Max(funcTable, maxVal, pages[i].MaxVal)
 			nullCount += *pages[i].NullCount
+		}
+		if bloomFilter {
+			filter.Merge(pages[i].Filter)
+			// TODO handle error
 		}
 	}
 

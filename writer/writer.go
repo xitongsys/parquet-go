@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"errors"
@@ -9,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/xitongsys/parquet-go-source/writerfile"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
@@ -17,6 +19,11 @@ import (
 	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/source"
 )
+
+type ColumnBloomFilter struct {
+	header *parquet.BloomFilterHeader
+	filter *bloom.BloomFilter
+}
 
 //ParquetWriter is a writer  parquet file
 type ParquetWriter struct {
@@ -41,8 +48,9 @@ type ParquetWriter struct {
 
 	DictRecs map[string]*layout.DictRecType
 
-	ColumnIndexes []*parquet.ColumnIndex
-	OffsetIndexes []*parquet.OffsetIndex
+	ColumnBloomFilters []*bloom.BloomFilter
+	ColumnIndexes      []*parquet.ColumnIndex
+	OffsetIndexes      []*parquet.OffsetIndex
 
 	MarshalFunc func(src []interface{}, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
 }
@@ -71,6 +79,7 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.DictRecs = make(map[string]*layout.DictRecType)
 	res.Footer = parquet.NewFileMetaData()
 	res.Footer.Version = 1
+	res.ColumnBloomFilters = make([]*bloom.BloomFilter, 0)
 	res.ColumnIndexes = make([]*parquet.ColumnIndex, 0)
 	res.OffsetIndexes = make([]*parquet.OffsetIndex, 0)
 	//include the createdBy to avoid
@@ -136,8 +145,49 @@ func (pw *ParquetWriter) WriteStop() error {
 	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
 	pw.RenameSchema()
 
-	// write ColumnIndex
+	// write BloomFilter
 	idx := 0
+	for _, rowGroup := range pw.Footer.RowGroups {
+		for _, columnChunk := range rowGroup.Columns {
+			columnBloomFilter := pw.ColumnBloomFilters[idx]
+			if columnBloomFilter == nil {
+				continue
+			}
+
+			bitSetBuf := bytes.NewBuffer([]byte{})
+			bitSetBufSize, err := columnBloomFilter.WriteTo(bitSetBuf)
+			if err != nil {
+				return err
+			}
+			numBytes := int32(bitSetBufSize)
+
+			bloomFilterHeader := &parquet.BloomFilterHeader{
+				NumBytes: numBytes,
+			}
+
+			bloomFilterHeaderBuf, err := ts.Write(context.TODO(), bloomFilterHeader)
+			if err != nil {
+				return err
+			}
+			if _, err = pw.PFile.Write(bloomFilterHeaderBuf); err != nil {
+				return err
+			}
+			if _, err = pw.PFile.Write(bitSetBuf.Bytes()); err != nil {
+				return err
+			}
+
+			idx++
+
+			pos := pw.Offset
+			columnChunk.MetaData.BloomFilterOffset = &pos
+			bloomFilterSize := int32(len(bloomFilterHeaderBuf)) + numBytes
+
+			pw.Offset += int64(bloomFilterSize)
+		}
+	}
+
+	// write ColumnIndex
+	idx = 0
 	for _, rowGroup := range pw.Footer.RowGroups {
 		for _, columnChunk := range rowGroup.Columns {
 			columnIndexBuf, err := ts.Write(context.TODO(), pw.ColumnIndexes[idx])
@@ -390,6 +440,9 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 
 			pageCount := len(rowGroup.Chunks[k].Pages)
 
+			//add BloomFilter
+			pw.ColumnBloomFilters = append(pw.ColumnBloomFilters, rowGroup.Chunks[k].BloomFilter)
+
 			//add ColumnIndex
 			columnIndex := parquet.NewColumnIndex()
 			columnIndex.NullPages = make([]bool, pageCount)
@@ -457,6 +510,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 		pw.Size = 0
 		pw.PagesMapBuf = make(map[string][]*layout.Page)
 	}
+
 	pw.Footer.NumRows += int64(len(pw.Objs))
 	pw.Objs = pw.Objs[:0]
 	pw.ObjsSize = 0

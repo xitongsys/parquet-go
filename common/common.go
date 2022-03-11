@@ -63,6 +63,10 @@ type Tag struct {
 	LogicalTypeFields      map[string]string
 	KeyLogicalTypeFields   map[string]string
 	ValueLogicalTypeFields map[string]string
+
+	BloomFilter                  bool
+	BloomFilterItems             int32
+	BloomFilterFalsePositiveRate float32
 }
 
 func NewTag() *Tag {
@@ -184,6 +188,18 @@ func StringToTag(tag string) (*Tag, error) {
 		case "valueomitstats":
 			if mp.ValueOmitStats, err = Str2Bool(val); err != nil {
 				return nil, fmt.Errorf("failed to parse valueomitstats: %s", err.Error())
+			}
+		case "bloomfilter":
+			if mp.BloomFilter, err = Str2Bool(val); err != nil {
+				return nil, fmt.Errorf("failed to parse bloomfilter: %s", err.Error())
+			}
+		case "bloomfilteritems":
+			if mp.BloomFilterItems, err = Str2Int32(val); err != nil {
+				return nil, fmt.Errorf("failed to parse bloomfilteritems: %s", err.Error())
+			}
+		case "bloomfilterfalsepositiverate":
+			if mp.BloomFilterFalsePositiveRate, err = Str2Float32(val); err != nil {
+				return nil, fmt.Errorf("failed to parse bloomfilterfalsepositiverate: %s", err.Error())
 			}
 		case "repetitiontype":
 			switch strings.ToLower(val) {
@@ -762,6 +778,14 @@ func Str2Bool(val string) (bool, error) {
 		return false, err
 	}
 	return valBoolean, nil
+}
+
+func Str2Float32(val string) (float32, error) {
+	valFloat, err := strconv.ParseFloat(val, 32)
+	if err != nil {
+		return 0, err
+	}
+	return float32(valFloat), nil
 }
 
 type FuncTable interface {
