@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/apache/arrow/go/arrow"
 	"github.com/apache/arrow/go/arrow/array"
@@ -24,6 +25,7 @@ func main() {
 			{Name: "int64", Type: arrow.PrimitiveTypes.Int64},
 			{Name: "float64", Type: arrow.PrimitiveTypes.Float64},
 			{Name: "str", Type: arrow.BinaryTypes.String},
+			{Name: "ts_ms", Type: arrow.FixedWidthTypes.Timestamp_ms},
 		},
 		nil,
 	)
@@ -43,6 +45,9 @@ func main() {
 			b.Field(idx).(*array.StringBuilder).AppendValues(
 				[]string{"a", "b", "c"}, nil,
 			)
+		case 3:
+			n := arrow.Timestamp(time.Now().UnixMilli())
+			b.Field(idx).(*array.TimestampBuilder).AppendValues([]arrow.Timestamp{n, n, n}, nil)
 		}
 	}
 	rec := b.NewRecord()
