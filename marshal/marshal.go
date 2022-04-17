@@ -1,7 +1,6 @@
 package marshal
 
 import (
-	"errors"
 	"reflect"
 
 	"github.com/xitongsys/parquet-go/common"
@@ -225,19 +224,6 @@ func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node) []
 
 //Convert the objects to table map. srcInterface is a slice of objects
 func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("unkown error")
-			}
-		}
-	}()
-
 	src := reflect.ValueOf(srcInterface)
 	res := setupTableMap(schemaHandler, len(srcInterface))
 	pathMap := schemaHandler.PathMap
