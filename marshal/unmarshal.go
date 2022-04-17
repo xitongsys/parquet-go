@@ -236,7 +236,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 
 				default:
 					value := reflect.ValueOf(val)
-					if po.Kind() != value.Kind() {
+					if po.Type() != value.Type() {
 						value = value.Convert(poType)
 					}
 					po.Set(value)
