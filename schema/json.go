@@ -2,7 +2,6 @@ package schema
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/xitongsys/parquet-go/common"
@@ -19,19 +18,6 @@ func NewJSONSchemaItem() *JSONSchemaItemType {
 }
 
 func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("unknown error")
-			}
-		}
-	}()
-
 	schema := NewJSONSchemaItem()
 	if err := json.Unmarshal([]byte(str), schema); err != nil {
 		return nil, fmt.Errorf("error in unmarshalling json schema string: %v", err.Error())
