@@ -90,8 +90,7 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 				} else {
 					PFile, _ = PFile.Open("")
 				}
-				size := columnChunks[i].MetaData.GetTotalCompressedSize()
-				thriftReader := source.ConvertToThriftReader(PFile, offset, size)
+				thriftReader := source.ConvertToThriftReader(PFile, offset)
 				chunk, _ := ReadChunk(thriftReader, schemaHandler, columnChunks[i])
 				chunksList[index] = append(chunksList[index], chunk)
 				PFile.Close()
