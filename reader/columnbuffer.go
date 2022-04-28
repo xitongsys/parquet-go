@@ -92,12 +92,11 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 		offset = *columnChunks[i].MetaData.DictionaryPageOffset
 	}
 
-	size := columnChunks[i].MetaData.GetTotalCompressedSize()
 	if cbt.ThriftReader != nil {
 		cbt.ThriftReader.Close()
 	}
 
-	cbt.ThriftReader = source.ConvertToThriftReader(cbt.PFile, offset, size)
+	cbt.ThriftReader = source.ConvertToThriftReader(cbt.PFile, offset)
 	cbt.ChunkReadValues = 0
 	cbt.DictPage = nil
 	return nil
