@@ -143,7 +143,9 @@ func (pr *ParquetReader) ReadFooter() error {
 	}
 	pr.Footer = parquet.NewFileMetaData()
 	pf := thrift.NewTCompactProtocolFactory()
-	protocol := pf.GetProtocol(thrift.NewStreamTransportR(pr.PFile))
+	thriftReader := thrift.NewStreamTransportR(pr.PFile)
+	bufferReader := thrift.NewTBufferedTransport(thriftReader, int(size))
+	protocol := pf.GetProtocol(bufferReader)
 	return pr.Footer.Read(context.TODO(), protocol)
 }
 
