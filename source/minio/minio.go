@@ -1,4 +1,4 @@
-package s3
+package minio
 
 import (
 	"context"
@@ -28,11 +28,6 @@ type MinioFile struct {
 	BucketName string
 	Key        string
 }
-
-const (
-	rangeHeader       = "bytes=%d-%d"
-	rangeHeaderSuffix = "bytes=%d"
-)
 
 var (
 	errWhence        = errors.New("Seek: invalid whence")
