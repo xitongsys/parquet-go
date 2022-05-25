@@ -230,6 +230,10 @@ func (cbt *ColumnBufferType) SkipRows(num int64) int64 {
 }
 
 func (cbt *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64) {
+	if cbt.Footer.NumRows == 0 {
+		return &layout.Table{}, 0
+	}
+
 	var err error
 
 	for cbt.DataTableNumRows < num && err == nil {
