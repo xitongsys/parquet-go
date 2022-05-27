@@ -33,12 +33,13 @@ type S3File struct {
 	whence int
 
 	// write-related fields
-	writeOpened     bool
-	writeDone       chan error
-	pipeReader      *io.PipeReader
-	pipeWriter      *io.PipeWriter
-	uploader        *manager.Uploader
-	uploaderOptions []func(*manager.Uploader)
+	writeOpened           bool
+	writeDone             chan error
+	pipeReader            *io.PipeReader
+	pipeWriter            *io.PipeWriter
+	uploader              *manager.Uploader
+	uploaderOptions       []func(*manager.Uploader)
+	putObjectInputOptions []func(*s3.PutObjectInput)
 
 	// read-related fields
 	readOpened bool
@@ -87,14 +88,16 @@ func NewS3FileWriterWithClient(
 	bucket string,
 	key string,
 	uploaderOptions []func(*manager.Uploader),
+	putObjectInputOptions ...func(*s3.PutObjectInput),
 ) (source.ParquetFile, error) {
 	file := &S3File{
-		ctx:             ctx,
-		client:          s3Client,
-		writeDone:       make(chan error),
-		uploaderOptions: uploaderOptions,
-		BucketName:      bucket,
-		Key:             key,
+		ctx:                   ctx,
+		client:                s3Client,
+		writeDone:             make(chan error),
+		uploaderOptions:       uploaderOptions,
+		putObjectInputOptions: putObjectInputOptions,
+		BucketName:            bucket,
+		Key:                   key,
 	}
 
 	return file.Create(key)
@@ -264,12 +267,13 @@ func (s *S3File) Open(name string) (source.ParquetFile, error) {
 // Create creates a new S3 File instance to perform writes
 func (s *S3File) Create(key string) (source.ParquetFile, error) {
 	pf := &S3File{
-		ctx:             s.ctx,
-		client:          s.client,
-		uploaderOptions: s.uploaderOptions,
-		BucketName:      s.BucketName,
-		Key:             key,
-		writeDone:       make(chan error),
+		ctx:                   s.ctx,
+		client:                s.client,
+		uploaderOptions:       s.uploaderOptions,
+		putObjectInputOptions: s.putObjectInputOptions,
+		BucketName:            s.BucketName,
+		Key:                   key,
+		writeDone:             make(chan error),
 	}
 	pf.openWrite()
 	return pf, nil
@@ -291,6 +295,10 @@ func (s *S3File) openWrite() {
 		Bucket: aws.String(s.BucketName),
 		Key:    aws.String(s.Key),
 		Body:   s.pipeReader,
+	}
+
+	for _, f := range s.putObjectInputOptions {
+		f(uploadParams)
 	}
 
 	go func(uploader *manager.Uploader, params *s3.PutObjectInput, done chan error) {
