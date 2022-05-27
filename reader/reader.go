@@ -21,7 +21,7 @@ type ParquetReader struct {
 	SchemaHandler *schema.SchemaHandler
 	NP            int64 //parallel number
 	Footer        *parquet.FileMetaData
-	PFile         source.ParquetFile
+	PFile         source.ParquetFileR
 
 	ColumnBuffers map[string]*ColumnBufferType
 
@@ -31,7 +31,7 @@ type ParquetReader struct {
 }
 
 //Create a parquet reader: obj is a object with schema tags or a JSON schema string
-func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
+func NewParquetReader(pFile source.ParquetFileR, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
 	res := new(ParquetReader)
 	res.NP = np

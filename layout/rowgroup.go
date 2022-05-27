@@ -42,7 +42,7 @@ func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
 }
 
 //Read one RowGroup from parquet file (Deprecated)
-func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, schemaHandler *schema.SchemaHandler, NP int64) (*RowGroup, error) {
+func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFileR, schemaHandler *schema.SchemaHandler, NP int64) (*RowGroup, error) {
 	var err error
 	rowGroup := new(RowGroup)
 	rowGroup.RowGroupHeader = rowGroupHeader

@@ -56,7 +56,7 @@ func main() {
 		uri.Scheme = "file"
 	}
 
-	var fr source.ParquetFile
+	var fr source.ParquetFileR
 	switch uri.Scheme {
 	case "s3":
 		// determine S3 bucket's region

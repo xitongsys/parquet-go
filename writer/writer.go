@@ -23,7 +23,7 @@ type ParquetWriter struct {
 	SchemaHandler *schema.SchemaHandler
 	NP            int64 //parallel number
 	Footer        *parquet.FileMetaData
-	PFile         source.ParquetFile
+	PFile         source.ParquetFileW
 
 	PageSize        int64
 	RowGroupSize    int64
@@ -53,7 +53,7 @@ func NewParquetWriterFromWriter(w io.Writer, obj interface{}, np int64) (*Parque
 }
 
 //Create a parquet handler. Obj is a object with tags or JSON schema string.
-func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
+func NewParquetWriter(pFile source.ParquetFileW, obj interface{}, np int64) (*ParquetWriter, error) {
 	var err error
 
 	res := new(ParquetWriter)

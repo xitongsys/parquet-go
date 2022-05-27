@@ -176,16 +176,19 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 
 ## ParquetFile
 
-Read/Write a parquet file need a ParquetFile interface implemented
+Reading or writing a parquet file requires an implementation of the ParquetFileR or ParquetFileW interface.
 
 ```golang
-type ParquetFile interface {
+type ParquetFileR interface {
 	io.Seeker
 	io.Reader
+	io.Closer
+	Open(name string) (ParquetReadFile, error)
+}
+
+type ParquetFileW interface {
 	io.Writer
 	io.Closer
-	Open(name string) (ParquetFile, error)
-	Create(name string) (ParquetFile, error)
 }
 ```
 
@@ -362,11 +365,11 @@ var jsonSchema string = `
 Marshal/Unmarshal is the most time consuming process in writing/reading. To improve the performance, parquet-go can use multiple goroutines to marshal/unmarshal the objects. You can set the concurrent number parameter `np` in the Read/Write initial functions.
 
 ```golang
-func NewParquetReader(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetReader, error)
-func NewParquetWriter(pFile ParquetFile.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error)
-func NewJSONWriter(jsonSchema string, pfile ParquetFile.ParquetFile, np int64) (*JSONWriter, error)
-func NewCSVWriter(md []string, pfile ParquetFile.ParquetFile, np int64) (*CSVWriter, error)
-func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile, np int64) (*ArrowWriter error)
+func NewParquetReader(pFile source.ParquetFileR, obj interface{}, np int64) (*ParquetReader, error)
+func NewParquetWriter(pFile source.ParquetFileW, obj interface{}, np int64) (*ParquetWriter, error)
+func NewJSONWriter(jsonSchema string, pfile source.ParquetFileW, np int64) (*JSONWriter, error)
+func NewCSVWriter(md []string, pfile source.ParquetFileW, np int64) (*CSVWriter, error)
+func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFileW, np int64) (*ArrowWriter error)
 ```
 
 ## Examples

@@ -23,7 +23,7 @@ func NewCSVWriterFromWriter(md []string, w io.Writer, np int64) (*CSVWriter, err
 }
 
 //Create CSV writer
-func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, error) {
+func NewCSVWriter(md []string, pfile source.ParquetFileW, np int64) (*CSVWriter, error) {
 	var err error
 	res := new(CSVWriter)
 	res.SchemaHandler, err = schema.NewSchemaHandlerFromMetadata(md)

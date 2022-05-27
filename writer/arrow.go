@@ -29,7 +29,7 @@ type ArrowWriter struct {
 //arrow schema, parquet file writer which contains the parquet file in
 //which we will write the record along with the number of parallel threads
 //which will write in the file.
-func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile,
+func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFileW,
 	np int64) (*ArrowWriter, error) {
 	var err error
 	res := new(ArrowWriter)

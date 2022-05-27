@@ -8,7 +8,8 @@ import (
 )
 
 // NewParquetColumnReader creates a parquet column reader
-func NewParquetColumnReader(pFile source.ParquetFile, np int64) (*ParquetReader, error) {
+func NewParquetColumnReader(pFile source.ParquetFileR, np int64) (*ParquetReader,
+	error) {
 	res := new(ParquetReader)
 	res.NP = np
 	res.PFile = pFile

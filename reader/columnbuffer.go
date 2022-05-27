@@ -13,7 +13,7 @@ import (
 )
 
 type ColumnBufferType struct {
-	PFile        source.ParquetFile
+	PFile        source.ParquetFileR
 	ThriftReader *thrift.TBufferedTransport
 
 	Footer        *parquet.FileMetaData
@@ -31,7 +31,7 @@ type ColumnBufferType struct {
 	DataTableNumRows int64
 }
 
-func NewColumnBuffer(pFile source.ParquetFile, footer *parquet.FileMetaData, schemaHandler *schema.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
+func NewColumnBuffer(pFile source.ParquetFileR, footer *parquet.FileMetaData, schemaHandler *schema.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
 	newPFile, err := pFile.Open("")
 	if err != nil {
 		return nil, err
