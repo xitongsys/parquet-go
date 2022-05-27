@@ -3,6 +3,7 @@ package reader
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"reflect"
 	"strings"
@@ -192,6 +193,63 @@ func (pr *ParquetReader) SkipRows(num int64) error {
 	for i := int64(0); i < pr.NP; i++ {
 		stopChan <- 0
 	}
+	return err
+}
+
+func (pr *ParquetReader) SeekRowGroup(index int) error {
+	var err error
+	if ln := len(pr.Footer.RowGroups); index < 0 || index >= ln {
+		return fmt.Errorf("index must be in range [0,%v)", ln)
+	}
+
+	for _, pathStr := range pr.SchemaHandler.ValueColumns {
+		if _, ok := pr.ColumnBuffers[pathStr]; !ok {
+			if pr.ColumnBuffers[pathStr], err = NewColumnBuffer(pr.PFile, pr.Footer, pr.SchemaHandler, pathStr); err != nil {
+				return err
+			}
+		}
+	}
+
+	index++ // Column buffers use 1-indexing.
+
+	var wg sync.WaitGroup
+	taskChan := make(chan string, len(pr.SchemaHandler.ValueColumns))
+	for key, _ := range pr.ColumnBuffers {
+		taskChan <- key
+	}
+
+	np := int(pr.NP)
+	errors := make([]error, np)
+	wg.Add(np)
+	for i := 0; i < np; i++ {
+		go func(i int) {
+			defer wg.Done()
+			for {
+				select {
+				default:
+					return
+				case pathStr := <-taskChan:
+					cb := pr.ColumnBuffers[pathStr]
+					err := cb.SeekRowGroup(int64(index))
+					if err != nil {
+						errors[i] = err
+						return
+					}
+					// Clear data so next reads will go straight to the new offset.
+					cb.DataTable = layout.NewTableFromTable(cb.DataTable)
+					cb.DataTableNumRows = 0
+				}
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	for _, e := range errors {
+		if e != nil {
+			return e
+		}
+	}
+
 	return err
 }
 
