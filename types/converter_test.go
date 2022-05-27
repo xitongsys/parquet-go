@@ -60,4 +60,22 @@ func TestDECIMAL(t *testing.T) {
 	if sa7 != "0.1234" {
 		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a7, sa7)
 	}
+
+	a8, _ := StrToParquetType("-12.345", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 0, 3)
+	sa8 := DECIMAL_INT_ToString(int64(a8.(int32)), 0, 3)
+	if sa8 != "-12.345" {
+		t.Error("DECIMAL_INT_ToString error: ", a8, sa8)
+	}
+
+	a9, _ := StrToParquetType("-0.001", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 0, 3)
+	sa9 := DECIMAL_INT_ToString(int64(a9.(int32)), 0, 3)
+	if sa9 != "-0.001" {
+		t.Error("DECIMAL_INT_ToString error: ", a9, sa9)
+	}
+
+	a10, _ := StrToParquetType("0.0001", parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 0, 4)
+	sa10 := DECIMAL_INT_ToString(int64(a10.(int32)), 0, 4)
+	if sa10 != "0.0001" {
+		t.Error("DECIMAL_INT_ToString error: ", a10, sa10)
+	}
 }
