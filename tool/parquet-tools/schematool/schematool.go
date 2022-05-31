@@ -146,6 +146,10 @@ func (n *Node) OutputJsonSchema() string {
 				res += fmt.Sprintf(tagStr, name, pTStr, cTStr, scale, precision, rTStr) + "}"
 			}
 
+		} else if cT != nil && *cT == parquet.ConvertedType_INTERVAL {
+			tagStr := "\"name=%s, type=%s, convertedtype=%s, length=12, repetitiontype=%s\""
+			res += fmt.Sprintf(tagStr, name, pTStr, cTStr, rTStr) + "}"
+
 		} else {
 			if cT != nil {
 				tagStr := "\"name=%s, type=%s, convertedtype=%s, repetitiontype=%s\""
@@ -244,6 +248,9 @@ func (n *Node) getStructTags() string {
 			tagStr := "`parquet:\"name=%s, type=%s, convertedtype=%s, scale=%d, precision=%d, repetitiontype=%s\"`"
 			tags = fmt.Sprintf(tagStr, n.SE.Name, pTStr, n.SE.Type, scale, precision, rTStr)
 		}
+	} else if cT != nil && *cT == parquet.ConvertedType_INTERVAL {
+		tagStr := "`parquet:\"name=%s, type=%s, convertedtype=%s, length=12, repetitiontype=%s\"`"
+		tags = fmt.Sprintf(tagStr, n.SE.Name, pTStr, cTStr, rTStr)
 	}
 
 	return tags
