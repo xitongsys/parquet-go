@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,9 +34,10 @@ type S3File struct {
 	uploaderOptions []func(*s3manager.Uploader)
 
 	// read-related fields
-	readOpened bool
-	fileSize   int64
-	downloader *s3manager.Downloader
+	readOpened     bool
+	fileSize       int64
+	socket         io.ReadCloser
+	minRequestSize int
 
 	lock       sync.RWMutex
 	err        error
@@ -46,8 +48,9 @@ type S3File struct {
 }
 
 const (
-	rangeHeader       = "bytes=%d-%d"
-	rangeHeaderSuffix = "bytes=%d"
+	rangeHeader           = "bytes=%d-%d"
+	rangeHeaderSuffix     = "bytes=%d"
+	defaultMinRequestSize = math.MaxUint32
 )
 
 var (
@@ -114,13 +117,21 @@ func NewS3FileWriterWithClient(
 
 // NewS3FileReader creates an S3 FileReader, to be used with NewParquetReader
 func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (source.ParquetFile, error) {
-	return NewS3FileReaderVersioned(ctx, bucket, key, nil)
+	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
+		Bucket:  bucket,
+		Key:     key,
+		Configs: cfgs,
+	})
 }
 
 // NewS3FileReaderWithClient is the same as NewS3FileReader but allows passing
 // your own S3 client
 func NewS3FileReaderWithClient(ctx context.Context, s3Client s3iface.S3API, bucket string, key string) (source.ParquetFile, error) {
-	return NewS3FileReaderVersionedWithClient(ctx, s3Client, bucket, key, nil)
+	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
+		Bucket:   bucket,
+		Key:      key,
+		S3Client: s3Client,
+	})
 }
 
 // Seek tracks the offset for the next Read. Has no effect on Write.
@@ -149,6 +160,8 @@ func (s *S3File) Seek(offset int64, whence int) (int64, error) {
 
 	s.offset = offset
 	s.whence = whence
+
+	s.closeSocket()
 	return s.offset, nil
 }
 
@@ -158,7 +171,39 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 
-	numBytes := len(p)
+	defer func() {
+		if err != nil {
+			s.closeSocket()
+		}
+	}()
+
+	if s.socket == nil {
+		err = s.openSocket(len(p))
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	n, err = s.socket.Read(p)
+	// Because the chunk size is not infinite, we might hit the end of the socket while
+	// there's still data in the file. In this case, we close the socket so that the next
+	// read call will request a new one, and we return a nil error so that the caller
+	// will not think the file is done.
+	if err == io.EOF {
+		err = nil
+		s.closeSocket()
+	}
+	s.offset += int64(n)
+
+	return n, err
+}
+
+// openSocket issues a new GetObject request to retrieve the next chunk of data from the
+// object.
+func (s *S3File) openSocket(numBytes int) error {
+	if numBytes < s.minRequestSize {
+		numBytes = s.minRequestSize
+	}
 	getObjRange := s.getBytesRange(numBytes)
 	getObj := &s3.GetObjectInput{
 		Bucket:    aws.String(s.BucketName),
@@ -168,21 +213,19 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 	if len(getObjRange) > 0 {
 		getObj.Range = aws.String(getObjRange)
 	}
-
-	wab := aws.NewWriteAtBuffer(p)
-	bytesDownloaded, err := s.downloader.DownloadWithContext(s.ctx, wab, getObj)
+	out, err := s.client.GetObjectWithContext(s.ctx, getObj)
 	if err != nil {
-		return 0, err
+		return err
 	}
+	s.socket = out.Body
+	return nil
+}
 
-	s.offset += bytesDownloaded
-	if buf := wab.Bytes(); len(buf) > numBytes {
-		// backing buffer reassigned, copy over some of the data
-		copy(p, buf)
-		bytesDownloaded = int64(len(p))
+func (s *S3File) closeSocket() {
+	if s.socket != nil {
+		s.socket.Close()
+		s.socket = nil
 	}
-
-	return int(bytesDownloaded), err
 }
 
 // Write len(p) bytes from p to the S3 data stream
@@ -220,6 +263,8 @@ func (s *S3File) Write(p []byte) (n int, err error) {
 func (s *S3File) Close() error {
 	var err error
 
+	s.closeSocket()
+
 	if s.pipeWriter != nil {
 		if err = s.pipeWriter.Close(); err != nil {
 			return err
@@ -252,15 +297,15 @@ func (s *S3File) Open(name string) (source.ParquetFile, error) {
 
 	// create a new instance
 	pf := &S3File{
-		ctx:        s.ctx,
-		client:     s.client,
-		downloader: s.downloader,
-		BucketName: s.BucketName,
-		Key:        name,
-		VersionId:  s.VersionId,
-		readOpened: s.readOpened,
-		fileSize:   s.fileSize,
-		offset:     0,
+		ctx:            s.ctx,
+		client:         s.client,
+		BucketName:     s.BucketName,
+		Key:            name,
+		VersionId:      s.VersionId,
+		readOpened:     s.readOpened,
+		fileSize:       s.fileSize,
+		minRequestSize: s.minRequestSize,
+		offset:         0,
 	}
 	return pf, nil
 }
@@ -350,7 +395,7 @@ func (s *S3File) getBytesRange(numBytes int) string {
 		end       int64
 	)
 
-	// Processing for unknown file size relies on the requestor to
+	// Processing for unknown file size relies on the requester to
 	// know which ranges are valid. May occur if caller is missing HEAD permissions.
 	if s.fileSize < 1 {
 		switch s.whence {
@@ -386,30 +431,79 @@ func (s *S3File) getBytesRange(numBytes int) string {
 
 // NewS3FileReaderVersioned creates an S3 FileReader for a versioned of S3 object, to be used with NewParquetReader
 func NewS3FileReaderVersioned(ctx context.Context, bucket string, key string, version *string, cfgs ...*aws.Config) (source.ParquetFile, error) {
-	if activeS3Session == nil {
-		sessLock.Lock()
-		if activeS3Session == nil {
-			activeS3Session = session.Must(session.NewSession())
-		}
-		sessLock.Unlock()
-	}
-
-	return NewS3FileReaderVersionedWithClient(ctx, s3.New(activeS3Session, cfgs...), bucket, key, version)
+	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
+		Bucket:  bucket,
+		Key:     key,
+		Configs: cfgs,
+		Version: version,
+	})
 }
 
 // NewS3FileReaderVersionedWithClient is the same as NewS3FileReaderVersioned but allows passing
 // your own S3 client
 func NewS3FileReaderVersionedWithClient(ctx context.Context, s3Client s3iface.S3API, bucket string, key string, version *string) (source.ParquetFile, error) {
-	s3Downloader := s3manager.NewDownloaderWithClient(s3Client)
+	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
+		Bucket:   bucket,
+		Key:      key,
+		S3Client: s3Client,
+		Version:  version,
+	})
+}
 
-	file := &S3File{
-		ctx:        ctx,
-		client:     s3Client,
-		downloader: s3Downloader,
-		BucketName: bucket,
-		Key:        key,
-		VersionId:  version,
+// S3FileReaderParams contains fields used to initialize and configure an S3File object
+// for reading.
+type S3FileReaderParams struct {
+	Bucket string
+	Key    string
+
+	// S3Client will be used to issue requests to S3. If not set, a new one one will be
+	// created. Optional.
+	S3Client s3iface.S3API
+	// Configs are the configs used to construct a new S3Client. If S3Client is provided,
+	// Configs are ignored. Optional.
+	Configs []*aws.Config
+	// Version is the version of the S3 object that will be read. If not set, the newest
+	// version will be read. Optional.
+	Version *string
+	// MinRequestSize controls the amount of data per request that the S3File will ask for
+	// from S3. Optional.
+	// A large MinRequestSize should improve performance and reduce AWS costs due to
+	// number of request. However, in some cases it may increase AWS costs due to data
+	// processing or data transfer. For best results, set it at or above the largest of
+	// the footer size and the biggest chunk size in the parquet file.
+	// S3File will not buffer a large amount of data in memory at one time, regardless
+	// of the value of MinRequestSize.
+	MinRequestSize int
+}
+
+// NewS3FileReaderWithParams creates an S3 FileReader for an object identified by and
+// configured using the S3FileReaderParams object.
+func NewS3FileReaderWithParams(ctx context.Context, params S3FileReaderParams) (source.ParquetFile, error) {
+	s3Client := params.S3Client
+	if s3Client == nil {
+		if activeS3Session == nil {
+			sessLock.Lock()
+			if activeS3Session == nil {
+				activeS3Session = session.Must(session.NewSession())
+			}
+			sessLock.Unlock()
+		}
+		s3Client = s3.New(activeS3Session, params.Configs...)
 	}
 
-	return file.Open(key)
+	minRequestSize := params.MinRequestSize
+	if minRequestSize == 0 {
+		minRequestSize = defaultMinRequestSize
+	}
+
+	file := &S3File{
+		ctx:            ctx,
+		client:         s3Client,
+		BucketName:     params.Bucket,
+		Key:            params.Key,
+		VersionId:      params.Version,
+		minRequestSize: minRequestSize,
+	}
+
+	return file.Open(params.Key)
 }

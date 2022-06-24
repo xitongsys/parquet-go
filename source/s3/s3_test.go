@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/golang/mock/gomock"
 	"github.com/xitongsys/parquet-go-source/s3/mocks"
 )
@@ -84,13 +83,11 @@ func TestReadBodyLargerThanProvidedBuffer(t *testing.T) {
 	bufReadCloser := ioutil.NopCloser(buf)
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObjectWithContext(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, input *s3.GetObjectInput, opts ...request.Option) (*s3.GetObjectOutput, error) {
-			return &s3.GetObjectOutput{Body: bufReadCloser}, nil
-		})
-	s := &S3File{
-		fileSize:   100,
-		offset:     10,
-		downloader: s3manager.NewDownloaderWithClient(mockClient),
+		Return(&s3.GetObjectOutput{Body: bufReadCloser}, nil)
+	s := S3File{
+		client:   mockClient,
+		fileSize: 100,
+		offset:   10,
 	}
 
 	b := make([]byte, 4)
@@ -113,13 +110,11 @@ func TestReadDownloadError(t *testing.T) {
 	bufReadCloser := ioutil.NopCloser(buf)
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObjectWithContext(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, input *s3.GetObjectInput, opts ...request.Option) (*s3.GetObjectOutput, error) {
-			return &s3.GetObjectOutput{Body: bufReadCloser}, errors.New(errMessage)
-		})
+		Return(&s3.GetObjectOutput{Body: bufReadCloser}, errors.New(errMessage))
 	s := &S3File{
-		fileSize:   100,
-		offset:     10,
-		downloader: s3manager.NewDownloaderWithClient(mockClient),
+		client:   mockClient,
+		fileSize: 100,
+		offset:   10,
 	}
 
 	b := make([]byte, 4)
@@ -142,13 +137,11 @@ func TestRead(t *testing.T) {
 	bufReadCloser := ioutil.NopCloser(buf)
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObjectWithContext(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, input *s3.GetObjectInput, opts ...request.Option) (*s3.GetObjectOutput, error) {
-			return &s3.GetObjectOutput{Body: bufReadCloser}, nil
-		})
+		Return(&s3.GetObjectOutput{Body: bufReadCloser}, nil)
 	s := &S3File{
-		fileSize:   100,
-		offset:     0,
-		downloader: s3manager.NewDownloaderWithClient(mockClient),
+		client:   mockClient,
+		fileSize: 100,
+		offset:   0,
 	}
 
 	b := make([]byte, 9)
