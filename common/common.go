@@ -12,7 +12,6 @@ import (
 	"github.com/apache/arrow/go/arrow"
 	"github.com/apache/arrow/go/arrow/array"
 	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/types"
 )
 
 // `parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`
@@ -1020,329 +1019,225 @@ func TransposeTable(table [][]interface{}) [][]interface{} {
 	return transposedTable
 }
 
-// ArrowColToParquetCol creates column with native parquet values from column
-// with arrow values.
+// ArrowColToParquetCol creates column with native go values from column
+// with arrow values according to the rules described in the Type section in
+// the project's README.md file.
 //
-// If a single record is not valid by the arrow definitions we assign it
-// default value which we chose.
-func ArrowColToParquetCol(field arrow.Field, col array.Interface, len int,
-	el *parquet.SchemaElement) ([]interface{}, error) {
-	var err error
-	recs := make([]interface{}, len)
+// If `col` contains Null value but `field` is not marked as Nullable this
+// results in an error.
+func ArrowColToParquetCol(field arrow.Field, col array.Interface) (
+	[]interface{}, error) {
+	recs := make([]interface{}, col.Len())
 	switch field.Type.(type) {
 	case *arrow.Int8Type:
 		arr := col.(*array.Int8)
-		var rec int8
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = int32(arr.Value(i))
 			}
 		}
 	case *arrow.Int16Type:
 		arr := col.(*array.Int16)
-		var rec int16
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = int32(arr.Value(i))
 			}
 		}
 	case *arrow.Int32Type:
 		arr := col.(*array.Int32)
-		var rec int32
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = arr.Value(i)
 			}
 		}
 	case *arrow.Int64Type:
 		arr := col.(*array.Int64)
-		var rec int64
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-
-			if err != nil {
-				return nil, err
+				recs[i] = arr.Value(i)
 			}
 		}
 	case *arrow.Uint8Type:
 		arr := col.(*array.Uint8)
-		var rec uint8
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = int32(arr.Value(i))
 			}
 		}
 	case *arrow.Uint16Type:
 		arr := col.(*array.Uint16)
-		var rec uint16
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-
-			if err != nil {
-				return nil, err
+				recs[i] = int32(arr.Value(i))
 			}
 		}
 	case *arrow.Uint32Type:
 		arr := col.(*array.Uint32)
-		var rec int32
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = int32(arr.Value(i))
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-
-			if err != nil {
-				return nil, err
+				recs[i] = int32(arr.Value(i))
 			}
 		}
 	case *arrow.Uint64Type:
 		arr := col.(*array.Uint64)
-		var rec int64
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = int64(arr.Value(i))
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-
-			if err != nil {
-				return nil, err
+				recs[i] = int64(arr.Value(i))
 			}
 		}
 	case *arrow.Float32Type:
 		arr := col.(*array.Float32)
-		var rec float32
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = arr.Value(i)
 			}
 		}
 	case *arrow.Float64Type:
 		arr := col.(*array.Float64)
-		var rec float64
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = arr.Value(i)
 			}
 		}
 	case *arrow.Date32Type:
 		arr := col.(*array.Date32)
-		var rec arrow.Date32
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-
-			if err != nil {
-				return nil, err
+				recs[i] = int32(arr.Value(i))
 			}
 		}
 	case *arrow.Date64Type:
 		arr := col.(*array.Date64)
-		var rec arrow.Date64
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-
-			if err != nil {
-				return nil, err
+				recs[i] = int32(arr.Value(i))
 			}
 		}
 	case *arrow.BinaryType:
 		arr := col.(*array.Binary)
-		var rec []byte
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = []byte("")
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = string(arr.Value(i))
 			}
 		}
 	case *arrow.StringType:
 		arr := col.(*array.String)
-		var rec string
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = ""
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-
-			if err != nil {
-				return nil, err
+				recs[i] = arr.Value(i)
 			}
 		}
 	case *arrow.BooleanType:
 		arr := col.(*array.Boolean)
-		var rec bool
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = false
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = arr.Value(i)
 			}
 		}
 	case *arrow.Time32Type:
 		arr := col.(*array.Time32)
-		var rec arrow.Time32
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = int32(arr.Value(i))
 			}
 		}
 	case *arrow.TimestampType:
 		arr := col.(*array.Timestamp)
-		var rec arrow.Timestamp
 		for i := 0; i < arr.Len(); i++ {
-			if arr.IsValid(i) {
-				rec = arr.Value(i)
+			if arr.IsNull(i) {
+				if !field.Nullable {
+					return nil, nonNullableFieldContainsNullError(field, i)
+				}
+				recs[i] = nil
 			} else {
-				rec = 0
-			}
-			recs[i], err = types.StrToParquetType(fmt.Sprintf("%v", rec),
-				el.Type,
-				el.ConvertedType,
-				int(el.GetTypeLength()),
-				int(el.GetScale()))
-			if err != nil {
-				return nil, err
+				recs[i] = int64(arr.Value(i))
 			}
 		}
 	}
 	return recs, nil
+}
+
+func nonNullableFieldContainsNullError(field arrow.Field, idx int) error {
+	return fmt.Errorf("field with name '%s' is marked non-nullable but its "+
+		"column array contains Null value at index %d", field.Name, idx)
 }

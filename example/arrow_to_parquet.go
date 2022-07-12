@@ -26,6 +26,8 @@ func main() {
 			{Name: "float64", Type: arrow.PrimitiveTypes.Float64},
 			{Name: "str", Type: arrow.BinaryTypes.String},
 			{Name: "ts_ms", Type: arrow.FixedWidthTypes.Timestamp_ms},
+			{Name: "nullable-int32", Type: arrow.PrimitiveTypes.Int32,
+				Nullable: true},
 		},
 		nil,
 	)
@@ -48,6 +50,12 @@ func main() {
 		case 3:
 			n := arrow.Timestamp(time.Now().UnixMilli())
 			b.Field(idx).(*array.TimestampBuilder).AppendValues([]arrow.Timestamp{n, n, n}, nil)
+		case 4:
+			colBuilder := b.Field(idx).(*array.Int32Builder)
+			colBuilder.Append(1)
+			colBuilder.AppendNull()
+			colBuilder.Append(2)
+			colBuilder.AppendNull()
 		}
 	}
 	rec := b.NewRecord()

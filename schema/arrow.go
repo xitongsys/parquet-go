@@ -11,8 +11,9 @@ import (
 // Schema metadata used to parse the native and converted types and
 // creating the schema definitions
 const (
-	convertedMetaDataTemplate = "name=%s, type=%s, convertedtype=%s"
-	primitiveMetaDataTemplate = "name=%s, type=%s"
+	convertedMetaDataTemplate = "name=%s, type=%s, convertedtype=%s, " +
+		"repetitiontype=%s"
+	primitiveMetaDataTemplate = "name=%s, type=%s, repetitiontype=%s"
 	rootNodeName              = "Parquet45go45root"
 )
 
@@ -25,63 +26,76 @@ func ConvertArrowToParquetSchema(schema *arrow.Schema) ([]string, error) {
 	metaData := make([]string, len(schema.Fields()))
 	var err error
 	for k, v := range schema.Fields() {
+		repetitionType := parquet.FieldRepetitionType_REQUIRED
+		if v.Nullable {
+			repetitionType = parquet.FieldRepetitionType_OPTIONAL
+		}
 		switch fieldType := v.Type; fieldType.Name() {
 		case arrow.PrimitiveTypes.Int8.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate,
-				v.Name, parquet.Type_INT32, parquet.ConvertedType_INT_8)
+				v.Name, parquet.Type_INT32, parquet.ConvertedType_INT_8,
+				repetitionType)
 		case arrow.PrimitiveTypes.Int16.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate,
-				v.Name, parquet.Type_INT32, parquet.ConvertedType_INT_16)
+				v.Name, parquet.Type_INT32, parquet.ConvertedType_INT_16,
+				repetitionType)
 		case arrow.PrimitiveTypes.Int32.Name():
-			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate,
-				v.Name, parquet.Type_INT32, parquet.ConvertedType_INT_32)
+			metaData[k] = fmt.Sprintf(primitiveMetaDataTemplate,
+				v.Name, parquet.Type_INT32, repetitionType)
 		case arrow.PrimitiveTypes.Int64.Name():
-			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate,
-				v.Name, parquet.Type_INT64, parquet.ConvertedType_INT_64)
+			metaData[k] = fmt.Sprintf(primitiveMetaDataTemplate,
+				v.Name, parquet.Type_INT64, repetitionType)
 		case arrow.PrimitiveTypes.Uint8.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate,
-				v.Name, parquet.Type_INT32, parquet.ConvertedType_UINT_8)
+				v.Name, parquet.Type_INT32, parquet.ConvertedType_UINT_8,
+				repetitionType)
 		case arrow.PrimitiveTypes.Uint16.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate,
-				v.Name, parquet.Type_INT32, parquet.ConvertedType_UINT_16)
+				v.Name, parquet.Type_INT32, parquet.ConvertedType_UINT_16,
+				repetitionType)
 		case arrow.PrimitiveTypes.Uint32.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate,
-				v.Name, parquet.Type_INT32, parquet.ConvertedType_UINT_32)
+				v.Name, parquet.Type_INT32, parquet.ConvertedType_UINT_32,
+				repetitionType)
 		case arrow.PrimitiveTypes.Uint64.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate,
-				v.Name, parquet.Type_INT64, parquet.ConvertedType_UINT_64)
+				v.Name, parquet.Type_INT64, parquet.ConvertedType_UINT_64,
+				repetitionType)
 		case arrow.PrimitiveTypes.Float32.Name():
 			metaData[k] = fmt.Sprintf(primitiveMetaDataTemplate, v.Name,
-				parquet.Type_FLOAT)
+				parquet.Type_FLOAT, repetitionType)
 		case arrow.PrimitiveTypes.Float64.Name():
 			metaData[k] = fmt.Sprintf(primitiveMetaDataTemplate, v.Name,
-				parquet.Type_DOUBLE)
+				parquet.Type_DOUBLE, repetitionType)
 		case arrow.PrimitiveTypes.Date32.Name(),
 			arrow.PrimitiveTypes.Date64.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate, v.Name,
-				parquet.Type_INT32, parquet.ConvertedType_DATE)
+				parquet.Type_INT32, parquet.ConvertedType_DATE, repetitionType)
 		case arrow.FixedWidthTypes.Date32.Name(), arrow.FixedWidthTypes.Date64.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate, v.Name,
-				parquet.Type_INT32, parquet.ConvertedType_DATE)
+				parquet.Type_INT32, parquet.ConvertedType_DATE, repetitionType)
 		case arrow.BinaryTypes.Binary.Name():
 			metaData[k] = fmt.Sprintf(primitiveMetaDataTemplate, v.Name,
-				parquet.Type_BYTE_ARRAY)
+				parquet.Type_BYTE_ARRAY, repetitionType)
 		case arrow.BinaryTypes.String.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate, v.Name,
-				parquet.Type_BYTE_ARRAY, parquet.ConvertedType_UTF8)
+				parquet.Type_BYTE_ARRAY, parquet.ConvertedType_UTF8,
+				repetitionType)
 		case arrow.FixedWidthTypes.Boolean.Name():
 			metaData[k] = fmt.Sprintf(primitiveMetaDataTemplate, v.Name,
-				parquet.Type_BOOLEAN)
+				parquet.Type_BOOLEAN, repetitionType)
 		case arrow.FixedWidthTypes.Time32ms.Name():
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate, v.Name,
-				parquet.Type_INT32, parquet.ConvertedType_TIME_MILLIS)
+				parquet.Type_INT32, parquet.ConvertedType_TIME_MILLIS,
+				repetitionType)
 		case arrow.FixedWidthTypes.Timestamp_ms.Name():
 			tsType := fieldType.(*arrow.TimestampType)
 			if tsType.Unit != arrow.Millisecond {
 				return nil, fmt.Errorf("Unsupported arrow format: %s", tsType.String())
 			}
 			metaData[k] = fmt.Sprintf(convertedMetaDataTemplate, v.Name,
-				parquet.Type_INT64, parquet.ConvertedType_TIMESTAMP_MILLIS)
+				parquet.Type_INT64, parquet.ConvertedType_TIMESTAMP_MILLIS,
+				repetitionType)
 		default:
 			return nil,
 				fmt.Errorf("Unsupported arrow format: %s", fieldType.Name())

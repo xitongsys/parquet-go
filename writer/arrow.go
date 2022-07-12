@@ -65,10 +65,7 @@ func (w *ArrowWriter) WriteArrow(record array.Record) error {
 	table := make([][]interface{}, 0)
 	for i, column := range record.Columns() {
 		columnFromRecord, err := common.ArrowColToParquetCol(
-			record.Schema().Field(i),
-			column,
-			column.Len(),
-			w.SchemaHandler.SchemaElements[i+1])
+			record.Schema().Field(i), column)
 
 		if err != nil {
 			return err
