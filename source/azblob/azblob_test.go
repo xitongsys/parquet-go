@@ -7,7 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Azure/azure-storage-blob-go/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 )
 
 func TestOpen_permissoin(t *testing.T) {
@@ -22,7 +23,7 @@ func TestOpen_permissoin(t *testing.T) {
 		},
 		{
 			url: "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_zip/",
-			err: errors.New("The specified blob does not exist"),
+			err: errors.New("RESPONSE ERROR (ErrorCode=BlobNotFound)"),
 		},
 		{
 			// the idea is that Azure blob does now allow "-" in storage account name so there should be no such a storage account
@@ -31,15 +32,13 @@ func TestOpen_permissoin(t *testing.T) {
 		},
 	}
 
-	readerOptions := ReaderOptions{
-		RetryOptions: azblob.RetryOptions{
-			MaxTries:   1,
-			TryTimeout: time.Second * 10,
-		},
-	}
-
 	for _, tc := range testCases {
-		_, err := NewAzBlobFileReader(context.Background(), tc.url, azblob.NewAnonymousCredential(), readerOptions)
+		_, err := NewAzBlobFileReader(context.Background(), tc.url, nil, azblob.ClientOptions{
+			Retry: policy.RetryOptions{
+				TryTimeout: 10 * time.Second,
+				MaxRetries: 1,
+			},
+		})
 		if tc.err == nil {
 			if err != nil {
 				t.Errorf("expected no error but got %s", err.Error())
