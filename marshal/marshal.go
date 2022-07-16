@@ -3,7 +3,6 @@ package marshal
 import (
 	"errors"
 	"reflect"
-	"strings"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
@@ -245,24 +244,9 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 	}()
 
 	src := reflect.ValueOf(srcInterface)
-	res := make(map[string]*layout.Table)
+	res := setupTableMap(schemaHandler, len(srcInterface))
 	pathMap := schemaHandler.PathMap
 	nodeBuf := NewNodeBuf(1)
-
-	for i := 0; i < len(schemaHandler.SchemaElements); i++ {
-		schema := schemaHandler.SchemaElements[i]
-		pathStr := schemaHandler.IndexMap[int32(i)]
-		numChildren := schema.GetNumChildren()
-		if numChildren == 0 {
-			res[pathStr] = layout.NewEmptyTable()
-			res[pathStr].Path = common.StrToPath(pathStr)
-			res[pathStr].MaxDefinitionLevel, _ = schemaHandler.MaxDefinitionLevel(res[pathStr].Path)
-			res[pathStr].MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(res[pathStr].Path)
-			res[pathStr].RepetitionType = schema.GetRepetitionType()
-			res[pathStr].Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
-			res[pathStr].Info = schemaHandler.Infos[i]
-		}
-	}
 
 	stack := make([]*Node, 0, 100)
 	for i := 0; i < len(srcInterface); i++ {
@@ -288,8 +272,6 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 			}
 			var m Marshaler
 
-			schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
-
 			if tk == reflect.Ptr {
 				m = &ParquetPtr{}
 			} else if tk == reflect.Struct {
@@ -306,6 +288,7 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 				}
 			} else {
 				table := res[node.PathMap.Path]
+				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
 				schema := schemaHandler.SchemaElements[schemaIndex]
 				var v interface{}
 				if node.Val.IsValid() {
@@ -324,8 +307,7 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 				numChildren := schemaHandler.SchemaElements[index].GetNumChildren()
 				if numChildren > int32(0) {
 					for key, table := range res {
-						if strings.HasPrefix(key, path) &&
-							(len(key) == len(path) || key[len(path)] == common.PAR_GO_PATH_DELIMITER[0]) {
+						if common.IsChildPath(path, key) {
 							table.Values = append(table.Values, nil)
 							table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 							table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
@@ -336,7 +318,6 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 					table.Values = append(table.Values, nil)
 					table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 					table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
-
 				}
 			} else {
 				for _, node := range nodes {
@@ -347,4 +328,28 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 	}
 
 	return &res, nil
+}
+
+func setupTableMap(schemaHandler *schema.SchemaHandler, numElements int) map[string]*layout.Table {
+	tableMap := make(map[string]*layout.Table)
+	for i := 0; i < len(schemaHandler.SchemaElements); i++ {
+		schema := schemaHandler.SchemaElements[i]
+		pathStr := schemaHandler.IndexMap[int32(i)]
+		numChildren := schema.GetNumChildren()
+		if numChildren == 0 {
+			table := layout.NewEmptyTable()
+			table.Path = common.StrToPath(pathStr)
+			table.MaxDefinitionLevel, _ = schemaHandler.MaxDefinitionLevel(table.Path)
+			table.MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(table.Path)
+			table.RepetitionType = schema.GetRepetitionType()
+			table.Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
+			table.Info = schemaHandler.Infos[i]
+			// Pre-size tables under the assumption that they'll be filled.
+			table.Values = make([]interface{}, 0, numElements)
+			table.DefinitionLevels = make([]int32, 0, numElements)
+			table.RepetitionLevels = make([]int32, 0, numElements)
+			tableMap[pathStr] = table
+		}
+	}
+	return tableMap
 }
