@@ -91,7 +91,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	var maxVal interface{} = pages[1].MaxVal
 	var minVal interface{} = pages[1].MinVal
 	var nullCount int64 = 0
-	pT, cT, logT, omitStats := pages[1].Schema.Type, pages[1].Schema.ConvertedType, pages[1].Schema.LogicalType, pages[0].Info.OmitStats
+	pT, cT, logT, omitStats := pages[1].Schema.Type, pages[1].Schema.ConvertedType, pages[1].Schema.LogicalType, pages[1].Info.OmitStats
 	funcTable := common.FindFuncTable(pT, cT, logT)
 
 	for i := 0; i < len(pages); i++ {
