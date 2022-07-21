@@ -92,12 +92,11 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 		offset = *columnChunks[i].MetaData.DictionaryPageOffset
 	}
 
-	size := columnChunks[i].MetaData.GetTotalCompressedSize()
 	if cbt.ThriftReader != nil {
 		cbt.ThriftReader.Close()
 	}
 
-	cbt.ThriftReader = source.ConvertToThriftReader(cbt.PFile, offset, size)
+	cbt.ThriftReader = source.ConvertToThriftReader(cbt.PFile, offset)
 	cbt.ChunkReadValues = 0
 	cbt.DictPage = nil
 	return nil
@@ -231,6 +230,10 @@ func (cbt *ColumnBufferType) SkipRows(num int64) int64 {
 }
 
 func (cbt *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64) {
+	if cbt.Footer.NumRows == 0 {
+		return &layout.Table{}, 0
+	}
+
 	var err error
 
 	for cbt.DataTableNumRows < num && err == nil {

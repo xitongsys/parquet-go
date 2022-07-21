@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
@@ -17,6 +18,7 @@ type TypeList struct {
 	Float             float32 `parquet:"name=float, type=FLOAT"`
 	Double            float64 `parquet:"name=double, type=DOUBLE"`
 	ByteArray         string  `parquet:"name=bytearray, type=BYTE_ARRAY"`
+	Enum              string  `parquet:"name=enum, type=BYTE_ARRAY, convertedtype=ENUM"`
 	FixedLenByteArray string  `parquet:"name=FixedLenByteArray, type=FIXED_LEN_BYTE_ARRAY, length=10"`
 
 	Utf8             string `parquet:"name=utf8, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
@@ -75,6 +77,7 @@ func main() {
 			Float:             float32(float32(i) * 0.5),
 			Double:            float64(float64(i) * 0.5),
 			ByteArray:         "ByteArray",
+			Enum:              "Enum" + strconv.Itoa(i),
 			FixedLenByteArray: "HelloWorld",
 
 			Utf8:            "utf8",

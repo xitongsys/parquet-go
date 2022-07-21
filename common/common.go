@@ -686,7 +686,7 @@ func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType, logT *parquet.Lo
 	}
 
 	if cT != nil {
-		if *cT == parquet.ConvertedType_UTF8 || *cT == parquet.ConvertedType_BSON || *cT == parquet.ConvertedType_JSON {
+		if *cT == parquet.ConvertedType_UTF8 || *cT == parquet.ConvertedType_BSON || *cT == parquet.ConvertedType_JSON || *cT == parquet.ConvertedType_ENUM {
 			return stringFuncTable{}
 		} else if *cT == parquet.ConvertedType_INT_8 || *cT == parquet.ConvertedType_INT_16 || *cT == parquet.ConvertedType_INT_32 ||
 			*cT == parquet.ConvertedType_DATE || *cT == parquet.ConvertedType_TIME_MILLIS {

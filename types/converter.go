@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/binary"
-	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -113,13 +112,20 @@ func INT96ToTime(int96 string) time.Time {
 }
 
 func DECIMAL_INT_ToString(dec int64, precision int, scale int) string {
-	s := int(math.Pow10(scale))
-	integer, fraction := int(dec)/s, int(dec)%s
-	ans := strconv.Itoa(integer)
-	if scale > 0 {
-		ans += "." + strconv.Itoa(fraction)
+	sign := ""
+	if dec < 0 {
+		sign = "-"
+		dec = -dec
 	}
-	return ans
+	ans := strconv.FormatInt(dec, 10)
+	if scale > 0 {
+		if scale > len(ans) {
+			ans = strings.Repeat("0", scale-(len(ans))+1) + ans
+		}
+		radixLoc := len(ans) - scale
+		ans = ans[:radixLoc] + "." + ans[radixLoc:]
+	}
+	return sign + ans
 }
 
 func DECIMAL_BYTE_ARRAY_ToString(dec []byte, precision int, scale int) string {
