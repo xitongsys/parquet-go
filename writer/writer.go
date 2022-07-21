@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"reflect"
+	"runtime/debug"
 	"sync"
 
 	"github.com/apache/thrift/lib/go/thrift"
@@ -259,7 +261,6 @@ func (pw *ParquetWriter) flushObjs() error {
 		if bgn >= l {
 			bgn, end = l, l
 		}
-
 		wg.Add(1)
 		go func(b, e int, index int64) {
 			defer func() {
@@ -269,6 +270,7 @@ func (pw *ParquetWriter) flushObjs() error {
 					case string:
 						errs[index] = errors.New(x)
 					case error:
+						fmt.Printf("RECOVER PANIC FROM PARQUET-GO: %s: %s", x, debug.Stack())
 						errs[index] = x
 					default:
 						errs[index] = errors.New("unknown error")
@@ -300,8 +302,10 @@ func (pw *ParquetWriter) flushObjs() error {
 						}()
 
 					} else {
-						pagesMapList[index][name], _ = layout.TableToDataPages(table, int32(pw.PageSize),
-							pw.CompressionType)
+						if table.Schema.Type != nil {
+							pagesMapList[index][name], _ = layout.TableToDataPages(table, int32(pw.PageSize),
+								pw.CompressionType)
+						}
 					}
 				}
 			} else {

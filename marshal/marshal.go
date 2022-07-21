@@ -2,14 +2,15 @@ package marshal
 
 import (
 	"errors"
-	"reflect"
-	"strings"
-
+	"fmt"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/types"
+	"reflect"
+	"runtime/debug"
+	"strings"
 )
 
 type Node struct {
@@ -237,6 +238,7 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 			case string:
 				err = errors.New(x)
 			case error:
+				fmt.Printf("RECOVER PANIC FROM PARQUET-GO: %s: %s", x, debug.Stack())
 				err = x
 			default:
 				err = errors.New("unkown error")
