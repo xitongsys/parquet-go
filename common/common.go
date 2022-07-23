@@ -992,6 +992,11 @@ func PathStrIndex(str string) int {
 	return len(strings.Split(str, PAR_GO_PATH_DELIMITER))
 }
 
+func IsChildPath(parent, child string) bool {
+	ln := len(parent)
+	return strings.HasPrefix(child, parent) && (len(child) == ln || child[ln] == PAR_GO_PATH_DELIMITER[0])
+}
+
 // NewTable creates empty table with transposed columns and records
 func NewTable(rowLen, colLen int) [][]interface{} {
 	tableLen := make([]interface{}, rowLen*colLen)
