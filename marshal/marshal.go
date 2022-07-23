@@ -254,13 +254,18 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 		pathStr := schemaHandler.IndexMap[int32(i)]
 		numChildren := schema.GetNumChildren()
 		if numChildren == 0 {
-			res[pathStr] = layout.NewEmptyTable()
-			res[pathStr].Path = common.StrToPath(pathStr)
-			res[pathStr].MaxDefinitionLevel, _ = schemaHandler.MaxDefinitionLevel(res[pathStr].Path)
-			res[pathStr].MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(res[pathStr].Path)
-			res[pathStr].RepetitionType = schema.GetRepetitionType()
-			res[pathStr].Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
-			res[pathStr].Info = schemaHandler.Infos[i]
+			table := layout.NewEmptyTable()
+			table.Path = common.StrToPath(pathStr)
+			table.MaxDefinitionLevel, _ = schemaHandler.MaxDefinitionLevel(table.Path)
+			table.MaxRepetitionLevel, _ = schemaHandler.MaxRepetitionLevel(table.Path)
+			table.RepetitionType = schema.GetRepetitionType()
+			table.Schema = schemaHandler.SchemaElements[schemaHandler.MapIndex[pathStr]]
+			table.Info = schemaHandler.Infos[i]
+			// Pre-size tables under the assumption that they'll be filled.
+			table.Values = make([]interface{}, 0, len(srcInterface))
+			table.DefinitionLevels = make([]int32, 0, len(srcInterface))
+			table.RepetitionLevels = make([]int32, 0, len(srcInterface))
+			res[pathStr] = table
 		}
 	}
 
