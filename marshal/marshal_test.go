@@ -1,9 +1,10 @@
 package marshal
 
 import (
-	"github.com/xitongsys/parquet-go/schema"
 	"reflect"
 	"testing"
+
+	"github.com/xitongsys/parquet-go/schema"
 )
 
 type marshalCases struct {
@@ -24,7 +25,9 @@ func TestParquetPtrMarshal(t *testing.T) {
 		RL:      2,
 		DL:      3,
 	}
-	res := ptrMarshal.Marshal(nodeNilPtr, nil)
+
+	stack := []*Node{}
+	res := ptrMarshal.Marshal(nodeNilPtr, nil, stack)
 	if len(res) != 0 {
 		t.Errorf("Fail expect nodes len %v, get %v", 0, len(res))
 	}
@@ -36,7 +39,8 @@ func TestParquetPtrMarshal(t *testing.T) {
 		RL:      2,
 		DL:      3,
 	}
-	res = ptrMarshal.Marshal(nodeIntPtr, nil)
+	stack = []*Node{}
+	res = ptrMarshal.Marshal(nodeIntPtr, nil, stack)
 	if len(res) != 1 || res[0].DL != 4 {
 		t.Errorf("Fail expect nodes len %v, DL value %v, get nodes len %v, DL value %v", 1, 4, len(res), res[0].DL)
 	}
