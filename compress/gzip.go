@@ -5,10 +5,11 @@ package compress
 
 import (
 	"bytes"
+	"io"
+	"sync"
+
 	"github.com/klauspost/compress/gzip"
 	"github.com/xitongsys/parquet-go/parquet"
-	"io/ioutil"
-	"sync"
 )
 
 var gzipWriterPool sync.Pool
@@ -34,7 +35,7 @@ func init() {
 		Uncompress: func(buf []byte) (i []byte, err error) {
 			rbuf := bytes.NewReader(buf)
 			gzipReader, _ := gzip.NewReader(rbuf)
-			res, err := ioutil.ReadAll(gzipReader)
+			res, err := io.ReadAll(gzipReader)
 			return res, err
 		},
 	}
