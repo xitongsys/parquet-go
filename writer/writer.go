@@ -423,17 +423,27 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 
 					var minVal []byte
 					var maxVal []byte
+					var nullCount *int64
 					if page.Header.DataPageHeader != nil && page.Header.DataPageHeader.Statistics != nil {
 						minVal = page.Header.DataPageHeader.Statistics.Min
 						maxVal = page.Header.DataPageHeader.Statistics.Max
+						nullCount = page.Header.DataPageHeader.Statistics.NullCount
 
 					} else if page.Header.DataPageHeaderV2 != nil && page.Header.DataPageHeaderV2.Statistics != nil {
 						minVal = page.Header.DataPageHeaderV2.Statistics.Min
 						maxVal = page.Header.DataPageHeaderV2.Statistics.Max
+						nullCount = page.Header.DataPageHeaderV2.Statistics.NullCount
 					}
 
 					columnIndex.MinValues[l] = minVal
 					columnIndex.MaxValues[l] = maxVal
+					// Statistics.NullCount is nil when statistics are omitted for the column otherwise for all column page headers it will be populated.
+					if nullCount != nil {
+						if columnIndex.NullCounts == nil {
+							columnIndex.NullCounts = make([]int64, pageCount)
+						}
+						columnIndex.NullCounts[l] = *nullCount
+					}
 
 					pageLocation := parquet.NewPageLocation()
 					pageLocation.Offset = pw.Offset
