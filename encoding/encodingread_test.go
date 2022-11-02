@@ -161,7 +161,7 @@ func TestReadDeltaBinaryPackedINT(t *testing.T) {
 		}
 
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadRLEBitpackedHybrid error, expect %v, get %v", data, res)
+			t.Errorf("ReadDeltaBinaryPackedINT64 error, expect %v, get %v", data, res)
 		}
 	}
 }
@@ -201,7 +201,7 @@ func TestReadDeltaBinaryPackedINT32(t *testing.T) {
 			t.Error(err)
 		}
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadRLEBitpackedHybrid error, expect %v, get %v", data, res)
+			t.Errorf("ReadDeltaBinaryPackedINT32 error, expect %v, get %v", data, res)
 		}
 	}
 }
@@ -225,7 +225,7 @@ func TestReadLengthDeltaByteArray(t *testing.T) {
 	for _, data := range testData {
 		res, _ := ReadDeltaLengthByteArray(bytes.NewReader(WriteDeltaLengthByteArray(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
-			t.Errorf("ReadDeltaByteArray err, expect %v, get %v", data, res)
+			t.Errorf("ReadDeltaLengthByteArray err, expect %v, get %v", data, res)
 		}
 	}
 }
@@ -241,7 +241,7 @@ func TestReadBitPacked(t *testing.T) {
 		bitWidth := uint64(bits.Len(uint(data[ln-1].(int))))
 		res, _ := ReadBitPacked(bytes.NewReader(WriteBitPacked(data, int64(bitWidth), false)), uint64(header), bitWidth)
 		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", data) {
-
+			t.Errorf("ReadBitPacked err, expect %v, get %v", data, res)
 		}
 	}
 }
