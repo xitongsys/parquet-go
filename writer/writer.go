@@ -18,7 +18,7 @@ import (
 	"github.com/xitongsys/parquet-go/source"
 )
 
-//ParquetWriter is a writer  parquet file
+// ParquetWriter is a writer  parquet file
 type ParquetWriter struct {
 	SchemaHandler *schema.SchemaHandler
 	NP            int64 //parallel number
@@ -45,6 +45,8 @@ type ParquetWriter struct {
 	OffsetIndexes []*parquet.OffsetIndex
 
 	MarshalFunc func(src []interface{}, sh *schema.SchemaHandler) (*map[string]*layout.Table, error)
+
+	stopped bool
 }
 
 func NewParquetWriterFromWriter(w io.Writer, obj interface{}, np int64) (*ParquetWriter, error) {
@@ -52,7 +54,7 @@ func NewParquetWriterFromWriter(w io.Writer, obj interface{}, np int64) (*Parque
 	return NewParquetWriter(wf, obj, np)
 }
 
-//Create a parquet handler. Obj is a object with tags or JSON schema string.
+// Create a parquet handler. Obj is a object with tags or JSON schema string.
 func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
 	var err error
 
@@ -79,6 +81,7 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.Footer.CreatedBy = &createdBy
 	_, err = res.PFile.Write([]byte("PAR1"))
 	res.MarshalFunc = marshal.Marshal
+	res.stopped = true
 
 	if obj != nil {
 		if sa, ok := obj.(string); ok {
@@ -97,6 +100,9 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 		res.Footer.Schema = append(res.Footer.Schema, res.SchemaHandler.SchemaElements...)
 	}
 
+	// Enable writing after init completed successfully
+	res.stopped = false
+
 	return res, err
 }
 
@@ -110,7 +116,7 @@ func (pw *ParquetWriter) SetSchemaHandlerFromJSON(jsonSchema string) error {
 	return nil
 }
 
-//Rename schema name to exname in tags
+// Rename schema name to exname in tags
 func (pw *ParquetWriter) RenameSchema() {
 	for i := 0; i < len(pw.Footer.Schema); i++ {
 		pw.Footer.Schema[i].Name = pw.SchemaHandler.Infos[i].ExName
@@ -125,10 +131,14 @@ func (pw *ParquetWriter) RenameSchema() {
 	}
 }
 
-//Write the footer and stop writing
+// Write the footer and stop writing
 func (pw *ParquetWriter) WriteStop() error {
-	var err error
+	if pw.stopped {
+		return nil
+	}
+	pw.stopped = true
 
+	var err error
 	if err = pw.Flush(true); err != nil {
 		return err
 	}
@@ -199,12 +209,16 @@ func (pw *ParquetWriter) WriteStop() error {
 	if _, err = pw.PFile.Write([]byte("PAR1")); err != nil {
 		return err
 	}
-	return nil
 
+	return nil
 }
 
-//Write one object to parquet file
+// Write one object to parquet file
 func (pw *ParquetWriter) Write(src interface{}) error {
+	if pw.stopped {
+		return errors.New("writer is stopped")
+	}
+
 	var err error
 	ln := int64(len(pw.Objs))
 
@@ -338,7 +352,7 @@ func (pw *ParquetWriter) flushObjs() error {
 	return err
 }
 
-//Flush the write buffer to parquet file
+// Flush the write buffer to parquet file
 func (pw *ParquetWriter) Flush(flag bool) error {
 	var err error
 
