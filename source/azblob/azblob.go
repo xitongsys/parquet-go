@@ -7,20 +7,15 @@ import (
 	"net/url"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/xitongsys/parquet-go/source"
 )
-
-type IAZIdentityCredential interface {
-	GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error)
-}
 
 // AzBlockBlob is ParquetFile for azblob
 type AzBlockBlob struct {
 	ctx             context.Context
 	URL             *url.URL
-	credential      IAZIdentityCredential
+	credential      azcore.TokenCredential
 	blockBlobClient *azblob.BlockBlobClient
 
 	// write-related fields
@@ -43,7 +38,7 @@ var (
 )
 
 // NewAzBlobFileWriter creates an Azure Blob FileWriter, to be used with NewParquetWriter
-func NewAzBlobFileWriter(ctx context.Context, URL string, credential IAZIdentityCredential, clientOptions azblob.ClientOptions) (source.ParquetFile, error) {
+func NewAzBlobFileWriter(ctx context.Context, URL string, credential azcore.TokenCredential, clientOptions azblob.ClientOptions) (source.ParquetFile, error) {
 	file := &AzBlockBlob{
 		ctx:           ctx,
 		credential:    credential,
@@ -54,7 +49,7 @@ func NewAzBlobFileWriter(ctx context.Context, URL string, credential IAZIdentity
 }
 
 // NewAzBlobFileReader creates an Azure Blob FileReader, to be used with NewParquetReader
-func NewAzBlobFileReader(ctx context.Context, URL string, credential IAZIdentityCredential, clientOptions azblob.ClientOptions) (source.ParquetFile, error) {
+func NewAzBlobFileReader(ctx context.Context, URL string, credential azcore.TokenCredential, clientOptions azblob.ClientOptions) (source.ParquetFile, error) {
 	file := &AzBlockBlob{
 		ctx:           ctx,
 		credential:    credential,
