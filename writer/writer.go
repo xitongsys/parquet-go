@@ -147,48 +147,52 @@ func (pw *ParquetWriter) WriteStop() error {
 	pw.RenameSchema()
 
 	// write ColumnIndex
-	idx := 0
-	for _, rowGroup := range pw.Footer.RowGroups {
-		for _, columnChunk := range rowGroup.Columns {
-			columnIndexBuf, err := ts.Write(context.TODO(), pw.ColumnIndexes[idx])
-			if err != nil {
-				return err
+	if len(pw.ColumnIndexes) > 0 {
+		idx := 0
+		for _, rowGroup := range pw.Footer.RowGroups {
+			for _, columnChunk := range rowGroup.Columns {
+				columnIndexBuf, err := ts.Write(context.TODO(), pw.ColumnIndexes[idx])
+				if err != nil {
+					return err
+				}
+				if _, err = pw.PFile.Write(columnIndexBuf); err != nil {
+					return err
+				}
+
+				idx++
+
+				pos := pw.Offset
+				columnChunk.ColumnIndexOffset = &pos
+				columnIndexBufSize := int32(len(columnIndexBuf))
+				columnChunk.ColumnIndexLength = &columnIndexBufSize
+
+				pw.Offset += int64(columnIndexBufSize)
 			}
-			if _, err = pw.PFile.Write(columnIndexBuf); err != nil {
-				return err
-			}
-
-			idx++
-
-			pos := pw.Offset
-			columnChunk.ColumnIndexOffset = &pos
-			columnIndexBufSize := int32(len(columnIndexBuf))
-			columnChunk.ColumnIndexLength = &columnIndexBufSize
-
-			pw.Offset += int64(columnIndexBufSize)
 		}
 	}
 
 	// write OffsetIndex
-	idx = 0
-	for _, rowGroup := range pw.Footer.RowGroups {
-		for _, columnChunk := range rowGroup.Columns {
-			offsetIndexBuf, err := ts.Write(context.TODO(), pw.OffsetIndexes[idx])
-			if err != nil {
-				return err
+	if len(pw.OffsetIndexes) > 0 {
+		idx := 0
+		for _, rowGroup := range pw.Footer.RowGroups {
+			for _, columnChunk := range rowGroup.Columns {
+				offsetIndexBuf, err := ts.Write(context.TODO(), pw.OffsetIndexes[idx])
+				if err != nil {
+					return err
+				}
+				if _, err = pw.PFile.Write(offsetIndexBuf); err != nil {
+					return err
+				}
+
+				idx++
+
+				pos := pw.Offset
+				columnChunk.OffsetIndexOffset = &pos
+				offsetIndexBufSize := int32(len(offsetIndexBuf))
+				columnChunk.OffsetIndexLength = &offsetIndexBufSize
+
+				pw.Offset += int64(offsetIndexBufSize)
 			}
-			if _, err = pw.PFile.Write(offsetIndexBuf); err != nil {
-				return err
-			}
-
-			idx++
-
-			pos := pw.Offset
-			columnChunk.OffsetIndexOffset = &pos
-			offsetIndexBufSize := int32(len(offsetIndexBuf))
-			columnChunk.OffsetIndexLength = &offsetIndexBufSize
-
-			pw.Offset += int64(offsetIndexBufSize)
 		}
 	}
 
