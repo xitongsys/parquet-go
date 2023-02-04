@@ -37,7 +37,7 @@ type S3File struct {
 	readOpened     bool
 	fileSize       int64
 	socket         io.ReadCloser
-	minRequestSize int
+	minRequestSize int64
 
 	lock       sync.RWMutex
 	err        error
@@ -48,9 +48,9 @@ type S3File struct {
 }
 
 const (
-	rangeHeader           = "bytes=%d-%d"
-	rangeHeaderSuffix     = "bytes=%d"
-	defaultMinRequestSize = math.MaxUint32
+	rangeHeader                 = "bytes=%d-%d"
+	rangeHeaderSuffix           = "bytes=%d"
+	defaultMinRequestSize int64 = math.MaxUint32
 )
 
 var (
@@ -178,7 +178,7 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 	}()
 
 	if s.socket == nil {
-		err = s.openSocket(len(p))
+		err = s.openSocket(int64(len(p)))
 		if err != nil {
 			return 0, err
 		}
@@ -200,7 +200,7 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 
 // openSocket issues a new GetObject request to retrieve the next chunk of data from the
 // object.
-func (s *S3File) openSocket(numBytes int) error {
+func (s *S3File) openSocket(numBytes int64) error {
 	if numBytes < s.minRequestSize {
 		numBytes = s.minRequestSize
 	}
@@ -388,7 +388,7 @@ func (s *S3File) openRead() error {
 }
 
 // getBytesRange returns the range request header string
-func (s *S3File) getBytesRange(numBytes int) string {
+func (s *S3File) getBytesRange(numBytes int64) string {
 	var (
 		byteRange string
 		begin     int64
@@ -491,7 +491,7 @@ func NewS3FileReaderWithParams(ctx context.Context, params S3FileReaderParams) (
 		s3Client = s3.New(activeS3Session, params.Configs...)
 	}
 
-	minRequestSize := params.MinRequestSize
+	minRequestSize := int64(params.MinRequestSize)
 	if minRequestSize == 0 {
 		minRequestSize = defaultMinRequestSize
 	}
