@@ -67,7 +67,7 @@ func TestRead(t *testing.T) {
 	err := b.WriteAll(ctx, key, testData, nil)
 	assert.NoError(t, err)
 
-	bf, err := NewBlobParquetFileReader(ctx, b, key)
+	bf, err := NewBlobReader(ctx, b, key)
 	assert.NoError(t, err)
 
 	buf := make([]byte, 1)
@@ -113,7 +113,7 @@ func TestWrite(t *testing.T) {
 	key := "test"
 	testData := []byte("test data")
 
-	bf, err := NewBlobParquetFileWriter(ctx, b, key)
+	bf, err := NewBlobWriter(ctx, b, key)
 	assert.NoError(t, err)
 
 	n, err := bf.Write(testData)
@@ -129,7 +129,7 @@ func TestWrite(t *testing.T) {
 	assert.Equal(t, testData, data)
 
 	// Opening an existing blob and writing to it replaces the contents
-	bf, err = NewBlobParquetFileReader(ctx, b, key)
+	bf, err = NewBlobReader(ctx, b, key)
 	assert.NoError(t, err)
 	testOverwrite := []byte("overwritten")
 	n, err = bf.Write(testOverwrite)
