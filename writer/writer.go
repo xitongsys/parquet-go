@@ -86,6 +86,7 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	if obj != nil {
 		if sa, ok := obj.(string); ok {
 			err = res.SetSchemaHandlerFromJSON(sa)
+			res.stopped = err != nil
 			return res, err
 
 		} else if sa, ok := obj.([]*parquet.SchemaElement); ok {
