@@ -135,10 +135,12 @@ func DECIMAL_BYTE_ARRAY_ToString(dec []byte, precision int, scale int) string {
 		for i := range dec {
 			dec[i] = dec[i] ^ 0xff
 		}
-		dec[len(dec)-1] += 1
 	}
 	a := new(big.Int)
 	a.SetBytes(dec)
+	if sign == "-" {
+		a = a.Add(a, big.NewInt(1))
+	}
 	sa := a.Text(10)
 
 	if scale > 0 {

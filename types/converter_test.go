@@ -78,4 +78,76 @@ func TestDECIMAL(t *testing.T) {
 	if sa10 != "0.0001" {
 		t.Error("DECIMAL_INT_ToString error: ", a10, sa10)
 	}
+
+	a11, _ := StrToParquetType("-100000", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa11 := DECIMAL_BYTE_ARRAY_ToString([]byte(a11.(string)), 8, 4)
+	if sa11 != "-100000.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a11, sa11)
+	}
+
+	a12, _ := StrToParquetType("100000", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa12 := DECIMAL_BYTE_ARRAY_ToString([]byte(a12.(string)), 8, 4)
+	if sa12 != "100000.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a12, sa12)
+	}
+
+	a13, _ := StrToParquetType("-100", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa13 := DECIMAL_BYTE_ARRAY_ToString([]byte(a13.(string)), 8, 4)
+	if sa13 != "-100.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a13, sa13)
+	}
+
+	a14, _ := StrToParquetType("100", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa14 := DECIMAL_BYTE_ARRAY_ToString([]byte(a14.(string)), 8, 4)
+	if sa14 != "100.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a14, sa14)
+	}
+
+	a15, _ := StrToParquetType("-431", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa15 := DECIMAL_BYTE_ARRAY_ToString([]byte(a15.(string)), 8, 4)
+	if sa15 != "-431.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a15, sa15)
+	}
+
+	a16, _ := StrToParquetType("431", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa16 := DECIMAL_BYTE_ARRAY_ToString([]byte(a16.(string)), 8, 4)
+	if sa16 != "431.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a16, sa16)
+	}
+
+	a17, _ := StrToParquetType("-432", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa17 := DECIMAL_BYTE_ARRAY_ToString([]byte(a17.(string)), 8, 4)
+	if sa17 != "-432.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a17, sa17)
+	}
+
+	a18, _ := StrToParquetType("432", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa18 := DECIMAL_BYTE_ARRAY_ToString([]byte(a18.(string)), 8, 4)
+	if sa18 != "432.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a18, sa18)
+	}
+
+	a19, _ := StrToParquetType("-433", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa19 := DECIMAL_BYTE_ARRAY_ToString([]byte(a19.(string)), 8, 4)
+	if sa19 != "-433.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a19, sa19)
+	}
+
+	a20, _ := StrToParquetType("433", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa20 := DECIMAL_BYTE_ARRAY_ToString([]byte(a20.(string)), 8, 4)
+	if sa20 != "433.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a20, sa20)
+	}
+
+	a21, _ := StrToParquetType("-65535", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa21 := DECIMAL_BYTE_ARRAY_ToString([]byte(a21.(string)), 8, 4)
+	if sa21 != "-65535.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a21, sa21)
+	}
+
+	a22, _ := StrToParquetType("65535", parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), 8, 4)
+	sa22 := DECIMAL_BYTE_ARRAY_ToString([]byte(a22.(string)), 8, 4)
+	if sa22 != "65535.0000" {
+		t.Error("DECIMAL_BYTE_ARRAY_ToString error: ", a22, sa22)
+	}
 }
