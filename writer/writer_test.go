@@ -91,6 +91,37 @@ func val(x int64) *int64 {
 	return &y
 }
 
+func TestZeroRows(t *testing.T) {
+	type test struct {
+		ColA string `parquet:"name=col_a, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+		ColB string `parquet:"name=col_b, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+	}
+
+	var err error
+	var buf bytes.Buffer
+	fw := writerfile.NewWriterFile(&buf)
+	//defer fw.Close()
+
+	// write
+	pw, err := NewParquetWriter(fw, new(test), 1)
+	assert.NoError(t, err)
+
+	err = pw.WriteStop()
+	assert.NoError(t, err)
+	assert.NoError(t, fw.Close())
+
+	// read
+	pf, err := buffer.NewBufferFile(buf.Bytes())
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, pf.Close())
+	}()
+	pr, err := reader.NewParquetReader(pf, new(test), 1)
+	assert.NoError(t, err)
+
+	assert.Equal(t, int64(0), pr.GetNumRows())
+}
+
 // TestNullCountsFromColumnIndex tests that NullCounts is correctly set in the ColumnIndex.
 func TestDoubleWriteStop(t *testing.T) {
 	type test struct {
