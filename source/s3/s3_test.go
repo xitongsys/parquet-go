@@ -424,8 +424,8 @@ func TestOpenReadFileSizeError(t *testing.T) {
 
 	ctx := context.Background()
 	mockClient := mocks.NewMockS3API(ctrl)
-	mockClient.EXPECT().HeadObjectWithContext(ctx, gomock.Any()).
-		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput) (*s3.HeadObjectOutput, error) {
+	mockClient.EXPECT().HeadObjectWithContext(ctx, gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput, arg2 ...request.Option) (*s3.HeadObjectOutput, error) {
 			if *hoi.Bucket != bucket {
 				t.Errorf("expected bucket %q but got %q", bucket, *hoi.Bucket)
 			}
@@ -460,8 +460,8 @@ func TestOpenRead(t *testing.T) {
 
 	ctx := context.Background()
 	mockClient := mocks.NewMockS3API(ctrl)
-	mockClient.EXPECT().HeadObjectWithContext(ctx, gomock.Any()).
-		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput) (*s3.HeadObjectOutput, error) {
+	mockClient.EXPECT().HeadObjectWithContext(ctx, gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput, arg2 ...request.Option) (*s3.HeadObjectOutput, error) {
 			if *hoi.Bucket != bucket {
 				t.Errorf("expected bucket %q but got %q", bucket, *hoi.Bucket)
 			}
@@ -500,7 +500,7 @@ func TestGetBytesRange(t *testing.T) {
 		filesize int64
 		offset   int64
 		whence   int
-		length   int
+		length   int64
 		expected string
 	}{
 		{"no file size seek start", 0, 5, io.SeekStart, 10, "bytes=5-14"},
