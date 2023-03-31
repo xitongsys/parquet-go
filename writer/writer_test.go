@@ -3,6 +3,7 @@ package writer
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -122,13 +123,13 @@ func TestZeroRows(t *testing.T) {
 	assert.Equal(t, int64(0), pr.GetNumRows())
 }
 
+type test struct {
+	ColA string `parquet:"name=col_a, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+	ColB string `parquet:"name=col_b, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+}
+
 // TestNullCountsFromColumnIndex tests that NullCounts is correctly set in the ColumnIndex.
 func TestDoubleWriteStop(t *testing.T) {
-	type test struct {
-		ColA string `parquet:"name=col_a, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-		ColB string `parquet:"name=col_b, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
-	}
-
 	var err error
 	var buf bytes.Buffer
 	fw := writerfile.NewWriterFile(&buf)
@@ -169,4 +170,20 @@ func TestDoubleWriteStop(t *testing.T) {
 	assert.NoError(t, err)
 
 	pr.ReadStop()
+}
+
+var testWriteErr = errors.New("test error")
+
+type invalidFile struct {
+	source.ParquetFile
+}
+
+func (m *invalidFile) Write(data []byte) (n int, err error) {
+	return 0, testWriteErr
+}
+
+func TestNewWriterWithInvaidFile(t *testing.T) {
+	pw, err := NewParquetWriter(&invalidFile{}, new(test), 1)
+	assert.Nil(t, pw)
+	assert.ErrorIs(t, err, testWriteErr)
 }
