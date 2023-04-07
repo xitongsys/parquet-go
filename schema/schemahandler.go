@@ -187,7 +187,7 @@ func (sh *SchemaHandler) CreateInExMap() {
 	}
 }
 
-//Convert a path to internal path
+// Convert a path to internal path
 func (sh *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
 	if _, ok := sh.InPathToExPath[pathStr]; ok {
 		return pathStr, nil
@@ -200,7 +200,7 @@ func (sh *SchemaHandler) ConvertToInPathStr(pathStr string) (string, error) {
 	return "", fmt.Errorf("can't find path %v", pathStr)
 }
 
-//Get root name from the schema handler
+// Get root name from the schema handler
 func (sh *SchemaHandler) GetRootInName() string {
 	if len(sh.SchemaElements) <= 0 {
 		return ""
@@ -226,7 +226,7 @@ func NewItem() *Item {
 	return item
 }
 
-//Create schema handler from a object
+// Create schema handler from a object
 func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -401,6 +401,54 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 	res.Infos = infos
 	res.CreateInExMap()
 	return res, nil
+}
+
+func NewSchemaHandlerFromSchemaHandler(sh *SchemaHandler) *SchemaHandler {
+	schemaHandler := new(SchemaHandler)
+	schemaHandler.MapIndex = make(map[string]int32)
+	schemaHandler.IndexMap = make(map[int32]string)
+	schemaHandler.InPathToExPath = make(map[string]string)
+	schemaHandler.ExPathToInPath = make(map[string]string)
+	schemaHandler.SchemaElements = sh.SchemaElements
+
+	schemaHandler.Infos = make([]*common.Tag, len(sh.SchemaElements))
+	for i := 0; i < len(sh.SchemaElements); i++ {
+		InName, ExName := sh.GetInName(i), sh.GetExName(i)
+		schemaHandler.Infos[i] = &common.Tag{
+			InName: InName,
+			ExName: ExName,
+		}
+	}
+	schemaHandler.CreateInExMap()
+
+	//use DFS get path of schema
+	ln := int32(len(sh.SchemaElements))
+	var pos int32 = 0
+	stack := make([][2]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	for pos < ln || len(stack) > 0 {
+		if len(stack) == 0 || stack[len(stack)-1][1] > 0 {
+			if len(stack) > 0 {
+				stack[len(stack)-1][1]--
+			}
+			item := [2]int32{pos, sh.SchemaElements[pos].GetNumChildren()}
+			stack = append(stack, item)
+			pos++
+		} else {
+			path := make([]string, 0)
+			for i := 0; i < len(stack); i++ {
+				inname := schemaHandler.Infos[stack[i][0]].InName
+				path = append(path, inname)
+			}
+			topPos := stack[len(stack)-1][0]
+			schemaHandler.MapIndex[common.PathToStr(path)] = topPos
+			schemaHandler.IndexMap[topPos] = common.PathToStr(path)
+			stack = stack[:len(stack)-1]
+		}
+	}
+	schemaHandler.setPathMap()
+	schemaHandler.setValueColumns()
+
+	return schemaHandler
 }
 
 // NewSchemaHandlerFromSchemaList creates schema handler from schema list
