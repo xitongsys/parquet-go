@@ -92,6 +92,9 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 			res.stopped = err != nil
 			return res, err
 
+		} else if sa, ok := obj.(*schema.SchemaHandler); ok {
+			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaHandler(sa)
+
 		} else if sa, ok := obj.([]*parquet.SchemaElement); ok {
 			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(sa)
 
