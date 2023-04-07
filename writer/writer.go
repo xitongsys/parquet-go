@@ -80,6 +80,9 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	createdBy := "parquet-go version latest"
 	res.Footer.CreatedBy = &createdBy
 	_, err = res.PFile.Write([]byte("PAR1"))
+	if err != nil {
+		return nil, err
+	}
 	res.MarshalFunc = marshal.Marshal
 	res.stopped = true
 
