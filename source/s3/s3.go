@@ -152,7 +152,9 @@ func (s *S3File) Seek(offset int64, whence int) (int64, error) {
 				return 0, errInvalidOffset
 			}
 		case io.SeekEnd:
-			if offset > -1 || -offset > s.fileSize {
+			if offset == 0 {
+				offset = s.fileSize
+			} else if offset > 0 || -offset > s.fileSize {
 				return 0, errInvalidOffset
 			}
 		}

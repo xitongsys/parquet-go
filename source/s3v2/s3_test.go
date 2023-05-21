@@ -33,6 +33,7 @@ func TestSeek(t *testing.T) {
 		{"seek current read past end", 20, 10, 20, io.SeekCurrent, 0, errInvalidOffset},
 		{"seek end", 20, 10, -5, io.SeekEnd, -5, nil},
 		{"seek end read past beginning", 20, 0, -30, io.SeekEnd, 0, errInvalidOffset},
+		{"seek end offset 0", 20, 0, 0, io.SeekEnd, 20, nil},
 		{"invalid whence", 20, 0, 0, 6, 0, errWhence},
 	}
 
