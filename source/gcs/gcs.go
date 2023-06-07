@@ -145,7 +145,9 @@ func (self *GcsFile) Seek(offset int64, whence int) (int64, error) {
 				return 0, errInvalidOffset
 			}
 		case io.SeekEnd:
-			if offset > -1 || -offset > self.fileSize {
+			if offset == 0 {
+				offset = self.fileSize
+			} else if offset > 0 || -offset > self.fileSize {
 				return 0, errInvalidOffset
 			}
 		}
