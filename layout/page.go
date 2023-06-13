@@ -76,7 +76,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	pT, cT, logT, omitStats := table.Schema.Type, table.Schema.ConvertedType, table.Schema.LogicalType, table.Info.OmitStats
 
 	for i < totalLn {
-		j := i + 1
+		j := i
 		var size int32 = 0
 		var numValues int32 = 0
 
