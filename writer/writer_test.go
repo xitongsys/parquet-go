@@ -75,6 +75,56 @@ func TestNullCountsFromColumnIndex(t *testing.T) {
 	}
 }
 
+// TestAllNullCountsFromColumnIndex tests that NullCounts is correctly set in the ColumnIndex if a field contains null value only.
+func TestAllNullCountsFromColumnIndex(t *testing.T) {
+	type Entry struct {
+		X *int64 `parquet:"name=x, type=INT64"`
+		Y *int64 `parquet:"name=z, type=INT64"`
+	}
+
+	var buf bytes.Buffer
+	fw := writerfile.NewWriterFile(&buf)
+	pw, err := NewParquetWriter(fw, new(Entry), 1)
+	assert.NoError(t, err)
+
+	entries := []Entry{
+		{val(0), nil},
+		{val(1), nil},
+		{val(2), nil},
+		{val(3), nil},
+		{val(4), nil},
+		{val(5), nil},
+	}
+	for _, entry := range entries {
+		assert.NoError(t, pw.Write(entry))
+	}
+	assert.NoError(t, pw.WriteStop())
+
+	pf, err := buffer.NewBufferFile(buf.Bytes())
+	assert.Nil(t, err)
+	defer func() {
+		assert.NoError(t, pf.Close())
+	}()
+	pr, err := reader.NewParquetReader(pf, nil, 1)
+	assert.Nil(t, err)
+
+	assert.Nil(t, pr.ReadFooter())
+
+	assert.Equal(t, 1, len(pr.Footer.RowGroups))
+	columns := pr.Footer.RowGroups[0].GetColumns()
+	assert.Equal(t, 2, len(columns))
+
+	colIdx, err := readColumnIndex(pr.PFile, *columns[0].ColumnIndexOffset)
+	assert.NoError(t, err)
+	assert.Equal(t, true, colIdx.IsSetNullCounts())
+	assert.Equal(t, []int64{0}, colIdx.GetNullCounts())
+
+	colIdx, err = readColumnIndex(pr.PFile, *columns[1].ColumnIndexOffset)
+	assert.NoError(t, err)
+	assert.Equal(t, true, colIdx.IsSetNullCounts())
+	assert.Equal(t, []int64{6}, colIdx.GetNullCounts())
+}
+
 func readColumnIndex(pf source.ParquetFile, offset int64) (*parquet.ColumnIndex, error) {
 	colIdx := parquet.NewColumnIndex()
 	tpf := thrift.NewTCompactProtocolFactoryConf(nil)
