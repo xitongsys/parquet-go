@@ -3,7 +3,7 @@ package schema
 import (
 	"testing"
 
-	"github.com/apache/arrow/go/arrow"
+	"github.com/apache/arrow/go/v12/arrow"
 	"github.com/stretchr/testify/assert"
 )
 
