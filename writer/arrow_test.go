@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/apache/arrow/go/arrow"
-	"github.com/apache/arrow/go/arrow/array"
-	"github.com/apache/arrow/go/arrow/memory"
+	"github.com/apache/arrow/go/v12/arrow"
+	"github.com/apache/arrow/go/v12/arrow/array"
+	"github.com/apache/arrow/go/v12/arrow/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/xitongsys/parquet-go-source/buffer"
 	"github.com/xitongsys/parquet-go-source/writerfile"
@@ -43,8 +43,8 @@ var testSchema = arrow.NewSchema(
 )
 
 // testRecord populates the schema testSchema with proper values
-func testRecord(mem memory.Allocator) array.Record {
-	col1 := func() array.Interface {
+func testRecord(mem memory.Allocator) arrow.Record {
+	col1 := func() arrow.Array {
 		ib := array.NewInt8Builder(mem)
 		defer ib.Release()
 
@@ -52,7 +52,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewInt8Array()
 	}()
 	defer col1.Release()
-	col2 := func() array.Interface {
+	col2 := func() arrow.Array {
 		ib := array.NewInt16Builder(mem)
 		defer ib.Release()
 
@@ -61,7 +61,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewInt16Array()
 	}()
 	defer col2.Release()
-	col3 := func() array.Interface {
+	col3 := func() arrow.Array {
 		ib := array.NewInt32Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]int32{-21, -22, -23, -24, -25, -26, -27, -28, -29,
@@ -69,7 +69,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewInt32Array()
 	}()
 	defer col3.Release()
-	col4 := func() array.Interface {
+	col4 := func() arrow.Array {
 		ib := array.NewInt64Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]int64{-31, -32, -33, -34, -35, -36, -37, -38, -39,
@@ -77,14 +77,14 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewInt64Array()
 	}()
 	defer col4.Release()
-	col5 := func() array.Interface {
+	col5 := func() arrow.Array {
 		ib := array.NewUint8Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]uint8{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, nil)
 		return ib.NewUint8Array()
 	}()
 	defer col5.Release()
-	col6 := func() array.Interface {
+	col6 := func() arrow.Array {
 		ib := array.NewUint16Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]uint16{11, 12, 13, 14, 15, 16, 17, 18, 19,
@@ -92,7 +92,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewUint16Array()
 	}()
 	defer col6.Release()
-	col7 := func() array.Interface {
+	col7 := func() arrow.Array {
 		ib := array.NewUint32Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]uint32{21, 22, 23, 24, 25, 26, 27, 28, 29,
@@ -100,7 +100,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewUint32Array()
 	}()
 	defer col7.Release()
-	col8 := func() array.Interface {
+	col8 := func() arrow.Array {
 		ib := array.NewUint64Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]uint64{31, 32, 33, 34, 35, 36, 37, 38, 39,
@@ -108,7 +108,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewUint64Array()
 	}()
 	defer col8.Release()
-	col9 := func() array.Interface {
+	col9 := func() arrow.Array {
 		ib := array.NewFloat32Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]float32{1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7,
@@ -116,7 +116,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewFloat32Array()
 	}()
 	defer col9.Release()
-	col10 := func() array.Interface {
+	col10 := func() arrow.Array {
 		ib := array.NewFloat64Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]float64{10.1, 12.2, 13.3, 14.4, 15.5, 16.6,
@@ -124,7 +124,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewFloat64Array()
 	}()
 	defer col10.Release()
-	col11 := func() array.Interface {
+	col11 := func() arrow.Array {
 		ib := array.NewDate32Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]arrow.Date32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
@@ -132,7 +132,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewDate32Array()
 	}()
 	defer col11.Release()
-	col12 := func() array.Interface {
+	col12 := func() arrow.Array {
 		ib := array.NewDate64Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]arrow.Date64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
@@ -140,7 +140,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewDate64Array()
 	}()
 	defer col12.Release()
-	col13 := func() array.Interface {
+	col13 := func() arrow.Array {
 		ib := array.NewBinaryBuilder(mem, arrow.BinaryTypes.Binary)
 		defer ib.Release()
 		ib.AppendValues([][]byte{[]byte("A"), []byte("B"), []byte("C"),
@@ -149,7 +149,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewBinaryArray()
 	}()
 	defer col13.Release()
-	col14 := func() array.Interface {
+	col14 := func() arrow.Array {
 		ib := array.NewStringBuilder(mem)
 		defer ib.Release()
 		ib.AppendValues([]string{"a", "b", "c", "d", "e", "f", "g",
@@ -157,7 +157,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewStringArray()
 	}()
 	defer col14.Release()
-	col15 := func() array.Interface {
+	col15 := func() arrow.Array {
 		ib := array.NewBooleanBuilder(mem)
 		defer ib.Release()
 		ib.AppendValues([]bool{true, false, true, false, true,
@@ -165,7 +165,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewBooleanArray()
 	}()
 	defer col15.Release()
-	col16 := func() array.Interface {
+	col16 := func() arrow.Array {
 		ib := array.NewDate32Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]arrow.Date32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
@@ -173,7 +173,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewDate32Array()
 	}()
 	defer col16.Release()
-	col17 := func() array.Interface {
+	col17 := func() arrow.Array {
 		ib := array.NewDate64Builder(mem)
 		defer ib.Release()
 		ib.AppendValues([]arrow.Date64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
@@ -181,7 +181,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewDate64Array()
 	}()
 	defer col17.Release()
-	col18 := func() array.Interface {
+	col18 := func() arrow.Array {
 		dtype := arrow.FixedWidthTypes.Time32ms
 		ib := array.NewTime32Builder(mem, dtype.(*arrow.Time32Type))
 		defer ib.Release()
@@ -192,7 +192,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewTime32Array()
 	}()
 	defer col18.Release()
-	col19 := func() array.Interface {
+	col19 := func() arrow.Array {
 		dtype := arrow.FixedWidthTypes.Timestamp_ms
 		ib := array.NewTimestampBuilder(mem, dtype.(*arrow.TimestampType))
 		defer ib.Release()
@@ -201,7 +201,7 @@ func testRecord(mem memory.Allocator) array.Record {
 		return ib.NewTimestampArray()
 	}()
 	defer col19.Release()
-	cols := []array.Interface{col1, col2, col3, col4, col5, col6, col7,
+	cols := []arrow.Array{col1, col2, col3, col4, col5, col6, col7,
 		col8, col9, col10, col11, col12, col13, col14, col15, col16, col17,
 		col18, col19}
 	return array.NewRecord(testSchema, cols, -1)
@@ -238,8 +238,8 @@ var testNullableSchema = arrow.NewSchema(
 )
 
 // testRecordWithNulls populates the schema testNullableSchema
-func testRecordWithNulls(mem memory.Allocator) array.Record {
-	col1 := func() array.Interface {
+func testRecordWithNulls(mem memory.Allocator) arrow.Record {
+	col1 := func() arrow.Array {
 		ib := array.NewInt8Builder(mem)
 		defer ib.Release()
 		ib.Append(-1)
@@ -249,7 +249,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewInt8Array()
 	}()
 	defer col1.Release()
-	col2 := func() array.Interface {
+	col2 := func() arrow.Array {
 		ib := array.NewInt16Builder(mem)
 		defer ib.Release()
 		ib.AppendNull()
@@ -259,7 +259,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewInt16Array()
 	}()
 	defer col2.Release()
-	col3 := func() array.Interface {
+	col3 := func() arrow.Array {
 		ib := array.NewInt32Builder(mem)
 		defer ib.Release()
 		ib.Append(-21)
@@ -269,7 +269,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewInt32Array()
 	}()
 	defer col3.Release()
-	col4 := func() array.Interface {
+	col4 := func() arrow.Array {
 		ib := array.NewInt64Builder(mem)
 		defer ib.Release()
 		ib.AppendNull()
@@ -279,7 +279,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewInt64Array()
 	}()
 	defer col4.Release()
-	col5 := func() array.Interface {
+	col5 := func() arrow.Array {
 		ib := array.NewUint8Builder(mem)
 		defer ib.Release()
 		ib.Append(1)
@@ -289,7 +289,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewUint8Array()
 	}()
 	defer col5.Release()
-	col6 := func() array.Interface {
+	col6 := func() arrow.Array {
 		ib := array.NewUint16Builder(mem)
 		defer ib.Release()
 		ib.AppendNull()
@@ -299,7 +299,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewUint16Array()
 	}()
 	defer col6.Release()
-	col7 := func() array.Interface {
+	col7 := func() arrow.Array {
 		ib := array.NewUint32Builder(mem)
 		defer ib.Release()
 		ib.Append(21)
@@ -309,7 +309,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewUint32Array()
 	}()
 	defer col7.Release()
-	col8 := func() array.Interface {
+	col8 := func() arrow.Array {
 		ib := array.NewUint64Builder(mem)
 		defer ib.Release()
 		ib.AppendNull()
@@ -319,7 +319,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewUint64Array()
 	}()
 	defer col8.Release()
-	col9 := func() array.Interface {
+	col9 := func() arrow.Array {
 		ib := array.NewFloat32Builder(mem)
 		defer ib.Release()
 		ib.Append(1.1)
@@ -329,7 +329,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewFloat32Array()
 	}()
 	defer col9.Release()
-	col10 := func() array.Interface {
+	col10 := func() arrow.Array {
 		ib := array.NewFloat64Builder(mem)
 		defer ib.Release()
 		ib.AppendNull()
@@ -339,7 +339,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewFloat64Array()
 	}()
 	defer col10.Release()
-	col11 := func() array.Interface {
+	col11 := func() arrow.Array {
 		ib := array.NewDate32Builder(mem)
 		defer ib.Release()
 		ib.Append(1)
@@ -349,7 +349,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewDate32Array()
 	}()
 	defer col11.Release()
-	col12 := func() array.Interface {
+	col12 := func() arrow.Array {
 		ib := array.NewDate64Builder(mem)
 		defer ib.Release()
 		ib.AppendNull()
@@ -359,7 +359,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewDate64Array()
 	}()
 	defer col12.Release()
-	col13 := func() array.Interface {
+	col13 := func() arrow.Array {
 		ib := array.NewBinaryBuilder(mem, arrow.BinaryTypes.Binary)
 		defer ib.Release()
 		ib.Append([]byte("A"))
@@ -369,7 +369,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewBinaryArray()
 	}()
 	defer col13.Release()
-	col14 := func() array.Interface {
+	col14 := func() arrow.Array {
 		ib := array.NewStringBuilder(mem)
 		defer ib.Release()
 		ib.AppendNull()
@@ -379,7 +379,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewStringArray()
 	}()
 	defer col14.Release()
-	col15 := func() array.Interface {
+	col15 := func() arrow.Array {
 		ib := array.NewBooleanBuilder(mem)
 		defer ib.Release()
 		ib.Append(true)
@@ -389,7 +389,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewBooleanArray()
 	}()
 	defer col15.Release()
-	col16 := func() array.Interface {
+	col16 := func() arrow.Array {
 		ib := array.NewDate32Builder(mem)
 		defer ib.Release()
 		ib.AppendNull()
@@ -399,7 +399,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewDate32Array()
 	}()
 	defer col16.Release()
-	col17 := func() array.Interface {
+	col17 := func() arrow.Array {
 		ib := array.NewDate64Builder(mem)
 		defer ib.Release()
 		ib.Append(1)
@@ -409,7 +409,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewDate64Array()
 	}()
 	defer col17.Release()
-	col18 := func() array.Interface {
+	col18 := func() arrow.Array {
 		dtype := arrow.FixedWidthTypes.Time32ms
 		ib := array.NewTime32Builder(mem, dtype.(*arrow.Time32Type))
 		defer ib.Release()
@@ -420,7 +420,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewTime32Array()
 	}()
 	defer col18.Release()
-	col19 := func() array.Interface {
+	col19 := func() arrow.Array {
 		dtype := arrow.FixedWidthTypes.Timestamp_ms
 		ib := array.NewTimestampBuilder(mem, dtype.(*arrow.TimestampType))
 		defer ib.Release()
@@ -431,7 +431,7 @@ func testRecordWithNulls(mem memory.Allocator) array.Record {
 		return ib.NewTimestampArray()
 	}()
 	defer col19.Release()
-	cols := []array.Interface{col1, col2, col3, col4, col5, col6, col7,
+	cols := []arrow.Array{col1, col2, col3, col4, col5, col6, col7,
 		col8, col9, col10, col11, col12, col13, col14, col15, col16, col17,
 		col18, col19}
 	return array.NewRecord(testNullableSchema, cols, -1)

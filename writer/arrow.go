@@ -3,8 +3,7 @@ package writer
 import (
 	"fmt"
 
-	"github.com/apache/arrow/go/arrow"
-	"github.com/apache/arrow/go/arrow/array"
+	"github.com/apache/arrow/go/v12/arrow"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/marshal"
@@ -25,10 +24,10 @@ type ArrowWriter struct {
 	ParquetWriter
 }
 
-//NewArrowWriter creates arrow schema parquet writer given the native
-//arrow schema, parquet file writer which contains the parquet file in
-//which we will write the record along with the number of parallel threads
-//which will write in the file.
+// NewArrowWriter creates arrow schema parquet writer given the native
+// arrow schema, parquet file writer which contains the parquet file in
+// which we will write the record along with the number of parallel threads
+// which will write in the file.
 func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile,
 	np int64) (*ArrowWriter, error) {
 	var err error
@@ -61,7 +60,7 @@ func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile,
 // The function transforms the data from the record, which the go arrow library
 // gives as array of columns, to array of rows which the parquet-go library
 // can understand as it does not accepts data by columns, but rather by rows.
-func (w *ArrowWriter) WriteArrow(record array.Record) error {
+func (w *ArrowWriter) WriteArrow(record arrow.Record) error {
 	table := make([][]interface{}, 0)
 	for i, column := range record.Columns() {
 		columnFromRecord, err := common.ArrowColToParquetCol(
