@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blockblob"
 )
 
 type testCase struct {
@@ -35,10 +35,12 @@ var testCases []testCase = []testCase{
 
 func TestOpen_NewAzBlobFileReader(t *testing.T) {
 	for _, tc := range testCases {
-		_, err := NewAzBlobFileReader(context.Background(), tc.url, nil, azblob.ClientOptions{
-			Retry: policy.RetryOptions{
-				TryTimeout: 10 * time.Second,
-				MaxRetries: 1,
+		_, err := NewAzBlobFileReader(context.Background(), tc.url, nil, blockblob.ClientOptions{
+			ClientOptions: policy.ClientOptions{
+				Retry: policy.RetryOptions{
+					TryTimeout: 10 * time.Second,
+					MaxRetries: 1,
+				},
 			},
 		})
 		if tc.err == nil {
@@ -57,10 +59,12 @@ func TestOpen_NewAzBlobFileReader(t *testing.T) {
 
 func TestOpen_NewAzBlobFileReaderWithSharedKey(t *testing.T) {
 	for _, tc := range testCases {
-		_, err := NewAzBlobFileReaderWithSharedKey(context.Background(), tc.url, nil, azblob.ClientOptions{
-			Retry: policy.RetryOptions{
-				TryTimeout: 10 * time.Second,
-				MaxRetries: 1,
+		_, err := NewAzBlobFileReaderWithSharedKey(context.Background(), tc.url, nil, blockblob.ClientOptions{
+			ClientOptions: policy.ClientOptions{
+				Retry: policy.RetryOptions{
+					TryTimeout: 10 * time.Second,
+					MaxRetries: 1,
+				},
 			},
 		})
 		if tc.err == nil {
@@ -79,7 +83,7 @@ func TestOpen_NewAzBlobFileReaderWithSharedKey(t *testing.T) {
 
 func TestOpen_NewAzBlobFileReaderWithClient(t *testing.T) {
 	for _, tc := range testCases {
-		testClient, _ := azblob.NewBlockBlobClientWithNoCredential(tc.url, &azblob.ClientOptions{})
+		testClient, _ := blockblob.NewClientWithNoCredential(tc.url, &blockblob.ClientOptions{})
 		_, err := NewAzBlobFileReaderWithClient(context.Background(), tc.url, testClient)
 		if tc.err == nil {
 			if err != nil {
