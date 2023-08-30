@@ -3,17 +3,28 @@ package azblob
 import (
 	"context"
 	"errors"
+	"net"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/bloberror"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blockblob"
 )
+
+type ErrorMatcher struct {
+	Match func(error) bool
+	Desc  string
+}
+
+func (em ErrorMatcher) String() string {
+	return em.Desc
+}
 
 type testCase struct {
 	url string
-	err error
+	err *ErrorMatcher
 }
 
 var testCases []testCase = []testCase{
@@ -24,21 +35,34 @@ var testCases []testCase = []testCase{
 	},
 	{
 		url: "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_zip/",
-		err: errors.New("RESPONSE ERROR (ErrorCode=BlobNotFound)"),
+		err: &ErrorMatcher{
+			Match: func(err error) bool {
+				return bloberror.HasCode(err, bloberror.BlobNotFound)
+			},
+			Desc: "BlobNotFound",
+		},
 	},
 	{
 		// the idea is that Azure blob does now allow "-" in storage account name so there should be no such a storage account
 		url: "https://non-existent.blob.core.windows.net/container/blob",
-		err: errors.New("no such host"),
+		err: &ErrorMatcher{
+			Match: func(err error) bool {
+				var dnsErr *net.DNSError
+				return errors.As(err, &dnsErr) && dnsErr.Err == "no such host"
+			},
+			Desc: "no such host",
+		},
 	},
 }
 
 func TestOpen_NewAzBlobFileReader(t *testing.T) {
 	for _, tc := range testCases {
-		_, err := NewAzBlobFileReader(context.Background(), tc.url, nil, azblob.ClientOptions{
-			Retry: policy.RetryOptions{
-				TryTimeout: 10 * time.Second,
-				MaxRetries: 1,
+		_, err := NewAzBlobFileReader(context.Background(), tc.url, nil, blockblob.ClientOptions{
+			ClientOptions: policy.ClientOptions{
+				Retry: policy.RetryOptions{
+					TryTimeout: 10 * time.Second,
+					MaxRetries: 1,
+				},
 			},
 		})
 		if tc.err == nil {
@@ -48,19 +72,21 @@ func TestOpen_NewAzBlobFileReader(t *testing.T) {
 			continue
 		}
 		if err == nil {
-			t.Errorf("expected [%s] error but got nil", tc.err.Error())
-		} else if !strings.Contains(err.Error(), tc.err.Error()) {
-			t.Errorf("expected [%s] error but got: %s", tc.err.Error(), err.Error())
+			t.Errorf("expected [%s] error but got nil", tc.err)
+		} else if !tc.err.Match(err) {
+			t.Errorf("expected [%s] error but got: %s", tc.err, err.Error())
 		}
 	}
 }
 
 func TestOpen_NewAzBlobFileReaderWithSharedKey(t *testing.T) {
 	for _, tc := range testCases {
-		_, err := NewAzBlobFileReaderWithSharedKey(context.Background(), tc.url, nil, azblob.ClientOptions{
-			Retry: policy.RetryOptions{
-				TryTimeout: 10 * time.Second,
-				MaxRetries: 1,
+		_, err := NewAzBlobFileReaderWithSharedKey(context.Background(), tc.url, nil, blockblob.ClientOptions{
+			ClientOptions: policy.ClientOptions{
+				Retry: policy.RetryOptions{
+					TryTimeout: 10 * time.Second,
+					MaxRetries: 1,
+				},
 			},
 		})
 		if tc.err == nil {
@@ -70,16 +96,16 @@ func TestOpen_NewAzBlobFileReaderWithSharedKey(t *testing.T) {
 			continue
 		}
 		if err == nil {
-			t.Errorf("expected [%s] error but got nil", tc.err.Error())
-		} else if !strings.Contains(err.Error(), tc.err.Error()) {
-			t.Errorf("expected [%s] error but got: %s", tc.err.Error(), err.Error())
+			t.Errorf("expected [%s] error but got nil", tc.err)
+		} else if !tc.err.Match(err) {
+			t.Errorf("expected [%s] error but got: %s", tc.err, err.Error())
 		}
 	}
 }
 
 func TestOpen_NewAzBlobFileReaderWithClient(t *testing.T) {
 	for _, tc := range testCases {
-		testClient, _ := azblob.NewBlockBlobClientWithNoCredential(tc.url, &azblob.ClientOptions{})
+		testClient, _ := blockblob.NewClientWithNoCredential(tc.url, &blockblob.ClientOptions{})
 		_, err := NewAzBlobFileReaderWithClient(context.Background(), tc.url, testClient)
 		if tc.err == nil {
 			if err != nil {
@@ -88,9 +114,9 @@ func TestOpen_NewAzBlobFileReaderWithClient(t *testing.T) {
 			continue
 		}
 		if err == nil {
-			t.Errorf("expected [%s] error but got nil", tc.err.Error())
-		} else if !strings.Contains(err.Error(), tc.err.Error()) {
-			t.Errorf("expected [%s] error but got: %s", tc.err.Error(), err.Error())
+			t.Errorf("expected [%s] error but got nil", tc.err)
+		} else if !tc.err.Match(err) {
+			t.Errorf("expected [%s] error but got: %s", tc.err, err.Error())
 		}
 	}
 	_, err := NewAzBlobFileReaderWithClient(context.Background(), "dummy-url", nil)
