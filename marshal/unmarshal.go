@@ -11,7 +11,7 @@ import (
 	"github.com/xitongsys/parquet-go/schema"
 )
 
-//Record Map KeyValue pair
+// Record Map KeyValue pair
 type KeyValue struct {
 	Key   reflect.Value
 	Value reflect.Value
@@ -27,7 +27,7 @@ type SliceRecord struct {
 	Index  int
 }
 
-//Convert the table map to objects slice. dstInterface is a slice of pointers of objects
+// Convert the table map to objects slice. dstInterface is a slice of pointers of objects
 func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *schema.SchemaHandler, prefixPath string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {

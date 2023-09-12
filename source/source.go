@@ -17,7 +17,7 @@ type ParquetFile interface {
 
 const bufferSize = 4096
 
-//Convert a file reater to Thrift reader
+// Convert a file reater to Thrift reader
 func ConvertToThriftReader(file ParquetFile, offset int64) *thrift.TBufferedTransport {
 	file.Seek(offset, 0)
 	thriftReader := thrift.NewStreamTransportR(file)

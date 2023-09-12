@@ -7,7 +7,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-//Create a schema handler from CSV metadata
+// Create a schema handler from CSV metadata
 func NewSchemaHandlerFromMetadata(mds []string) (*SchemaHandler, error) {
 	schemaList := make([]*parquet.SchemaElement, 0)
 	infos := make([]*common.Tag, 0)

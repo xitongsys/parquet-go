@@ -45,7 +45,7 @@ func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parque
 	return page, totSize
 }
 
-//Compress the dict page to parquet file
+// Compress the dict page to parquet file
 func (page *Page) DictPageCompress(compressType parquet.CompressionCodec, pT parquet.Type) []byte {
 	dataBuf := encoding.WritePlain(page.DataTable.Values, pT)
 	var dataEncodeBuf []byte = compress.Compress(dataBuf, compressType)
@@ -70,7 +70,7 @@ func (page *Page) DictPageCompress(compressType parquet.CompressionCodec, pT par
 	return res
 }
 
-//Convert a table to dict data pages
+// Convert a table to dict data pages
 func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bitWidth int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
@@ -151,7 +151,7 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize int32, bi
 	return res, totSize
 }
 
-//Compress the data page to parquet file
+// Compress the data page to parquet file
 func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bitWidth int32, values []int32) []byte {
 	//values////////////////////////////////////////////
 	valuesRawBuf := []byte{byte(bitWidth)}

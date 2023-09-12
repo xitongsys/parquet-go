@@ -62,15 +62,15 @@ func TIMESTAMP_NANOSToTime(nanos int64, adjustedToUTC bool) time.Time {
 	}
 }
 
-//From Spark
-//https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L47
+// From Spark
+// https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L47
 const (
 	JULIAN_DAY_OF_EPOCH int64 = 2440588
 	MICROS_PER_DAY      int64 = 3600 * 24 * 1000 * 1000
 )
 
-//From Spark
-//https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L180
+// From Spark
+// https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L180
 func toJulianDay(t time.Time) (int32, int64) {
 	utc := t.UTC()
 	nanos := utc.UnixNano()
@@ -82,8 +82,8 @@ func toJulianDay(t time.Time) (int32, int64) {
 	return days, us
 }
 
-//From Spark
-//https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L170
+// From Spark
+// https://github.com/apache/spark/blob/b9f2f78de59758d1932c1573338539e485a01112/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/util/DateTimeUtils.scala#L170
 func fromJulianDay(days int32, nanos int64) time.Time {
 	nanos = ((int64(days)-JULIAN_DAY_OF_EPOCH)*MICROS_PER_DAY + nanos/1000) * 1000
 	sec, nsec := nanos/time.Second.Nanoseconds(), nanos%time.Second.Nanoseconds()

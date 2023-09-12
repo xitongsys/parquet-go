@@ -30,7 +30,7 @@ type ParquetReader struct {
 	ObjPartialType reflect.Type
 }
 
-//Create a parquet reader: obj is a object with schema tags or a JSON schema string
+// Create a parquet reader: obj is a object with schema tags or a JSON schema string
 func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetReader, error) {
 	var err error
 	res := new(ParquetReader)
@@ -95,7 +95,7 @@ func (pr *ParquetReader) SetSchemaHandlerFromJSON(jsonSchema string) error {
 	return nil
 }
 
-//Rename schema name to inname
+// Rename schema name to inname
 func (pr *ParquetReader) RenameSchema() {
 	for i := 0; i < len(pr.SchemaHandler.Infos); i++ {
 		pr.Footer.Schema[i].Name = pr.SchemaHandler.Infos[i].InName
@@ -118,7 +118,7 @@ func (pr *ParquetReader) GetNumRows() int64 {
 	return pr.Footer.GetNumRows()
 }
 
-//Get the footer size
+// Get the footer size
 func (pr *ParquetReader) GetFooterSize() (uint32, error) {
 	var err error
 	buf := make([]byte, 4)
@@ -132,7 +132,7 @@ func (pr *ParquetReader) GetFooterSize() (uint32, error) {
 	return size, err
 }
 
-//Read footer from parquet file
+// Read footer from parquet file
 func (pr *ParquetReader) ReadFooter() error {
 	size, err := pr.GetFooterSize()
 	if err != nil {
@@ -149,7 +149,7 @@ func (pr *ParquetReader) ReadFooter() error {
 	return pr.Footer.Read(context.TODO(), protocol)
 }
 
-//Skip rows of parquet file
+// Skip rows of parquet file
 func (pr *ParquetReader) SkipRows(num int64) error {
 	var err error
 	if num <= 0 {
@@ -195,7 +195,7 @@ func (pr *ParquetReader) SkipRows(num int64) error {
 	return err
 }
 
-//Read rows of parquet file and unmarshal all to dst
+// Read rows of parquet file and unmarshal all to dst
 func (pr *ParquetReader) Read(dstInterface interface{}) error {
 	return pr.read(dstInterface, "")
 }
@@ -226,7 +226,7 @@ func (pr *ParquetReader) ReadByNumber(maxReadNumber int) ([]interface{}, error) 
 	return ret, nil
 }
 
-//Read rows of parquet file and unmarshal all to dst
+// Read rows of parquet file and unmarshal all to dst
 func (pr *ParquetReader) ReadPartial(dstInterface interface{}, prefixPath string) error {
 	prefixPath, err := pr.SchemaHandler.ConvertToInPathStr(prefixPath)
 	if err != nil {
@@ -262,7 +262,7 @@ func (pr *ParquetReader) ReadPartialByNumber(maxReadNumber int, prefixPath strin
 	return ret, nil
 }
 
-//Read rows of parquet file with a prefixPath
+// Read rows of parquet file with a prefixPath
 func (pr *ParquetReader) read(dstInterface interface{}, prefixPath string) error {
 	var err error
 	tmap := make(map[string]*layout.Table)
@@ -352,7 +352,7 @@ func (pr *ParquetReader) read(dstInterface interface{}, prefixPath string) error
 	return err
 }
 
-//Stop Read
+// Stop Read
 func (pr *ParquetReader) ReadStop() {
 	for _, cb := range pr.ColumnBuffers {
 		if cb != nil {

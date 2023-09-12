@@ -20,7 +20,7 @@ func NewJSONWriterFromWriter(jsonSchema string, w io.Writer, np int64) (*JSONWri
 	return NewJSONWriter(jsonSchema, wf, np)
 }
 
-//Create JSON writer
+// Create JSON writer
 func NewJSONWriter(jsonSchema string, pfile source.ParquetFile, np int64) (*JSONWriter, error) {
 	var err error
 	res := new(JSONWriter)

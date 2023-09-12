@@ -14,7 +14,7 @@ import (
 	"github.com/xitongsys/parquet-go/types"
 )
 
-//ss is []string
+// ss is []string
 func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
 	defer func() {
 		if r := recover(); r != nil {

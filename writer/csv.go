@@ -22,7 +22,7 @@ func NewCSVWriterFromWriter(md []string, w io.Writer, np int64) (*CSVWriter, err
 	return NewCSVWriter(md, wf, np)
 }
 
-//Create CSV writer
+// Create CSV writer
 func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, error) {
 	var err error
 	res := new(CSVWriter)
@@ -46,7 +46,7 @@ func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, 
 	return res, err
 }
 
-//Write string values to parquet file
+// Write string values to parquet file
 func (w *CSVWriter) WriteString(recsi interface{}) error {
 	var err error
 	recs := recsi.([]*string)
