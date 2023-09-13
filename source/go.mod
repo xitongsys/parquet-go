@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.15.3
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.26.3
+	github.com/bobg/gcsobj v0.1.2 // indirect
 	github.com/colinmarc/hdfs/v2 v2.1.1
 	github.com/golang/mock v1.6.0
 	github.com/minio/minio-go/v7 v7.0.34
