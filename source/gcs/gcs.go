@@ -18,10 +18,12 @@ type File struct {
 	BucketName string
 	FilePath   string
 
-	gcsReader *gcsobj.Reader
-	gcsWriter *storage.Writer
-	object    *storage.ObjectHandle
-	ctx       context.Context //nolint:containedctx // Needed to create new readers and writers
+	gcsClient      *storage.Client
+	gcsReader      *gcsobj.Reader
+	gcsWriter      *storage.Writer
+	object         *storage.ObjectHandle
+	ctx            context.Context //nolint:containedctx // Needed to create new readers and writers
+	externalClient bool
 }
 
 // NewGcsFileWriter will create a new GCS file writer.
@@ -41,13 +43,20 @@ func NewGcsFileReader(ctx context.Context, projectID, bucketName, name string) (
 		return nil, fmt.Errorf("failed to create storage client: %w", err)
 	}
 
-	return NewGcsFileReaderWithClient(ctx, client, projectID, bucketName, name)
+	r, err := NewGcsFileReaderWithClient(ctx, client, projectID, bucketName, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set externalClient to false so we close it when calling `Close`.
+	r.externalClient = false
+
+	return r, nil
 }
 
 // NewGcsFileWriter will create a new GCS file reader with the passed client.
 func NewGcsFileReaderWithClient(ctx context.Context, client *storage.Client, projectID, bucketName, name string) (*File, error) {
-	bucket := client.Bucket(bucketName)
-	obj := bucket.Object(name)
+	obj := client.Bucket(bucketName).Object(name)
 
 	reader, err := gcsobj.NewReader(ctx, obj)
 	if err != nil {
@@ -55,12 +64,14 @@ func NewGcsFileReaderWithClient(ctx context.Context, client *storage.Client, pro
 	}
 
 	return &File{
-		ProjectID:  projectID,
-		BucketName: bucketName,
-		FilePath:   name,
-		gcsReader:  reader,
-		object:     obj,
-		ctx:        ctx,
+		ProjectID:      projectID,
+		BucketName:     bucketName,
+		FilePath:       name,
+		gcsClient:      client,
+		gcsReader:      reader,
+		object:         obj,
+		ctx:            ctx,
+		externalClient: true,
 	}, nil
 }
 
@@ -72,7 +83,11 @@ func (g *File) Open(name string) (source.ParquetFile, error) {
 		name = g.FilePath
 	}
 
-	return NewGcsFileReader(g.ctx, g.ProjectID, g.BucketName, name)
+	if g.gcsClient == nil {
+		return NewGcsFileReader(g.ctx, g.ProjectID, g.BucketName, name)
+	}
+
+	return NewGcsFileReaderWithClient(g.ctx, g.gcsClient, g.ProjectID, g.BucketName, name)
 }
 
 // Create will create a new GCS file reader/writer and open the object named as
@@ -83,7 +98,11 @@ func (g *File) Create(name string) (source.ParquetFile, error) {
 		name = g.FilePath
 	}
 
-	return NewGcsFileReader(g.ctx, g.ProjectID, g.BucketName, name)
+	if g.gcsClient == nil {
+		return NewGcsFileWriter(g.ctx, g.ProjectID, g.BucketName, name)
+	}
+
+	return NewGcsFileWriterWithClient(g.ctx, g.gcsClient, g.ProjectID, g.BucketName, name)
 }
 
 // Seek implements io.Seeker.
@@ -92,12 +111,12 @@ func (g *File) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Read implements io.Reader.
-func (g *File) Read(b []byte) (cnt int, err error) {
+func (g *File) Read(b []byte) (int, error) {
 	return g.gcsReader.Read(b)
 }
 
 // Write implements io.Writer.
-func (g *File) Write(b []byte) (n int, err error) {
+func (g *File) Write(b []byte) (int, error) {
 	if g.gcsWriter == nil {
 		g.gcsWriter = g.object.NewWriter(g.ctx)
 	}
@@ -107,6 +126,14 @@ func (g *File) Write(b []byte) (n int, err error) {
 
 // Close implements io.Closer.
 func (g *File) Close() error {
+	if !g.externalClient {
+		if err := g.gcsClient.Close(); err != nil {
+			return err
+		}
+
+		g.gcsClient = nil
+	}
+
 	if g.gcsWriter != nil {
 		if err := g.gcsWriter.Close(); err != nil {
 			return err
