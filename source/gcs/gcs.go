@@ -126,7 +126,7 @@ func (g *File) Write(b []byte) (int, error) {
 
 // Close implements io.Closer.
 func (g *File) Close() error {
-	if !g.externalClient {
+	if !g.externalClient && g.gcsClient != nil {
 		if err := g.gcsClient.Close(); err != nil {
 			return err
 		}
@@ -138,6 +138,8 @@ func (g *File) Close() error {
 		if err := g.gcsWriter.Close(); err != nil {
 			return err
 		}
+
+		g.gcsWriter = nil
 	}
 
 	return g.gcsReader.Close()
