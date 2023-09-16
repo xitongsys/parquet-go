@@ -10,7 +10,7 @@ import (
 )
 
 // Compile time check that *File implement the source.ParquetFile interface.
-var _ source.ParquetFile = &File{}
+var _ source.ParquetFile = (*File)(nil)
 
 // File represents a File that can be read from or written to.
 type File struct {
