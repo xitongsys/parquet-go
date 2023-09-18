@@ -29,15 +29,28 @@ const (
 	contentRangeHeader = "Content-Range"
 )
 
-func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHeaders map[string]string) (source.ParquetFile, error) {
-	// make sure remote support range
-	transport := http.DefaultTransport
-	if dedicatedTransport {
-		transport = &http.Transport{}
-	}
-	transport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: ignoreTLSError}
+var (
+	defaultClient *http.Client
+)
 
-	client := &http.Client{Transport: transport}
+func SetDefaultClient(client *http.Client) {
+	defaultClient = client
+}
+
+func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHeaders map[string]string) (source.ParquetFile, error) {
+	var client *http.Client
+	if defaultClient != nil {
+		client = defaultClient
+	} else {
+		// make sure remote support range
+		transport := http.DefaultTransport
+		if dedicatedTransport {
+			transport = &http.Transport{}
+		}
+		transport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: ignoreTLSError}
+		client = &http.Client{Transport: transport}
+	}
+
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
