@@ -70,7 +70,9 @@ func main() {
 	if err = pr.Read(&dateItem); err != nil {
 		log.Println("Read error", err)
 	}
-	log.Println(dateItem)
+	fmt.Printf("RequiredDate: %v\n", dateItem[0].RequiredDate)
+	fmt.Printf("OptionalDate %v\n", *dateItem[0].OptionalDate)
+	fmt.Printf("NullDate: %v\n", dateItem[0].NullDate)
 
 	pr.ReadStop()
 	fr.Close()
