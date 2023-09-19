@@ -5,7 +5,7 @@ package compress
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"sync"
 
 	"github.com/pierrec/lz4/v4"
@@ -32,7 +32,7 @@ func init() {
 		Uncompress: func(buf []byte) (i []byte, err error) {
 			rbuf := bytes.NewReader(buf)
 			lz4Reader := lz4.NewReader(rbuf)
-			res, err := ioutil.ReadAll(lz4Reader)
+			res, err := io.ReadAll(lz4Reader)
 			return res, err
 		},
 	}
