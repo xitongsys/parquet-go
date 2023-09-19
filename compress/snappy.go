@@ -4,7 +4,7 @@
 package compress
 
 import (
-	"github.com/golang/snappy"
+	"github.com/klauspost/compress/snappy"
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
