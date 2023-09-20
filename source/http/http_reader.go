@@ -139,6 +139,7 @@ func (r *HttpReader) Read(b []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer resp.Body.Close()
 
 	buf, err := ioutil.ReadAll(resp.Body)
 	bytesRead := len(buf)
