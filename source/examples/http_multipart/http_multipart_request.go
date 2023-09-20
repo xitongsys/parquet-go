@@ -23,8 +23,8 @@ type Student struct {
 }
 
 func main() {
-	fpath := "flat.parquet.snappy"
-	file, err := os.Open(fpath)
+	path := "flat.parquet.snappy"
+	file, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func main() {
 	// create sample request
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("parquet_file", filepath.Base(fpath))
+	part, err := writer.CreateFormFile("parquet_file", filepath.Base(path))
 	if err != nil {
 		log.Fatal(err)
 	}
