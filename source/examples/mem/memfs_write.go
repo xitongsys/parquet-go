@@ -1,17 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"time"
 
-	"github.com/xitongsys/parquet-go-source/mem"
 	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go-source/mem"
+	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
-	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type Student struct {
@@ -24,6 +25,9 @@ type Student struct {
 }
 
 func main() {
+	bs, err := os.ReadFile("flat.parquet.snappy")
+	fmt.Println(string(bs[:100]))
+	panic(err)
 	// create in-memory ParquetFile with Closer Function
 	// NOTE: closer function can be nil, no action will be
 	// run when the writer is closed.

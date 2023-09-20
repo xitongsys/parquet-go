@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	source "github.com/xitongsys/parquet-go-source/http"
-	"github.com/xitongsys/parquet-go/reader"
 	"io"
 	"log"
 	"mime/multipart"
@@ -11,6 +9,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+
+	source "github.com/xitongsys/parquet-go-source/http"
+	"github.com/xitongsys/parquet-go/reader"
 )
 
 type Student struct {
@@ -22,8 +23,8 @@ type Student struct {
 }
 
 func main() {
-	path := "flat.parquet.snappy"
-	file, err := os.Open(path)
+	fpath := "flat.parquet.snappy"
+	file, err := os.Open(fpath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,7 +33,7 @@ func main() {
 	// create sample request
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("parquet_file", filepath.Base(path))
+	part, err := writer.CreateFormFile("parquet_file", filepath.Base(fpath))
 	if err != nil {
 		log.Fatal(err)
 	}
