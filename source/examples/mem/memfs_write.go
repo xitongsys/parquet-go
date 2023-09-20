@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -25,9 +24,6 @@ type Student struct {
 }
 
 func main() {
-	bs, err := os.ReadFile("flat.parquet.snappy")
-	fmt.Println(string(bs[:100]))
-	panic(err)
 	// create in-memory ParquetFile with Closer Function
 	// NOTE: closer function can be nil, no action will be
 	// run when the writer is closed.
