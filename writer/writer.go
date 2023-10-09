@@ -473,7 +473,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 					pageLocation := parquet.NewPageLocation()
 					pageLocation.Offset = pw.Offset
 					pageLocation.FirstRowIndex = firstRowIndex
-					pageLocation.CompressedPageSize = page.Header.CompressedPageSize
+					pageLocation.CompressedPageSize = int32(len(page.RawData)) // https://github.com/xitongsys/parquet-go/issues/547
 
 					offsetIndex.PageLocations = append(offsetIndex.PageLocations, pageLocation)
 
