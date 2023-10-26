@@ -193,7 +193,7 @@ Using this interface, parquet-go can read/write parquet file on different platfo
 
 ## Writer
 
-Three Writers are supported: ParquetWriter, JSONWriter, CSVWriter, ArrowWriter.
+Four Writers are supported: ParquetWriter, JSONWriter, CSVWriter, ArrowWriter.
 
 * ParquetWriter is used to write predefined Golang structs.
 [Example of ParquetWriter](https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
@@ -229,7 +229,7 @@ Two Readers are supported: ParquetReader, ColumnReader
 
 ## Schema
 
-There are three methods to define the schema: go struct tags, Json, CSV, Arrow metadata. Only items in schema will be written and others will be ignored.
+There are four methods to define the schema: go struct tags, Json, CSV, Arrow metadata. Only items in schema will be written and others will be ignored.
 
 ### Tag
 
