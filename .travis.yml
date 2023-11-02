@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - "1.17.x"
+  - "1.20.x"
 
 services:
   - docker
@@ -10,6 +10,5 @@ script:
   - make test
 
 after_script:
-
 
 after_success:
