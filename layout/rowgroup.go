@@ -1,7 +1,6 @@
 package layout
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/xitongsys/parquet-go/common"
@@ -68,20 +67,7 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 
 		wg.Add(1)
 		go func(index int64, bgn int64, end int64) {
-			defer func() {
-				wg.Done()
-				if r := recover(); r != nil {
-					switch x := r.(type) {
-					case string:
-						err = errors.New(x)
-					case error:
-						err = x
-					default:
-						err = errors.New("unknown error")
-					}
-				}
-			}()
-
+			defer wg.Done()
 			for i := bgn; i < end; i++ {
 				offset := columnChunks[i].FileOffset
 				PFile := PFile
