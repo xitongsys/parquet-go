@@ -51,16 +51,28 @@ func NewColumnBuffer(pFile source.ParquetFile, footer *parquet.FileMetaData, sch
 }
 
 func (cbt *ColumnBufferType) NextRowGroup() error {
-	var err error
 	rowGroups := cbt.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
 	if cbt.RowGroupIndex >= ln {
-		cbt.DataTableNumRows++ //very important, because DataTableNumRows is one smaller than real rows number
+		// If we seeked here, stop future reads
+		cbt.ChunkReadValues = cbt.ChunkHeader.MetaData.NumValues
+		//very important, because DataTableNumRows is one smaller than real rows number
+		cbt.DataTableNumRows++
 		return io.EOF
 	}
 
-	cbt.RowGroupIndex++
+	return cbt.SeekRowGroup(cbt.RowGroupIndex + 1)
+}
 
+func (cbt *ColumnBufferType) SeekRowGroup(index int64) error {
+	var err error
+	rowGroups := cbt.Footer.GetRowGroups()
+	ln := int64(len(rowGroups))
+	if index <= 0 || index > ln {
+		return fmt.Errorf("[SeekRowGroup] index out of bounds: %v", index)
+	}
+
+	cbt.RowGroupIndex = index
 	columnChunks := rowGroups[cbt.RowGroupIndex-1].GetColumns()
 	i := int64(0)
 	ln = int64(len(columnChunks))
@@ -86,7 +98,6 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 		}
 	}
 
-	//offset := columnChunks[i].FileOffset
 	offset := columnChunks[i].MetaData.DataPageOffset
 	if columnChunks[i].MetaData.DictionaryPageOffset != nil {
 		offset = *columnChunks[i].MetaData.DictionaryPageOffset
