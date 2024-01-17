@@ -191,7 +191,7 @@ func (cbt *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
 	}
 }
 
-func (cbt *ColumnBufferType) SkipRows(num int64) int64 {
+func (cbt *ColumnBufferType) SkipRows(num int64) (int64, error) {
 	var (
 		err  error
 		page *layout.Page
@@ -199,6 +199,9 @@ func (cbt *ColumnBufferType) SkipRows(num int64) int64 {
 
 	for cbt.DataTableNumRows < num && err == nil {
 		page, err = cbt.ReadPageForSkip()
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	if num > cbt.DataTableNumRows {
@@ -207,7 +210,7 @@ func (cbt *ColumnBufferType) SkipRows(num int64) int64 {
 
 	if page != nil {
 		if err = page.GetValueFromRawData(cbt.SchemaHandler); err != nil {
-			return 0
+			return 0, err
 		}
 
 		page.Decode(cbt.DictPage)
@@ -226,18 +229,17 @@ func (cbt *ColumnBufferType) SkipRows(num int64) int64 {
 		cbt.DataTable.Merge(tmp)
 	}
 
-	return num
+	return num, nil
 }
 
-func (cbt *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64) {
-	if cbt.Footer.NumRows == 0 {
-		return &layout.Table{}, 0
-	}
-
+func (cbt *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64, error) {
 	var err error
 
 	for cbt.DataTableNumRows < num && err == nil {
 		err = cbt.ReadPage()
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	if cbt.DataTableNumRows < 0 {
@@ -252,11 +254,11 @@ func (cbt *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64) {
 	res := cbt.DataTable.Pop(num)
 	cbt.DataTableNumRows -= num
 
-	if cbt.DataTableNumRows <= 0 { //release previous slice memory
+	if cbt.DataTableNumRows <= 0 { // release previous slice memory
 		tmp := cbt.DataTable
 		cbt.DataTable = layout.NewTableFromTable(tmp)
 		cbt.DataTable.Merge(tmp)
 	}
-	return res, num
+	return res, num, nil
 
 }
