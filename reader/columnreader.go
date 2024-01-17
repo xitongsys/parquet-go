@@ -80,8 +80,8 @@ func (pr *ParquetReader) ReadColumnByPath(pathStr string, num int64) (values []i
 	}
 
 	if cb, ok := pr.ColumnBuffers[pathStr]; ok {
-		table, _ := cb.ReadRows(int64(num))
-		return table.Values, table.RepetitionLevels, table.DefinitionLevels, nil
+		table, _, err := cb.ReadRows(int64(num))
+		return table.Values, table.RepetitionLevels, table.DefinitionLevels, err
 	}
 	return []interface{}{}, []int32{}, []int32{}, errPathNotFound
 }
