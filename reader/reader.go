@@ -322,7 +322,7 @@ func (pr *ParquetReader) read(dstInterface interface{}, prefixPath string) error
 		stopChan <- 0
 	}
 	if err = errors.Join(errs...); err != nil {
-		return fmt.Errorf("error reading parquet file: %s", err.Error())
+		return fmt.Errorf("error reading parquet file: %w", err)
 	}
 	dstList := make([]interface{}, pr.NP)
 	delta := (int64(num) + pr.NP - 1) / pr.NP
