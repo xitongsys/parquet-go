@@ -22,10 +22,17 @@ func NewBufferFile() *BufferFile {
 }
 
 // NewBufferFileFromBytes creates new in memory parquet buffer from the given bytes.
+// It allocates a new slice and copy the contents of s.
 func NewBufferFileFromBytes(s []byte) *BufferFile {
 	b := make([]byte, len(s))
 	copy(b, s)
 	return &BufferFile{buff: b}
+}
+
+// NewBufferFileFromBytes creates new in memory parquet buffer from the given bytes.
+// It uses the provided slice as its buffer.
+func NewBufferFileFromBytesNoAlloc(s []byte) *BufferFile {
+	return &BufferFile{buff: s}
 }
 
 // NewBufferFileCapacity starts the returned BufferFile with the given capacity
