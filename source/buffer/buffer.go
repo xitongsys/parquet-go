@@ -33,6 +33,11 @@ func NewBufferFileCapacity(cap int) *BufferFile {
 	return &BufferFile{buff: make([]byte, 0, cap)}
 }
 
+// NewBufferFileFromBytesZeroAlloc creates new in memory parquet buffer without memory allocation.
+func NewBufferFileFromBytesZeroAlloc(s []byte) *BufferFile {
+	return &BufferFile{buff: s}
+}
+
 func (bf BufferFile) Create(string) (source.ParquetFile, error) {
 	return NewBufferFile(), nil
 }
