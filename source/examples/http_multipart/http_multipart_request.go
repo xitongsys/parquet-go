@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	source "github.com/xitongsys/parquet-go-source/http"
-	"github.com/xitongsys/parquet-go/reader"
 	"io"
 	"log"
 	"mime/multipart"
@@ -11,6 +9,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+
+	source "github.com/xitongsys/parquet-go-source/http"
+	"github.com/xitongsys/parquet-go/reader"
 )
 
 type Student struct {

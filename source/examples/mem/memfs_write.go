@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/xitongsys/parquet-go-source/mem"
 	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go-source/mem"
+	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
-	"github.com/xitongsys/parquet-go/parquet"
 )
 
 type Student struct {
