@@ -306,7 +306,7 @@ func MarshalStruct(srcInterface []interface{}, schemaHandler *schema.SchemaHandl
 				}
 				var m Marshaler
 
-				if tk == reflect.Ptr || tk == reflect.UnsafePointer || tk == reflect.Interface || tk == reflect.Uintptr {
+				if tk == reflect.Ptr || tk == reflect.UnsafePointer || tk == reflect.Uintptr {
 					m = &ParquetPtr{}
 				} else if tk == reflect.Struct {
 					if isProto && node.Val.Type() == schema.ProtoTimestampType {
