@@ -14,7 +14,7 @@ import (
 type JobStatus int32
 
 const (
-	JobStatus_JobStatus_UNSPECIFIED  JobStatus = 0
+	JobStatus_UNSPECIFIED            JobStatus = 0
 	JobStatus_BLOCKED                JobStatus = 1
 	JobStatus_ENQUEUED               JobStatus = 2
 	JobStatus_RUNNING                JobStatus = 3
@@ -61,9 +61,7 @@ func TestProtoSpecificSchema(t *testing.T) {
 	assert.Equal(t, parquet.Type_BYTE_ARRAY, *schemaHandler.SchemaElements[2].Type)
 	assert.Equal(t, parquet.ConvertedType_ENUM, *schemaHandler.SchemaElements[2].ConvertedType)
 	assert.Equal(t, parquet.Type_INT32, *schemaHandler.SchemaElements[3].Type)
-	if schemaHandler.SchemaElements[3].ConvertedType != nil {
-		t.Errorf("primitive type int32 should not have converted type")
-	}
+	assert.Nil(t, schemaHandler.SchemaElements[3].ConvertedType)
 }
 
 func TestNewSchemaHandlerFromProtStruct(t *testing.T) {
@@ -108,8 +106,8 @@ func TestNewSchemaHandlerFromProtStruct(t *testing.T) {
 func TestTagGeneration(t *testing.T) {
 	expected := make(map[string]*common.Tag)
 	expected["Sex"], _ = common.StringToTag("name=Sex, type=BOOLEAN")
-	expected["Info"], _ = common.StringToTag("type=MAP, convertedtype=MAP, keytype=BYTE_ARRAY, valuetype=BYTE_ARRAY, name=Info")
-	expected["Classes"], _ = common.StringToTag("type=LIST, convertedtype=LIST, name=Classes")
+	expected["Info"], _ = common.StringToTag("type=MAP, keytype=BYTE_ARRAY, valuetype=BYTE_ARRAY, name=Info")
+	expected["Classes"], _ = common.StringToTag("type=LIST, name=Classes")
 	expected["Age"], _ = common.StringToTag("type=INT64, name=Age")
 	expected["Name"], _ = common.StringToTag("type=BYTE_ARRAY, name=Name")
 

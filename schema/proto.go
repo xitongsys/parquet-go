@@ -21,6 +21,7 @@ const (
 	ParquetKeyConvertedType   = "keyconvertedtype"
 	ParquetValueConvertedType = "valueconvertedtype"
 
+	// Parquet type https://github.com/xitongsys/parquet-go?tab=readme-ov-file#type
 	ParquetTypeBoolean           = "BOOLEAN"
 	ParquetTypeInt32             = "INT32"
 	ParquetTypeInt64             = "INT64"
@@ -34,6 +35,7 @@ const (
 	ParquetTypeList   = "LIST"
 	ParquetTypeStruct = "STRUCT"
 
+	// Parquet converted type https://github.com/apache/parquet-format/blob/97ed3ba484d3b5a7b58678457eceb518b037ee04/LogicalTypes.md#L136
 	ConvertedTypeUtf8            = "UTF8"
 	ConvertedTypeMap             = "MAP"
 	ConvertedTypeList            = "LIST"
@@ -44,7 +46,7 @@ const (
 	ConvertedTypeTimeMicros      = "TIME_MICROS"
 	ConvertedTypeTimestampMills  = "TIMESTAMP_MILLIS"
 	ConvertedTypeTimestampMicros = "TIMESTAMP_MICROS"
-	ConvertedTypeUnit8           = "UINT_8"
+	ConvertedTypeUint8           = "UINT_8"
 	ConvertedTypeUnint16         = "UINT_16"
 	ConvertedTypeUnint32         = "UINT_32"
 	ConvertedTypeUnint64         = "UINT_64"
@@ -62,8 +64,8 @@ const (
 
 var ProtoTimestampType = reflect.TypeOf(timestamppb.Timestamp{})
 
-func IsPrimitiveParquetType(tp string) bool {
-	switch tp {
+func IsPrimitiveParquetType(typ string) bool {
+	switch typ {
 	case ParquetTypeBoolean,
 		ParquetTypeInt32,
 		ParquetTypeInt64,
@@ -103,7 +105,7 @@ func IsPrimitiveGoTypeKind(kind reflect.Kind) bool {
 
 func IsPointerGoTypeKind(kind reflect.Kind) bool {
 	switch kind {
-	case reflect.Pointer, reflect.UnsafePointer, reflect.Uintptr, reflect.Interface:
+	case reflect.Pointer, reflect.UnsafePointer, reflect.Uintptr:
 		return true
 	default:
 		return false
@@ -124,10 +126,12 @@ func IsProtoInternalField(name string) bool {
 	}
 }
 
-func GetDefinedTypeTag(tp reflect.Type) (tags map[string]string, err error) {
+// Get the tags from given reflect type through switch case, which has better performance than map.
+// Given this function is per event call, the performance matters when there are many events to process.
+func GetDefinedTypeTag(typ reflect.Type) (tags map[string]string, err error) {
 	tags = make(map[string]string)
 
-	switch tp.Kind() {
+	switch typ.Kind() {
 	case reflect.Bool:
 		tags[ParquetType] = ParquetTypeBoolean
 	case reflect.Int8:
@@ -138,7 +142,7 @@ func GetDefinedTypeTag(tp reflect.Type) (tags map[string]string, err error) {
 		tags[ParquetConvertedType] = ConvertedTypeInt16
 	case reflect.Int32:
 		// speical handling for the proto enum generated constant, it checks Enum() method generated. It's not ideal but no better way to do it.
-		if _, exists := tp.MethodByName(ProtoEnumMethodName); exists {
+		if _, exists := typ.MethodByName(ProtoEnumMethodName); exists {
 			tags[ParquetType] = ParquetTypeByteArray
 			tags[ParquetConvertedType] = ConvertedTypeEnum
 		} else {
@@ -150,7 +154,7 @@ func GetDefinedTypeTag(tp reflect.Type) (tags map[string]string, err error) {
 		tags[ParquetType] = ParquetTypeInt64
 	case reflect.Uint8:
 		tags[ParquetType] = ParquetTypeInt32
-		tags[ParquetConvertedType] = ConvertedTypeUnit8
+		tags[ParquetConvertedType] = ConvertedTypeUint8
 	case reflect.Uint16:
 		tags[ParquetType] = ParquetTypeInt32
 		tags[ParquetConvertedType] = ConvertedTypeUnint16
@@ -169,22 +173,22 @@ func GetDefinedTypeTag(tp reflect.Type) (tags map[string]string, err error) {
 		tags[ParquetType] = ParquetTypeDouble
 	case reflect.String:
 		tags[ParquetType] = ParquetTypeByteArray
-	case reflect.Pointer, reflect.UnsafePointer, reflect.Uintptr, reflect.Interface:
-		tags, err = GetDefinedTypeTag(tp.Elem())
+	case reflect.Pointer, reflect.UnsafePointer, reflect.Uintptr:
+		tags, err = GetDefinedTypeTag(typ.Elem())
 	case reflect.Array, reflect.Slice:
-		tags, err = getListTag(tp)
+		tags, err = getListTag(typ)
 	case reflect.Map:
-		tags, err = getMapTag(tp)
+		tags, err = getMapTag(typ)
 	case reflect.Struct:
 		// do nothing since the struct tag is not needed in schema generation
 	default:
-		return nil, fmt.Errorf("Type %s is not supported in generating tags.", tp)
+		return nil, fmt.Errorf("type '%s' is not supported in generating tags", typ)
 	}
 	return
 }
 
 // Generate the tag for the struct field when there is no predefined tag
-func GenerateFieldTag(field reflect.StructField) (tagString string, err error) {
+func GenerateFieldTag(field reflect.StructField) (tag string, err error) {
 	tags, err := GetDefinedTypeTag(field.Type)
 	if err != nil {
 		return "", err
@@ -201,54 +205,40 @@ func getTagStringFromTags(tags map[string]string) string {
 	return strings.Join(pairs, ", ")
 }
 
-func getMapTag(tp reflect.Type) (tags map[string]string, err error) {
+func getMapTag(typ reflect.Type) (tags map[string]string, err error) {
 	tags = make(map[string]string)
 	tags[ParquetType] = ParquetTypeMap
-	tags[ParquetConvertedType] = ParquetTypeMap
-	if IsPrimitiveOrPointerGoKind(tp.Key().Kind()) {
-		elementTags, elementErr := GetDefinedTypeTag(tp.Key())
-		if elementErr != nil {
-			return nil, elementErr
-		}
-		if elementType, exists := elementTags[ParquetType]; exists && IsPrimitiveParquetType(elementType) {
-			tags[ParquetKeyType] = elementType
-			if elementConvertedType, exists := elementTags[ParquetConvertedType]; exists {
-				tags[ParquetKeyConvertedType] = elementConvertedType
-			}
-		}
+	tags, err = updateKeyOrValueType(tags, typ, true)
+	if err != nil {
+		return nil, err
 	}
-	if IsPrimitiveOrPointerGoKind(tp.Elem().Kind()) {
-		elementTags, elementErr := GetDefinedTypeTag(tp.Elem())
-		if elementErr != nil {
-			return nil, elementErr
-		}
-		if elementType, exists := elementTags[ParquetType]; exists && IsPrimitiveParquetType(elementType) {
-			tags[ParquetValueType] = elementType
-			if elementConvertedType, exists := elementTags[ParquetConvertedType]; exists {
-				tags[ParquetValueConvertedType] = elementConvertedType
-			}
-		}
-	}
-	return
+	return updateKeyOrValueType(tags, typ, false)
 }
 
-func getListTag(tp reflect.Type) (tags map[string]string, err error) {
-	tags = make(map[string]string)
-	tags[ParquetType] = ParquetTypeList
-	tags[ParquetConvertedType] = ParquetTypeList
-	if IsPrimitiveOrPointerGoKind(tp.Elem().Kind()) {
-		elementTags, elementErr := GetDefinedTypeTag(tp.Elem())
+func updateKeyOrValueType(tags map[string]string, typ reflect.Type, updateKey bool) (map[string]string, error) {
+	if IsPrimitiveOrPointerGoKind(typ.Elem().Kind()) {
+		elementTags, elementErr := GetDefinedTypeTag(typ.Elem())
 		if elementErr != nil {
 			return nil, elementErr
 		}
 		if elementType, exists := elementTags[ParquetType]; exists && IsPrimitiveParquetType(elementType) {
-			tags[ParquetValueType] = elementType
-			if elementConvertedType, exists := elementTags[ParquetConvertedType]; exists {
+			elementConvertedType := elementTags[ParquetConvertedType]
+			if updateKey {
+				tags[ParquetKeyType] = elementType
+				tags[ParquetKeyConvertedType] = elementConvertedType
+			} else {
+				tags[ParquetValueType] = elementType
 				tags[ParquetValueConvertedType] = elementConvertedType
 			}
 		}
 	}
-	return
+	return tags, nil
+}
+
+func getListTag(typ reflect.Type) (tags map[string]string, err error) {
+	tags = make(map[string]string)
+	tags[ParquetType] = ParquetTypeList
+	return updateKeyOrValueType(tags, typ, false)
 }
 
 // Speical handling for the timestamp schema to convert it as millis as one int64 number instead of keeping it as struct.
@@ -264,6 +254,11 @@ func generateSchemaTimestamp(item *Item) (*parquet.SchemaElement, *common.Tag, e
 	return schema, newInfo, nil
 }
 
+// DFS traverse the obj underlying struct type. If field is strucd recursive visit its sub-fields.
+// Generate the schemas for each non-struct field and create SchemaHandler from schema list.
+// Primitive type is just generating one schema for it.
+// Slice has its own special handling it. https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
+// Map also requires special handling. https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#maps
 func NewSchemaHandlerFromProtoStruct(obj interface{}) (sh *SchemaHandler, err error) {
 	defer func() {
 		if r := recover(); r != nil {
