@@ -181,6 +181,7 @@ func GetDefinedTypeTag(typ reflect.Type) (tags map[string]string, err error) {
 		tags, err = getMapTag(typ)
 	case reflect.Struct:
 		// do nothing since the struct tag is not needed in schema generation
+		// When it's struct, the schema generation will recursively traverse its fields.
 	default:
 		return nil, fmt.Errorf("type '%s' is not supported in generating tags", typ)
 	}
@@ -216,8 +217,12 @@ func getMapTag(typ reflect.Type) (tags map[string]string, err error) {
 }
 
 func updateKeyOrValueType(tags map[string]string, typ reflect.Type, updateKey bool) (map[string]string, error) {
-	if IsPrimitiveOrPointerGoKind(typ.Elem().Kind()) {
-		elementTags, elementErr := GetDefinedTypeTag(typ.Elem())
+	innerType := typ.Elem()
+	if updateKey {
+		innerType = typ.Key()
+	}
+	if IsPrimitiveOrPointerGoKind(innerType.Kind()) {
+		elementTags, elementErr := GetDefinedTypeTag(innerType)
 		if elementErr != nil {
 			return nil, elementErr
 		}
@@ -257,8 +262,8 @@ func generateSchemaTimestamp(item *Item) (*parquet.SchemaElement, *common.Tag, e
 // DFS traverse the obj underlying struct type. If field is strucd recursive visit its sub-fields.
 // Generate the schemas for each non-struct field and create SchemaHandler from schema list.
 // Primitive type is just generating one schema for it.
-// Slice has its own special handling it. https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
-// Map also requires special handling. https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#maps
+// Slice has its own special handling: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
+// Map also requires special handling: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#maps
 func NewSchemaHandlerFromProtoStruct(obj interface{}) (sh *SchemaHandler, err error) {
 	defer func() {
 		if r := recover(); r != nil {
