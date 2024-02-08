@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -29,6 +30,30 @@ func NewPathMap(path string) *PathMapType {
 	pathMap.Path = path
 	pathMap.Children = make(map[string]*PathMapType)
 	return pathMap
+}
+
+// Printout the structure of the schema path.
+// Ex.
+// Parquet_go_root
+//
+//	Sex: Parquet_go_rootSex
+//	Name: Parquet_go_rootName
+//	Age: Parquet_go_rootAge
+//	Classes: Parquet_go_rootClasses
+//	  List: Parquet_go_rootClassesList
+//	    Element: Parquet_go_rootClassesListElement
+//	      Name: Parquet_go_rootClassesListElementName
+//	      Number: Parquet_go_rootClassesListElementNumber
+//	      Score: Parquet_go_rootClassesListElementScore
+func (pmt *PathMapType) output(builder *strings.Builder, indent string) *strings.Builder {
+	builder.WriteString(pmt.Path + "\n")
+	childIndent := indent + "  "
+	for key, value := range pmt.Children {
+		builder.WriteString(childIndent)
+		builder.WriteString(key + ": ")
+		value.output(builder, childIndent)
+	}
+	return builder
 }
 
 func (pmt *PathMapType) Add(path []string) {
@@ -274,65 +299,20 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			for i := int(numField - 1); i >= 0; i-- {
 				f := item.GoType.Field(i)
 				tagStr := f.Tag.Get("parquet")
-
 				//ignore item without parquet tag
 				if len(tagStr) <= 0 {
 					numField--
 					continue
 				}
-
-				newItem := NewItem()
-				newItem.Info, err = common.StringToTag(tagStr)
+				newItem, err := generateSchemaForStructField(f, tagStr)
 				if err != nil {
-					return nil, fmt.Errorf("failed parse tag: %s", err.Error())
-				}
-				newItem.Info.InName = f.Name
-				newItem.GoType = f.Type
-				if f.Type.Kind() == reflect.Ptr {
-					newItem.GoType = f.Type.Elem()
-					newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
+					return nil, err
 				}
 				stack = append(stack, newItem)
 			}
 		} else if item.GoType.Kind() == reflect.Slice &&
 			item.Info.RepetitionType != parquet.FieldRepetitionType_REPEATED {
-			schema := parquet.NewSchemaElement()
-			schema.Name = item.Info.InName
-			rt1 := item.Info.RepetitionType
-			schema.RepetitionType = &rt1
-			var numField int32 = 1
-			schema.NumChildren = &numField
-			ct1 := parquet.ConvertedType_LIST
-			schema.ConvertedType = &ct1
-			schemaElements = append(schemaElements, schema)
-			newInfo = common.NewTag()
-			common.DeepCopy(item.Info, newInfo)
-			infos = append(infos, newInfo)
-
-			schema = parquet.NewSchemaElement()
-			schema.Name = "List"
-			rt2 := parquet.FieldRepetitionType_REPEATED
-			schema.RepetitionType = &rt2
-			schema.NumChildren = &numField
-			schemaElements = append(schemaElements, schema)
-			newInfo = common.NewTag()
-			common.DeepCopy(item.Info, newInfo)
-			newInfo.InName, newInfo.ExName = "List", "list"
-			infos = append(infos, newInfo)
-
-			newItem := NewItem()
-			newItem.Info = common.GetValueTagMap(item.Info)
-			newItem.Info.InName = "Element"
-			newItem.Info.ExName = "element"
-			newItem.GoType = item.GoType.Elem()
-			if newItem.GoType.Kind() == reflect.Ptr {
-				newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
-				newItem.GoType = item.GoType.Elem().Elem()
-			} else {
-				newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
-			}
-			stack = append(stack, newItem)
-
+			stack, schemaElements, infos = generateSchemaForSlice(item, stack, schemaElements, infos)
 		} else if item.GoType.Kind() == reflect.Slice &&
 			item.Info.RepetitionType == parquet.FieldRepetitionType_REPEATED {
 			newItem := NewItem()
@@ -341,50 +321,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			stack = append(stack, newItem)
 
 		} else if item.GoType.Kind() == reflect.Map {
-			schema := parquet.NewSchemaElement()
-			schema.Name = item.Info.InName
-			rt1 := item.Info.RepetitionType
-			schema.RepetitionType = &rt1
-			var numField1 int32 = 1
-			schema.NumChildren = &numField1
-			ct1 := parquet.ConvertedType_MAP
-			schema.ConvertedType = &ct1
-			schemaElements = append(schemaElements, schema)
-			newInfo = common.NewTag()
-			common.DeepCopy(item.Info, newInfo)
-			infos = append(infos, newInfo)
-
-			schema = parquet.NewSchemaElement()
-			schema.Name = "Key_value"
-			rt2 := parquet.FieldRepetitionType_REPEATED
-			schema.RepetitionType = &rt2
-			var numField2 int32 = 2
-			schema.NumChildren = &numField2
-			ct2 := parquet.ConvertedType_MAP_KEY_VALUE
-			schema.ConvertedType = &ct2
-			schemaElements = append(schemaElements, schema)
-			newInfo = common.NewTag()
-			common.DeepCopy(item.Info, newInfo)
-			newInfo.InName, newInfo.ExName = "Key_value", "key_value"
-			infos = append(infos, newInfo)
-
-			newItem := NewItem()
-			newItem.Info = common.GetValueTagMap(item.Info)
-			newItem.GoType = item.GoType.Elem()
-			if newItem.GoType.Kind() == reflect.Ptr {
-				newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
-				newItem.GoType = item.GoType.Elem().Elem()
-			} else {
-				newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
-			}
-			stack = append(stack, newItem)
-
-			newItem = NewItem()
-			newItem.Info = common.GetKeyTagMap(item.Info)
-			newItem.GoType = item.GoType.Key()
-			newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
-			stack = append(stack, newItem)
-
+			stack, schemaElements, infos = generateSchemaForMap(item, stack, schemaElements, infos)
 		} else {
 			schema, err := common.NewSchemaElementFromTagMap(item.Info)
 			if err != nil {
@@ -401,6 +338,109 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 	res.Infos = infos
 	res.CreateInExMap()
 	return res, nil
+}
+
+func generateSchemaForSlice(item *Item, stack []*Item, schemaElements []*parquet.SchemaElement, infos []*common.Tag) ([]*Item, []*parquet.SchemaElement, []*common.Tag) {
+	schema := parquet.NewSchemaElement()
+	schema.Name = item.Info.InName
+	rt1 := item.Info.RepetitionType
+	schema.RepetitionType = &rt1
+	var numField int32 = 1
+	schema.NumChildren = &numField
+	ct1 := parquet.ConvertedType_LIST
+	schema.ConvertedType = &ct1
+	schemaElements = append(schemaElements, schema)
+	newInfo := common.NewTag()
+	common.DeepCopy(item.Info, newInfo)
+	infos = append(infos, newInfo)
+
+	schema = parquet.NewSchemaElement()
+	schema.Name = "List"
+	rt2 := parquet.FieldRepetitionType_REPEATED
+	schema.RepetitionType = &rt2
+	schema.NumChildren = &numField
+	schemaElements = append(schemaElements, schema)
+	newInfo = common.NewTag()
+	common.DeepCopy(item.Info, newInfo)
+	newInfo.InName, newInfo.ExName = "List", "list"
+	infos = append(infos, newInfo)
+
+	newItem := NewItem()
+	newItem.Info = common.GetValueTagMap(item.Info)
+	newItem.Info.InName = "Element"
+	newItem.Info.ExName = "element"
+	newItem.GoType = item.GoType.Elem()
+	if newItem.GoType.Kind() == reflect.Ptr {
+		newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
+		newItem.GoType = item.GoType.Elem().Elem()
+	} else {
+		newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
+	}
+	stack = append(stack, newItem)
+	return stack, schemaElements, infos
+}
+
+func generateSchemaForStructField(f reflect.StructField, tagStr string) (*Item, error) {
+	var err error
+	newItem := NewItem()
+	newItem.Info, err = common.StringToTag(tagStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed parse tag: %s", err.Error())
+	}
+	newItem.Info.InName = f.Name
+	newItem.GoType = f.Type
+	if f.Type.Kind() == reflect.Ptr {
+		newItem.GoType = f.Type.Elem()
+		newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
+	}
+	return newItem, nil
+}
+
+func generateSchemaForMap(item *Item, stack []*Item, schemaElements []*parquet.SchemaElement, infos []*common.Tag) ([]*Item, []*parquet.SchemaElement, []*common.Tag) {
+	schema := parquet.NewSchemaElement()
+	schema.Name = item.Info.InName
+	rt1 := item.Info.RepetitionType
+	schema.RepetitionType = &rt1
+	var numField1 int32 = 1
+	schema.NumChildren = &numField1
+	ct1 := parquet.ConvertedType_MAP
+	schema.ConvertedType = &ct1
+	schemaElements = append(schemaElements, schema)
+	newInfo := common.NewTag()
+	common.DeepCopy(item.Info, newInfo)
+	infos = append(infos, newInfo)
+
+	schema = parquet.NewSchemaElement()
+	schema.Name = "Key_value"
+	rt2 := parquet.FieldRepetitionType_REPEATED
+	schema.RepetitionType = &rt2
+	var numField2 int32 = 2
+	schema.NumChildren = &numField2
+	ct2 := parquet.ConvertedType_MAP_KEY_VALUE
+	schema.ConvertedType = &ct2
+	schemaElements = append(schemaElements, schema)
+	newInfo = common.NewTag()
+	common.DeepCopy(item.Info, newInfo)
+	newInfo.InName, newInfo.ExName = "Key_value", "key_value"
+	infos = append(infos, newInfo)
+
+	newItem := NewItem()
+	newItem.Info = common.GetValueTagMap(item.Info)
+	newItem.GoType = item.GoType.Elem()
+	if newItem.GoType.Kind() == reflect.Ptr {
+		newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
+		newItem.GoType = item.GoType.Elem().Elem()
+	} else {
+		newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
+	}
+	stack = append(stack, newItem)
+
+	newItem = NewItem()
+	newItem.Info = common.GetKeyTagMap(item.Info)
+	newItem.GoType = item.GoType.Key()
+	newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
+	stack = append(stack, newItem)
+	return stack, schemaElements, infos
 }
 
 func NewSchemaHandlerFromSchemaHandler(sh *SchemaHandler) *SchemaHandler {
