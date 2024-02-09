@@ -13,9 +13,10 @@ const ProtoNanosName = "Nanos"
 
 type ParquetTimestamp struct{}
 
+// Marshal the proto timestamp into milliseconds
 func (p *ParquetTimestamp) Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node) []*Node {
-	mills := node.Val.FieldByName(ProtoSecondsName).Int()*1000 + node.Val.FieldByName(ProtoNanosName).Int()/(int64)(time.Millisecond)
-	node.Val = reflect.ValueOf(mills)
+	millis := node.Val.FieldByName(ProtoSecondsName).Int()*1000 + node.Val.FieldByName(ProtoNanosName).Int()/(int64)(time.Millisecond)
+	node.Val = reflect.ValueOf(millis)
 	stack = append(stack, node)
 	return stack
 }
