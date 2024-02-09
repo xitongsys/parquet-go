@@ -3,9 +3,9 @@ package schema
 import (
 	"fmt"
 
+	"github.com/AppliedIntuition/parquet-go/common"
+	"github.com/AppliedIntuition/parquet-go/parquet"
 	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
 )
 
 // Schema metadata used to parse the native and converted types and

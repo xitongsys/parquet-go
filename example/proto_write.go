@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/AppliedIntuition/parquet-go/writer"
 	"github.com/xitongsys/parquet-go-source/local"
-	"github.com/xitongsys/parquet-go/writer"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

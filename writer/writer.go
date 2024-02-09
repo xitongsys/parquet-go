@@ -8,13 +8,13 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/AppliedIntuition/parquet-go/common"
+	"github.com/AppliedIntuition/parquet-go/layout"
+	"github.com/AppliedIntuition/parquet-go/marshal"
+	"github.com/AppliedIntuition/parquet-go/parquet"
+	"github.com/AppliedIntuition/parquet-go/schema"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/xitongsys/parquet-go-source/writerfile"
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/marshal"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/source"
 )
 

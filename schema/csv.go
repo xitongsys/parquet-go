@@ -3,11 +3,11 @@ package schema
 import (
 	"fmt"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/AppliedIntuition/parquet-go/common"
+	"github.com/AppliedIntuition/parquet-go/parquet"
 )
 
-//Create a schema handler from CSV metadata
+// Create a schema handler from CSV metadata
 func NewSchemaHandlerFromMetadata(mds []string) (*SchemaHandler, error) {
 	schemaList := make([]*parquet.SchemaElement, 0)
 	infos := make([]*common.Tag, 0)

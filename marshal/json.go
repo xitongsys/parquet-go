@@ -7,14 +7,14 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/types"
+	"github.com/AppliedIntuition/parquet-go/common"
+	"github.com/AppliedIntuition/parquet-go/layout"
+	"github.com/AppliedIntuition/parquet-go/parquet"
+	"github.com/AppliedIntuition/parquet-go/schema"
+	"github.com/AppliedIntuition/parquet-go/types"
 )
 
-//ss is []string
+// ss is []string
 func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
 	defer func() {
 		if r := recover(); r != nil {

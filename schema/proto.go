@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/AppliedIntuition/parquet-go/common"
+	"github.com/AppliedIntuition/parquet-go/parquet"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
