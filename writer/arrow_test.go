@@ -6,13 +6,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/AppliedIntuition/parquet-go/reader"
 	"github.com/apache/arrow/go/v12/arrow"
 	"github.com/apache/arrow/go/v12/arrow/array"
 	"github.com/apache/arrow/go/v12/arrow/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/xitongsys/parquet-go-source/buffer"
 	"github.com/xitongsys/parquet-go-source/writerfile"
-	"github.com/xitongsys/parquet-go/reader"
 )
 
 // testSchema is schema for the testint table which covers all

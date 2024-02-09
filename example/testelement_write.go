@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
+	"github.com/AppliedIntuition/parquet-go/schema"
+	"github.com/AppliedIntuition/parquet-go/writer"
 	"github.com/xitongsys/parquet-go-source/local"
-	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/writer"
 )
 
 type subElem struct {

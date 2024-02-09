@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/AppliedIntuition/parquet-go/parquet"
+	"github.com/AppliedIntuition/parquet-go/reader"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/stretchr/testify/assert"
 	"github.com/xitongsys/parquet-go-source/buffer"
 	"github.com/xitongsys/parquet-go-source/writerfile"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/source"
 )
 

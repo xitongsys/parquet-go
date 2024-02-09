@@ -1,10 +1,10 @@
 package marshal
 
 import (
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
+	"github.com/AppliedIntuition/parquet-go/common"
+	"github.com/AppliedIntuition/parquet-go/layout"
+	"github.com/AppliedIntuition/parquet-go/parquet"
+	"github.com/AppliedIntuition/parquet-go/schema"
 )
 
 // MarshalArrow accepts a slice of rows with which it creates a table object.

@@ -1,20 +1,20 @@
 package layout
 
 import (
+	"github.com/AppliedIntuition/parquet-go/common"
+	"github.com/AppliedIntuition/parquet-go/encoding"
+	"github.com/AppliedIntuition/parquet-go/parquet"
+	"github.com/AppliedIntuition/parquet-go/schema"
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/encoding"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
 )
 
-//Chunk stores the ColumnChunk in parquet file
+// Chunk stores the ColumnChunk in parquet file
 type Chunk struct {
 	Pages       []*Page
 	ChunkHeader *parquet.ColumnChunk
 }
 
-//Convert several pages to one chunk
+// Convert several pages to one chunk
 func PagesToChunk(pages []*Page) *Chunk {
 	ln := len(pages)
 	var numValues int64 = 0
@@ -79,7 +79,7 @@ func PagesToChunk(pages []*Page) *Chunk {
 	return chunk
 }
 
-//Convert several pages to one chunk with dict page first
+// Convert several pages to one chunk with dict page first
 func PagesToDictChunk(pages []*Page) *Chunk {
 	if len(pages) < 2 {
 		return nil
@@ -148,7 +148,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	return chunk
 }
 
-//Decode a dict chunk
+// Decode a dict chunk
 func DecodeDictChunk(chunk *Chunk) {
 	dictPage := chunk.Pages[0]
 	numPages := len(chunk.Pages)
@@ -164,7 +164,7 @@ func DecodeDictChunk(chunk *Chunk) {
 	chunk.Pages = chunk.Pages[1:] // delete the head dict page
 }
 
-//Read one chunk from parquet file (Deprecated)
+// Read one chunk from parquet file (Deprecated)
 func ReadChunk(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, chunkHeader *parquet.ColumnChunk) (*Chunk, error) {
 	chunk := new(Chunk)
 	chunk.ChunkHeader = chunkHeader

@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/schema"
+	"github.com/AppliedIntuition/parquet-go/layout"
+	"github.com/AppliedIntuition/parquet-go/schema"
 )
 
 const ProtoSecondsName = "Seconds"

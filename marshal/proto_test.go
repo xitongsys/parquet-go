@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AppliedIntuition/parquet-go/schema"
 	"github.com/stretchr/testify/assert"
-	"github.com/xitongsys/parquet-go/schema"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

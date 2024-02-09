@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AppliedIntuition/parquet-go/common"
+	"github.com/AppliedIntuition/parquet-go/parquet"
 	"github.com/stretchr/testify/assert"
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

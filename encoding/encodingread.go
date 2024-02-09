@@ -7,7 +7,7 @@ import (
 	"io"
 	"math"
 
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/AppliedIntuition/parquet-go/parquet"
 )
 
 func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt uint64, bitWidth uint64) ([]interface{}, error) {
@@ -142,7 +142,7 @@ func ReadUnsignedVarInt(bytesReader *bytes.Reader) (uint64, error) {
 	return res, err
 }
 
-//RLE return res is []INT64
+// RLE return res is []INT64
 func ReadRLE(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([]interface{}, error) {
 	var err error
 	var res []interface{}
@@ -166,7 +166,7 @@ func ReadRLE(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([]inter
 	return res, err
 }
 
-//return res is []INT64
+// return res is []INT64
 func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([]interface{}, error) {
 	var err error
 	numGroup := (header >> 1)
@@ -227,7 +227,7 @@ func ReadBitPacked(bytesReader *bytes.Reader, header uint64, bitWidth uint64) ([
 	return res, err
 }
 
-//res is INT64
+// res is INT64
 func ReadRLEBitPackedHybrid(bytesReader *bytes.Reader, bitWidth uint64, length uint64) ([]interface{}, error) {
 	res := make([]interface{}, 0)
 	if length <= 0 {
@@ -325,7 +325,7 @@ func ReadDeltaBinaryPackedINT32(bytesReader *bytes.Reader) ([]interface{}, error
 	return res[:numValues], err
 }
 
-//res is INT64
+// res is INT64
 func ReadDeltaBinaryPackedINT64(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var (
 		err error
