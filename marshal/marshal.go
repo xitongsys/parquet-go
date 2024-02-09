@@ -18,8 +18,8 @@ type Node struct {
 	DL      int32
 }
 
-//Improve Performance///////////////////////////
-//NodeBuf
+// Improve Performance///////////////////////////
+// NodeBuf
 type NodeBufType struct {
 	Index int
 	Buf   []*Node
@@ -47,7 +47,7 @@ func (nbt *NodeBufType) Reset() {
 	nbt.Index = 0
 }
 
-////////for improve performance///////////////////////////////////
+// //////for improve performance///////////////////////////////////
 type Marshaler interface {
 	Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node) (newStack []*Node)
 }
@@ -223,24 +223,9 @@ func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node) []
 	return stack
 }
 
-//Convert the objects to table map. srcInterface is a slice of objects
-func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("unkown error")
-			}
-		}
-	}()
-
+func InitMarshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (*reflect.Value, *NodeBufType, map[string]*layout.Table) {
 	src := reflect.ValueOf(srcInterface)
 	res := setupTableMap(schemaHandler, len(srcInterface))
-	pathMap := schemaHandler.PathMap
 	nodeBuf := NewNodeBuf(1)
 
 	for i := 0; i < len(schemaHandler.SchemaElements); i++ {
@@ -262,7 +247,29 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 			res[pathStr] = table
 		}
 	}
+	return &src, nodeBuf, res
+}
 
+func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
+	return MarshalStruct(srcInterface, schemaHandler, false)
+}
+
+// Convert the objects to table map. srcInterface is a slice of objects
+func MarshalStruct(srcInterface []interface{}, schemaHandler *schema.SchemaHandler, isProto bool) (tb *map[string]*layout.Table, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("unkown error")
+			}
+		}
+	}()
+	src, nodeBuf, res := InitMarshal(srcInterface, schemaHandler)
+	pathMap := schemaHandler.PathMap
 	stack := make([]*Node, 0, 100)
 	for i := 0; i < len(srcInterface); i++ {
 		stack = stack[:0]
@@ -277,63 +284,84 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 		stack = append(stack, node)
 
 		for len(stack) > 0 {
-			ln := len(stack)
-			node := stack[ln-1]
-			stack = stack[:ln-1]
+			stack = stack[:0]
+			nodeBuf.Reset()
 
-			tk := reflect.Interface
-			if node.Val.IsValid() {
-				tk = node.Val.Type().Kind()
+			node := nodeBuf.GetNode()
+			node.Val = src.Index(i)
+			if src.Index(i).Type().Kind() == reflect.Interface {
+				node.Val = src.Index(i).Elem()
 			}
-			var m Marshaler
+			node.PathMap = pathMap
+			stack = append(stack, node)
 
-			if tk == reflect.Ptr {
-				m = &ParquetPtr{}
-			} else if tk == reflect.Struct {
-				m = &ParquetStruct{}
-			} else if tk == reflect.Slice {
-				m = &ParquetSlice{schemaHandler: schemaHandler}
-			} else if tk == reflect.Map {
-				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
-				sele := schemaHandler.SchemaElements[schemaIndex]
-				if !sele.IsSetConvertedType() {
-					m = &ParquetMapStruct{schemaHandler: schemaHandler}
-				} else {
-					m = &ParquetMap{schemaHandler: schemaHandler}
-				}
-			} else {
-				table := res[node.PathMap.Path]
-				schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
-				schema := schemaHandler.SchemaElements[schemaIndex]
-				var v interface{}
+			for len(stack) > 0 {
+				ln := len(stack)
+				node := stack[ln-1]
+				stack = stack[:ln-1]
+
+				tk := reflect.Interface
 				if node.Val.IsValid() {
-					v = node.Val.Interface()
+					tk = node.Val.Type().Kind()
 				}
-				table.Values = append(table.Values, types.InterfaceToParquetType(v, schema.Type))
-				table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
-				table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
-				continue
-			}
+				var m Marshaler
 
-			oldLen := len(stack)
-			stack = m.Marshal(node, nodeBuf, stack)
-			if len(stack) == oldLen {
-				path := node.PathMap.Path
-				index := schemaHandler.MapIndex[path]
-				numChildren := schemaHandler.SchemaElements[index].GetNumChildren()
-				if numChildren > int32(0) {
-					for key, table := range res {
-						if common.IsChildPath(path, key) {
-							table.Values = append(table.Values, nil)
-							table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
-							table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
-						}
+				if tk == reflect.Ptr || tk == reflect.UnsafePointer || tk == reflect.Uintptr {
+					m = &ParquetPtr{}
+				} else if tk == reflect.Struct {
+					if isProto && node.Val.Type() == schema.ProtoTimestampType {
+						m = &ParquetTimestamp{}
+					} else {
+						m = &ParquetStruct{}
+					}
+				} else if tk == reflect.Slice || tk == reflect.Array {
+					m = &ParquetSlice{schemaHandler: schemaHandler}
+				} else if tk == reflect.Map {
+					schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
+					sele := schemaHandler.SchemaElements[schemaIndex]
+					if !sele.IsSetConvertedType() {
+						m = &ParquetMapStruct{schemaHandler: schemaHandler}
+					} else {
+						m = &ParquetMap{schemaHandler: schemaHandler}
 					}
 				} else {
-					table := res[path]
-					table.Values = append(table.Values, nil)
+					table := res[node.PathMap.Path]
+					schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
+					schemaDefinition := schemaHandler.SchemaElements[schemaIndex]
+					var v interface{}
+					if node.Val.IsValid() {
+						v = node.Val.Interface()
+					}
+					// special handling for the enum
+					if isProto && schemaDefinition.ConvertedType != nil && *schemaDefinition.ConvertedType == parquet.ConvertedType_ENUM {
+						v = node.Val.MethodByName(schema.ProtoStringMethodName).Call(nil)[0].Interface().(string)
+					}
+					table.Values = append(table.Values, types.InterfaceToParquetType(v, schemaDefinition.Type))
 					table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 					table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+					continue
+				}
+
+				oldLen := len(stack)
+				stack = m.Marshal(node, nodeBuf, stack)
+				if len(stack) == oldLen {
+					path := node.PathMap.Path
+					index := schemaHandler.MapIndex[path]
+					numChildren := schemaHandler.SchemaElements[index].GetNumChildren()
+					if numChildren > int32(0) {
+						for key, table := range res {
+							if common.IsChildPath(path, key) {
+								table.Values = append(table.Values, nil)
+								table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+								table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+							}
+						}
+					} else {
+						table := res[path]
+						table.Values = append(table.Values, nil)
+						table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+						table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+					}
 				}
 			}
 		}
