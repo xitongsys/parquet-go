@@ -77,7 +77,7 @@ func TypeFromString(s string) (Type, error) {
 	case "FIXED_LEN_BYTE_ARRAY":
 		return Type_FIXED_LEN_BYTE_ARRAY, nil
 	}
-	return Type(0), fmt.Errorf("not a valid Type string")
+	return Type(0), fmt.Errorf("not a valid Type %s", s)
 }
 
 func TypePtr(v Type) *Type { return &v }

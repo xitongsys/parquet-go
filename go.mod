@@ -10,7 +10,7 @@ require (
 	github.com/klauspost/compress v1.16.7
 	github.com/pierrec/lz4/v4 v4.1.15
 	github.com/stretchr/testify v1.8.0
-	github.com/xitongsys/parquet-go v1.6.3-0.20231102094431-8ca067b2bd32 // indirect
+	github.com/xitongsys/parquet-go v1.6.3-0.20231102094431-8ca067b2bd32
 	github.com/xitongsys/parquet-go-source v0.0.0-20200817004010-026bad9b25d0
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.32.0
 )

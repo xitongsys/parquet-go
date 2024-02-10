@@ -51,7 +51,7 @@ type ProtoMessage struct {
 }
 
 func TestProtoSpecificSchema(t *testing.T) {
-	schemaHandler, err := NewSchemaHandlerFromProtoStruct(new(ProtoMessage))
+	schemaHandler, err := NewSchemaHandlerFromProtoStruct(new(ProtoMessage), false)
 	if err != nil {
 		t.Errorf("failed to generate schema handler: %v", err)
 	}
@@ -65,7 +65,7 @@ func TestProtoSpecificSchema(t *testing.T) {
 }
 
 func TestNewSchemaHandlerFromProtStruct(t *testing.T) {
-	schemaHandler, err := NewSchemaHandlerFromProtoStruct(new(StudentNoTag))
+	schemaHandler, err := NewSchemaHandlerFromProtoStruct(new(StudentNoTag), false)
 	if err != nil {
 		t.Errorf("failed to generate schema handler: %v", err)
 	}
@@ -105,16 +105,17 @@ func TestNewSchemaHandlerFromProtStruct(t *testing.T) {
 
 func TestTagGeneration(t *testing.T) {
 	expected := make(map[string]*common.Tag)
-	expected["Sex"], _ = common.StringToTag("name=Sex, type=BOOLEAN")
-	expected["Info"], _ = common.StringToTag("type=MAP, keytype=BYTE_ARRAY, valuetype=BYTE_ARRAY, name=Info")
+	expected["Sex"], _ = common.StringToTag("type=BOOLEAN, repetitiontype=OPTIONAL, name=Sex")
+	expected["Info"], _ = common.StringToTag("type=MAP, keytype=BYTE_ARRAY, valuetype=BYTE_ARRAY, repetitiontype=OPTIONAL, name=Info")
 	expected["Classes"], _ = common.StringToTag("type=LIST, name=Classes")
 	expected["Age"], _ = common.StringToTag("type=INT64, name=Age")
 	expected["Name"], _ = common.StringToTag("type=BYTE_ARRAY, name=Name")
 
 	actual := make(map[string]*common.Tag)
 	tp := reflect.TypeOf(StudentNoTag{})
+	tv := reflect.ValueOf(StudentNoTag{})
 	for i := tp.NumField() - 1; i >= 0; i-- {
-		tagString, err := GenerateFieldTag(tp.Field(i))
+		tagString, err := GenerateFieldTag(tp.Field(i), tv.Field(i))
 		if err != nil {
 			t.Errorf("failed to generate tag: %v", err)
 		}

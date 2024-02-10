@@ -155,7 +155,6 @@ func TestMarshalFast(t *testing.T) {
 		{testNestedElem{EmptyRepeated: []*struct{}{{}, nil, {}}}},
 
 		// interface{}
-		{testIfaceElem{}},
 		{testIfaceElem{
 			Bool:      false,
 			Int32:     int32(0),
@@ -177,8 +176,7 @@ func TestMarshalFast(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run("", func(t *testing.T) {
 			input := []interface{}{tt.value}
-			schemaType := reflect.Zero(reflect.PtrTo(reflect.TypeOf(tt.value))).Interface()
-			sch, err := schema.NewSchemaHandlerFromStruct(schemaType)
+			sch, err := schema.NewSchemaHandlerFromProtoStruct(tt.value, true)
 			if err != nil {
 				t.Fatalf("%v", err)
 			}

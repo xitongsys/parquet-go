@@ -241,8 +241,9 @@ func (sh *SchemaHandler) GetRootExName() string {
 }
 
 type Item struct {
-	GoType reflect.Type
-	Info   *common.Tag
+	GoType  reflect.Type
+	Info    *common.Tag
+	GoValue reflect.Value
 }
 
 func NewItem() *Item {
@@ -304,7 +305,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 					numField--
 					continue
 				}
-				newItem, err := generateSchemaForStructField(f, tagStr)
+				newItem, err := generateSchemaForStructField(f, getValueWithDefault(item.GoValue.Field(i)), tagStr)
 				if err != nil {
 					return nil, err
 				}
@@ -318,6 +319,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 			newItem := NewItem()
 			newItem.Info = item.Info
 			newItem.GoType = item.GoType.Elem()
+			newItem.GoValue = getValueWithDefault(getSliceElemValue(item.GoValue))
 			stack = append(stack, newItem)
 
 		} else if item.GoType.Kind() == reflect.Map {
@@ -338,6 +340,15 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 	res.Infos = infos
 	res.CreateInExMap()
 	return res, nil
+}
+
+func getSliceElemValue(arr reflect.Value) reflect.Value {
+	if arr.Len() > 0 {
+		return arr.Index(0)
+	} else {
+		// create empty object for the given type
+		return reflect.New(arr.Type().Elem()).Elem()
+	}
 }
 
 func generateSchemaForSlice(item *Item, stack []*Item, schemaElements []*parquet.SchemaElement, infos []*common.Tag) ([]*Item, []*parquet.SchemaElement, []*common.Tag) {
@@ -370,17 +381,22 @@ func generateSchemaForSlice(item *Item, stack []*Item, schemaElements []*parquet
 	newItem.Info.InName = "Element"
 	newItem.Info.ExName = "element"
 	newItem.GoType = item.GoType.Elem()
-	if newItem.GoType.Kind() == reflect.Ptr {
-		newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
-		newItem.GoType = item.GoType.Elem().Elem()
-	} else {
-		newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
-	}
+	newItem.GoValue = getValueWithDefault(getSliceElemValue(item.GoValue))
 	stack = append(stack, newItem)
 	return stack, schemaElements, infos
 }
 
-func generateSchemaForStructField(f reflect.StructField, tagStr string) (*Item, error) {
+// This get default value is used for schema generation to have non nil value to recursively traverse
+func getValueWithDefault(v reflect.Value) reflect.Value {
+	if IsPointerOrInterface(v.Kind()) {
+		if v.IsNil() {
+			return reflect.New(v.Type().Elem())
+		}
+	}
+	return v
+}
+
+func generateSchemaForStructField(f reflect.StructField, value reflect.Value, tagStr string) (*Item, error) {
 	var err error
 	newItem := NewItem()
 	newItem.Info, err = common.StringToTag(tagStr)
@@ -388,11 +404,8 @@ func generateSchemaForStructField(f reflect.StructField, tagStr string) (*Item, 
 		return nil, fmt.Errorf("failed parse tag: %s", err.Error())
 	}
 	newItem.Info.InName = f.Name
-	newItem.GoType = f.Type
-	if f.Type.Kind() == reflect.Ptr {
-		newItem.GoType = f.Type.Elem()
-		newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
-	}
+	newItem.GoType = value.Type()
+	newItem.GoValue = getValueWithDefault(value)
 	return newItem, nil
 }
 
@@ -427,17 +440,13 @@ func generateSchemaForMap(item *Item, stack []*Item, schemaElements []*parquet.S
 	newItem := NewItem()
 	newItem.Info = common.GetValueTagMap(item.Info)
 	newItem.GoType = item.GoType.Elem()
-	if newItem.GoType.Kind() == reflect.Ptr {
-		newItem.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
-		newItem.GoType = item.GoType.Elem().Elem()
-	} else {
-		newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
-	}
+	newItem.GoValue = getValueWithDefault(reflect.New(item.GoType.Elem()).Elem())
 	stack = append(stack, newItem)
 
 	newItem = NewItem()
 	newItem.Info = common.GetKeyTagMap(item.Info)
 	newItem.GoType = item.GoType.Key()
+	newItem.GoValue = getValueWithDefault(reflect.New(item.GoType.Key()).Elem())
 	newItem.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
 	stack = append(stack, newItem)
 	return stack, schemaElements, infos
