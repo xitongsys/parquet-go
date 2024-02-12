@@ -108,7 +108,7 @@ func TestInterfaceMarshal(t *testing.T) {
 		Arr:       []TestInterface{&impl2, &impl2, &impl2},
 		NestedArr: [][]TestInterface{{&impl2, &impl2}, {&impl2}},
 	}
-	schemaHandler, err := schema.NewSchemaHandlerFromProtoStruct(val, false)
+	schemaHandler, err := schema.NewSchemaHandlerFromStruct(val, false)
 	if err != nil {
 		t.Errorf("failed to get schema handler: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestMarsalProtoSpecific(t *testing.T) {
 		ProtoMessage{Timestamp: timestamppb.Timestamp{Seconds: 5, Nanos: int32(time.Millisecond)}, Status: JobStatus_JobStatus_UNSPECIFIED, IntVal: 7},
 	}
 
-	schemaHandler, err := schema.NewSchemaHandlerFromProtoStruct(ProtoMessage{}, false)
+	schemaHandler, err := schema.NewSchemaHandlerFromStruct(ProtoMessage{}, false)
 	if err != nil {
 		t.Errorf("failed to get schema handler: %v", err)
 	}
@@ -204,7 +204,7 @@ func TestMarshalTestNestedElem(t *testing.T) {
 		testNestedElem{EmptyRepeated: []*struct{}{{}}},
 		testNestedElem{EmptyRepeated: []*struct{}{{}, nil, {}}},
 	}
-	schemaHandler, err := schema.NewSchemaHandlerFromProtoStruct(testNestedElem{}, false)
+	schemaHandler, err := schema.NewSchemaHandlerFromStruct(testNestedElem{}, false)
 	if err != nil {
 		t.Errorf("failed to get schema handler: %v", err)
 	}

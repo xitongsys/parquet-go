@@ -270,7 +270,7 @@ func generateSchemaTimestamp(item *Item) (*parquet.SchemaElement, *common.Tag, e
 // Primitive type is just generating one schema for it.
 // Slice has its own special handling: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
 // Map also requires special handling: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#maps
-func NewSchemaHandlerFromProtoStruct(obj interface{}, skipNoTagField bool) (sh *SchemaHandler, err error) {
+func NewSchemaHandlerFromStruct(obj interface{}, skipNoTagField bool) (sh *SchemaHandler, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {

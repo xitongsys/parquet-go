@@ -51,7 +51,7 @@ type ProtoMessage struct {
 }
 
 func TestProtoSpecificSchema(t *testing.T) {
-	schemaHandler, err := NewSchemaHandlerFromProtoStruct(new(ProtoMessage), false)
+	schemaHandler, err := NewSchemaHandlerFromStruct(new(ProtoMessage), false)
 	if err != nil {
 		t.Errorf("failed to generate schema handler: %v", err)
 	}
@@ -65,7 +65,7 @@ func TestProtoSpecificSchema(t *testing.T) {
 }
 
 func TestNewSchemaHandlerFromProtStruct(t *testing.T) {
-	schemaHandler, err := NewSchemaHandlerFromProtoStruct(new(StudentNoTag), false)
+	schemaHandler, err := NewSchemaHandlerFromStruct(new(StudentNoTag), false)
 	if err != nil {
 		t.Errorf("failed to generate schema handler: %v", err)
 	}

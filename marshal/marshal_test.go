@@ -176,7 +176,7 @@ func TestMarshalFast(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run("", func(t *testing.T) {
 			input := []interface{}{tt.value}
-			sch, err := schema.NewSchemaHandlerFromProtoStruct(tt.value, true)
+			sch, err := schema.NewSchemaHandlerFromStruct(tt.value, true)
 			if err != nil {
 				t.Fatalf("%v", err)
 			}

@@ -10,7 +10,7 @@ import (
 
 // Pass the obj as the go struct object
 func NewParquetWriterFromProto(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
-	schemaHandler, err := schema.NewSchemaHandlerFromProtoStruct(obj, false)
+	schemaHandler, err := schema.NewSchemaHandlerFromStruct(obj, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate schema handler: %v", err)
 	}
