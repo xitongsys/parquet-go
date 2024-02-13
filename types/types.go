@@ -203,6 +203,10 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 	}
 }
 
+func IsUint(kind reflect.Kind) bool {
+	return kind == reflect.Uint || kind == reflect.Uint16 || kind == reflect.Uint32 || kind == reflect.Uint8 || kind == reflect.Uint64
+}
+
 func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 	if src == nil {
 		return src
@@ -224,14 +228,24 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 		if _, ok := src.(int32); ok {
 			return src
 		} else {
-			return int32(reflect.ValueOf(src).Int())
+			v := reflect.ValueOf(src)
+			if IsUint(v.Kind()) {
+				return uint32(v.Uint())
+			} else {
+				return int32(v.Int())
+			}
 		}
 
 	case parquet.Type_INT64:
 		if _, ok := src.(int64); ok {
 			return src
 		} else {
-			return reflect.ValueOf(src).Int()
+			v := reflect.ValueOf(src)
+			if IsUint(v.Kind()) {
+				return uint64(v.Uint())
+			} else {
+				return int64(v.Int())
+			}
 		}
 
 	case parquet.Type_FLOAT:

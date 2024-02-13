@@ -87,6 +87,10 @@ func (t *TestInterfaceImpl2) foo() {
 
 type TestInterfaceStruct struct {
 	Val       TestInterface
+	UintVal32 uint32
+	UintVal64 uint64
+	UintVal   uint
+	Uint8     uint8
 	NestedVal TestInterface
 	Arr       []TestInterface
 	NestedArr [][]TestInterface
@@ -116,7 +120,7 @@ func TestInterfaceMarshal(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to marshal values: %v", err)
 	}
-	assert.Equal(t, 7, len(schemaHandler.ValueColumns))
+	assert.Equal(t, 11, len(schemaHandler.ValueColumns))
 	elementTestSchema := (*tableMap)["Parquet_go_root\x01Arr\x01List\x01Element\x01Test"]
 	elementBarSchema := (*tableMap)["Parquet_go_root\x01Arr\x01List\x01Element\x01NestedInterface\x01Bar"]
 	nestedElementTestSchema := (*tableMap)["Parquet_go_root\x01NestedArr\x01List\x01Element\x01List\x01Element\x01Test"]
