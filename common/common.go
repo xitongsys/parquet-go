@@ -810,7 +810,12 @@ func (table boolFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, va
 type int32FuncTable struct{}
 
 func (_ int32FuncTable) LessThan(a interface{}, b interface{}) bool {
-	return a.(int32) < b.(int32)
+	switch a.(type) {
+	case int32, int16, int8:
+		return a.(int32) < b.(int32)
+	default:
+		return int32(a.(uint32)) < int32(b.(uint32))
+	}
 }
 
 func (table int32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
@@ -820,7 +825,12 @@ func (table int32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, v
 type uint32FuncTable struct{}
 
 func (_ uint32FuncTable) LessThan(a interface{}, b interface{}) bool {
-	return uint32(a.(int32)) < uint32(b.(int32))
+	switch a.(type) {
+	case int32, int16, int8:
+		return uint32(a.(int32)) < uint32(b.(int32))
+	default:
+		return a.(uint32) < b.(uint32)
+	}
 }
 
 func (table uint32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
@@ -830,7 +840,12 @@ func (table uint32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, 
 type int64FuncTable struct{}
 
 func (_ int64FuncTable) LessThan(a interface{}, b interface{}) bool {
-	return a.(int64) < b.(int64)
+	switch a.(type) {
+	case int64:
+		return a.(int64) < b.(int64)
+	default:
+		return int64(a.(uint64)) < int64(b.(uint64))
+	}
 }
 
 func (table int64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
@@ -840,7 +855,12 @@ func (table int64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, v
 type uint64FuncTable struct{}
 
 func (_ uint64FuncTable) LessThan(a interface{}, b interface{}) bool {
-	return uint64(a.(int64)) < uint64(b.(int64))
+	switch a.(type) {
+	case uint64:
+		return a.(uint64) < b.(uint64)
+	default:
+		return uint64(a.(int64)) < uint64(b.(int64))
+	}
 }
 
 func (table uint64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {

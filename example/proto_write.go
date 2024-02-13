@@ -73,6 +73,9 @@ type TestInterfaceStruct struct {
 	NestedVal TestInterface
 	Arr       [][]TestInterface
 	Message   ProtoMessage
+	UintVal   uint
+	UintVal32 uint32
+	UintVal64 uint64
 }
 
 func main() {
