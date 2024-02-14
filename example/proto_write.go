@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/AppliedIntuition/parquet-go/writer"
@@ -46,9 +47,39 @@ type ProtoMessage struct {
 	Status    JobStatus
 	IntVal    int32
 }
+type TestInterface interface {
+	foo()
+}
+
+type TestInterfaceImpl1 struct {
+	Bar string
+}
+
+type TestInterfaceImpl2 struct {
+	Test            string
+	NestedInterface TestInterface
+}
+
+func (t *TestInterfaceImpl1) foo() {
+	fmt.Println(t.Bar)
+}
+
+func (t *TestInterfaceImpl2) foo() {
+	fmt.Print(t.Test)
+}
+
+type TestInterfaceStruct struct {
+	Val       TestInterface
+	NestedVal TestInterface
+	Arr       [][]TestInterface
+	Message   ProtoMessage
+	UintVal   uint
+	UintVal32 uint32
+	UintVal64 uint64
+}
 
 func main() {
-	protoMessages := []interface{}{
+	protoMessages := []ProtoMessage{
 		ProtoMessage{Timestamp: timestamppb.Timestamp{Seconds: 1, Nanos: 1000000}, Status: JobStatus_RUNNING, IntVal: 1},
 		ProtoMessage{Timestamp: timestamppb.Timestamp{Seconds: 2, Nanos: 1000000}, Status: JobStatus_ENQUEUED, IntVal: 2},
 		ProtoMessage{Timestamp: timestamppb.Timestamp{Seconds: 3, Nanos: 1000000}, Status: JobStatus_COMPLETED, IntVal: 3},
@@ -56,19 +87,34 @@ func main() {
 		ProtoMessage{Timestamp: timestamppb.Timestamp{Seconds: 5, Nanos: 1000000}, Status: JobStatus_CANCELLED, IntVal: 5},
 		ProtoMessage{Timestamp: timestamppb.Timestamp{Seconds: 6, Nanos: 1000000}, Status: JobStatus_UPSTREAM_NOT_PROCESSED, IntVal: 6},
 	}
+	impl2 := TestInterfaceImpl2{
+		Test:            "test",
+		NestedInterface: &TestInterfaceImpl1{Bar: "bar1"},
+	}
+	impl1 := TestInterfaceImpl1{Bar: "bar2"}
+
+	vals := make([]TestInterfaceStruct, 6)
+	for index, message := range protoMessages {
+		vals[index] = TestInterfaceStruct{
+			Val:       &impl1,
+			NestedVal: &impl2,
+			Arr:       [][]TestInterface{{&impl2, &impl2}, {&impl2}},
+			Message:   message,
+		}
+	}
 
 	fw, err := local.NewLocalFileWriter("output/proto_message.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err := writer.NewParquetWriterFromProto(fw, new(ProtoMessage), 1)
+	pw, err := writer.NewParquetWriterFromProto(fw, &vals[0], 1)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
-	for _, message := range protoMessages {
-		if err = pw.Write(message); err != nil {
+	for _, val := range vals {
+		if err = pw.Write(val); err != nil {
 			log.Println("Write error", err)
 			return
 		}

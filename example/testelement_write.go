@@ -36,7 +36,7 @@ func main() {
 		log.Println("Can't create file", err)
 		return
 	}
-	schemaHandler, err := schema.NewSchemaHandlerFromProtoStruct(new(testNestedElem))
+	schemaHandler, err := schema.NewSchemaHandlerFromStruct(new(testNestedElem))
 	if err != nil {
 		log.Println("failed to create the schema handler: %v", err)
 	}

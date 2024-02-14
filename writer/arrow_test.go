@@ -80,31 +80,31 @@ func testRecord(mem memory.Allocator) arrow.Record {
 	col5 := func() arrow.Array {
 		ib := array.NewUint8Builder(mem)
 		defer ib.Release()
-		ib.AppendValues([]uint8{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, nil)
+		ib.AppendValues([]uint8{uint8(1), uint8(2), uint8(3), uint8(4), uint8(5), uint8(6), uint8(7), uint8(8), uint8(9), uint8(10)}, nil)
 		return ib.NewUint8Array()
 	}()
 	defer col5.Release()
 	col6 := func() arrow.Array {
 		ib := array.NewUint16Builder(mem)
 		defer ib.Release()
-		ib.AppendValues([]uint16{11, 12, 13, 14, 15, 16, 17, 18, 19,
-			20}, nil)
+		ib.AppendValues([]uint16{uint16(11), uint16(12), uint16(13), uint16(14), uint16(15), uint16(16), uint16(17), uint16(18), uint16(19),
+			uint16(20)}, nil)
 		return ib.NewUint16Array()
 	}()
 	defer col6.Release()
 	col7 := func() arrow.Array {
 		ib := array.NewUint32Builder(mem)
 		defer ib.Release()
-		ib.AppendValues([]uint32{21, 22, 23, 24, 25, 26, 27, 28, 29,
-			30}, nil)
+		ib.AppendValues([]uint32{uint32(21), uint32(22), uint32(23), uint32(24), uint32(25), uint32(26), uint32(27), uint32(28), uint32(29),
+			uint32(30)}, nil)
 		return ib.NewUint32Array()
 	}()
 	defer col7.Release()
 	col8 := func() arrow.Array {
 		ib := array.NewUint64Builder(mem)
 		defer ib.Release()
-		ib.AppendValues([]uint64{31, 32, 33, 34, 35, 36, 37, 38, 39,
-			40}, nil)
+		ib.AppendValues([]uint64{uint64(31), uint64(32), uint64(33), uint64(34), uint64(35), uint64(36), uint64(37), uint64(38), uint64(39),
+			uint64(40)}, nil)
 		return ib.NewUint64Array()
 	}()
 	defer col8.Release()

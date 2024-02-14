@@ -17,9 +17,12 @@ const (
 	ParquetType               = "type"
 	ParquetConvertedType      = "convertedtype"
 	ParquetValueType          = "valuetype"
+	ParquetRepetitionType     = "repetitiontype"
 	ParquetKeyType            = "keytype"
 	ParquetKeyConvertedType   = "keyconvertedtype"
 	ParquetValueConvertedType = "valueconvertedtype"
+
+	RepetitionTypeOptional = "OPTIONAL"
 
 	// Parquet type https://github.com/xitongsys/parquet-go?tab=readme-ov-file#type
 	ParquetTypeBoolean           = "BOOLEAN"
@@ -112,23 +115,21 @@ func IsPointerGoTypeKind(kind reflect.Kind) bool {
 	}
 }
 
+func IsPointerOrInterface(kind reflect.Kind) bool {
+	return kind == reflect.Interface || IsPointerGoTypeKind(kind)
+}
+
 func IsPrimitiveOrPointerGoKind(kind reflect.Kind) bool {
 	return IsPointerGoTypeKind(kind) || IsPrimitiveGoTypeKind(kind)
 }
 
-func IsProtoInternalField(name string) bool {
-	switch name {
-	case "state", "sizeCache", "unknownFields":
-		return true
-	default:
-		return false
-
-	}
+func IsInternalField(name string) bool {
+	return !(name[0] >= 'A' && name[0] <= 'Z')
 }
 
 // Get the tags from given reflect type through switch case, which has better performance than map.
 // Given this function is per event call, the performance matters when there are many events to process.
-func GetDefinedTypeTag(typ reflect.Type) (tags map[string]string, err error) {
+func GetDefinedTypeTag(typ reflect.Type, value reflect.Value) (tags map[string]string, err error) {
 	tags = make(map[string]string)
 
 	switch typ.Kind() {
@@ -174,11 +175,16 @@ func GetDefinedTypeTag(typ reflect.Type) (tags map[string]string, err error) {
 	case reflect.String:
 		tags[ParquetType] = ParquetTypeByteArray
 	case reflect.Pointer, reflect.UnsafePointer, reflect.Uintptr:
-		tags, err = GetDefinedTypeTag(typ.Elem())
+		tags, err = GetDefinedTypeTag(typ.Elem(), value.Elem())
+		// only pointer requires the Optional,
+		// other types such as map, slice relies on repeated type to be considered as optional
+		tags[ParquetRepetitionType] = RepetitionTypeOptional
 	case reflect.Array, reflect.Slice:
 		tags, err = getListTag(typ)
 	case reflect.Map:
 		tags, err = getMapTag(typ)
+	case reflect.Interface:
+		tags, err = GetDefinedTypeTag(value.Elem().Type(), value.Elem())
 	case reflect.Struct:
 		// do nothing since the struct tag is not needed in schema generation
 		// When it's struct, the schema generation will recursively traverse its fields.
@@ -189,8 +195,8 @@ func GetDefinedTypeTag(typ reflect.Type) (tags map[string]string, err error) {
 }
 
 // Generate the tag for the struct field when there is no predefined tag
-func GenerateFieldTag(field reflect.StructField) (tag string, err error) {
-	tags, err := GetDefinedTypeTag(field.Type)
+func GenerateFieldTag(field reflect.StructField, value reflect.Value) (tag string, err error) {
+	tags, err := GetDefinedTypeTag(field.Type, value)
 	if err != nil {
 		return "", err
 	}
@@ -222,7 +228,7 @@ func updateKeyOrValueType(tags map[string]string, typ reflect.Type, updateKey bo
 		innerType = typ.Key()
 	}
 	if IsPrimitiveOrPointerGoKind(innerType.Kind()) {
-		elementTags, elementErr := GetDefinedTypeTag(innerType)
+		elementTags, elementErr := GetDefinedTypeTag(innerType, reflect.New(innerType).Elem())
 		if elementErr != nil {
 			return nil, elementErr
 		}
@@ -264,7 +270,7 @@ func generateSchemaTimestamp(item *Item) (*parquet.SchemaElement, *common.Tag, e
 // Primitive type is just generating one schema for it.
 // Slice has its own special handling: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists
 // Map also requires special handling: https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#maps
-func NewSchemaHandlerFromProtoStruct(obj interface{}) (sh *SchemaHandler, err error) {
+func NewSchemaHandlerFromStruct(obj interface{}, skipNoTagField bool) (sh *SchemaHandler, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -279,11 +285,14 @@ func NewSchemaHandlerFromProtoStruct(obj interface{}) (sh *SchemaHandler, err er
 	}()
 
 	ot := reflect.TypeOf(obj)
+	ov := reflect.ValueOf(obj)
 	if ot.Kind() == reflect.Pointer {
 		ot = ot.Elem()
+		ov = ov.Elem()
 	}
 	item := NewItem()
 	item.GoType = ot
+	item.GoValue = getValueWithDefault(ov)
 	item.Info.InName = "Parquet_go_root"
 	item.Info.ExName = "parquet_go_root"
 	item.Info.RepetitionType = parquet.FieldRepetitionType_REQUIRED
@@ -322,14 +331,24 @@ func NewSchemaHandlerFromProtoStruct(obj interface{}) (sh *SchemaHandler, err er
 
 			for i := int(numField - 1); i >= 0; i-- {
 				f := item.GoType.Field(i)
-				if IsProtoInternalField(f.Name) {
+				v := item.GoValue.Field(i)
+				if IsInternalField(f.Name) {
 					continue
 				}
-				tagStr, err := GenerateFieldTag(f)
-				if err != nil {
-					return nil, err
+				tagStr := f.Tag.Get("parquet")
+				if len(tagStr) <= 0 {
+					if skipNoTagField {
+						numField--
+						continue
+					} else {
+						tagStr, err = GenerateFieldTag(f, v)
+						if err != nil {
+							return nil, err
+						}
+
+					}
 				}
-				newItem, err := generateSchemaForStructField(f, tagStr)
+				newItem, err := generateSchemaForStructField(f, v, tagStr)
 				if err != nil {
 					return nil, err
 				}
@@ -341,7 +360,7 @@ func NewSchemaHandlerFromProtoStruct(obj interface{}) (sh *SchemaHandler, err er
 			item.Info.RepetitionType != parquet.FieldRepetitionType_REPEATED {
 			// special handling for the nested slice, the value type cannot be prvoided through the regular tag since it only has one layer deep
 			if item.Info.ValueType == "" {
-				tags, err := GetDefinedTypeTag(item.GoType.Elem())
+				tags, err := GetDefinedTypeTag(item.GoType.Elem(), getSliceElemValue(item.GoValue))
 				if err != nil {
 					return nil, err
 				}
@@ -354,15 +373,22 @@ func NewSchemaHandlerFromProtoStruct(obj interface{}) (sh *SchemaHandler, err er
 			newItem := NewItem()
 			newItem.Info = item.Info
 			newItem.GoType = item.GoType.Elem()
+			newItem.GoValue = getValueWithDefault(getSliceElemValue(item.GoValue))
 			stack = append(stack, newItem)
 		} else if IsPointerGoTypeKind(item.GoType.Kind()) {
 			item.GoType = item.GoType.Elem()
+			item.GoValue = getValueWithDefault(item.GoValue).Elem()
+			item.Info.RepetitionType = parquet.FieldRepetitionType_OPTIONAL
 			stack = append(stack, item)
 		} else if item.GoType.Kind() == reflect.Map {
 			stack, schemaElements, infos = generateSchemaForMap(item, stack, schemaElements, infos)
+		} else if item.GoType.Kind() == reflect.Interface {
+			item.GoType = item.GoValue.Elem().Type()
+			item.GoValue = item.GoValue.Elem()
+			stack = append(stack, item)
 		} else {
 			if item.Info.Type == "" {
-				tags, err := GetDefinedTypeTag(item.GoType)
+				tags, err := GetDefinedTypeTag(item.GoType, item.GoValue)
 				if err != nil {
 					return nil, err
 				}

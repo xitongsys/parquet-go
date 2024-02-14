@@ -50,7 +50,7 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(sa)
 
 		} else {
-			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
+			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj, true); err != nil {
 				return res, err
 			}
 

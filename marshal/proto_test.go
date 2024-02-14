@@ -64,6 +64,84 @@ type ProtoMessage struct {
 	IntVal    int32
 }
 
+type TestInterface interface {
+	foo()
+}
+
+type TestInterfaceImpl1 struct {
+	Bar string
+}
+
+type TestInterfaceImpl2 struct {
+	Test            string
+	NestedInterface TestInterface
+}
+
+func (t *TestInterfaceImpl1) foo() {
+	fmt.Println(t.Bar)
+}
+
+func (t *TestInterfaceImpl2) foo() {
+	fmt.Print(t.Test)
+}
+
+type TestInterfaceStruct struct {
+	Val       TestInterface
+	UintVal32 uint32
+	UintVal64 uint64
+	UintVal   uint
+	Uint8     uint8
+	NestedVal TestInterface
+	Arr       []TestInterface
+	NestedArr [][]TestInterface
+}
+
+// TODO nested array [][]struct{with interface}
+// nested interface (struct with field interface with underlying struct with interface)
+
+func TestInterfaceMarshal(t *testing.T) {
+	impl2 := TestInterfaceImpl2{
+		Test:            "test",
+		NestedInterface: &TestInterfaceImpl1{Bar: "bar1"},
+	}
+	impl1 := TestInterfaceImpl1{Bar: "bar2"}
+
+	val := TestInterfaceStruct{
+		Val:       &impl1,
+		NestedVal: &impl2,
+		Arr:       []TestInterface{&impl2, &impl2, &impl2},
+		NestedArr: [][]TestInterface{{&impl2, &impl2}, {&impl2}},
+	}
+	schemaHandler, err := schema.NewSchemaHandlerFromStruct(val, false)
+	if err != nil {
+		t.Errorf("failed to get schema handler: %v", err)
+	}
+	tableMap, err := MarshalProto([]interface{}{&val}, schemaHandler)
+	if err != nil {
+		t.Errorf("failed to marshal values: %v", err)
+	}
+	assert.Equal(t, 11, len(schemaHandler.ValueColumns))
+	elementTestSchema := (*tableMap)["Parquet_go_root\x01Arr\x01List\x01Element\x01Test"]
+	elementBarSchema := (*tableMap)["Parquet_go_root\x01Arr\x01List\x01Element\x01NestedInterface\x01Bar"]
+	nestedElementTestSchema := (*tableMap)["Parquet_go_root\x01NestedArr\x01List\x01Element\x01List\x01Element\x01Test"]
+	nestedElementBarSchema := (*tableMap)["Parquet_go_root\x01NestedArr\x01List\x01Element\x01List\x01Element\x01NestedInterface\x01Bar"]
+	assert.Equal(t, []int32{2, 2, 2}, elementTestSchema.DefinitionLevels)
+	assert.Equal(t, int32(2), elementTestSchema.MaxDefinitionLevel)
+	assert.Equal(t, []int32{3, 3, 3}, elementBarSchema.DefinitionLevels)
+	assert.Equal(t, int32(3), elementBarSchema.MaxDefinitionLevel)
+	// nested array [][] has two optional levels, element &impl2, one more optional level, Test is required, so definition level is 3
+	assert.Equal(t, int32(3), nestedElementTestSchema.MaxDefinitionLevel)
+	assert.Equal(t, []int32{3, 3, 3}, nestedElementTestSchema.DefinitionLevels)
+	// repetition level start from 0 which means one whole entry of [][], 2 means it's element in the inner array, 1 means its inner array as element of outter array
+	assert.Equal(t, []int32{0, 2, 1}, nestedElementTestSchema.RepetitionLevels)
+	assert.Equal(t, int32(2), nestedElementTestSchema.MaxRepetitionLevel)
+	assert.Equal(t, int32(4), nestedElementBarSchema.MaxDefinitionLevel)
+	// &TestInterfaceImpl1 plus one on the definition level which is 4
+	assert.Equal(t, []int32{4, 4, 4}, nestedElementBarSchema.DefinitionLevels)
+	assert.Equal(t, int32(2), nestedElementBarSchema.MaxRepetitionLevel)
+	assert.Equal(t, []int32{0, 2, 1}, nestedElementBarSchema.RepetitionLevels)
+}
+
 func TestMarsalProtoSpecific(t *testing.T) {
 	protoMessages := []interface{}{
 		ProtoMessage{Timestamp: timestamppb.Timestamp{Seconds: 1, Nanos: int32(time.Millisecond)}, Status: JobStatus_RUNNING, IntVal: 1},
@@ -76,7 +154,7 @@ func TestMarsalProtoSpecific(t *testing.T) {
 		ProtoMessage{Timestamp: timestamppb.Timestamp{Seconds: 5, Nanos: int32(time.Millisecond)}, Status: JobStatus_JobStatus_UNSPECIFIED, IntVal: 7},
 	}
 
-	schemaHandler, err := schema.NewSchemaHandlerFromProtoStruct(ProtoMessage{})
+	schemaHandler, err := schema.NewSchemaHandlerFromStruct(ProtoMessage{}, false)
 	if err != nil {
 		t.Errorf("failed to get schema handler: %v", err)
 	}
@@ -130,7 +208,7 @@ func TestMarshalTestNestedElem(t *testing.T) {
 		testNestedElem{EmptyRepeated: []*struct{}{{}}},
 		testNestedElem{EmptyRepeated: []*struct{}{{}, nil, {}}},
 	}
-	schemaHandler, err := schema.NewSchemaHandlerFromProtoStruct(testNestedElem{})
+	schemaHandler, err := schema.NewSchemaHandlerFromStruct(testNestedElem{}, false)
 	if err != nil {
 		t.Errorf("failed to get schema handler: %v", err)
 	}
