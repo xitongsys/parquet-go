@@ -242,8 +242,8 @@ func (sh *SchemaHandler) GetRootExName() string {
 
 type Item struct {
 	GoType  reflect.Type
-	Info    *common.Tag
 	GoValue reflect.Value
+	Info    *common.Tag
 }
 
 func NewItem() *Item {
