@@ -28,15 +28,36 @@ type File struct {
 
 // NewGcsFileWriter will create a new GCS file writer.
 func NewGcsFileWriter(ctx context.Context, projectID, bucketName, name string) (*File, error) {
-	return NewGcsFileReader(ctx, projectID, bucketName, name)
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create storage client: %w", err)
+	}
+
+	r, err := NewGcsFileWriterWithClient(ctx, client, projectID, bucketName, name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set externalClient to false so we close it when calling `Close`.
+	r.externalClient = false
+
+	return r, nil
 }
 
 // NewGcsFileWriter will create a new GCS file writer with the passed client.
 func NewGcsFileWriterWithClient(ctx context.Context, client *storage.Client, projectID, bucketName, name string) (*File, error) {
+	obj := client.Bucket(bucketName).Object(name)
+
+	// Close writer to flush changes and force the file to be created
+	writer := obj.NewWriter(ctx)
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close writer: %w", err)
+	}
+
 	return NewGcsFileReaderWithClient(ctx, client, projectID, bucketName, name)
 }
 
-// NewGcsFileWriter will create a new GCS file reader.
+// NewGcsFileReader will create a new GCS file reader.
 func NewGcsFileReader(ctx context.Context, projectID, bucketName, name string) (*File, error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -54,7 +75,7 @@ func NewGcsFileReader(ctx context.Context, projectID, bucketName, name string) (
 	return r, nil
 }
 
-// NewGcsFileWriter will create a new GCS file reader with the passed client.
+// NewGcsFileReader will create a new GCS file reader with the passed client.
 func NewGcsFileReaderWithClient(ctx context.Context, client *storage.Client, projectID, bucketName, name string) (*File, error) {
 	obj := client.Bucket(bucketName).Object(name)
 
