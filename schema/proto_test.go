@@ -48,6 +48,8 @@ type ProtoMessage struct {
 	Timestamp timestamppb.Timestamp
 	Status    JobStatus
 	IntVal    int32
+	Bytes     []byte
+	String    string
 }
 
 func TestProtoSpecificSchema(t *testing.T) {
@@ -55,13 +57,19 @@ func TestProtoSpecificSchema(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to generate schema handler: %v", err)
 	}
-	assert.Equal(t, 3, len(schemaHandler.ValueColumns))
+	assert.Equal(t, 5, len(schemaHandler.ValueColumns))
 	assert.Equal(t, parquet.Type_INT64, *schemaHandler.SchemaElements[1].Type)
 	assert.Equal(t, parquet.ConvertedType_TIMESTAMP_MILLIS, *schemaHandler.SchemaElements[1].ConvertedType)
 	assert.Equal(t, parquet.Type_BYTE_ARRAY, *schemaHandler.SchemaElements[2].Type)
 	assert.Equal(t, parquet.ConvertedType_ENUM, *schemaHandler.SchemaElements[2].ConvertedType)
 	assert.Equal(t, parquet.Type_INT32, *schemaHandler.SchemaElements[3].Type)
 	assert.Nil(t, schemaHandler.SchemaElements[3].ConvertedType)
+	assert.Equal(t, parquet.Type_BYTE_ARRAY, *schemaHandler.SchemaElements[4].Type)
+	assert.Nil(t, schemaHandler.SchemaElements[4].ConvertedType)
+	assert.Nil(t, schemaHandler.SchemaElements[4].LogicalType)
+	assert.Equal(t, parquet.Type_BYTE_ARRAY, *schemaHandler.SchemaElements[5].Type)
+	assert.Nil(t, schemaHandler.SchemaElements[5].ConvertedType)
+	assert.NotNil(t, schemaHandler.SchemaElements[5].LogicalType.STRING)
 }
 
 func TestNewSchemaHandlerFromProtStruct(t *testing.T) {

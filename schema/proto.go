@@ -21,6 +21,7 @@ const (
 	ParquetKeyType            = "keytype"
 	ParquetKeyConvertedType   = "keyconvertedtype"
 	ParquetValueConvertedType = "valueconvertedtype"
+	ParquetLogicalType        = "logicaltype"
 
 	RepetitionTypeOptional = "OPTIONAL"
 
@@ -60,6 +61,9 @@ const (
 	ConvertedTypeJson            = "JSON"
 	ConvertedTypeBson            = "BSON"
 	ConvertedTypeInterval        = "INTERVAL"
+
+	// Parquet logical type
+	LogicalTypeString = "STRING"
 
 	ProtoEnumMethodName   = "Enum"
 	ProtoStringMethodName = "String"
@@ -174,6 +178,7 @@ func GetDefinedTypeTag(typ reflect.Type, value reflect.Value) (tags map[string]s
 		tags[ParquetType] = ParquetTypeDouble
 	case reflect.String:
 		tags[ParquetType] = ParquetTypeByteArray
+		tags[ParquetLogicalType] = LogicalTypeString
 	case reflect.Pointer, reflect.UnsafePointer, reflect.Uintptr:
 		tags, err = GetDefinedTypeTag(typ.Elem(), value.Elem())
 		// only pointer requires the Optional,
@@ -248,6 +253,11 @@ func updateKeyOrValueType(tags map[string]string, typ reflect.Type, updateKey bo
 
 func getListTag(typ reflect.Type) (tags map[string]string, err error) {
 	tags = make(map[string]string)
+	// bytes is converted to []uint8, it should just return the bytearray parquet type
+	if typ.Elem().Kind() == reflect.Uint8 {
+		tags[ParquetType] = ParquetTypeByteArray
+		return tags, nil
+	}
 	tags[ParquetType] = ParquetTypeList
 	return updateKeyOrValueType(tags, typ, false)
 }
@@ -358,6 +368,13 @@ func NewSchemaHandlerFromStruct(obj interface{}, skipNoTagField bool) (sh *Schem
 			schema.NumChildren = &numChildren
 		} else if (item.GoType.Kind() == reflect.Slice || item.GoType.Kind() == reflect.Array) &&
 			item.Info.RepetitionType != parquet.FieldRepetitionType_REPEATED {
+			if item.GoType.Elem().Kind() == reflect.Uint8 {
+				schemaElements, infos, err = generateSingleSchemaElement(item, schemaElements, infos)
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
 			// special handling for the nested slice, the value type cannot be prvoided through the regular tag since it only has one layer deep
 			if item.Info.ValueType == "" {
 				tags, err := GetDefinedTypeTag(item.GoType.Elem(), getSliceElemValue(item.GoValue))
@@ -394,14 +411,10 @@ func NewSchemaHandlerFromStruct(obj interface{}, skipNoTagField bool) (sh *Schem
 				}
 				item.Info.Type = tags[ParquetType]
 			}
-			schema, err := common.NewSchemaElementFromTagMap(item.Info)
+			schemaElements, infos, err = generateSingleSchemaElement(item, schemaElements, infos)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
+				return nil, err
 			}
-			schemaElements = append(schemaElements, schema)
-			newInfo = common.NewTag()
-			common.DeepCopy(item.Info, newInfo)
-			infos = append(infos, newInfo)
 		}
 	}
 
@@ -409,4 +422,16 @@ func NewSchemaHandlerFromStruct(obj interface{}, skipNoTagField bool) (sh *Schem
 	res.Infos = infos
 	res.CreateInExMap()
 	return res, nil
+}
+
+func generateSingleSchemaElement(item *Item, schemaElements []*parquet.SchemaElement, infos []*common.Tag) ([]*parquet.SchemaElement, []*common.Tag, error) {
+	schema, err := common.NewSchemaElementFromTagMap(item.Info)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
+	}
+	schemaElements = append(schemaElements, schema)
+	newInfo := common.NewTag()
+	common.DeepCopy(item.Info, newInfo)
+	infos = append(infos, newInfo)
+	return schemaElements, infos, nil
 }
