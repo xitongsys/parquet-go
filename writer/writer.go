@@ -290,6 +290,7 @@ func (pw *ParquetWriter) flushObjs() error {
 			defer func() {
 				wg.Done()
 				if r := recover(); r != nil {
+					lock.Lock()
 					switch x := r.(type) {
 					case string:
 						errs[index] = errors.New(x)
@@ -298,6 +299,7 @@ func (pw *ParquetWriter) flushObjs() error {
 					default:
 						errs[index] = errors.New("unknown error")
 					}
+					lock.Unlock()
 				}
 			}()
 
@@ -338,12 +340,14 @@ func (pw *ParquetWriter) flushObjs() error {
 
 	wg.Wait()
 
+	lock.Lock()
 	for _, err2 := range errs {
 		if err2 != nil {
 			err = err2
 			break
 		}
 	}
+	lock.Unlock()
 
 	for _, pagesMap := range pagesMapList {
 		for name, pages := range pagesMap {
