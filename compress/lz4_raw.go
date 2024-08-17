@@ -9,11 +9,11 @@ import (
 )
 
 func init() {
-	lz4hc := lz4.CompressorHC{
-		Level: lz4.CompressionLevel(9),
-	}
 	compressors[parquet.CompressionCodec_LZ4_RAW] = &Compressor{
 		Compress: func(buf []byte) []byte {
+			lz4hc := lz4.CompressorHC{
+				Level: lz4.CompressionLevel(9),
+			}
 			res := make([]byte, lz4.CompressBlockBound(len(buf)))
 			count, _ := lz4hc.CompressBlock(buf, res)
 			return res[:count]
