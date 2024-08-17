@@ -2,6 +2,7 @@ package compress
 
 import (
 	"bytes"
+	"sync"
 	"testing"
 
 	"github.com/xitongsys/parquet-go/parquet"
@@ -15,10 +16,18 @@ func TestLz4RawCompress(t *testing.T) {
 	}
 
 	// compression
-	output := lz4RawCompressor.Compress(input)
-	if !bytes.Equal(compressed, output) {
-		t.Fatalf("expected output %s but was %s", string(compressed), string(output))
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			output := lz4RawCompressor.Compress(input)
+			if !bytes.Equal(compressed, output) {
+				t.Fatalf("expected output %s but was %s", string(compressed), string(output))
+			}
+		}()
 	}
+	wg.Wait()
 
 	// uncompression
 	output, err := lz4RawCompressor.Uncompress(compressed)
