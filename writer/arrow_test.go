@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
-	"github.com/apache/arrow/go/v12/arrow/memory"
+	"github.com/apache/arrow/go/v17/arrow"
+	"github.com/apache/arrow/go/v17/arrow/array"
+	"github.com/apache/arrow/go/v17/arrow/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/xitongsys/parquet-go-source/buffer"
 	"github.com/xitongsys/parquet-go-source/writerfile"
@@ -589,13 +589,13 @@ func TestE2ENullabilityValid(t *testing.T) {
 		actualTable = append(actualTable, rowToSliceOfValues(row))
 	}
 	expectedTable := [][]interface{}{
-		{-1, nil, -21, nil, 1, nil, 21, nil, 1.1, nil, 1, nil, "A", nil, true,
+		{-1, nil, -21, nil, 1, nil, 21, nil, float32(1.1), nil, 1, nil, "A", nil, true,
 			nil, 1, nil, 1},
 
 		{nil, -11, nil, -31, nil, 11, nil, 31, nil, 10.1, nil, 1, nil, "a",
 			nil, 1, nil, 1, nil},
 
-		{-2, nil, -22, nil, 2, nil, 22, nil, 1.2, nil, 2, nil, "B", nil, false,
+		{-2, nil, -22, nil, 2, nil, 22, nil, float32(1.2), nil, 2, nil, "B", nil, false,
 			nil, 2, nil, 2},
 
 		{nil, -12, nil, -32, nil, 12, nil, 32, nil, 10.2, nil, 2, nil, "b",
