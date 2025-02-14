@@ -6,7 +6,7 @@ toolchain go1.22.5
 require (
 	github.com/apache/arrow/go/v17 v17.0.0
 	github.com/apache/thrift v0.21.0
-	github.com/aws/aws-sdk-go v1.30.19
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/goccy/go-reflect v1.2.0
 	github.com/klauspost/compress v1.17.11
 	github.com/pierrec/lz4/v4 v4.1.22
@@ -19,7 +19,7 @@ require (
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
-	github.com/jmespath/go-jmespath v0.3.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
