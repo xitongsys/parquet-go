@@ -18,8 +18,8 @@ func TestLz4RawCompress(t *testing.T) {
 	// compression
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
+		wg.Add(1)
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			output := lz4RawCompressor.Compress(input)
 			if !bytes.Equal(compressed, output) {
