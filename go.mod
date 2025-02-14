@@ -1,7 +1,6 @@
 module github.com/xitongsys/parquet-go
 
-go 1.21
-toolchain go1.22.5
+go 1.23
 
 require (
 	github.com/apache/arrow/go/v17 v17.0.0
