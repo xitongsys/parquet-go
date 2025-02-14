@@ -1,10 +1,11 @@
 module github.com/xitongsys/parquet-go
 
 go 1.21
+toolchain go1.22.5
 
 require (
 	github.com/apache/arrow/go/v17 v17.0.0
-	github.com/apache/thrift v0.20.0
+	github.com/apache/thrift v0.21.0
 	github.com/aws/aws-sdk-go v1.30.19
 	github.com/goccy/go-reflect v1.2.0
 	github.com/klauspost/compress v1.17.9
