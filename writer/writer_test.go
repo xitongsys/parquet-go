@@ -237,3 +237,16 @@ func TestNewWriterWithInvaidFile(t *testing.T) {
 	assert.Nil(t, pw)
 	assert.ErrorIs(t, err, testWriteErr)
 }
+
+func TestWriteStopRaceConditionOnError(t *testing.T) {
+	var buf bytes.Buffer
+	fw := writerfile.NewWriterFile(&buf)
+	pw, err := NewJSONWriter(`{"Tag":"name=parquet-go-root","Fields":[{"Tag":"name=x, type=INT64"}]}`, fw, 4)
+	assert.NoError(t, err)
+
+	for i := 0; i < 10; i++ {
+		entry := fmt.Sprintf(`{"not-x":%d}`, i)
+		assert.NoError(t, pw.Write(entry))
+	}
+	assert.Error(t, pw.WriteStop())
+}
