@@ -1,15 +1,15 @@
 package marshal
 
 import (
-	"errors"
 	"fmt"
+	"unsafe"
+
 	"github.com/goccy/go-reflect"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/schema"
 	"github.com/xitongsys/parquet-go/types"
-	"unsafe"
 )
 
 // MarshalFast implements the Marshal function while maximizing performance and minimizing
@@ -26,19 +26,6 @@ import (
 //
 // It does not support map-type fields. It should support every other use-case of Marshal.
 func MarshalFast(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("unkown error")
-			}
-		}
-	}()
-
 	tableMap := setupTableMap(schemaHandler, len(srcInterface))
 	pathMap := schemaHandler.PathMap
 
