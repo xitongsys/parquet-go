@@ -287,19 +287,7 @@ func (pw *ParquetWriter) flushObjs() error {
 
 		wg.Add(1)
 		go func(b, e int, index int64) {
-			defer func() {
-				wg.Done()
-				if r := recover(); r != nil {
-					switch x := r.(type) {
-					case string:
-						errs[index] = errors.New(x)
-					case error:
-						errs[index] = x
-					default:
-						errs[index] = errors.New("unknown error")
-					}
-				}
-			}()
+			defer wg.Done()
 
 			if e <= b {
 				return
@@ -443,7 +431,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 				//only record DataPage
 				if page.Header.Type != parquet.PageType_DICTIONARY_PAGE {
 					if page.Header.DataPageHeader == nil && page.Header.DataPageHeaderV2 == nil {
-						panic(errors.New("unsupported data page: " + page.Header.String()))
+						return errors.New("unsupported data page: " + page.Header.String())
 					}
 
 					var minVal []byte
