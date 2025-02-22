@@ -7,7 +7,7 @@ require (
 	github.com/apache/thrift v0.21.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/goccy/go-reflect v1.2.0
-	github.com/klauspost/compress v1.17.11
+	github.com/klauspost/compress v1.18.0
 	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/stretchr/testify v1.10.0
 	github.com/xitongsys/parquet-go-source v0.0.0-20241021075129-b732d2ac9c9b
