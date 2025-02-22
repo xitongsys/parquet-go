@@ -23,7 +23,7 @@ type Student struct {
 
 func main() {
 	var err error
-	w, err := os.Create("output/flat.parquet")
+	w, err := os.Create("flat.parquet")
 	if err != nil {
 		log.Println("Can't create local file", err)
 		return
@@ -60,7 +60,7 @@ func main() {
 	w.Close()
 
 	///read
-	fr, err := local.NewLocalFileReader("output/flat.parquet")
+	fr, err := local.NewLocalFileReader("flat.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return

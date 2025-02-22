@@ -22,7 +22,7 @@ type Student struct {
 
 func main() {
 	var err error
-	fw, err := local.NewLocalFileWriter("output/flat.parquet")
+	fw, err := local.NewLocalFileWriter("keyvalue.parquet")
 	if err != nil {
 		log.Println("Can't create local file", err)
 		return
@@ -38,7 +38,7 @@ func main() {
 	pw.RowGroupSize = 128 * 1024 * 1024 //128M
 	pw.PageSize = 8 * 1024              //8K
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
-	num := 100
+	num := 10
 	for i := 0; i < num; i++ {
 		stu := Student{
 			Name:   "StudentName",
@@ -52,6 +52,36 @@ func main() {
 			log.Println("Write error", err)
 		}
 	}
+
+	//To add KeyValueMetadata, you must call the Flush after all data written
+	pw.Flush(true)
+
+	//add global KeyValueMetadata
+	pw.Footer.KeyValueMetadata = make([]*parquet.KeyValue, 0)
+	keyValueGlobal := parquet.NewKeyValue()
+	valueGlobal := "valueGlobal"
+	keyValueGlobal.Key, keyValueGlobal.Value = "keyGlobal", &valueGlobal
+
+	//see column information
+	//log.Println(pw.SchemaHandler.MapIndex)
+
+	// add KeyValueMetadata in ColumnChunk
+	for _, rowGroup := range pw.Footer.RowGroups {
+		for _, column := range rowGroup.Columns {
+			pathInSchema := column.MetaData.PathInSchema
+			ln := len(pathInSchema)
+			if pathInSchema[ln-1] == "Weight" {
+				key, value := "unit", "kg"
+				keyValue := parquet.NewKeyValue()
+				keyValue.Key, keyValue.Value = key, &value
+
+				column.MetaData.KeyValueMetadata = []*parquet.KeyValue{
+					keyValue,
+				}
+			}
+		}
+	}
+
 	if err = pw.WriteStop(); err != nil {
 		log.Println("WriteStop error", err)
 		return
@@ -60,7 +90,7 @@ func main() {
 	fw.Close()
 
 	///read
-	fr, err := local.NewLocalFileReader("output/flat.parquet")
+	fr, err := local.NewLocalFileReader("keyvalue.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
@@ -72,12 +102,8 @@ func main() {
 		return
 	}
 	num = int(pr.GetNumRows())
-	for i := 0; i < num/10; i++ {
-		if i%2 == 0 {
-			pr.SkipRows(10) //skip 10 rows
-			continue
-		}
-		stus := make([]Student, 10) //read 10 rows
+	for i := 0; i < num; i++ {
+		stus := make([]Student, 1)
 		if err = pr.Read(&stus); err != nil {
 			log.Println("Read error", err)
 		}

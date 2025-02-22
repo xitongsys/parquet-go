@@ -55,7 +55,6 @@ func main() {
 			colBuilder.Append(1)
 			colBuilder.AppendNull()
 			colBuilder.Append(2)
-			colBuilder.AppendNull()
 		}
 	}
 	rec := b.NewRecord()
