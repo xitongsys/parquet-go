@@ -23,7 +23,7 @@ func TestLz4RawCompress(t *testing.T) {
 			defer wg.Done()
 			output := lz4RawCompressor.Compress(input)
 			if !bytes.Equal(compressed, output) {
-				t.Fatalf("expected output %s but was %s", string(compressed), string(output))
+				t.Errorf("expected output %s but was %s", string(compressed), string(output))
 			}
 		}()
 	}

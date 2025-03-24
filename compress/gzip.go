@@ -27,8 +27,10 @@ func init() {
 			res := new(bytes.Buffer)
 			gzipWriter := gzipWriterPool.Get().(*gzip.Writer)
 			gzipWriter.Reset(res)
-			gzipWriter.Write(buf)
-			gzipWriter.Close()
+			if _, err := gzipWriter.Write(buf); err != nil {
+				return nil
+			}
+			_ = gzipWriter.Close()
 			gzipWriter.Reset(nil)
 			gzipWriterPool.Put(gzipWriter)
 			return res.Bytes()
