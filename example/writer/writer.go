@@ -57,7 +57,7 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	w.Close()
+	_ = w.Close()
 
 	///read
 	fr, err := local.NewLocalFileReader("flat.parquet")
@@ -74,7 +74,7 @@ func main() {
 	num = int(pr.GetNumRows())
 	for i := 0; i < num/10; i++ {
 		if i%2 == 0 {
-			pr.SkipRows(10) // skip 10 rows
+			_ = pr.SkipRows(10) // skip 10 rows
 			continue
 		}
 		stus := make([]Student, 10) // read 10 rows
@@ -85,5 +85,5 @@ func main() {
 	}
 
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

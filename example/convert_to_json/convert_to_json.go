@@ -63,7 +63,7 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
 	///read
 	fr, err := local.NewLocalFileReader("to_json.parquet")
@@ -94,5 +94,5 @@ func main() {
 	log.Println(string(jsonBs))
 
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

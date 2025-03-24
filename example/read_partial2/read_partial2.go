@@ -63,7 +63,7 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
 	///read
 	fr, err := local.NewLocalFileReader("partial2.parquet")
@@ -81,9 +81,9 @@ func main() {
 	num = int(pr.GetNumRows())
 	// only read scores
 	scores := make([]map[string]int32, num)
-	pr.ReadPartial(&scores, common.ReformPathStr("parquet_go_root.scores"))
+	_ = pr.ReadPartial(&scores, common.ReformPathStr("parquet_go_root.scores"))
 	log.Println(scores)
 
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

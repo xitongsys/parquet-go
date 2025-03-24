@@ -76,7 +76,7 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
 	fr, err := local.NewLocalFileReader("arrow.parquet")
 	if err != nil {

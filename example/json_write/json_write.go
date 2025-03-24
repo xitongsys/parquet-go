@@ -101,5 +101,5 @@ func main() {
 		log.Println("WriteStop error", err)
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 }
