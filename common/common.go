@@ -12,7 +12,7 @@ import (
 	"github.com/apache/arrow/go/v17/arrow"
 	"github.com/apache/arrow/go/v17/arrow/array"
 
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/parquet"
 )
 
 // `parquet:"name=Name, type=FIXED_LEN_BYTE_ARRAY, length=12"`

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/common"
+	"github.com/hangxie/parquet-go/parquet"
 )
 
 /*

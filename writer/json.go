@@ -3,12 +3,12 @@ package writer
 import (
 	"io"
 
-	"github.com/xitongsys/parquet-go-source/writerfile"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/marshal"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/hangxie/parquet-go-source/writerfile"
+	"github.com/hangxie/parquet-go/layout"
+	"github.com/hangxie/parquet-go/marshal"
+	"github.com/hangxie/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/schema"
+	"github.com/hangxie/parquet-go/source"
 )
 
 type JSONWriter struct {

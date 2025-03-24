@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/types"
+	"github.com/hangxie/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/types"
 )
 
 // Get object type from schema by reflect

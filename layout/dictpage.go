@@ -6,10 +6,10 @@ import (
 
 	"github.com/apache/thrift/lib/go/thrift"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/compress"
-	"github.com/xitongsys/parquet-go/encoding"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/common"
+	"github.com/hangxie/parquet-go/compress"
+	"github.com/hangxie/parquet-go/encoding"
+	"github.com/hangxie/parquet-go/parquet"
 )
 
 type DictRecType struct {

@@ -6,7 +6,7 @@ package compress
 import (
 	"github.com/klauspost/compress/snappy"
 
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/parquet"
 )
 
 func init() {

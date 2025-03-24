@@ -7,9 +7,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/xitongsys/parquet-go-source/local"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/writer"
+	"github.com/hangxie/parquet-go-source/local"
+	"github.com/hangxie/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/writer"
 )
 
 type Shoe struct {
