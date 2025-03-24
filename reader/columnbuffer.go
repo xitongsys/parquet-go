@@ -81,7 +81,7 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 
 	cbt.ChunkHeader = columnChunks[i]
 	if columnChunks[i].FilePath != nil {
-		cbt.PFile.Close()
+		_ = cbt.PFile.Close()
 		if cbt.PFile, err = cbt.PFile.Open(*columnChunks[i].FilePath); err != nil {
 			return err
 		}
@@ -94,7 +94,7 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 	}
 
 	if cbt.ThriftReader != nil {
-		cbt.ThriftReader.Close()
+		_ = cbt.ThriftReader.Close()
 	}
 
 	cbt.ThriftReader = source.ConvertToThriftReader(cbt.PFile, offset)
@@ -169,7 +169,9 @@ func (cbt *ColumnBufferType) ReadPageForSkip() (*layout.Page, error) {
 		}
 
 		if page.Header.GetType() == parquet.PageType_DICTIONARY_PAGE {
-			page.GetValueFromRawData(cbt.SchemaHandler)
+			if err := page.GetValueFromRawData(cbt.SchemaHandler); err != nil {
+				return nil, err
+			}
 			cbt.DictPage = page
 			return page, nil
 		}

@@ -55,7 +55,8 @@ func (pr *ParquetReader) SkipRowsByIndex(index, num int64) {
 		return
 	}
 	pathStr := pr.SchemaHandler.ValueColumns[index]
-	pr.SkipRowsByPath(pathStr, num)
+	// return error till we can change function signature
+	_ = pr.SkipRowsByPath(pathStr, num)
 }
 
 // ReadColumnByPath reads column by path in schema.

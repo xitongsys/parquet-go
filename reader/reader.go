@@ -167,7 +167,7 @@ func (pr *ParquetReader) ReadFooter() error {
 		return err
 	}
 	pr.Footer = parquet.NewFileMetaData()
-	pf := thrift.NewTCompactProtocolFactory()
+	pf := thrift.NewTCompactProtocolFactoryConf(&thrift.TConfiguration{})
 	thriftReader := thrift.NewStreamTransportR(pr.PFile)
 	bufferReader := thrift.NewTBufferedTransport(thriftReader, int(size))
 	protocol := pf.GetProtocol(bufferReader)
@@ -381,7 +381,7 @@ func (pr *ParquetReader) read(dstInterface interface{}, prefixPath string) error
 func (pr *ParquetReader) ReadStop() {
 	for _, cb := range pr.ColumnBuffers {
 		if cb != nil {
-			cb.PFile.Close()
+			_ = cb.PFile.Close()
 		}
 	}
 }
