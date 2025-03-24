@@ -33,7 +33,6 @@ type MinioFile struct {
 var (
 	errWhence        = errors.New("Seek: invalid whence")
 	errInvalidOffset = errors.New("Seek: invalid offset")
-	errFailedUpload  = errors.New("Write: failed upload")
 )
 
 // NewS3FileWriterWithClient is the same as NewMinioFileWriter but allows passing

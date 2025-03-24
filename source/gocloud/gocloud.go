@@ -63,7 +63,9 @@ func (b *blobFile) Read(p []byte) (n int, err error) {
 	if err != nil {
 		return 0, errors.Wrapf(err, "Failed to open reader. key=%s, offset=%d, len=%d", b.key, b.offset, len(p))
 	}
-	defer r.Close()
+	defer func() {
+		_ = r.Close()
+	}()
 
 	n, err = r.Read(p)
 	b.offset += int64(n)

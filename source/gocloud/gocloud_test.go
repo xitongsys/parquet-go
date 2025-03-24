@@ -13,14 +13,14 @@ func TestSeek(t *testing.T) {
 	bf := &blobFile{}
 
 	// Out of range whence
-	offset, err := bf.Seek(0, io.SeekEnd+1)
+	_, err := bf.Seek(0, io.SeekEnd+1)
 	assert.Error(t, err)
 
 	// Filesize is inconsequential for SeekStart and SeekCurrent
-	offset, err = bf.Seek(-1, io.SeekStart)
+	_, err = bf.Seek(-1, io.SeekStart)
 	assert.Error(t, err)
 
-	offset, err = bf.Seek(10, io.SeekStart)
+	offset, err := bf.Seek(10, io.SeekStart)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(10), offset)
 
@@ -32,11 +32,11 @@ func TestSeek(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(0), offset)
 
-	offset, err = bf.Seek(-1, io.SeekCurrent)
+	_, err = bf.Seek(-1, io.SeekCurrent)
 	assert.Error(t, err)
 
 	// Ensure SeekEnd works correctly with zero sized files
-	offset, err = bf.Seek(-1, io.SeekEnd)
+	_, err = bf.Seek(-1, io.SeekEnd)
 	assert.Error(t, err)
 
 	offset, err = bf.Seek(1, io.SeekEnd)
@@ -49,7 +49,7 @@ func TestSeek(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(0), offset)
 
-	offset, err = bf.Seek(-2, io.SeekEnd)
+	_, err = bf.Seek(-2, io.SeekEnd)
 	assert.Error(t, err)
 
 	offset, err = bf.Seek(1, io.SeekEnd)
@@ -59,7 +59,9 @@ func TestSeek(t *testing.T) {
 
 func TestRead(t *testing.T) {
 	b := memblob.OpenBucket(nil)
-	defer b.Close()
+	defer func() {
+		_ = b.Close()
+	}()
 
 	ctx := context.Background()
 	key := "test"
@@ -94,7 +96,7 @@ func TestRead(t *testing.T) {
 	assert.Equal(t, n, 0)
 
 	// Ensure Read operates as expected if we seek
-	bf.Seek(-1, io.SeekEnd)
+	_, _ = bf.Seek(-1, io.SeekEnd)
 	n, err = bf.Read(buf)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, n)
@@ -107,7 +109,9 @@ func TestRead(t *testing.T) {
 
 func TestWrite(t *testing.T) {
 	b := memblob.OpenBucket(nil)
-	defer b.Close()
+	defer func() {
+		_ = b.Close()
+	}()
 
 	ctx := context.Background()
 	key := "test"

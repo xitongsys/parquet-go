@@ -134,7 +134,7 @@ func (s *AzBlockBlob) Seek(offset int64, whence int) (int64, error) {
 
 	switch whence {
 	case io.SeekStart:
-		offset = offset
+		// we are at the position right no
 	case io.SeekCurrent:
 		offset = s.offset + offset
 	case io.SeekEnd:
@@ -234,12 +234,11 @@ func (s *AzBlockBlob) Open(URL string) (source.ParquetFile, error) {
 			return s, err
 		}
 	}
-	fileSize := int64(-1)
 	props, err := s.blockBlobClient.GetProperties(s.ctx, nil)
 	if err != nil {
 		return &AzBlockBlob{}, err
 	}
-	fileSize = *props.ContentLength
+	fileSize := *props.ContentLength
 
 	pf := &AzBlockBlob{
 		ctx:             s.ctx,

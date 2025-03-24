@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -61,7 +60,9 @@ func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHea
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	// retrieve size
 	contentRange := resp.Header.Values(contentRangeHeader)
@@ -137,9 +138,11 @@ func (r *HttpReader) Read(b []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
-	buf, err := ioutil.ReadAll(resp.Body)
+	buf, err := io.ReadAll(resp.Body)
 	bytesRead := len(buf)
 	for i := 0; i < bytesRead; i++ {
 		b[i] = buf[i]

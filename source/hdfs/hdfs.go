@@ -95,13 +95,19 @@ func (self *HdfsFile) Write(b []byte) (n int, err error) {
 
 func (self *HdfsFile) Close() error {
 	if self.FileReader != nil {
-		self.FileReader.Close()
+		if err := self.FileReader.Close(); err != nil {
+			return err
+		}
 	}
 	if self.FileWriter != nil {
-		self.FileWriter.Close()
+		if err := self.FileWriter.Close(); err != nil {
+			return err
+		}
 	}
 	if self.Client != nil {
-		self.Client.Close()
+		if err := self.Client.Close(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -65,7 +65,6 @@ const (
 var (
 	errWhence        = errors.New("Seek: invalid whence")
 	errInvalidOffset = errors.New("Seek: invalid offset")
-	errFailedUpload  = errors.New("Write: failed upload")
 )
 
 // NewS3FileWriter creates an S3 FileWriter, to be used with NewParquetWriter
@@ -237,7 +236,7 @@ func (s *S3File) openSocket(numBytes int64) error {
 
 func (s *S3File) closeSocket() {
 	if s.socket != nil {
-		s.socket.Close()
+		_ = s.socket.Close()
 		s.socket = nil
 	}
 }
