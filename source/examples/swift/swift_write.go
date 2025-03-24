@@ -7,10 +7,10 @@ import (
 
 	"github.com/ncw/swift"
 
-	"github.com/xitongsys/parquet-go/reader"
-	"github.com/xitongsys/parquet-go/writer"
+	"github.com/hangxie/parquet-go/reader"
+	"github.com/hangxie/parquet-go/writer"
 
-	swiftsource "github.com/xitongsys/parquet-go-source/swift"
+	swiftsource "github.com/hangxie/parquet-go-source/swift"
 )
 
 type Student struct {

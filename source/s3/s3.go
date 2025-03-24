@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/hangxie/parquet-go/source"
 )
 
 // S3File is ParquetFile for AWS S3

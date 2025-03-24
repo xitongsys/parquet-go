@@ -5,14 +5,13 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/golang/mock/gomock"
 
-	"github.com/xitongsys/parquet-go-source/s3v2/mocks"
+	"github.com/hangxie/parquet-go-source/s3v2/mocks"
 )
 
 func TestSeek(t *testing.T) {
@@ -80,7 +79,7 @@ func TestReadBodyLargerThanProvidedBuffer(t *testing.T) {
 	defer ctrl.Finish()
 
 	buf := bytes.NewBufferString("some body data that is larger than expected")
-	bufReadCloser := ioutil.NopCloser(buf)
+	bufReadCloser := io.NopCloser(buf)
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObject(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.GetObjectOutput{Body: bufReadCloser}, nil)
@@ -107,7 +106,7 @@ func TestReadDownloadError(t *testing.T) {
 
 	errMessage := "some download error"
 	buf := bytes.NewBufferString("some data")
-	bufReadCloser := ioutil.NopCloser(buf)
+	bufReadCloser := io.NopCloser(buf)
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObject(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.GetObjectOutput{Body: bufReadCloser}, errors.New(errMessage))
@@ -134,7 +133,7 @@ func TestRead(t *testing.T) {
 
 	data := "some data"
 	buf := bytes.NewBufferString(data)
-	bufReadCloser := ioutil.NopCloser(buf)
+	bufReadCloser := io.NopCloser(buf)
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObject(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.GetObjectOutput{Body: bufReadCloser}, nil)

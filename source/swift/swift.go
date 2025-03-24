@@ -3,7 +3,7 @@ package swiftsource
 import (
 	"github.com/ncw/swift"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/hangxie/parquet-go/source"
 )
 
 type SwiftFile struct {

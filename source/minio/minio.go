@@ -7,7 +7,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/hangxie/parquet-go/source"
 )
 
 // MinioFile is ParquetFile for MinIO S3 API

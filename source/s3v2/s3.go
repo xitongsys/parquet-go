@@ -1,6 +1,6 @@
 package s3v2
 
-//go:generate mockgen -destination=./mocks/mock_s3.go -package=mocks github.com/xitongsys/parquet-go-source/s3v2 S3API
+//go:generate mockgen -destination=./mocks/mock_s3.go -package=mocks github.com/hangxie/parquet-go-source/s3v2 S3API
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/xitongsys/parquet-go/source"
+	"github.com/hangxie/parquet-go/source"
 )
 
 type S3API interface {
