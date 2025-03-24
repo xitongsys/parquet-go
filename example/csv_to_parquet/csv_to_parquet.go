@@ -35,7 +35,7 @@ func main() {
 	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 
-	csvFile, _ := os.Open("data/shoes.csv")
+	csvFile, _ := os.Open("shoes.csv")
 	reader := csv.NewReader(bufio.NewReader(csvFile))
 
 	for {
@@ -60,5 +60,5 @@ func main() {
 	}
 
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 }

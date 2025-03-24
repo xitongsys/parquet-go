@@ -54,12 +54,12 @@ func main() {
 		log.Println("WriteStop error", err)
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
 	var names, classes, scores_key, scores_value, ids []interface{}
 	var rls, dls []int32
 
-	///read
+	// read
 	fr, err := local.NewLocalFileReader("column.parquet")
 	if err != nil {
 		log.Println("Can't open file", err)
@@ -72,15 +72,16 @@ func main() {
 	}
 	num = int64(pr.GetNumRows())
 
-	pr.SkipRowsByPath(common.ReformPathStr("parquet_go_root.name"), 5) // skip the first five rows
+	// skip the first five rows
+	_ = pr.SkipRowsByPath(common.ReformPathStr("parquet_go_root.name"), 5)
 	names, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.name"), num)
 	log.Println("name", names, rls, dls, err)
 
 	classes, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.class.list.element"), num)
 	log.Println("class", classes, rls, dls, err)
 
-	scores_key, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.score.key_value.key"), num)
-	scores_value, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.score.key_value.value"), num)
+	_, _, _, _ = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.score.key_value.key"), num)
+	_, _, _, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.score.key_value.value"), num)
 	log.Println("parquet_go_root.scores_key", scores_key, err)
 	log.Println("parquet_go_root.scores_value", scores_value, err)
 
@@ -89,5 +90,5 @@ func main() {
 	log.Println(ids)
 
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

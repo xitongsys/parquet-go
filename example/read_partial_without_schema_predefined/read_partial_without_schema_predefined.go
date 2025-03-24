@@ -63,7 +63,7 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
 	///read
 	fr, err := local.NewLocalFileReader("partial2_without_predefined_schema.parquet")
@@ -89,5 +89,5 @@ func main() {
 	log.Println(res)
 
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

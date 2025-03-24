@@ -113,7 +113,7 @@ func main() {
 		log.Println("WriteStop error", err)
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
 	///read
 	fr, err := local.NewLocalFileReader("type.parquet")
@@ -137,5 +137,5 @@ func main() {
 		log.Println(tps)
 	}
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

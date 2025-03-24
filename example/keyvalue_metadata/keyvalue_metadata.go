@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// To add KeyValueMetadata, you must call the Flush after all data written
-	pw.Flush(true)
+	_ = pw.Flush(true)
 
 	// add global KeyValueMetadata
 	pw.Footer.KeyValueMetadata = make([]*parquet.KeyValue, 0)
@@ -87,7 +87,7 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
 	///read
 	fr, err := local.NewLocalFileReader("keyvalue.parquet")
@@ -111,5 +111,5 @@ func main() {
 	}
 
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

@@ -62,9 +62,9 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
-	///read
+	// read
 	fr, err := local.NewLocalFileReader("without_predefined_schema.parquet")
 	if err != nil {
 		log.Println("Can't open file")
@@ -87,5 +87,5 @@ func main() {
 	log.Println(res)
 
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

@@ -122,7 +122,7 @@ func writeNested() {
 	if err = pw.WriteStop(); err != nil {
 		log.Println("WriteStop error", err)
 	}
-	fw.Close()
+	_ = fw.Close()
 	log.Println("Write Finished")
 
 	// read nested
@@ -145,7 +145,7 @@ func writeNested() {
 		log.Println(stus)
 	}
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }
 
 func main() {
