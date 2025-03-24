@@ -149,7 +149,7 @@ func (pw *ParquetWriter) WriteStop() error {
 		return err
 	}
 	ts := thrift.NewTSerializer()
-	ts.Protocol = thrift.NewTCompactProtocolFactory().GetProtocol(ts.Transport)
+	ts.Protocol = thrift.NewTCompactProtocolFactoryConf(&thrift.TConfiguration{}).GetProtocol(ts.Transport)
 	pw.RenameSchema()
 
 	// write ColumnIndex
@@ -266,13 +266,12 @@ func (pw *ParquetWriter) flushObjs() error {
 		pagesMapList[i] = make(map[string][]*layout.Page)
 	}
 
-	var c int64 = 0
 	delta := (l + pw.NP - 1) / pw.NP
 	lock := new(sync.Mutex)
 	var wg sync.WaitGroup
 	var errs []error = make([]error, pw.NP)
 
-	for c = 0; c < pw.NP; c++ {
+	for c := int64(0); c < pw.NP; c++ {
 		bgn := c * delta
 		end := bgn + delta
 		if end > l {
