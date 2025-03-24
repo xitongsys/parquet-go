@@ -5,5 +5,4 @@ updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
-      interval: weekly
-      day: friday
+      interval: monthly
