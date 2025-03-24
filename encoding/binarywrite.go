@@ -15,7 +15,8 @@ func BinaryWriteINT32(w io.Writer, nums []interface{}) {
 		buf[i*4+2] = byte(v >> 16)
 		buf[i*4+3] = byte(v >> 24)
 	}
-	w.Write(buf)
+	// return error till we can change function signature
+	_, _ = w.Write(buf)
 }
 
 func BinaryWriteINT64(w io.Writer, nums []interface{}) {
@@ -31,7 +32,8 @@ func BinaryWriteINT64(w io.Writer, nums []interface{}) {
 		buf[i*8+6] = byte(v >> 48)
 		buf[i*8+7] = byte(v >> 56)
 	}
-	w.Write(buf)
+	// return error till we can change function signature
+	_, _ = w.Write(buf)
 }
 
 func BinaryWriteFLOAT32(w io.Writer, nums []interface{}) {
@@ -43,7 +45,8 @@ func BinaryWriteFLOAT32(w io.Writer, nums []interface{}) {
 		buf[i*4+2] = byte(v >> 16)
 		buf[i*4+3] = byte(v >> 24)
 	}
-	w.Write(buf)
+	// return error till we can change function signature
+	_, _ = w.Write(buf)
 }
 
 func BinaryWriteFLOAT64(w io.Writer, nums []interface{}) {
@@ -59,5 +62,6 @@ func BinaryWriteFLOAT64(w io.Writer, nums []interface{}) {
 		buf[i*8+6] = byte(v >> 48)
 		buf[i*8+7] = byte(v >> 56)
 	}
-	w.Write(buf)
+	// return error till we can change function signature
+	_, _ = w.Write(buf)
 }
