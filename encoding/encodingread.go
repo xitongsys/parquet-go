@@ -28,7 +28,7 @@ func ReadPlain(bytesReader *bytes.Reader, dataType parquet.Type, cnt, bitWidth u
 	} else if dataType == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 		return ReadPlainFIXED_LEN_BYTE_ARRAY(bytesReader, cnt, bitWidth)
 	} else {
-		return nil, fmt.Errorf("Unknown parquet type")
+		return nil, fmt.Errorf("unknown parquet type")
 	}
 }
 
@@ -105,7 +105,9 @@ func ReadPlainBYTE_ARRAY(bytesReader *bytes.Reader, cnt uint64) ([]interface{}, 
 		}
 		ln := binary.LittleEndian.Uint32(buf)
 		cur := make([]byte, ln)
-		bytesReader.Read(cur)
+		if _, err := bytesReader.Read(cur); err != nil {
+			return nil, err
+		}
 		res[i] = string(cur)
 	}
 	return res, err
