@@ -18,7 +18,7 @@ func main() {
 		"name=Sex, type=BOOLEAN",
 	}
 
-	//write
+	// write
 	fw, err := local.NewLocalFileWriter("csv.parquet")
 	if err != nil {
 		log.Println("Can't open file", err)
@@ -64,5 +64,4 @@ func main() {
 	}
 	log.Println("Write Finished")
 	fw.Close()
-
 }

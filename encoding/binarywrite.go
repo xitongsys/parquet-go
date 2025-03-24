@@ -5,8 +5,7 @@ import (
 	"math"
 )
 
-//LittleEndian
-
+// LittleEndian
 func BinaryWriteINT32(w io.Writer, nums []interface{}) {
 	buf := make([]byte, len(nums)*4)
 	for i, n := range nums {

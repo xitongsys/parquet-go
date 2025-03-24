@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/apache/thrift/lib/go/thrift"
+
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/marshal"
@@ -23,17 +24,17 @@ type ParquetReaderOptions struct {
 
 type ParquetReader struct {
 	SchemaHandler *schema.SchemaHandler
-	NP            int64 //parallel number
+	NP            int64 // parallel number
 	Footer        *parquet.FileMetaData
 	PFile         source.ParquetFile
 
 	ColumnBuffers map[string]*ColumnBufferType
 
-	//One reader can only read one type objects
+	// One reader can only read one type objects
 	ObjType        reflect.Type
 	ObjPartialType reflect.Type
 
-	//Determines whether case sensitivity is enabled
+	// Determines whether case sensitivity is enabled
 	CaseInsensitive bool
 }
 
@@ -61,7 +62,6 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64, opts 
 
 		} else if sa, ok := obj.([]*parquet.SchemaElement); ok {
 			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(sa)
-
 		} else {
 			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
 				return res, err
@@ -69,7 +69,6 @@ func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64, opts 
 
 			res.ObjType = reflect.TypeOf(obj).Elem()
 		}
-
 	} else {
 		res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(res.Footer.Schema)
 	}
@@ -208,7 +207,7 @@ func (pr *ParquetReader) SkipRows(num int64) error {
 		}()
 	}
 
-	for key, _ := range pr.ColumnBuffers {
+	for key := range pr.ColumnBuffers {
 		taskChan <- key
 	}
 
@@ -327,7 +326,7 @@ func (pr *ParquetReader) read(dstInterface interface{}, prefixPath string) error
 	}
 
 	readNum := 0
-	for key, _ := range pr.ColumnBuffers {
+	for key := range pr.ColumnBuffers {
 		if strings.HasPrefix(key, prefixPath) {
 			taskChan <- key
 			readNum++

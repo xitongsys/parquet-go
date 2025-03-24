@@ -302,7 +302,6 @@ func NewSchemaElementFromTagMap(info *Tag) (*parquet.SchemaElement, error) {
 
 	if t, err := parquet.TypeFromString(info.Type); err == nil {
 		schema.Type = &t
-
 	} else {
 		return nil, fmt.Errorf("type " + info.Type + ": " + err.Error())
 	}
@@ -579,7 +578,6 @@ func StringToVariableName(str string) string {
 		c := str[i]
 		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' {
 			name += string(c)
-
 		} else {
 			name += strconv.Itoa(int(c))
 		}
@@ -600,11 +598,11 @@ func HeadToUpper(str string) string {
 	if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
 		return strings.ToUpper(str[0:1]) + str[1:]
 	}
-	//handle non-alpha prefix such as "_"
+	// handle non-alpha prefix such as "_"
 	return "PARGO_PREFIX_" + str
 }
 
-func CmpIntBinary(as string, bs string, order string, signed bool) bool {
+func CmpIntBinary(as, bs, order string, signed bool) bool {
 	abs, bbs := []byte(as), []byte(bs)
 	la, lb := len(abs), len(bbs)
 
@@ -714,23 +712,18 @@ func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType, logT *parquet.Lo
 	if logT != nil {
 		if logT.TIME != nil || logT.TIMESTAMP != nil {
 			return FindFuncTable(pT, nil, nil)
-
 		} else if logT.DATE != nil {
 			return int32FuncTable{}
-
 		} else if logT.INTEGER != nil {
 			if logT.INTEGER.IsSigned {
 				return FindFuncTable(pT, nil, nil)
-
 			} else {
 				if *pT == parquet.Type_INT32 {
 					return uint32FuncTable{}
-
 				} else if *pT == parquet.Type_INT64 {
 					return uint64FuncTable{}
 				}
 			}
-
 		} else if logT.DECIMAL != nil {
 			if *pT == parquet.Type_BYTE_ARRAY || *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 				return decimalStringFuncTable{}
@@ -739,7 +732,6 @@ func FindFuncTable(pT *parquet.Type, cT *parquet.ConvertedType, logT *parquet.Lo
 			} else if *pT == parquet.Type_INT64 {
 				return int64FuncTable{}
 			}
-
 		} else if logT.BSON != nil || logT.JSON != nil || logT.STRING != nil || logT.UUID != nil {
 			return stringFuncTable{}
 		}
@@ -765,11 +757,11 @@ func Str2Bool(val string) (bool, error) {
 }
 
 type FuncTable interface {
-	LessThan(a interface{}, b interface{}) bool
-	MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32)
+	LessThan(a, b interface{}) bool
+	MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32)
 }
 
-func Min(table FuncTable, a interface{}, b interface{}) interface{} {
+func Min(table FuncTable, a, b interface{}) interface{} {
 	if a == nil {
 		return b
 	}
@@ -783,7 +775,7 @@ func Min(table FuncTable, a interface{}, b interface{}) interface{} {
 	}
 }
 
-func Max(table FuncTable, a interface{}, b interface{}) interface{} {
+func Max(table FuncTable, a, b interface{}) interface{} {
 	if a == nil {
 		return b
 	}
@@ -799,57 +791,57 @@ func Max(table FuncTable, a interface{}, b interface{}) interface{} {
 
 type boolFuncTable struct{}
 
-func (_ boolFuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ boolFuncTable) LessThan(a, b interface{}) bool {
 	return !a.(bool) && b.(bool)
 }
 
-func (table boolFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table boolFuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), 1
 }
 
 type int32FuncTable struct{}
 
-func (_ int32FuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ int32FuncTable) LessThan(a, b interface{}) bool {
 	return a.(int32) < b.(int32)
 }
 
-func (table int32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table int32FuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), 4
 }
 
 type uint32FuncTable struct{}
 
-func (_ uint32FuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ uint32FuncTable) LessThan(a, b interface{}) bool {
 	return uint32(a.(int32)) < uint32(b.(int32))
 }
 
-func (table uint32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table uint32FuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), 4
 }
 
 type int64FuncTable struct{}
 
-func (_ int64FuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ int64FuncTable) LessThan(a, b interface{}) bool {
 	return a.(int64) < b.(int64)
 }
 
-func (table int64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table int64FuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), 8
 }
 
 type uint64FuncTable struct{}
 
-func (_ uint64FuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ uint64FuncTable) LessThan(a, b interface{}) bool {
 	return uint64(a.(int64)) < uint64(b.(int64))
 }
 
-func (table uint64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table uint64FuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), 8
 }
 
 type int96FuncTable struct{}
 
-func (_ int96FuncTable) LessThan(ai interface{}, bi interface{}) bool {
+func (_ int96FuncTable) LessThan(ai, bi interface{}) bool {
 	a, b := []byte(ai.(string)), []byte(bi.(string))
 	fa, fb := a[11]>>7, b[11]>>7
 	if fa > fb {
@@ -867,43 +859,43 @@ func (_ int96FuncTable) LessThan(ai interface{}, bi interface{}) bool {
 	return false
 }
 
-func (table int96FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table int96FuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), int32(len(val.(string)))
 }
 
 type float32FuncTable struct{}
 
-func (_ float32FuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ float32FuncTable) LessThan(a, b interface{}) bool {
 	return a.(float32) < b.(float32)
 }
 
-func (table float32FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table float32FuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), 4
 }
 
 type float64FuncTable struct{}
 
-func (_ float64FuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ float64FuncTable) LessThan(a, b interface{}) bool {
 	return a.(float64) < b.(float64)
 }
 
-func (table float64FuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table float64FuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), 8
 }
 
 type stringFuncTable struct{}
 
-func (_ stringFuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ stringFuncTable) LessThan(a, b interface{}) bool {
 	return a.(string) < b.(string)
 }
 
-func (table stringFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table stringFuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), int32(len(val.(string)))
 }
 
 type intervalFuncTable struct{}
 
-func (_ intervalFuncTable) LessThan(ai interface{}, bi interface{}) bool {
+func (_ intervalFuncTable) LessThan(ai, bi interface{}) bool {
 	a, b := []byte(ai.(string)), []byte(bi.(string))
 	for i := 11; i >= 0; i-- {
 		if a[i] > b[i] {
@@ -915,17 +907,17 @@ func (_ intervalFuncTable) LessThan(ai interface{}, bi interface{}) bool {
 	return false
 }
 
-func (table intervalFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table intervalFuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), int32(len(val.(string)))
 }
 
 type decimalStringFuncTable struct{}
 
-func (_ decimalStringFuncTable) LessThan(a interface{}, b interface{}) bool {
+func (_ decimalStringFuncTable) LessThan(a, b interface{}) bool {
 	return CmpIntBinary(a.(string), b.(string), "BigEndian", true)
 }
 
-func (table decimalStringFuncTable) MinMaxSize(minVal interface{}, maxVal interface{}, val interface{}) (interface{}, interface{}, int32) {
+func (table decimalStringFuncTable) MinMaxSize(minVal, maxVal, val interface{}) (interface{}, interface{}, int32) {
 	return Min(table, minVal, val), Max(table, maxVal, val), int32(len(val.(string)))
 }
 
@@ -1032,7 +1024,8 @@ func TransposeTable(table [][]interface{}) [][]interface{} {
 // If `col` contains Null value but `field` is not marked as Nullable this
 // results in an error.
 func ArrowColToParquetCol(field arrow.Field, col arrow.Array) (
-	[]interface{}, error) {
+	[]interface{}, error,
+) {
 	recs := make([]interface{}, col.Len())
 	switch field.Type.(type) {
 	case *arrow.Int8Type:

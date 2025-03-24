@@ -131,10 +131,14 @@ func TestCmp(t *testing.T) {
 		{"int64 1", int64(-1), int64(-1), parquet.TypePtr(parquet.Type_INT64), nil, false},
 		{"int64 2", int64(-1), int64(1), parquet.TypePtr(parquet.Type_INT64), nil, true},
 
-		{"int96 1", string(StrIntToBinary("2147483648", "LittleEndian", 12, true)),
-			string(StrIntToBinary("2147483647", "LittleEndian", 12, true)), parquet.TypePtr(parquet.Type_INT96), nil, false},
-		{"int96 2", string(StrIntToBinary("-2147483648", "LittleEndian", 12, true)),
-			string(StrIntToBinary("-2147483647", "LittleEndian", 12, true)), parquet.TypePtr(parquet.Type_INT96), nil, true},
+		{
+			"int96 1", string(StrIntToBinary("2147483648", "LittleEndian", 12, true)),
+			string(StrIntToBinary("2147483647", "LittleEndian", 12, true)), parquet.TypePtr(parquet.Type_INT96), nil, false,
+		},
+		{
+			"int96 2", string(StrIntToBinary("-2147483648", "LittleEndian", 12, true)),
+			string(StrIntToBinary("-2147483647", "LittleEndian", 12, true)), parquet.TypePtr(parquet.Type_INT96), nil, true,
+		},
 
 		{"float 1", float32(0.1), float32(0.2), parquet.TypePtr(parquet.Type_FLOAT), nil, true},
 		{"float 1", float32(0.1), float32(0.1), parquet.TypePtr(parquet.Type_FLOAT), nil, false},
@@ -173,29 +177,41 @@ func TestCmp(t *testing.T) {
 		{"timestamp_micros 1", int64(1), int64(2), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MICROS), true},
 		{"timestamp_millis 1", int64(1), int64(2), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_TIMESTAMP_MILLIS), true},
 
-		{"interval 1", string(StrIntToBinary("12345", "LittleEndian", 12, false)),
+		{
+			"interval 1", string(StrIntToBinary("12345", "LittleEndian", 12, false)),
 			string(StrIntToBinary("123456", "LittleEndian", 12, false)),
-			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL), true},
-		{"interval 2", string(StrIntToBinary("123457", "LittleEndian", 12, false)),
+			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL), true,
+		},
+		{
+			"interval 2", string(StrIntToBinary("123457", "LittleEndian", 12, false)),
 			string(StrIntToBinary("123456", "LittleEndian", 12, false)),
-			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL), false},
+			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_INTERVAL), false,
+		},
 
 		{"decimal 1", int32(12345), int32(123), parquet.TypePtr(parquet.Type_INT32), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), false},
 		{"decimal 2", int64(12345), int64(12346), parquet.TypePtr(parquet.Type_INT64), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), true},
 
-		{"decimal 3", string(StrIntToBinary("12345", "BigEndian", 0, true)),
+		{
+			"decimal 3", string(StrIntToBinary("12345", "BigEndian", 0, true)),
 			string(StrIntToBinary("12346", "BigEndian", 0, true)),
-			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), true},
-		{"decimal 4", string(StrIntToBinary("-12345", "BigEndian", 0, true)),
+			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), true,
+		},
+		{
+			"decimal 4", string(StrIntToBinary("-12345", "BigEndian", 0, true)),
 			string(StrIntToBinary("-12346", "BigEndian", 0, true)),
-			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), false},
+			parquet.TypePtr(parquet.Type_FIXED_LEN_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), false,
+		},
 
-		{"decimal 5", string(StrIntToBinary("12345", "BigEndian", 0, true)),
+		{
+			"decimal 5", string(StrIntToBinary("12345", "BigEndian", 0, true)),
 			string(StrIntToBinary("12346", "BigEndian", 0, true)),
-			parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), true},
-		{"decimal 6", string(StrIntToBinary("-12345", "BigEndian", 0, true)),
+			parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), true,
+		},
+		{
+			"decimal 6", string(StrIntToBinary("-12345", "BigEndian", 0, true)),
 			string(StrIntToBinary("-12346", "BigEndian", 0, true)),
-			parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), false},
+			parquet.TypePtr(parquet.Type_BYTE_ARRAY), parquet.ConvertedTypePtr(parquet.ConvertedType_DECIMAL), false,
+		},
 	}
 
 	for _, c := range cases {
@@ -292,7 +308,8 @@ func TestSizeOf(t *testing.T) {
 			C []string
 			D map[string]string
 		}{
-			1, 2, []string{"hello", "world", "", "good"},
+			1, 2,
+			[]string{"hello", "world", "", "good"},
 			map[string]string{
 				string("hello"): string("012345678901"),
 				string("world"): string("012345678901"),

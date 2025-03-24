@@ -154,7 +154,6 @@ func (n *Node) OutputJsonSchema() string {
 			} else {
 				res += fmt.Sprintf(tagStr, name, pTStr, rTStr) + "}"
 			}
-
 		}
 	} else {
 		if cT != nil {
@@ -262,7 +261,7 @@ func Strip(s string) string {
 	return s
 }
 
-func (n *Node) OutputStruct(withName bool, withTags bool) string {
+func (n *Node) OutputStruct(withName, withTags bool) string {
 	name := n.SE.GetName()
 
 	res := ""
@@ -358,7 +357,6 @@ func (st *SchemaTree) OutputJsonSchema() string {
 	json.Unmarshal([]byte(jsonStr), &obj)
 	res, _ := json.MarshalIndent(&obj, "", "  ")
 	return string(res)
-
 }
 
 func (st *SchemaTree) OutputStruct(withTags bool) string {

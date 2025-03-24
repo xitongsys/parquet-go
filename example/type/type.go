@@ -56,7 +56,7 @@ type TypeList struct {
 
 func main() {
 	var err error
-	//write
+	// write
 	fw, err := local.NewLocalFileWriter("type.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
@@ -138,5 +138,4 @@ func main() {
 	}
 	pr.ReadStop()
 	fr.Close()
-
 }

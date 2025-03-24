@@ -32,7 +32,7 @@ func main() {
 		return
 	}
 
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 
 	csvFile, _ := os.Open("data/shoes.csv")

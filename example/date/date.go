@@ -31,7 +31,7 @@ func main() {
 		return
 	}
 
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 
 	optionalDate := int32(19619)

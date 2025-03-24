@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/apache/thrift/lib/go/thrift"
+
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -55,7 +56,7 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 	rowGroups := cbt.Footer.GetRowGroups()
 	ln := int64(len(rowGroups))
 	if cbt.RowGroupIndex >= ln {
-		cbt.DataTableNumRows++ //very important, because DataTableNumRows is one smaller than real rows number
+		cbt.DataTableNumRows++ // very important, because DataTableNumRows is one smaller than real rows number
 		return io.EOF
 	}
 
@@ -86,7 +87,7 @@ func (cbt *ColumnBufferType) NextRowGroup() error {
 		}
 	}
 
-	//offset := columnChunks[i].FileOffset
+	// offset := columnChunks[i].FileOffset
 	offset := columnChunks[i].MetaData.DataPageOffset
 	if columnChunks[i].MetaData.DictionaryPageOffset != nil {
 		offset = *columnChunks[i].MetaData.DictionaryPageOffset
@@ -106,7 +107,7 @@ func (cbt *ColumnBufferType) ReadPage() error {
 	if cbt.ChunkHeader != nil && cbt.ChunkHeader.MetaData != nil && cbt.ChunkReadValues < cbt.ChunkHeader.MetaData.NumValues {
 		page, numValues, numRows, err := layout.ReadPage(cbt.ThriftReader, cbt.SchemaHandler, cbt.ChunkHeader.MetaData)
 		if err != nil {
-			//data is nil and rl/dl=0, no pages in file
+			// data is nil and rl/dl=0, no pages in file
 			if err == io.EOF {
 				if cbt.DataTable == nil {
 					index := cbt.SchemaHandler.MapIndex[cbt.PathStr]
@@ -252,11 +253,10 @@ func (cbt *ColumnBufferType) ReadRows(num int64) (*layout.Table, int64) {
 	res := cbt.DataTable.Pop(num)
 	cbt.DataTableNumRows -= num
 
-	if cbt.DataTableNumRows <= 0 { //release previous slice memory
+	if cbt.DataTableNumRows <= 0 { // release previous slice memory
 		tmp := cbt.DataTable
 		cbt.DataTable = layout.NewTableFromTable(tmp)
 		cbt.DataTable.Merge(tmp)
 	}
 	return res, num
-
 }

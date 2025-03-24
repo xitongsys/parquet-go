@@ -7,7 +7,7 @@ import (
 	"github.com/xitongsys/parquet-go/schema"
 )
 
-//Marshal function for CSV like data
+// Marshal function for CSV like data
 func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*map[string]*layout.Table, error) {
 	res := make(map[string]*layout.Table)
 	if ln := len(records); ln <= 0 {

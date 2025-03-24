@@ -17,8 +17,8 @@ type Node struct {
 	DL      int32
 }
 
-//Improve Performance///////////////////////////
-//NodeBuf
+// Improve Performance///////////////////////////
+// NodeBuf
 type NodeBufType struct {
 	Index int
 	Buf   []*Node
@@ -46,7 +46,7 @@ func (nbt *NodeBufType) Reset() {
 	nbt.Index = 0
 }
 
-////////for improve performance///////////////////////////////////
+// //////for improve performance///////////////////////////////////
 type Marshaler interface {
 	Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node) (newStack []*Node)
 }
@@ -74,7 +74,7 @@ func (p *ParquetStruct) Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node)
 		name := tf.Name
 		newNode := nodeBuf.GetNode()
 
-		//some ignored item
+		// some ignored item
 		if newNode.PathMap, ok = node.PathMap.Children[name]; !ok {
 			continue
 		}
@@ -109,7 +109,7 @@ func (p *ParquetMapStruct) Marshal(node *Node, nodeBuf *NodeBufType, stack []*No
 		key := keys[j]
 		newNode := nodeBuf.GetNode()
 
-		//some ignored item
+		// some ignored item
 		k := key.String()
 		if newNode.PathMap, ok = node.PathMap.Children[k]; !ok {
 			continue
@@ -222,7 +222,7 @@ func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node) []
 	return stack
 }
 
-//Convert the objects to table map. srcInterface is a slice of objects
+// Convert the objects to table map. srcInterface is a slice of objects
 func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
 	src := reflect.ValueOf(srcInterface)
 	res := setupTableMap(schemaHandler, len(srcInterface))

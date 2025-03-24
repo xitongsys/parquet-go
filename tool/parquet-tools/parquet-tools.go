@@ -141,5 +141,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", *cmd)
 		os.Exit(1)
 	}
-
 }

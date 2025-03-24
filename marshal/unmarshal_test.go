@@ -117,5 +117,4 @@ func TestMarshalUnmarshal(t *testing.T) {
 	if s0 != s1 {
 		t.Errorf("Fail expect %s, get %s", s0, s1)
 	}
-
 }

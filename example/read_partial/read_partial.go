@@ -17,7 +17,7 @@ type Student struct {
 	Weight  float32 `parquet:"name=weight, type=FLOAT"`
 	Sex     bool    `parquet:"name=sex, type=BOOLEAN"`
 	Day     int32   `parquet:"name=day, type=INT32, convertedtype=DATE"`
-	Ignored int32   //without parquet tag and won't write
+	Ignored int32   // without parquet tag and won't write
 }
 
 type Student2 struct {
@@ -35,14 +35,14 @@ func main() {
 		return
 	}
 
-	//write
+	// write
 	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
 
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 100
 	for i := 0; i < num; i++ {
@@ -80,10 +80,10 @@ func main() {
 	num = int(pr.GetNumRows())
 	for i := 0; i < num/10; i++ {
 		if i%2 == 0 {
-			pr.SkipRows(10) //skip 10 rows
+			pr.SkipRows(10) // skip 10 rows
 			continue
 		}
-		stus := make([]Student2, 10) //read 10 rows
+		stus := make([]Student2, 10) // read 10 rows
 		if err = pr.Read(&stus); err != nil {
 			log.Println("Read error", err)
 		}
@@ -92,5 +92,4 @@ func main() {
 
 	pr.ReadStop()
 	fr.Close()
-
 }

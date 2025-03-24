@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apache/arrow/go/v17/arrow"
+
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/marshal"
@@ -29,7 +30,8 @@ type ArrowWriter struct {
 // which we will write the record along with the number of parallel threads
 // which will write in the file.
 func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile,
-	np int64) (*ArrowWriter, error) {
+	np int64,
+) (*ArrowWriter, error) {
 	var err error
 	res := new(ArrowWriter)
 	res.SchemaHandler, err = schema.NewSchemaHandlerFromArrow(arrowSchema)
@@ -65,7 +67,6 @@ func (w *ArrowWriter) WriteArrow(record arrow.Record) error {
 	for i, column := range record.Columns() {
 		columnFromRecord, err := common.ArrowColToParquetCol(
 			record.Schema().Field(i), column)
-
 		if err != nil {
 			return err
 		}

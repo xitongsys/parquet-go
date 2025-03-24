@@ -5,8 +5,7 @@ import (
 	"math"
 )
 
-//LittleEndian
-
+// LittleEndian
 func BinaryReadINT32(r io.Reader, nums []interface{}) error {
 	buf := make([]byte, len(nums)*4)
 	n, err := io.ReadFull(r, buf)

@@ -8,6 +8,7 @@ import (
 	"github.com/apache/arrow/go/v17/arrow"
 	"github.com/apache/arrow/go/v17/arrow/array"
 	"github.com/apache/arrow/go/v17/arrow/memory"
+
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
@@ -26,8 +27,10 @@ func main() {
 			{Name: "float64", Type: arrow.PrimitiveTypes.Float64},
 			{Name: "str", Type: arrow.BinaryTypes.String},
 			{Name: "ts_ms", Type: arrow.FixedWidthTypes.Timestamp_ms},
-			{Name: "nullable-int32", Type: arrow.PrimitiveTypes.Int32,
-				Nullable: true},
+			{
+				Name: "nullable-int32", Type: arrow.PrimitiveTypes.Int32,
+				Nullable: true,
+			},
 		},
 		nil,
 	)

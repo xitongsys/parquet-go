@@ -9,6 +9,7 @@ import (
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/stretchr/testify/assert"
+
 	"github.com/xitongsys/parquet-go-source/buffer"
 	"github.com/xitongsys/parquet-go-source/writerfile"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -149,7 +150,7 @@ func TestZeroRows(t *testing.T) {
 	var err error
 	var buf bytes.Buffer
 	fw := writerfile.NewWriterFile(&buf)
-	//defer fw.Close()
+	// defer fw.Close()
 
 	// write
 	pw, err := NewParquetWriter(fw, new(test), 1)
@@ -180,7 +181,7 @@ func TestDoubleWriteStop(t *testing.T) {
 	var err error
 	var buf bytes.Buffer
 	fw := writerfile.NewWriterFile(&buf)
-	//defer fw.Close()
+	// defer fw.Close()
 
 	// write
 	pw, err := NewParquetWriter(fw, new(test), 1)

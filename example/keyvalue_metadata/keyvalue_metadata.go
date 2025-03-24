@@ -17,7 +17,7 @@ type Student struct {
 	Weight  float32 `parquet:"name=weight, type=FLOAT"`
 	Sex     bool    `parquet:"name=sex, type=BOOLEAN"`
 	Day     int32   `parquet:"name=day, type=INT32, convertedtype=DATE"`
-	Ignored int32   //without parquet tag and won't write
+	Ignored int32   // without parquet tag and won't write
 }
 
 func main() {
@@ -28,15 +28,15 @@ func main() {
 		return
 	}
 
-	//write
+	// write
 	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
 
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
-	pw.PageSize = 8 * 1024              //8K
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
+	pw.PageSize = 8 * 1024              // 8K
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {
@@ -53,17 +53,17 @@ func main() {
 		}
 	}
 
-	//To add KeyValueMetadata, you must call the Flush after all data written
+	// To add KeyValueMetadata, you must call the Flush after all data written
 	pw.Flush(true)
 
-	//add global KeyValueMetadata
+	// add global KeyValueMetadata
 	pw.Footer.KeyValueMetadata = make([]*parquet.KeyValue, 0)
 	keyValueGlobal := parquet.NewKeyValue()
 	valueGlobal := "valueGlobal"
 	keyValueGlobal.Key, keyValueGlobal.Value = "keyGlobal", &valueGlobal
 
-	//see column information
-	//log.Println(pw.SchemaHandler.MapIndex)
+	// see column information
+	// log.Println(pw.SchemaHandler.MapIndex)
 
 	// add KeyValueMetadata in ColumnChunk
 	for _, rowGroup := range pw.Footer.RowGroups {
@@ -112,5 +112,4 @@ func main() {
 
 	pr.ReadStop()
 	fr.Close()
-
 }

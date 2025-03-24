@@ -23,14 +23,13 @@ type Student struct {
 
 func main() {
 	var err error
-	//write
+	// write
 	fw, err := local.NewLocalFileWriter("column.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
 		return
 	}
-	pw, err :=
-		writer.NewParquetWriter(fw, new(Student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer")
 		return
@@ -73,7 +72,7 @@ func main() {
 	}
 	num = int64(pr.GetNumRows())
 
-	pr.SkipRowsByPath(common.ReformPathStr("parquet_go_root.name"), 5) //skip the first five rows
+	pr.SkipRowsByPath(common.ReformPathStr("parquet_go_root.name"), 5) // skip the first five rows
 	names, rls, dls, err = pr.ReadColumnByPath(common.ReformPathStr("parquet_go_root.name"), num)
 	log.Println("name", names, rls, dls, err)
 
@@ -85,11 +84,10 @@ func main() {
 	log.Println("parquet_go_root.scores_key", scores_key, err)
 	log.Println("parquet_go_root.scores_value", scores_value, err)
 
-	pr.SkipRowsByIndex(2, 5) //skip the first five rows
+	pr.SkipRowsByIndex(2, 5) // skip the first five rows
 	ids, _, _, _ = pr.ReadColumnByIndex(2, num)
 	log.Println(ids)
 
 	pr.ReadStop()
 	fr.Close()
-
 }

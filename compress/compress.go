@@ -2,6 +2,7 @@ package compress
 
 import (
 	"fmt"
+
 	"github.com/xitongsys/parquet-go/parquet"
 )
 

@@ -20,7 +20,7 @@ func NewJSONWriterFromWriter(jsonSchema string, w io.Writer, np int64) (*JSONWri
 	return NewJSONWriter(jsonSchema, wf, np)
 }
 
-//Create JSON writer
+// Create JSON writer
 func NewJSONWriter(jsonSchema string, pfile source.ParquetFile, np int64) (*JSONWriter, error) {
 	var err error
 	res := new(JSONWriter)
@@ -30,8 +30,8 @@ func NewJSONWriter(jsonSchema string, pfile source.ParquetFile, np int64) (*JSON
 	}
 
 	res.PFile = pfile
-	res.PageSize = 8 * 1024              //8K
-	res.RowGroupSize = 128 * 1024 * 1024 //128M
+	res.PageSize = 8 * 1024              // 8K
+	res.RowGroupSize = 128 * 1024 * 1024 // 128M
 	res.CompressionType = parquet.CompressionCodec_SNAPPY
 	res.PagesMapBuf = make(map[string][]*layout.Page)
 	res.DictRecs = make(map[string]*layout.DictRecType)

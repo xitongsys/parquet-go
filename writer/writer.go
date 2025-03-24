@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/apache/thrift/lib/go/thrift"
+
 	"github.com/xitongsys/parquet-go-source/writerfile"
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
@@ -21,7 +22,7 @@ import (
 // ParquetWriter is a writer  parquet file
 type ParquetWriter struct {
 	SchemaHandler *schema.SchemaHandler
-	NP            int64 //parallel number
+	NP            int64 // parallel number
 	Footer        *parquet.FileMetaData
 	PFile         source.ParquetFile
 
@@ -60,8 +61,8 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 
 	res := new(ParquetWriter)
 	res.NP = np
-	res.PageSize = 8 * 1024              //8K
-	res.RowGroupSize = 128 * 1024 * 1024 //128M
+	res.PageSize = 8 * 1024              // 8K
+	res.RowGroupSize = 128 * 1024 * 1024 // 128M
 	res.CompressionType = parquet.CompressionCodec_SNAPPY
 	res.ObjsSize = 0
 	res.CheckSizeCritical = 0
@@ -75,8 +76,8 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 	res.Footer.Version = 1
 	res.ColumnIndexes = make([]*parquet.ColumnIndex, 0)
 	res.OffsetIndexes = make([]*parquet.OffsetIndex, 0)
-	//include the createdBy to avoid
-	//WARN  CorruptStatistics:118 - Ignoring statistics because created_by is null or empty! See PARQUET-251 and PARQUET-297
+	// include the createdBy to avoid
+	// WARN  CorruptStatistics:118 - Ignoring statistics because created_by is null or empty! See PARQUET-251 and PARQUET-297
 	createdBy := "parquet-go version latest"
 	res.Footer.CreatedBy = &createdBy
 	_, err = res.PFile.Write([]byte("PAR1"))
@@ -94,10 +95,8 @@ func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*Par
 
 		} else if sa, ok := obj.(*schema.SchemaHandler); ok {
 			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaHandler(sa)
-
 		} else if sa, ok := obj.([]*parquet.SchemaElement); ok {
 			res.SchemaHandler = schema.NewSchemaHandlerFromSchemaList(sa)
-
 		} else {
 			if res.SchemaHandler, err = schema.NewSchemaHandlerFromStruct(obj); err != nil {
 				return res, err
@@ -249,13 +248,11 @@ func (pw *ParquetWriter) Write(src interface{}) error {
 
 	if pw.ObjsSize >= criSize {
 		err = pw.Flush(false)
-
 	} else {
 		dln := (criSize - pw.ObjsSize + pw.ObjSize - 1) / pw.ObjSize / 2
 		pw.CheckSizeCritical = dln + ln
 	}
 	return err
-
 }
 
 func (pw *ParquetWriter) flushObjs() error {
@@ -325,7 +322,6 @@ func (pw *ParquetWriter) flushObjs() error {
 							pagesMapList[index][name], _ = layout.TableToDictDataPages(pw.DictRecs[name],
 								table, int32(pw.PageSize), 32, pw.CompressionType)
 						}()
-
 					} else {
 						pagesMapList[index][name], _ = layout.TableToDataPages(table, int32(pw.PageSize),
 							pw.CompressionType)
@@ -334,7 +330,6 @@ func (pw *ParquetWriter) flushObjs() error {
 			} else {
 				errs[index] = err2
 			}
-
 		}(int(bgn), int(end), c)
 	}
 
@@ -358,7 +353,7 @@ func (pw *ParquetWriter) flushObjs() error {
 			}
 			for _, page := range pages {
 				pw.Size += int64(len(page.RawData))
-				page.DataTable = nil //release memory
+				page.DataTable = nil // release memory
 			}
 		}
 	}
@@ -376,7 +371,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 	}
 
 	if (pw.Size+pw.ObjsSize >= pw.RowGroupSize || flag) && len(pw.PagesMapBuf) > 0 {
-		//pages -> chunk
+		// pages -> chunk
 		chunkMap := make(map[string]*layout.Chunk)
 		for name, pages := range pw.PagesMapBuf {
 			if len(pages) > 0 && (pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY || pages[0].Info.Encoding == parquet.Encoding_RLE_DICTIONARY) {
@@ -385,18 +380,17 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 				chunkMap[name] = layout.PagesToDictChunk(tmp)
 			} else {
 				chunkMap[name] = layout.PagesToChunk(pages)
-
 			}
 		}
 
-		pw.DictRecs = make(map[string]*layout.DictRecType) //clean records for next chunks
+		pw.DictRecs = make(map[string]*layout.DictRecType) // clean records for next chunks
 
-		//chunks -> rowGroup
+		// chunks -> rowGroup
 		rowGroup := layout.NewRowGroup()
 		rowGroup.RowGroupHeader.Columns = make([]*parquet.ColumnChunk, 0)
 
 		for k := 0; k < len(pw.SchemaHandler.SchemaElements); k++ {
-			//for _, chunk := range chunkMap {
+			// for _, chunk := range chunkMap {
 			schema := pw.SchemaHandler.SchemaElements[k]
 			if schema.GetNumChildren() > 0 {
 				continue
@@ -406,7 +400,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 				continue
 			}
 			rowGroup.Chunks = append(rowGroup.Chunks, chunk)
-			//rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
+			// rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalCompressedSize
 			rowGroup.RowGroupHeader.TotalByteSize += chunk.ChunkHeader.MetaData.TotalUncompressedSize
 			rowGroup.RowGroupHeader.Columns = append(rowGroup.RowGroupHeader.Columns, chunk.ChunkHeader)
 		}
@@ -419,7 +413,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 
 			pageCount := len(rowGroup.Chunks[k].Pages)
 
-			//add ColumnIndex
+			// add ColumnIndex
 			columnIndex := parquet.NewColumnIndex()
 			columnIndex.NullPages = make([]bool, pageCount)
 			columnIndex.MinValues = make([][]byte, pageCount)
@@ -427,7 +421,7 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 			columnIndex.BoundaryOrder = parquet.BoundaryOrder_UNORDERED
 			pw.ColumnIndexes = append(pw.ColumnIndexes, columnIndex)
 
-			//add OffsetIndex
+			// add OffsetIndex
 			offsetIndex := parquet.NewOffsetIndex()
 			offsetIndex.PageLocations = make([]*parquet.PageLocation, 0)
 			pw.OffsetIndexes = append(pw.OffsetIndexes, offsetIndex)
@@ -440,11 +434,10 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DictionaryPageOffset = &tmp
 				} else if rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset <= 0 {
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = pw.Offset
-
 				}
 
 				page := rowGroup.Chunks[k].Pages[l]
-				//only record DataPage
+				// only record DataPage
 				if page.Header.Type != parquet.PageType_DICTIONARY_PAGE {
 					if page.Header.DataPageHeader == nil && page.Header.DataPageHeaderV2 == nil {
 						panic(errors.New("unsupported data page: " + page.Header.String()))
@@ -500,5 +493,4 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 	pw.Objs = pw.Objs[:0]
 	pw.ObjsSize = 0
 	return nil
-
 }

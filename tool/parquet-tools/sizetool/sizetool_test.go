@@ -18,23 +18,23 @@ func TestGetParquetFileSize(t *testing.T) {
 			pr: &reader.ParquetReader{
 				Footer: &parquet.FileMetaData{
 					RowGroups: []*parquet.RowGroup{
-						&parquet.RowGroup{
+						{
 							Columns: []*parquet.ColumnChunk{
-								&parquet.ColumnChunk{
+								{
 									MetaData: &parquet.ColumnMetaData{
 										TotalCompressedSize: 500,
 									},
 								},
-								&parquet.ColumnChunk{
+								{
 									MetaData: &parquet.ColumnMetaData{
 										TotalCompressedSize: 501,
 									},
 								},
 							},
 						},
-						&parquet.RowGroup{
+						{
 							Columns: []*parquet.ColumnChunk{
-								&parquet.ColumnChunk{
+								{
 									MetaData: &parquet.ColumnMetaData{
 										TotalCompressedSize: 233,
 									},
@@ -52,10 +52,10 @@ func TestGetParquetFileSize(t *testing.T) {
 			pr: &reader.ParquetReader{
 				Footer: &parquet.FileMetaData{
 					RowGroups: []*parquet.RowGroup{
-						&parquet.RowGroup{
+						{
 							TotalByteSize: 1001,
 						},
-						&parquet.RowGroup{
+						{
 							TotalByteSize: 24,
 						},
 					},
@@ -69,10 +69,10 @@ func TestGetParquetFileSize(t *testing.T) {
 			pr: &reader.ParquetReader{
 				Footer: &parquet.FileMetaData{
 					RowGroups: []*parquet.RowGroup{
-						&parquet.RowGroup{
+						{
 							TotalByteSize: 1001,
 						},
-						&parquet.RowGroup{
+						{
 							TotalByteSize: 999,
 						},
 					},

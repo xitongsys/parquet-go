@@ -6,16 +6,19 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/apache/thrift/lib/go/thrift"
 	"time"
+
+	"github.com/apache/thrift/lib/go/thrift"
 )
 
 // (needed to ensure safety because of naive import list construction.)
-var _ = thrift.ZERO
-var _ = fmt.Printf
-var _ = context.Background
-var _ = time.Now
-var _ = bytes.Equal
+var (
+	_ = thrift.ZERO
+	_ = fmt.Printf
+	_ = context.Background
+	_ = time.Now
+	_ = bytes.Equal
+)
 
 func init() {
 }

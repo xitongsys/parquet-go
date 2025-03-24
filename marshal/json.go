@@ -13,7 +13,7 @@ import (
 	"github.com/xitongsys/parquet-go/types"
 )
 
-//ss is []string
+// ss is []string
 func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
 	res := setupTableMap(schemaHandler, len(ss))
 	pathMap := schemaHandler.PathMap
@@ -54,7 +54,7 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 			pathStr := node.PathMap.Path
 
 			schemaIndex, ok := schemaHandler.MapIndex[pathStr]
-			//no schema item will be ignored
+			// no schema item will be ignored
 			if !ok {
 				continue
 			}
@@ -64,7 +64,7 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 			if tk == reflect.Map {
 				keys := node.Val.MapKeys()
 
-				if schema.GetConvertedType() == parquet.ConvertedType_MAP { //real map
+				if schema.GetConvertedType() == parquet.ConvertedType_MAP { // real map
 					pathStr = pathStr + common.PAR_GO_PATH_DELIMITER + "Key_value"
 					if len(keys) <= 0 {
 						for key, table := range res {
@@ -99,7 +99,7 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 						newPathStr := newNode.PathMap.Path // check again
 						newSchemaIndex := schemaHandler.MapIndex[newPathStr]
 						newSchema := schemaHandler.SchemaElements[newSchemaIndex]
-						if newSchema.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL { //map value only be :optional or required
+						if newSchema.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL { // map value only be :optional or required
 							newNode.DL++
 						}
 
@@ -111,13 +111,13 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 						stack = append(stack, newNode)
 					}
 
-				} else { //struct
+				} else { // struct
 					keysMap := make(map[string]int)
 					for j := 0; j < len(keys); j++ {
-						//ExName to InName
+						// ExName to InName
 						keysMap[common.StringToVariableName(keys[j].String())] = j
 					}
-					for key, _ := range node.PathMap.Children {
+					for key := range node.PathMap.Children {
 						ki, ok := keysMap[key]
 
 						if ok && node.Val.MapIndex(keys[ki]).Elem().IsValid() {
@@ -177,14 +177,14 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 						newPathStr := newNode.PathMap.Path
 						newSchemaIndex := schemaHandler.MapIndex[newPathStr]
 						newSchema := schemaHandler.SchemaElements[newSchemaIndex]
-						if newSchema.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL { //element of LIST can only be optional or required
+						if newSchema.GetRepetitionType() == parquet.FieldRepetitionType_OPTIONAL { // element of LIST can only be optional or required
 							newNode.DL++
 						}
 
 						stack = append(stack, newNode)
 					}
 
-				} else { //Repeated
+				} else { // Repeated
 					if ln <= 0 {
 						for key, table := range res {
 							if common.IsChildPath(node.PathMap.Path, key) {
@@ -226,5 +226,4 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 	}
 
 	return &res, nil
-
 }

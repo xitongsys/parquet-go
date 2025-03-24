@@ -29,30 +29,54 @@ func TestTypeConversion(t *testing.T) {
 				{Name: "f1-f62", Type: arrow.PrimitiveTypes.Float64},
 				{Name: "f1-d32", Type: arrow.PrimitiveTypes.Date32},
 				{Name: "f1-d64", Type: arrow.PrimitiveTypes.Date64},
-				{Name: "null-i8", Type: arrow.PrimitiveTypes.Int8,
-					Nullable: true},
-				{Name: "null-i16", Type: arrow.PrimitiveTypes.Int16,
-					Nullable: true},
-				{Name: "null-i32", Type: arrow.PrimitiveTypes.Int32,
-					Nullable: true},
-				{Name: "null-i64", Type: arrow.PrimitiveTypes.Int64,
-					Nullable: true},
-				{Name: "null-ui8", Type: arrow.PrimitiveTypes.Uint8,
-					Nullable: true},
-				{Name: "null-ui16", Type: arrow.PrimitiveTypes.Uint16,
-					Nullable: true},
-				{Name: "null-ui32", Type: arrow.PrimitiveTypes.Uint32,
-					Nullable: true},
-				{Name: "null-ui64", Type: arrow.PrimitiveTypes.Uint64,
-					Nullable: true},
-				{Name: "null-f32", Type: arrow.PrimitiveTypes.Float32,
-					Nullable: true},
-				{Name: "null-f62", Type: arrow.PrimitiveTypes.Float64,
-					Nullable: true},
-				{Name: "null-d32", Type: arrow.PrimitiveTypes.Date32,
-					Nullable: true},
-				{Name: "null-d64", Type: arrow.PrimitiveTypes.Date64,
-					Nullable: true},
+				{
+					Name: "null-i8", Type: arrow.PrimitiveTypes.Int8,
+					Nullable: true,
+				},
+				{
+					Name: "null-i16", Type: arrow.PrimitiveTypes.Int16,
+					Nullable: true,
+				},
+				{
+					Name: "null-i32", Type: arrow.PrimitiveTypes.Int32,
+					Nullable: true,
+				},
+				{
+					Name: "null-i64", Type: arrow.PrimitiveTypes.Int64,
+					Nullable: true,
+				},
+				{
+					Name: "null-ui8", Type: arrow.PrimitiveTypes.Uint8,
+					Nullable: true,
+				},
+				{
+					Name: "null-ui16", Type: arrow.PrimitiveTypes.Uint16,
+					Nullable: true,
+				},
+				{
+					Name: "null-ui32", Type: arrow.PrimitiveTypes.Uint32,
+					Nullable: true,
+				},
+				{
+					Name: "null-ui64", Type: arrow.PrimitiveTypes.Uint64,
+					Nullable: true,
+				},
+				{
+					Name: "null-f32", Type: arrow.PrimitiveTypes.Float32,
+					Nullable: true,
+				},
+				{
+					Name: "null-f62", Type: arrow.PrimitiveTypes.Float64,
+					Nullable: true,
+				},
+				{
+					Name: "null-d32", Type: arrow.PrimitiveTypes.Date32,
+					Nullable: true,
+				},
+				{
+					Name: "null-d64", Type: arrow.PrimitiveTypes.Date64,
+					Nullable: true,
+				},
 			}, nil),
 			expectedParquetMetaData: []string{
 				"name=f1-i8, type=INT32, convertedtype=INT_8, " +
@@ -103,10 +127,14 @@ func TestTypeConversion(t *testing.T) {
 			testSchema: arrow.NewSchema([]arrow.Field{
 				{Name: "f1-string", Type: arrow.BinaryTypes.String},
 				{Name: "f1-binary", Type: arrow.BinaryTypes.Binary},
-				{Name: "null-string", Type: arrow.BinaryTypes.String,
-					Nullable: true},
-				{Name: "null-binary", Type: arrow.BinaryTypes.Binary,
-					Nullable: true},
+				{
+					Name: "null-string", Type: arrow.BinaryTypes.String,
+					Nullable: true,
+				},
+				{
+					Name: "null-binary", Type: arrow.BinaryTypes.Binary,
+					Nullable: true,
+				},
 			}, nil),
 			expectedParquetMetaData: []string{
 				"name=f1-string, type=BYTE_ARRAY, convertedtype=UTF8, " +
@@ -126,16 +154,26 @@ func TestTypeConversion(t *testing.T) {
 				{Name: "f1-d64", Type: arrow.FixedWidthTypes.Date64},
 				{Name: "f1-t32ms", Type: arrow.FixedWidthTypes.Time32ms},
 				{Name: "f1-tsms", Type: arrow.FixedWidthTypes.Timestamp_ms},
-				{Name: "null-bool", Type: arrow.FixedWidthTypes.Boolean,
-					Nullable: true},
-				{Name: "null-d32", Type: arrow.FixedWidthTypes.Date32,
-					Nullable: true},
-				{Name: "null-d64", Type: arrow.FixedWidthTypes.Date64,
-					Nullable: true},
-				{Name: "null-t32ms", Type: arrow.FixedWidthTypes.Time32ms,
-					Nullable: true},
-				{Name: "null-tsms", Type: arrow.FixedWidthTypes.Timestamp_ms,
-					Nullable: true},
+				{
+					Name: "null-bool", Type: arrow.FixedWidthTypes.Boolean,
+					Nullable: true,
+				},
+				{
+					Name: "null-d32", Type: arrow.FixedWidthTypes.Date32,
+					Nullable: true,
+				},
+				{
+					Name: "null-d64", Type: arrow.FixedWidthTypes.Date64,
+					Nullable: true,
+				},
+				{
+					Name: "null-t32ms", Type: arrow.FixedWidthTypes.Time32ms,
+					Nullable: true,
+				},
+				{
+					Name: "null-tsms", Type: arrow.FixedWidthTypes.Timestamp_ms,
+					Nullable: true,
+				},
 			}, nil),
 			expectedParquetMetaData: []string{
 				"name=f1-bool, type=BOOLEAN, repetitiontype=REQUIRED",
@@ -166,14 +204,22 @@ func TestTypeConversion(t *testing.T) {
 				{Name: "f1-t32s", Type: arrow.FixedWidthTypes.Time32s},
 				{Name: "f1-tsns", Type: arrow.FixedWidthTypes.Timestamp_ns},
 				{Name: "f1-tss", Type: arrow.FixedWidthTypes.Timestamp_s},
-				{Name: "null-t64us", Type: arrow.FixedWidthTypes.Time64us,
-					Nullable: true},
-				{Name: "null-t32s", Type: arrow.FixedWidthTypes.Time32s,
-					Nullable: true},
-				{Name: "null-tsns", Type: arrow.FixedWidthTypes.Timestamp_ns,
-					Nullable: true},
-				{Name: "null-tss", Type: arrow.FixedWidthTypes.Timestamp_s,
-					Nullable: true},
+				{
+					Name: "null-t64us", Type: arrow.FixedWidthTypes.Time64us,
+					Nullable: true,
+				},
+				{
+					Name: "null-t32s", Type: arrow.FixedWidthTypes.Time32s,
+					Nullable: true,
+				},
+				{
+					Name: "null-tsns", Type: arrow.FixedWidthTypes.Timestamp_ns,
+					Nullable: true,
+				},
+				{
+					Name: "null-tss", Type: arrow.FixedWidthTypes.Timestamp_s,
+					Nullable: true,
+				},
 			}, nil),
 			expectedParquetMetaData: []string{},
 			expectedErr:             true,
@@ -181,8 +227,7 @@ func TestTypeConversion(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.title, func(t *testing.T) {
-			actualMetaData, err :=
-				ConvertArrowToParquetSchema(test.testSchema)
+			actualMetaData, err := ConvertArrowToParquetSchema(test.testSchema)
 			if err != nil {
 				assert.True(t, test.expectedErr)
 			} else {

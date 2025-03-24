@@ -37,7 +37,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			return nil, fmt.Errorf("failed parse tag: %s", err.Error())
 		}
 		var newInfo *common.Tag
-		if info.Type == "" { //struct
+		if info.Type == "" { // struct
 			schema := parquet.NewSchemaElement()
 			schema.Name = info.InName
 			rt := info.RepetitionType
@@ -55,7 +55,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 				stack = append(stack, newItem)
 			}
 
-		} else if info.Type == "LIST" { //list
+		} else if info.Type == "LIST" { // list
 			schema := parquet.NewSchemaElement()
 			schema.Name = info.InName
 			rt1 := info.RepetitionType
@@ -88,7 +88,7 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			}
 			stack = append(stack, item.Fields[0])
 
-		} else if info.Type == "MAP" { //map
+		} else if info.Type == "MAP" { // map
 			schema := parquet.NewSchemaElement()
 			schema.Name = info.InName
 			rt1 := info.RepetitionType
@@ -121,10 +121,10 @@ func NewSchemaHandlerFromJSON(str string) (sh *SchemaHandler, err error) {
 			if len(item.Fields) != 2 {
 				return nil, fmt.Errorf("MAP needs exact 2 fields to define key and value type")
 			}
-			stack = append(stack, item.Fields[1]) //put value
-			stack = append(stack, item.Fields[0]) //put key
+			stack = append(stack, item.Fields[1]) // put value
+			stack = append(stack, item.Fields[0]) // put key
 
-		} else { //normal variable
+		} else { // normal variable
 			schema, err := common.NewSchemaElementFromTagMap(info)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())

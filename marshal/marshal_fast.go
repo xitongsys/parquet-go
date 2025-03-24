@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/goccy/go-reflect"
+
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/layout"
 	"github.com/xitongsys/parquet-go/parquet"
@@ -161,7 +162,6 @@ func (c *compiler) compileStruct(typ reflect.Type, pathMap *schema.PathMapType) 
 }
 
 func (c *compiler) compileSlice(typ reflect.Type, pathMap *schema.PathMapType) encoder {
-
 	if *c.getSchema(pathMap.Path).RepetitionType != parquet.FieldRepetitionType_REPEATED {
 		pathMap = pathMap.Children["List"].Children["Element"]
 	}
