@@ -11,6 +11,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.22
 	github.com/stretchr/testify v1.10.0
 	github.com/xitongsys/parquet-go-source v0.0.0-20241021075129-b732d2ac9c9b
+	golang.org/x/text v0.16.0
 )
 
 require (
