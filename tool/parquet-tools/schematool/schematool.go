@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/schema"
 )
@@ -266,7 +269,7 @@ func (n *Node) OutputStruct(withName, withTags bool) string {
 
 	res := ""
 	if withName {
-		res += strings.Title(name)
+		res += cases.Title(language.English).String(name)
 	}
 
 	pT, cT := n.SE.Type, n.SE.ConvertedType
@@ -354,7 +357,7 @@ func CreateSchemaTree(schemas []*parquet.SchemaElement) *SchemaTree {
 func (st *SchemaTree) OutputJsonSchema() string {
 	jsonStr := st.Root.OutputJsonSchema()
 	var obj schema.JSONSchemaItemType
-	json.Unmarshal([]byte(jsonStr), &obj)
+	_ = json.Unmarshal([]byte(jsonStr), &obj)
 	res, _ := json.MarshalIndent(&obj, "", "  ")
 	return string(res)
 }
