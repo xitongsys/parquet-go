@@ -50,9 +50,13 @@ func TestCmpIntBinary(t *testing.T) {
 
 	for _, c := range cases {
 		abuf, bbuf := new(bytes.Buffer), new(bytes.Buffer)
-		binary.Write(abuf, binary.LittleEndian, c.numa)
-		binary.Write(bbuf, binary.LittleEndian, c.numb)
-		as, bs := string(abuf.Bytes()), string(bbuf.Bytes())
+		if err := binary.Write(abuf, binary.LittleEndian, c.numa); err != nil {
+			t.Errorf("binary.Write error, %v", err)
+		}
+		if err := binary.Write(bbuf, binary.LittleEndian, c.numb); err != nil {
+			t.Errorf("binary.Write error, %v", err)
+		}
+		as, bs := abuf.String(), bbuf.String()
 		if (c.numa < c.numb) != (CmpIntBinary(as, bs, "LittleEndian", true)) {
 			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
 		}
@@ -79,8 +83,12 @@ func TestCmpIntBinary(t *testing.T) {
 		as := StrIntToBinary(c.numa, "LittleEndian", 0, true)
 		bs := StrIntToBinary(c.numb, "LittleEndian", 0, true)
 		an, bn := 0, 0
-		fmt.Sscanf(c.numa, "%d", &an)
-		fmt.Sscanf(c.numb, "%d", &bn)
+		if _, err := fmt.Sscanf(c.numa, "%d", &an); err != nil {
+			t.Errorf("fmt.Sscanf error, %v", err)
+		}
+		if _, err := fmt.Sscanf(c.numb, "%d", &bn); err != nil {
+			t.Errorf("fmt.Sscanf error, %v", err)
+		}
 		if (an < bn) != (CmpIntBinary(as, bs, "LittleEndian", true)) {
 			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
 		}
@@ -104,8 +112,12 @@ func TestCmpIntBinary(t *testing.T) {
 		as := StrIntToBinary(c.numa, "LittleEndian", 0, false)
 		bs := StrIntToBinary(c.numb, "LittleEndian", 0, false)
 		an, bn := uint64(0), uint64(0)
-		fmt.Sscanf(c.numa, "%d", &an)
-		fmt.Sscanf(c.numb, "%d", &bn)
+		if _, err := fmt.Sscanf(c.numa, "%d", &an); err != nil {
+			t.Errorf("fmt.Sscanf error, %v", err)
+		}
+		if _, err := fmt.Sscanf(c.numb, "%d", &bn); err != nil {
+			t.Errorf("fmt.Sscanf error, %v", err)
+		}
 		if (an < bn) != (CmpIntBinary(as, bs, "LittleEndian", false)) {
 			t.Errorf("CmpIntBinary error, %v-%v", c.numa, c.numb)
 		}
