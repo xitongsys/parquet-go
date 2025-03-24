@@ -24,8 +24,10 @@ func init() {
 			lz4Writer := lz4WriterPool.Get().(*lz4.Writer)
 			res := new(bytes.Buffer)
 			lz4Writer.Reset(res)
-			lz4Writer.Write(buf)
-			lz4Writer.Close()
+			if _, err := lz4Writer.Write(buf); err != nil {
+				return nil
+			}
+			_ = lz4Writer.Close()
 			lz4Writer.Reset(nil)
 			lz4WriterPool.Put(lz4Writer)
 			return res.Bytes()

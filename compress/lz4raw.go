@@ -1,5 +1,5 @@
-//go:build !no_lz4_raw
-// +build !no_lz4_raw
+//go:build !no_lz4raw
+// +build !no_lz4raw
 
 package compress
 
