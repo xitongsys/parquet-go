@@ -19,7 +19,7 @@ type Student struct {
 	Sex     bool             `parquet:"name=sex, type=BOOLEAN"`
 	Day     int32            `parquet:"name=day, type=INT32, convertedtype=DATE"`
 	Scores  map[string]int32 `parquet:"name=scores, type=MAP, keytype=BYTE_ARRAY, keyconvertedtype=UTF8, valuetype=INT32"`
-	Ignored int32            //without parquet tag and won't write
+	Ignored int32            // without parquet tag and won't write
 }
 
 func main() {
@@ -30,14 +30,14 @@ func main() {
 		return
 	}
 
-	//write
+	// write
 	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
 
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {
@@ -79,7 +79,7 @@ func main() {
 	}
 
 	num = int(pr.GetNumRows())
-	//only read scores
+	// only read scores
 	res, err := pr.ReadPartialByNumber(num, common.ReformPathStr("parquet_go_root.scores"))
 	if err != nil {
 		log.Println("Can't read", err)
@@ -90,5 +90,4 @@ func main() {
 
 	pr.ReadStop()
 	fr.Close()
-
 }

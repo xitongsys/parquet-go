@@ -83,14 +83,14 @@ func main() {
 		return
 	}
 
-	//write
+	// write
 	pw, err := writer.NewParquetWriter(fw, jsonSchema, 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
 
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {
@@ -102,20 +102,17 @@ func main() {
 			Sex:     bool(i%2 == 0),
 			Classes: []string{"Math", "Physics"},
 			Scores: map[string][]float32{
-				"Math":    []float32{89.5, 99.4},
-				"Physics": []float32{100.0, 95.3},
+				"Math":    {89.5, 99.4},
+				"Physics": {100.0, 95.3},
 			},
 
 			Friends: []struct {
 				Name string
 				Id   int64
 			}{
-				struct {
-					Name string
-					Id   int64
-				}{
+				{
 					Name: "Jack",
-					Id:   01,
+					Id:   0o1,
 				},
 			},
 
@@ -123,12 +120,9 @@ func main() {
 				Name string
 				Id   int64
 			}{
-				struct {
-					Name string
-					Id   int64
-				}{
+				{
 					Name: "Tom",
-					Id:   02,
+					Id:   0o2,
 				},
 			},
 		}
@@ -167,5 +161,4 @@ func main() {
 
 	pr.ReadStop()
 	fr.Close()
-
 }

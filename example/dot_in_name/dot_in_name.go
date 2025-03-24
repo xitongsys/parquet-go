@@ -27,15 +27,15 @@ func main() {
 		return
 	}
 
-	//write
+	// write
 	pw, err := writer.NewParquetWriter(fw, new(A), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
 
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
-	pw.PageSize = 8 * 1024              //8K
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
+	pw.PageSize = 8 * 1024              // 8K
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {

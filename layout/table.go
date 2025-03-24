@@ -24,31 +24,31 @@ func NewEmptyTable() *Table {
 	return table
 }
 
-//Table is the core data structure used to store the values
+// Table is the core data structure used to store the values
 type Table struct {
-	//Repetition type of the values: REQUIRED/OPTIONAL/REPEATED
+	// Repetition type of the values: REQUIRED/OPTIONAL/REPEATED
 	RepetitionType parquet.FieldRepetitionType
-	//Schema
+	// Schema
 	Schema *parquet.SchemaElement
-	//Path of this column
+	// Path of this column
 	Path []string
-	//Maximum of definition levels
+	// Maximum of definition levels
 	MaxDefinitionLevel int32
-	//Maximum of repetition levels
+	// Maximum of repetition levels
 	MaxRepetitionLevel int32
 
-	//Parquet values
+	// Parquet values
 	Values []interface{}
-	//Definition Levels slice
+	// Definition Levels slice
 	DefinitionLevels []int32
-	//Repetition Levels slice
+	// Repetition Levels slice
 	RepetitionLevels []int32
 
-	//Tag info
+	// Tag info
 	Info *common.Tag
 }
 
-//Merge several tables to one table(the first table)
+// Merge several tables to one table(the first table)
 func (t *Table) Merge(tables ...*Table) {
 	ln := len(tables)
 	if ln <= 0 {

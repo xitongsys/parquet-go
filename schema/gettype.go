@@ -19,7 +19,7 @@ func (sh *SchemaHandler) GetTypes() []reflect.Type {
 	elementTypes := make([]reflect.Type, ln)
 
 	var pos int32 = 0
-	stack := make([][2]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	stack := make([][2]int32, 0) // stack item[0]: index of schemas; item[1]: numChildren
 	for pos < ln || len(stack) > 0 {
 		if len(stack) == 0 || stack[len(stack)-1][1] > 0 {
 			if len(stack) > 0 {
@@ -41,11 +41,9 @@ func (sh *SchemaHandler) GetTypes() []reflect.Type {
 			if nc == 0 {
 				if *rT != parquet.FieldRepetitionType_REPEATED {
 					elementTypes[idx] = types.ParquetTypeToGoReflectType(pT, rT)
-
 				} else {
 					elementTypes[idx] = reflect.SliceOf(types.ParquetTypeToGoReflectType(pT, nil))
 				}
-
 			} else {
 				if cT != nil && *cT == parquet.ConvertedType_LIST &&
 					len(elements[idx]) == 1 &&
@@ -78,10 +76,8 @@ func (sh *SchemaHandler) GetTypes() []reflect.Type {
 
 					if rT == nil || *rT == parquet.FieldRepetitionType_REQUIRED {
 						elementTypes[idx] = structType
-
 					} else if *rT == parquet.FieldRepetitionType_OPTIONAL {
 						elementTypes[idx] = reflect.New(structType).Type()
-
 					} else if *rT == parquet.FieldRepetitionType_REPEATED {
 						elementTypes[idx] = reflect.SliceOf(structType)
 					}

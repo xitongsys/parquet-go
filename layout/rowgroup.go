@@ -9,20 +9,20 @@ import (
 	"github.com/xitongsys/parquet-go/source"
 )
 
-//RowGroup stores the RowGroup in parquet file
+// RowGroup stores the RowGroup in parquet file
 type RowGroup struct {
 	Chunks         []*Chunk
 	RowGroupHeader *parquet.RowGroup
 }
 
-//Create a RowGroup
+// Create a RowGroup
 func NewRowGroup() *RowGroup {
 	rowGroup := new(RowGroup)
 	rowGroup.RowGroupHeader = parquet.NewRowGroup()
 	return rowGroup
 }
 
-//Convert a RowGroup to table map
+// Convert a RowGroup to table map
 func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
 	tableMap := make(map[string]*Table, 0)
 	for _, chunk := range rowGroup.Chunks {
@@ -40,7 +40,7 @@ func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
 	return &tableMap
 }
 
-//Read one RowGroup from parquet file (Deprecated)
+// Read one RowGroup from parquet file (Deprecated)
 func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, schemaHandler *schema.SchemaHandler, NP int64) (*RowGroup, error) {
 	var err error
 	rowGroup := new(RowGroup)
@@ -66,7 +66,7 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 		}
 
 		wg.Add(1)
-		go func(index int64, bgn int64, end int64) {
+		go func(index, bgn, end int64) {
 			defer wg.Done()
 			for i := bgn; i < end; i++ {
 				offset := columnChunks[i].FileOffset

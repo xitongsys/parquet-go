@@ -8,6 +8,7 @@ import (
 	"math/bits"
 
 	"github.com/apache/thrift/lib/go/thrift"
+
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/compress"
 	"github.com/xitongsys/parquet-go/encoding"
@@ -15,33 +16,33 @@ import (
 	"github.com/xitongsys/parquet-go/schema"
 )
 
-//Page is used to store the page data
+// Page is used to store the page data
 type Page struct {
-	//Header of a page
+	// Header of a page
 	Header *parquet.PageHeader
-	//Table to store values
+	// Table to store values
 	DataTable *Table
-	//Compressed data of the page, which is written in parquet file
+	// Compressed data of the page, which is written in parquet file
 	RawData []byte
-	//Compress type: gzip/snappy/zstd/none
+	// Compress type: gzip/snappy/zstd/none
 	CompressType parquet.CompressionCodec
-	//Schema
+	// Schema
 	Schema *parquet.SchemaElement
-	//Path in schema(include the root)
+	// Path in schema(include the root)
 	Path []string
-	//Maximum of the values
+	// Maximum of the values
 	MaxVal interface{}
-	//Minimum of the values
+	// Minimum of the values
 	MinVal interface{}
-	//NullCount
+	// NullCount
 	NullCount *int64
-	//Tag info
+	// Tag info
 	Info *common.Tag
 
 	PageSize int32
 }
 
-//Create a new page
+// Create a new page
 func NewPage() *Page {
 	page := new(Page)
 	page.DataTable = nil
@@ -51,7 +52,7 @@ func NewPage() *Page {
 	return page
 }
 
-//Create a new dict page
+// Create a new dict page
 func NewDictPage() *Page {
 	page := NewPage()
 	page.Header.DictionaryPageHeader = parquet.NewDictionaryPageHeader()
@@ -59,7 +60,7 @@ func NewDictPage() *Page {
 	return page
 }
 
-//Create a new data page
+// Create a new data page
 func NewDataPage() *Page {
 	page := NewPage()
 	page.Header.DataPageHeader = parquet.NewDataPageHeader()
@@ -67,7 +68,7 @@ func NewDataPage() *Page {
 	return page
 }
 
-//Convert a table to data pages
+// Convert a table to data pages
 func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
@@ -82,7 +83,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 
 		var maxVal interface{} = table.Values[i]
 		var minVal interface{} = table.Values[i]
-		var nullCount = int64(0)
+		nullCount := int64(0)
 
 		funcTable := common.FindFuncTable(pT, cT, logT)
 
@@ -135,7 +136,7 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 	return res, totSize
 }
 
-//Decode dict page
+// Decode dict page
 func (page *Page) Decode(dictPage *Page) {
 	if dictPage == nil || page == nil ||
 		(page.Header.DataPageHeader == nil && page.Header.DataPageHeaderV2 == nil) {
@@ -163,7 +164,7 @@ func (page *Page) Decode(dictPage *Page) {
 	}
 }
 
-//Encoding values
+// Encoding values
 func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 	encodingMethod := parquet.Encoding_PLAIN
 	if page.Info.Encoding != 0 {
@@ -175,26 +176,22 @@ func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 
 	} else if encodingMethod == parquet.Encoding_DELTA_BINARY_PACKED {
 		return encoding.WriteDelta(valuesBuf)
-
 	} else if encodingMethod == parquet.Encoding_DELTA_BYTE_ARRAY {
 		return encoding.WriteDeltaByteArray(valuesBuf)
-
 	} else if encodingMethod == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
 		return encoding.WriteDeltaLengthByteArray(valuesBuf)
-
 	} else if encodingMethod == parquet.Encoding_BYTE_STREAM_SPLIT {
 		return encoding.WriteByteStreamSplit(valuesBuf)
-
 	} else {
 		return encoding.WritePlain(valuesBuf, *page.Schema.Type)
 	}
 }
 
-//Compress the data page to parquet file
+// Compress the data page to parquet file
 func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte {
 	ln := len(page.DataTable.DefinitionLevels)
 
-	//values////////////////////////////////////////////
+	// values////////////////////////////////////////////
 	// valuesBuf == nil means "up to i, every item in DefinitionLevels was
 	// MaxDefinitionLevel". This lets us avoid allocating the array for the
 	// (somewhat) common case of "all values present".
@@ -212,10 +209,10 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	if valuesBuf == nil {
 		valuesBuf = page.DataTable.Values
 	}
-	//valuesRawBuf := encoding.WritePlain(valuesBuf)
+	// valuesRawBuf := encoding.WritePlain(valuesBuf)
 	valuesRawBuf := page.EncodingValues(valuesBuf)
 
-	//definitionLevel//////////////////////////////////
+	// definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
 	if page.DataTable.MaxDefinitionLevel > 0 {
 		definitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
@@ -223,7 +220,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			int32(bits.Len32(uint32(page.DataTable.MaxDefinitionLevel))))
 	}
 
-	//repetitionLevel/////////////////////////////////
+	// repetitionLevel/////////////////////////////////
 	var repetitionLevelBuf []byte
 	if page.DataTable.MaxRepetitionLevel > 0 {
 		repetitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
@@ -231,7 +228,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 			int32(bits.Len32(uint32(page.DataTable.MaxRepetitionLevel))))
 	}
 
-	//dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
+	// dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
 	dataBuf := make([]byte, 0, len(repetitionLevelBuf)+len(definitionLevelBuf)+len(valuesRawBuf))
 	dataBuf = append(dataBuf, repetitionLevelBuf...)
 	dataBuf = append(dataBuf, definitionLevelBuf...)
@@ -239,7 +236,7 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 	var dataEncodeBuf []byte = compress.Compress(dataBuf, compressType)
 
-	//pageHeader/////////////////////////////////////
+	// pageHeader/////////////////////////////////////
 	page.Header = parquet.NewPageHeader()
 	page.Header.Type = parquet.PageType_DATA_PAGE
 	page.Header.CompressedPageSize = int32(len(dataEncodeBuf))
@@ -280,21 +277,21 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	return res
 }
 
-//Compress data page v2 to parquet file
+// Compress data page v2 to parquet file
 func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []byte {
 	ln := len(page.DataTable.DefinitionLevels)
 
-	//values////////////////////////////////////////////
+	// values////////////////////////////////////////////
 	valuesBuf := make([]interface{}, 0)
 	for i := 0; i < ln; i++ {
 		if page.DataTable.DefinitionLevels[i] == page.DataTable.MaxDefinitionLevel {
 			valuesBuf = append(valuesBuf, page.DataTable.Values[i])
 		}
 	}
-	//valuesRawBuf := encoding.WritePlain(valuesBuf)
+	// valuesRawBuf := encoding.WritePlain(valuesBuf)
 	valuesRawBuf := page.EncodingValues(valuesBuf)
 
-	//definitionLevel//////////////////////////////////
+	// definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
 	if page.DataTable.MaxDefinitionLevel > 0 {
 		numInterfaces := make([]interface{}, ln)
@@ -306,7 +303,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 			parquet.Type_INT64)
 	}
 
-	//repetitionLevel/////////////////////////////////
+	// repetitionLevel/////////////////////////////////
 	r0Num := int32(0)
 	var repetitionLevelBuf []byte
 	if page.DataTable.MaxRepetitionLevel > 0 {
@@ -324,7 +321,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 
 	var dataEncodeBuf []byte = compress.Compress(valuesRawBuf, compressType)
 
-	//pageHeader/////////////////////////////////////
+	// pageHeader/////////////////////////////////////
 	page.Header = parquet.NewPageHeader()
 	page.Header.Type = parquet.PageType_DATA_PAGE_V2
 	page.Header.CompressedPageSize = int32(len(dataEncodeBuf) + len(definitionLevelBuf) + len(repetitionLevelBuf))
@@ -333,7 +330,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	page.Header.DataPageHeaderV2.NumValues = int32(len(page.DataTable.Values))
 	page.Header.DataPageHeaderV2.NumNulls = page.Header.DataPageHeaderV2.NumValues - int32(len(valuesBuf))
 	page.Header.DataPageHeaderV2.NumRows = r0Num
-	//page.Header.DataPageHeaderV2.Encoding = parquet.Encoding_PLAIN
+	// page.Header.DataPageHeaderV2.Encoding = parquet.Encoding_PLAIN
 	page.Header.DataPageHeaderV2.Encoding = page.Info.Encoding
 
 	page.Header.DataPageHeaderV2.DefinitionLevelsByteLength = int32(len(definitionLevelBuf))
@@ -374,7 +371,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	return res
 }
 
-//This is a test function
+// This is a test function
 func ReadPage2(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
 	var err error
 	page, err := ReadPageRawData(thriftReader, schemaHandler, colMetaData)
@@ -391,11 +388,9 @@ func ReadPage2(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sc
 	return page, numValues, numRows, nil
 }
 
-//Read page RawData
+// Read page RawData
 func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, error) {
-	var (
-		err error
-	)
+	var err error
 
 	pageHeader, err := ReadPageHeader(thriftReader)
 	if err != nil {
@@ -429,7 +424,7 @@ func ReadPageRawData(thriftReader *thrift.TBufferedTransport, schemaHandler *sch
 	return page, nil
 }
 
-//Get RepetitionLevels and Definitions from RawData
+// Get RepetitionLevels and Definitions from RawData
 func (p *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64, int64, error) {
 	var err error
 	bytesReader := bytes.NewReader(p.RawData)
@@ -558,7 +553,7 @@ func (p *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64, i
 	}
 }
 
-//Get values from raw data
+// Get values from raw data
 func (p *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error {
 	var err error
 	var encodingType parquet.Encoding
@@ -621,7 +616,7 @@ func (p *Page) GetValueFromRawData(schemaHandler *schema.SchemaHandler) error {
 	return nil
 }
 
-//Read page header
+// Read page header
 func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeader, error) {
 	protocol := thrift.NewTCompactProtocol(thriftReader)
 	pageHeader := parquet.NewPageHeader()
@@ -629,18 +624,15 @@ func ReadPageHeader(thriftReader *thrift.TBufferedTransport) (*parquet.PageHeade
 	return pageHeader, err
 }
 
-//Read data page values
-func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encoding, dataType parquet.Type, convertedType parquet.ConvertedType, cnt uint64, bitWidth uint64) ([]interface{}, error) {
-	var (
-		res []interface{}
-	)
+// Read data page values
+func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encoding, dataType parquet.Type, convertedType parquet.ConvertedType, cnt, bitWidth uint64) ([]interface{}, error) {
+	var res []interface{}
 	if cnt <= 0 {
 		return res, nil
 	}
 
 	if encodingMethod == parquet.Encoding_PLAIN {
 		return encoding.ReadPlain(bytesReader, dataType, cnt, bitWidth)
-
 	} else if encodingMethod == parquet.Encoding_PLAIN_DICTIONARY || encodingMethod == parquet.Encoding_RLE_DICTIONARY {
 		b, err := bytesReader.ReadByte()
 		if err != nil {
@@ -667,17 +659,14 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 		return values[:cnt], nil
 
 	} else if encodingMethod == parquet.Encoding_BIT_PACKED {
-		//deprecated
+		// deprecated
 		return res, fmt.Errorf("Unsupported Encoding method BIT_PACKED")
-
 	} else if encodingMethod == parquet.Encoding_DELTA_BINARY_PACKED {
 
 		if dataType == parquet.Type_INT32 {
 			return encoding.ReadDeltaBinaryPackedINT32(bytesReader)
-
 		} else if dataType == parquet.Type_INT64 {
 			return encoding.ReadDeltaBinaryPackedINT64(bytesReader)
-
 		}
 		return res, fmt.Errorf("The encoding method DELTA_BINARY_PACKED can only be used with int32 and int64 types")
 
@@ -717,11 +706,9 @@ func ReadDataPageValues(bytesReader *bytes.Reader, encodingMethod parquet.Encodi
 	}
 }
 
-//Read page from parquet file
+// Read page from parquet file
 func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.SchemaHandler, colMetaData *parquet.ColumnMetaData) (*Page, int64, int64, error) {
-	var (
-		err error
-	)
+	var err error
 
 	pageHeader, err := ReadPageHeader(thriftReader)
 	if err != nil {
@@ -812,7 +799,6 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 
 	} else if pageHeader.GetType() == parquet.PageType_INDEX_PAGE {
 		return nil, 0, 0, fmt.Errorf("Unsupported page type: INDEX_PAGE")
-
 	} else if pageHeader.GetType() == parquet.PageType_DATA_PAGE_V2 ||
 		pageHeader.GetType() == parquet.PageType_DATA_PAGE {
 
@@ -933,5 +919,4 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 	} else {
 		return nil, 0, 0, fmt.Errorf("Error page type %v", pageHeader.GetType())
 	}
-
 }

@@ -22,7 +22,7 @@ func NewCSVWriterFromWriter(md []string, w io.Writer, np int64) (*CSVWriter, err
 	return NewCSVWriter(md, wf, np)
 }
 
-//Create CSV writer
+// Create CSV writer
 func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, error) {
 	var err error
 	res := new(CSVWriter)
@@ -31,8 +31,8 @@ func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, 
 		return nil, fmt.Errorf("failed to create schema from metadata: %s", err.Error())
 	}
 	res.PFile = pfile
-	res.PageSize = 8 * 1024              //8K
-	res.RowGroupSize = 128 * 1024 * 1024 //128M
+	res.PageSize = 8 * 1024              // 8K
+	res.RowGroupSize = 128 * 1024 * 1024 // 128M
 	res.CompressionType = parquet.CompressionCodec_SNAPPY
 	res.PagesMapBuf = make(map[string][]*layout.Page)
 	res.DictRecs = make(map[string]*layout.DictRecType)
@@ -46,7 +46,7 @@ func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, 
 	return res, err
 }
 
-//Write string values to parquet file
+// Write string values to parquet file
 func (w *CSVWriter) WriteString(recsi interface{}) error {
 	var err error
 	recs := recsi.([]*string)

@@ -158,7 +158,7 @@ func (sh *SchemaHandler) GetExName(index int) string {
 }
 
 func (sh *SchemaHandler) CreateInExMap() {
-	//use DFS get path of schema
+	// use DFS get path of schema
 	sh.ExPathToInPath, sh.InPathToExPath = map[string]string{}, map[string]string{}
 	schemas := sh.SchemaElements
 	ln := int32(len(schemas))
@@ -262,7 +262,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 				f := item.GoType.Field(i)
 				tagStr := f.Tag.Get("parquet")
 
-				//ignore item without parquet tag
+				// ignore item without parquet tag
 				if len(tagStr) <= 0 {
 					numField--
 					continue
@@ -408,10 +408,10 @@ func NewSchemaHandlerFromSchemaHandler(sh *SchemaHandler) *SchemaHandler {
 	}
 	schemaHandler.CreateInExMap()
 
-	//use DFS get path of schema
+	// use DFS get path of schema
 	ln := int32(len(sh.SchemaElements))
 	var pos int32 = 0
-	stack := make([][2]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	stack := make([][2]int32, 0) // stack item[0]: index of schemas; item[1]: numChildren
 	for pos < ln || len(stack) > 0 {
 		if len(stack) == 0 || stack[len(stack)-1][1] > 0 {
 			if len(stack) > 0 {
@@ -458,10 +458,10 @@ func NewSchemaHandlerFromSchemaList(schemas []*parquet.SchemaElement) *SchemaHan
 	}
 	schemaHandler.CreateInExMap()
 
-	//use DFS get path of schema
+	// use DFS get path of schema
 	ln := int32(len(schemas))
 	var pos int32 = 0
-	stack := make([][2]int32, 0) //stack item[0]: index of schemas; item[1]: numChildren
+	stack := make([][2]int32, 0) // stack item[0]: index of schemas; item[1]: numChildren
 	for pos < ln || len(stack) > 0 {
 		if len(stack) == 0 || stack[len(stack)-1][1] > 0 {
 			if len(stack) > 0 {

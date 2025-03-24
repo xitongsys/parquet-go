@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apache/arrow/go/v17/arrow"
+
 	"github.com/xitongsys/parquet-go/common"
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -109,7 +110,8 @@ func ConvertArrowToParquetSchema(schema *arrow.Schema) ([]string, error) {
 // arrow schema and we need to translate it to the native format which the
 // parquet-go library understands.
 func NewSchemaHandlerFromArrow(arrowSchema *arrow.Schema) (
-	*SchemaHandler, error) {
+	*SchemaHandler, error,
+) {
 	schemaList := make([]*parquet.SchemaElement, 0)
 	infos := make([]*common.Tag, 0)
 

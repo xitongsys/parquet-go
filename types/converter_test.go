@@ -15,7 +15,6 @@ func TestINT96(t *testing.T) {
 	if !t1.Equal(t2) {
 		t.Error("INT96 error: ", t1, t2)
 	}
-
 }
 
 func TestDECIMAL(t *testing.T) {

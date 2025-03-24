@@ -49,7 +49,6 @@ func TestParquetPtrMarshal(t *testing.T) {
 var iface interface{}
 
 func TestMarshalFast(t *testing.T) {
-
 	type testElem struct {
 		Bool      bool    `parquet:"name=bool, type=BOOLEAN"`
 		Int       int     `parquet:"name=int, type=INT64"`

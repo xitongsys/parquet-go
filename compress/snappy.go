@@ -5,6 +5,7 @@ package compress
 
 import (
 	"github.com/klauspost/compress/snappy"
+
 	"github.com/xitongsys/parquet-go/parquet"
 )
 

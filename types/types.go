@@ -12,32 +12,23 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionTyp
 	if rT == nil || *rT != parquet.FieldRepetitionType_OPTIONAL {
 		if *pT == parquet.Type_BOOLEAN {
 			return reflect.TypeOf(true)
-
 		} else if *pT == parquet.Type_INT32 {
 			return reflect.TypeOf(int32(0))
-
 		} else if *pT == parquet.Type_INT64 {
 			return reflect.TypeOf(int64(0))
-
 		} else if *pT == parquet.Type_INT96 {
 			return reflect.TypeOf("")
-
 		} else if *pT == parquet.Type_FLOAT {
 			return reflect.TypeOf(float32(0))
-
 		} else if *pT == parquet.Type_DOUBLE {
 			return reflect.TypeOf(float64(0))
-
 		} else if *pT == parquet.Type_BYTE_ARRAY {
 			return reflect.TypeOf("")
-
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			return reflect.TypeOf("")
-
 		} else {
 			return nil
 		}
-
 	} else {
 		if *pT == parquet.Type_BOOLEAN {
 			v := true
@@ -77,8 +68,8 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionTyp
 	}
 }
 
-//Scan a string to parquet value; length and scale just for decimal
-func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, length int, scale int) (interface{}, error) {
+// Scan a string to parquet value; length and scale just for decimal
+func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, length, scale int) (interface{}, error) {
 	if cT == nil {
 		if *pT == parquet.Type_BOOLEAN {
 			var v bool
@@ -111,7 +102,6 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 
 		} else if *pT == parquet.Type_BYTE_ARRAY {
 			return s, nil
-
 		} else if *pT == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 			return s, nil
 		}
@@ -120,7 +110,6 @@ func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, len
 
 	if *cT == parquet.ConvertedType_UTF8 {
 		return s, nil
-
 	} else if *cT == parquet.ConvertedType_INT_8 {
 		var v int8
 		_, err := fmt.Sscanf(s, "%d", &v)
@@ -264,8 +253,8 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 	}
 }
 
-//order=LittleEndian or BigEndian; length is byte num
-func StrIntToBinary(num string, order string, length int, signed bool) string {
+// order=LittleEndian or BigEndian; length is byte num
+func StrIntToBinary(num, order string, length int, signed bool) string {
 	bigNum := new(big.Int)
 	bigNum.SetString(num, 10)
 	if !signed {
@@ -329,7 +318,7 @@ func StrIntToBinary(num string, order string, length int, signed bool) string {
 	return string(bs)
 }
 
-func JSONTypeToParquetType(val reflect.Value, pT *parquet.Type, cT *parquet.ConvertedType, length int, scale int) (interface{}, error) {
+func JSONTypeToParquetType(val reflect.Value, pT *parquet.Type, cT *parquet.ConvertedType, length, scale int) (interface{}, error) {
 	if val.Type().Kind() == reflect.Interface && val.IsNil() {
 		return nil, nil
 	}

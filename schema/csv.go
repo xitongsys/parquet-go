@@ -7,7 +7,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-//Create a schema handler from CSV metadata
+// Create a schema handler from CSV metadata
 func NewSchemaHandlerFromMetadata(mds []string) (*SchemaHandler, error) {
 	schemaList := make([]*parquet.SchemaElement, 0)
 	infos := make([]*common.Tag, 0)
@@ -36,7 +36,7 @@ func NewSchemaHandlerFromMetadata(mds []string) (*SchemaHandler, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
 		}
-		//schema.RepetitionType = parquet.FieldRepetitionTypePtr(parquet.FieldRepetitionType_OPTIONAL)
+		// schema.RepetitionType = parquet.FieldRepetitionTypePtr(parquet.FieldRepetitionType_OPTIONAL)
 		schemaList = append(schemaList, schema)
 	}
 	res := NewSchemaHandlerFromSchemaList(schemaList)

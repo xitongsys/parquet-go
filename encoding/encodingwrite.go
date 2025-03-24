@@ -10,7 +10,7 @@ import (
 	"github.com/xitongsys/parquet-go/parquet"
 )
 
-func ToInt64(nums []interface{}) []int64 { //convert bool/int values to int64 values
+func ToInt64(nums []interface{}) []int64 { // convert bool/int values to int64 values
 	ln := len(nums)
 	res := make([]int64, ln)
 	if ln <= 0 {
@@ -434,7 +434,6 @@ func WriteBitPackedDeprecated(vals []interface{}, bitWidth int64) []byte {
 	var valBitLeft uint64 = uint64(bitWidth)
 	var val uint64 = valsInt[0] << uint64(64-bitWidth)
 	for i < ln {
-
 		if valBitLeft > curNeed {
 			var mask uint64 = ((1 << curNeed) - 1) << (64 - curNeed)
 

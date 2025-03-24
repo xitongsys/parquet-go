@@ -10,7 +10,7 @@ import (
 	"github.com/xitongsys/parquet-go/schema"
 )
 
-//Record Map KeyValue pair
+// Record Map KeyValue pair
 type KeyValue struct {
 	Key   reflect.Value
 	Value reflect.Value
@@ -26,8 +26,8 @@ type SliceRecord struct {
 	Index  int
 }
 
-//Convert the table map to objects slice. dstInterface is a slice of pointers of objects
-func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterface interface{}, schemaHandler *schema.SchemaHandler, prefixPath string) (err error) {
+// Convert the table map to objects slice. dstInterface is a slice of pointers of objects
+func Unmarshal(tableMap *map[string]*layout.Table, bgn, end int, dstInterface interface{}, schemaHandler *schema.SchemaHandler, prefixPath string) (err error) {
 	tableNeeds := make(map[string]*layout.Table)
 	tableBgn, tableEnd := make(map[string]int), make(map[string]int)
 	for name, table := range *tableMap {
@@ -188,7 +188,6 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 
 					if strings.ToLower(path[index+1]) == "key" {
 						po = mapRec.KeyValues[mapRec.Index].Key
-
 					} else {
 						po = mapRec.KeyValues[mapRec.Index].Value
 					}

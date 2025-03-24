@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/klauspost/compress/gzip"
+
 	"github.com/xitongsys/parquet-go/parquet"
 )
 

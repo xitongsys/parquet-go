@@ -52,7 +52,7 @@ func main() {
 	}
 `
 
-	//write
+	// write
 	fw, err := local.NewLocalFileWriter("json.parquet")
 	if err != nil {
 		log.Println("Can't create file", err)
@@ -102,5 +102,4 @@ func main() {
 	}
 	log.Println("Write Finished")
 	fw.Close()
-
 }
