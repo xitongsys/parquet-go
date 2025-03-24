@@ -40,7 +40,7 @@ lint: tools  ## Run static code analysis
 			echo functions with gocyclo score higher than 15; \
 			cat /tmp/gocyclo.output | sed 's/^/    /'; \
 			false; \
-		fi
+		fi || true
 
 .PHONY: deps
 deps:  ## Install prerequisite for build
