@@ -110,7 +110,8 @@ func TestMarshalUnmarshal(t *testing.T) {
 	}
 
 	dst := make([]Student, 0)
-	Unmarshal(src, 0, len(stus), &dst, schemaHandler, "")
+	// return error till we can change function signature
+	_ = Unmarshal(src, 0, len(stus), &dst, schemaHandler, "")
 
 	s0 := fmt.Sprint(stus)
 	s1 := fmt.Sprint(dst)
