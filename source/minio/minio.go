@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/minio/minio-go/v7"
+
 	"github.com/xitongsys/parquet-go/source"
 )
 
@@ -55,7 +56,7 @@ func NewS3FileWriterWithClient(
 
 // NewS3FileReaderWithClient is the same as NewMinioFileReader but allows passing
 // your own S3 client
-func NewS3FileReaderWithClient(ctx context.Context, s3Client *minio.Client, bucket string, key string) (source.ParquetFile, error) {
+func NewS3FileReaderWithClient(ctx context.Context, s3Client *minio.Client, bucket, key string) (source.ParquetFile, error) {
 	file := &MinioFile{
 		ctx:        ctx,
 		client:     s3Client,

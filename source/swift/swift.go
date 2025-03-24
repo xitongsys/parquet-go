@@ -2,6 +2,7 @@ package swiftsource
 
 import (
 	"github.com/ncw/swift"
+
 	"github.com/xitongsys/parquet-go/source"
 )
 
@@ -15,7 +16,7 @@ type SwiftFile struct {
 	FileWriter *swift.ObjectCreateFile
 }
 
-func newSwiftFile(containerName string, filePath string, conn *swift.Connection) *SwiftFile {
+func newSwiftFile(containerName, filePath string, conn *swift.Connection) *SwiftFile {
 	return &SwiftFile{
 		Connection: conn,
 		Container:  containerName,
@@ -23,12 +24,12 @@ func newSwiftFile(containerName string, filePath string, conn *swift.Connection)
 	}
 }
 
-func NewSwiftFileReader(container string, filePath string, conn *swift.Connection) (source.ParquetFile, error) {
+func NewSwiftFileReader(container, filePath string, conn *swift.Connection) (source.ParquetFile, error) {
 	res := newSwiftFile(container, filePath, conn)
 	return res.Open(filePath)
 }
 
-func NewSwiftFileWriter(container string, filePath string, conn *swift.Connection) (source.ParquetFile, error) {
+func NewSwiftFileWriter(container, filePath string, conn *swift.Connection) (source.ParquetFile, error) {
 	res := newSwiftFile(container, filePath, conn)
 	return res.Create(filePath)
 }

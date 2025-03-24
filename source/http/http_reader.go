@@ -29,9 +29,7 @@ const (
 	contentRangeHeader = "Content-Range"
 )
 
-var (
-	defaultClient *http.Client
-)
+var defaultClient *http.Client
 
 func SetDefaultClient(client *http.Client) {
 	defaultClient = client

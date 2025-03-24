@@ -23,7 +23,7 @@ func main() {
 	bucketName := "Your bucket name"
 	fileName := "gcs_example/csv.parquet"
 
-	//write
+	// write
 	fw, err := gcs.NewGcsFileWriter(ctx, projectId, bucketName, fileName)
 	if err != nil {
 		log.Println("Can't open file", err)
@@ -68,5 +68,4 @@ func main() {
 	}
 	log.Println("Write Finished")
 	fw.Close()
-
 }

@@ -28,9 +28,7 @@ func (self *LocalFile) Create(name string) (source.ParquetFile, error) {
 }
 
 func (self *LocalFile) Open(name string) (source.ParquetFile, error) {
-	var (
-		err error
-	)
+	var err error
 	if name == "" {
 		name = self.FilePath
 	}
@@ -40,6 +38,7 @@ func (self *LocalFile) Open(name string) (source.ParquetFile, error) {
 	myFile.File, err = os.Open(name)
 	return myFile, err
 }
+
 func (self *LocalFile) Seek(offset int64, pos int) (int64, error) {
 	return self.File.Seek(offset, pos)
 }

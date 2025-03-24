@@ -18,7 +18,7 @@ type Student struct {
 
 func main() {
 	var err error
-	//write
+	// write
 	fw, err := hdfs.NewHdfsFileWriter([]string{"localhost:9000"}, "root", "/flat.parquet")
 	if err != nil {
 		log.Println("Can't create hdfs file", err)

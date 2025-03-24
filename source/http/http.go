@@ -2,8 +2,9 @@ package http
 
 import (
 	"errors"
-	"github.com/xitongsys/parquet-go/source"
 	"mime/multipart"
+
+	"github.com/xitongsys/parquet-go/source"
 )
 
 type MultipartFileWrapper struct {

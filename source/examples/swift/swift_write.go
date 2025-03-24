@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/ncw/swift"
+
 	"github.com/xitongsys/parquet-go/reader"
 	"github.com/xitongsys/parquet-go/writer"
 
-	"github.com/xitongsys/parquet-go-source/swift"
+	swiftsource "github.com/xitongsys/parquet-go-source/swift"
 )
 
 type Student struct {
@@ -45,7 +46,7 @@ func main() {
 		return
 	}
 
-	//write
+	// write
 	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Failed to create parquet writer: ", err)
@@ -90,7 +91,7 @@ func main() {
 	}
 	num = int(pr.GetNumRows())
 	for i := 0; i < num/10; i++ {
-		stus := make([]Student, 10) //read 10 rows
+		stus := make([]Student, 10) // read 10 rows
 		if err = pr.Read(&stus); err != nil {
 			log.Println("Read error: ", err)
 		}

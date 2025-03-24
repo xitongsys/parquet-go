@@ -79,10 +79,10 @@ func s3Example() {
 	num = int(pr.GetNumRows())
 	for i := 0; i < num/10; i++ {
 		if i%2 == 0 {
-			pr.SkipRows(10) //skip 10 rows
+			pr.SkipRows(10) // skip 10 rows
 			continue
 		}
-		stus := make([]student, 10) //read 10 rows
+		stus := make([]student, 10) // read 10 rows
 		if err = pr.Read(&stus); err != nil {
 			log.Println("Read error", err)
 		}

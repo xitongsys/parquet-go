@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+
 	"github.com/xitongsys/parquet-go/source"
 )
 
@@ -108,7 +109,7 @@ func NewS3FileWriterWithClient(
 }
 
 // NewS3FileReader creates an S3 FileReader, to be used with NewParquetReader
-func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aws.Config) (source.ParquetFile, error) {
+func NewS3FileReader(ctx context.Context, bucket, key string, cfgs ...*aws.Config) (source.ParquetFile, error) {
 	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
 		Bucket: bucket,
 		Key:    key,
@@ -116,7 +117,7 @@ func NewS3FileReader(ctx context.Context, bucket string, key string, cfgs ...*aw
 }
 
 // NewS3FileReaderVersioned creates an S3 FileReader for a versioned S3 object, to be used with NewParquetReader
-func NewS3FileReaderVersioned(ctx context.Context, bucket string, key string, version *string, cfgs ...*aws.Config) (source.ParquetFile, error) {
+func NewS3FileReaderVersioned(ctx context.Context, bucket, key string, version *string, cfgs ...*aws.Config) (source.ParquetFile, error) {
 	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
 		Bucket:  bucket,
 		Key:     key,
@@ -126,7 +127,7 @@ func NewS3FileReaderVersioned(ctx context.Context, bucket string, key string, ve
 
 // NewS3FileReaderWithClient is the same as NewS3FileReader but allows passing
 // your own S3 client
-func NewS3FileReaderWithClient(ctx context.Context, s3Client S3API, bucket string, key string) (source.ParquetFile, error) {
+func NewS3FileReaderWithClient(ctx context.Context, s3Client S3API, bucket, key string) (source.ParquetFile, error) {
 	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
 		Bucket:   bucket,
 		Key:      key,
@@ -136,7 +137,7 @@ func NewS3FileReaderWithClient(ctx context.Context, s3Client S3API, bucket strin
 
 // NewS3FileReaderWithClientVersioned is the same as NewS3FileReaderVersioned but allows passing
 // your own S3 client
-func NewS3FileReaderWithClientVersioned(ctx context.Context, s3Client S3API, bucket string, key string, version *string) (source.ParquetFile, error) {
+func NewS3FileReaderWithClientVersioned(ctx context.Context, s3Client S3API, bucket, key string, version *string) (source.ParquetFile, error) {
 	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
 		Bucket:   bucket,
 		Key:      key,

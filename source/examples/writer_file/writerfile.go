@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/xitongsys/parquet-go-source/writerfile"
-	"github.com/xitongsys/parquet-go/writer"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/writer"
 )
 
 type Student struct {
@@ -24,14 +24,14 @@ func main() {
 	buf := new(bytes.Buffer)
 	fw := writerfile.NewWriterFile(buf)
 
-	//write
+	// write
 	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
 
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {
@@ -54,5 +54,4 @@ func main() {
 	log.Println("Write Finished")
 	fw.Close()
 	log.Println(buf)
-
 }

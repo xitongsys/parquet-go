@@ -2,6 +2,7 @@ package hdfs
 
 import (
 	"github.com/colinmarc/hdfs/v2"
+
 	"github.com/xitongsys/parquet-go/source"
 )
 
@@ -15,7 +16,7 @@ type HdfsFile struct {
 	FileWriter *hdfs.FileWriter
 }
 
-func NewHdfsFileWriter(hosts []string, user string, name string) (source.ParquetFile, error) {
+func NewHdfsFileWriter(hosts []string, user, name string) (source.ParquetFile, error) {
 	res := &HdfsFile{
 		Hosts:    hosts,
 		User:     user,
@@ -24,7 +25,7 @@ func NewHdfsFileWriter(hosts []string, user string, name string) (source.Parquet
 	return res.Create(name)
 }
 
-func NewHdfsFileReader(hosts []string, user string, name string) (source.ParquetFile, error) {
+func NewHdfsFileReader(hosts []string, user, name string) (source.ParquetFile, error) {
 	res := &HdfsFile{
 		Hosts:    hosts,
 		User:     user,
@@ -48,12 +49,10 @@ func (self *HdfsFile) Create(name string) (source.ParquetFile, error) {
 	}
 	hf.FileWriter, err = hf.Client.Create(name)
 	return hf, err
-
 }
+
 func (self *HdfsFile) Open(name string) (source.ParquetFile, error) {
-	var (
-		err error
-	)
+	var err error
 	if name == "" {
 		name = self.FilePath
 	}
@@ -72,6 +71,7 @@ func (self *HdfsFile) Open(name string) (source.ParquetFile, error) {
 	hf.FileReader, err = hf.Client.Open(name)
 	return hf, err
 }
+
 func (self *HdfsFile) Seek(offset int64, pos int) (int64, error) {
 	return self.FileReader.Seek(offset, pos)
 }

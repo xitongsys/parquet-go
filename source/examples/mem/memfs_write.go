@@ -35,23 +35,22 @@ func main() {
 		}
 
 		// write file to disk
-		if err := ioutil.WriteFile(name, dat, 0644); err != nil {
+		if err := ioutil.WriteFile(name, dat, 0o644); err != nil {
 			log.Printf("error writing result file: %v", err)
 		}
 		return nil
 	})
-
 	if err != nil {
 		log.Println("Can't create local file", err)
 		return
 	}
-	//write
+	// write
 	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
-	pw.RowGroupSize = 128 * 1024 * 1024 //128M
+	pw.RowGroupSize = 128 * 1024 * 1024 // 128M
 	pw.CompressionType = parquet.CompressionCodec_SNAPPY
 	num := 10
 	for i := 0; i < num; i++ {
@@ -104,5 +103,4 @@ func main() {
 		log.Printf("error removing file from memfs: %v", err)
 		os.Exit(1)
 	}
-
 }

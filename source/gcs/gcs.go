@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/bobg/gcsobj"
+
 	"github.com/xitongsys/parquet-go/source"
 )
 

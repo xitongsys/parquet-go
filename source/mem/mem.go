@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/afero"
+
 	"github.com/xitongsys/parquet-go/source"
 )
 
@@ -65,9 +66,7 @@ func (fs *MemFile) Create(name string) (source.ParquetFile, error) {
 
 // Open - open file in-memory
 func (fs *MemFile) Open(name string) (source.ParquetFile, error) {
-	var (
-		err error
-	)
+	var err error
 	if name == "" {
 		name = fs.FilePath
 	}
