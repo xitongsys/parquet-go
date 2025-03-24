@@ -30,7 +30,7 @@ func BenchmarkWriteCSV(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		fw.Close()
+		_ = fw.Close()
 	}
 }
 
@@ -58,6 +58,6 @@ func BenchmarkWriteCSVPlainDictionary(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		fw.Close()
+		_ = fw.Close()
 	}
 }

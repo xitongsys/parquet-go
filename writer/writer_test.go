@@ -219,20 +219,20 @@ func TestDoubleWriteStop(t *testing.T) {
 	pr.ReadStop()
 }
 
-var testWriteErr = errors.New("test error")
+var errWrite = errors.New("test error")
 
 type invalidFile struct {
 	source.ParquetFile
 }
 
 func (m *invalidFile) Write(data []byte) (n int, err error) {
-	return 0, testWriteErr
+	return 0, errWrite
 }
 
 func TestNewWriterWithInvaidFile(t *testing.T) {
 	pw, err := NewParquetWriter(&invalidFile{}, new(test), 1)
 	assert.Nil(t, pw)
-	assert.ErrorIs(t, err, testWriteErr)
+	assert.ErrorIs(t, err, errWrite)
 }
 
 func TestWriteStopRaceConditionOnError(t *testing.T) {
