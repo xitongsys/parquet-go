@@ -94,7 +94,7 @@ func (sh *SchemaHandler) GetRepetitionType(path []string) (parquet.FieldRepetiti
 	if index, ok := sh.MapIndex[pathStr]; ok {
 		return sh.SchemaElements[index].GetRepetitionType(), nil
 	}
-	return 0, errors.New("Name Not In Schema")
+	return 0, errors.New("name not in schema")
 }
 
 // MaxDefinitionLevel returns the max definition level type of a column by it's schema path
