@@ -79,7 +79,7 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 				thriftReader := source.ConvertToThriftReader(PFile, offset)
 				chunk, _ := ReadChunk(thriftReader, schemaHandler, columnChunks[i])
 				chunksList[index] = append(chunksList[index], chunk)
-				PFile.Close()
+				_ = PFile.Close()
 			}
 		}(c, bgn, end)
 	}
