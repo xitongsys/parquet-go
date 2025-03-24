@@ -1,5 +1,5 @@
-# exclude everything
-example/output/*
+build/
 
-# exception to the rule
-!example/output/.gitkeep
+.idea
+.vscode
+*.swp
