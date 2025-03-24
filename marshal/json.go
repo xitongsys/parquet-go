@@ -37,7 +37,9 @@ func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map
 		}
 		// `useNumber`causes the Decoder to unmarshal a number into an interface{} as a Number instead of as a float64.
 		d.UseNumber()
-		d.Decode(&ui)
+		if err := d.Decode(&ui); err != nil {
+			return nil, err
+		}
 
 		node.Val = reflect.ValueOf(ui)
 		node.PathMap = pathMap

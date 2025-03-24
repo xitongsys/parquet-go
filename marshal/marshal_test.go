@@ -8,7 +8,7 @@ import (
 )
 
 type marshalCases struct {
-	nullPtr    *int
+	nullPtr    *int //lint:ignore U1000 this is a placeholder for testing
 	integerPtr *int
 }
 
@@ -45,8 +45,6 @@ func TestParquetPtrMarshal(t *testing.T) {
 		t.Errorf("Fail expect nodes len %v, DL value %v, get nodes len %v, DL value %v", 1, 4, len(res), res[0].DL)
 	}
 }
-
-var iface interface{}
 
 func TestMarshalFast(t *testing.T) {
 	type testElem struct {
@@ -176,7 +174,7 @@ func TestMarshalFast(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run("", func(t *testing.T) {
 			input := []interface{}{tt.value}
-			schemaType := reflect.Zero(reflect.PtrTo(reflect.TypeOf(tt.value))).Interface()
+			schemaType := reflect.Zero(reflect.PointerTo(reflect.TypeOf(tt.value))).Interface()
 			sch, err := schema.NewSchemaHandlerFromStruct(schemaType)
 			if err != nil {
 				t.Fatalf("%v", err)
