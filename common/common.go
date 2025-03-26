@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
+	"github.com/apache/arrow-go/v18/arrow"
+	"github.com/apache/arrow-go/v18/arrow/array"
 
 	"github.com/xitongsys/parquet-go/parquet"
 )
@@ -304,7 +304,7 @@ func NewSchemaElementFromTagMap(info *Tag) (*parquet.SchemaElement, error) {
 		schema.Type = &t
 
 	} else {
-		return nil, fmt.Errorf("type " + info.Type + ": " + err.Error())
+		return nil, fmt.Errorf("type %s: %s", info.Type, err.Error())
 	}
 
 	if ct, err := parquet.ConvertedTypeFromString(info.ConvertedType); err == nil {
@@ -419,7 +419,7 @@ func NewLogicalTypeFromFieldsMap(mp map[string]string) (*parquet.LogicalType, er
 			logicalType.UUID = parquet.NewUUIDType()
 
 		default:
-			return nil, fmt.Errorf("unknow logicaltype: " + val)
+			return nil, fmt.Errorf("unknow logicaltype: %s", val)
 		}
 
 		return logicalType, nil
@@ -528,7 +528,6 @@ func DeepCopy(src, dst interface{}) {
 	var buf bytes.Buffer
 	gob.NewEncoder(&buf).Encode(src)
 	gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
-	return
 }
 
 // Get key tag map for map
