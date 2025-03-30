@@ -3,7 +3,7 @@ module github.com/hangxie/parquet-go
 go 1.23.0
 
 require (
-	github.com/apache/arrow/go/v17 v17.0.0
+	github.com/apache/arrow-go/v18 v18.2.0
 	github.com/apache/thrift v0.21.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/goccy/go-reflect v1.2.0
