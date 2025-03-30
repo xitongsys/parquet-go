@@ -1,0 +1,8 @@
+name: Pull Request Build
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
