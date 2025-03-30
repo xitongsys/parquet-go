@@ -70,8 +70,9 @@ test: deps tools  ## Run unit tests
 	@set -euo pipefail ; \
 		cd $(BUILD_DIR)/test; \
 		CGO_ENABLED=1 go test -v -race -count 1 -trimpath \
-			-coverprofile=coverage.out $(CURDIR)/... \
+			-coverprofile=coverage.out.raw $(CURDIR)/... \
 			| tee go-test.output ; \
+		cat coverage.out.raw | egrep -v '/example/|/tool/' > coverage.out; \
 		go tool cover -html=coverage.out -o coverage.html ; \
 		go tool cover -func=coverage.out -o coverage.txt ; \
 		cat go-test.output | $(GOBIN)/go-junit-report > junit.xml ; \
