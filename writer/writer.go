@@ -428,14 +428,14 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 			firstRowIndex := int64(0)
 
 			for l := 0; l < pageCount; l++ {
-				if rowGroup.Chunks[k].Pages[l].Header.Type == parquet.PageType_DICTIONARY_PAGE {
+				page := rowGroup.Chunks[k].Pages[l]
+				if page.Header.Type == parquet.PageType_DICTIONARY_PAGE {
 					tmp := pw.Offset
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DictionaryPageOffset = &tmp
 				} else if rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset <= 0 {
 					rowGroup.Chunks[k].ChunkHeader.MetaData.DataPageOffset = pw.Offset
 				}
 
-				page := rowGroup.Chunks[k].Pages[l]
 				// only record DataPage
 				if page.Header.Type != parquet.PageType_DICTIONARY_PAGE {
 					if page.Header.DataPageHeader == nil && page.Header.DataPageHeaderV2 == nil {
@@ -469,14 +469,14 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 					pageLocation := parquet.NewPageLocation()
 					pageLocation.Offset = pw.Offset
 					pageLocation.FirstRowIndex = firstRowIndex
-					pageLocation.CompressedPageSize = page.Header.CompressedPageSize
+					pageLocation.CompressedPageSize = int32(len(page.RawData))
 
 					offsetIndex.PageLocations = append(offsetIndex.PageLocations, pageLocation)
 
 					firstRowIndex += int64(page.Header.DataPageHeader.NumValues)
 				}
 
-				data := rowGroup.Chunks[k].Pages[l].RawData
+				data := page.RawData
 				if _, err = pw.PFile.Write(data); err != nil {
 					return err
 				}
