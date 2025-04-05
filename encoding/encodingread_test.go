@@ -21,7 +21,12 @@ func TestReadPlainBOOLEAN(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res, _ := ReadPlainBOOLEAN(bytes.NewReader(WritePlainBOOLEAN(data)), uint64(len(data)))
+		buf, err := WritePlainBOOLEAN(data)
+		if err != nil {
+			t.Errorf("WritePlainBOOLEAN err, %v", err)
+			continue
+		}
+		res, _ := ReadPlainBOOLEAN(bytes.NewReader(buf), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainBOOLEAN err, expect %v, get %v", data, res)
 		}
@@ -71,7 +76,12 @@ func TestReadPlainBYTE_ARRAY(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res, _ := ReadPlainBYTE_ARRAY(bytes.NewReader(WritePlainBYTE_ARRAY(data)), uint64(len(data)))
+		buf, err := WritePlainBYTE_ARRAY(data)
+		if err != nil {
+			t.Errorf("WritePlainBYTE_ARRAY err, %v", err)
+			continue
+		}
+		res, _ := ReadPlainBYTE_ARRAY(bytes.NewReader(buf), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainBYTE_ARRAY err, %v", data)
 		}
@@ -85,7 +95,12 @@ func TestReadPlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res, _ := ReadPlainFIXED_LEN_BYTE_ARRAY(bytes.NewReader(WritePlainFIXED_LEN_BYTE_ARRAY(data)), uint64(len(data)), uint64(len(data[0].(string))))
+		buf, err := WritePlainFIXED_LEN_BYTE_ARRAY(data)
+		if err != nil {
+			t.Errorf("WritePlainFIXED_LEN_BYTE_ARRAY err, %v", err)
+			continue
+		}
+		res, _ := ReadPlainFIXED_LEN_BYTE_ARRAY(bytes.NewReader(buf), uint64(len(data)), uint64(len(data[0].(string))))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainFIXED_LEN_BYTE_ARRAY err, %v", data)
 		}
@@ -99,7 +114,12 @@ func TestReadPlainFLOAT(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res, _ := ReadPlainFLOAT(bytes.NewReader(WritePlainFLOAT(data)), uint64(len(data)))
+		buf, err := WritePlainFLOAT(data)
+		if err != nil {
+			t.Errorf("WritePlainFLOAT err, %v", err)
+			continue
+		}
+		res, _ := ReadPlainFLOAT(bytes.NewReader(buf), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainFLOAT err, %v", data)
 		}
@@ -113,7 +133,12 @@ func TestReadPlainDOUBLE(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res, _ := ReadPlainDOUBLE(bytes.NewReader(WritePlainDOUBLE(data)), uint64(len(data)))
+		buf, err := WritePlainDOUBLE(data)
+		if err != nil {
+			t.Errorf("WritePlainDOUBLE err, %v", err)
+			continue
+		}
+		res, _ := ReadPlainDOUBLE(bytes.NewReader(buf), uint64(len(data)))
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadPlainDOUBLE err, %v", data)
 		}
@@ -139,8 +164,12 @@ func TestReadRLEBitPackedHybrid(t *testing.T) {
 	}
 	for _, data := range testData {
 		maxVal := uint64(data[len(data)-1].(int64))
-
-		res, err := ReadRLEBitPackedHybrid(bytes.NewReader(WriteRLEBitPackedHybrid(data, int32(bits.Len64(maxVal)), parquet.Type_INT64)), uint64(bits.Len64(maxVal)), 0)
+		buf, err := WriteRLEBitPackedHybrid(data, int32(bits.Len64(maxVal)), parquet.Type_INT64)
+		if err != nil {
+			t.Errorf("WriteRLEBitPackedHybrid err, %v", err)
+			continue
+		}
+		res, err := ReadRLEBitPackedHybrid(bytes.NewReader(buf), uint64(bits.Len64(maxVal)), 0)
 		if fmt.Sprintf("%v", data) != fmt.Sprintf("%v", res) {
 			t.Errorf("ReadRLEBitpackedHybrid error, expect %v, get %v, err info:%v", data, res, err)
 		}

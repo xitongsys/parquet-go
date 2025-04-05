@@ -77,8 +77,10 @@ func TestWriteRLE(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := WriteRLE(data.nums, int32(bits.Len64(uint64(data.nums[len(data.nums)-1].(int64)))), parquet.Type_INT64)
-		if string(res) != string(data.expected) {
+		res, err := WriteRLE(data.nums, int32(bits.Len64(uint64(data.nums[len(data.nums)-1].(int64)))), parquet.Type_INT64)
+		if err != nil {
+			t.Errorf("WriteRLE error, expect %v, get %v", data.expected, err)
+		} else if string(res) != string(data.expected) {
 			t.Errorf("WriteRLE error, expect %v, get %v", data.expected, res)
 		}
 	}
@@ -113,8 +115,10 @@ func TestWritePlainBOOLEAN(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := WritePlainBOOLEAN(data.nums)
-		if string(res) != string(data.expected) {
+		res, err := WritePlainBOOLEAN(data.nums)
+		if err != nil {
+			t.Errorf("WritePlainBOOLEAN error, expect <nil>, get %v", err)
+		} else if string(res) != string(data.expected) {
 			t.Errorf("WritePlainBOOLEAN error, expect %v, get %v", data.expected, res)
 		}
 	}
@@ -131,8 +135,10 @@ func TestWritePlainINT32(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := WritePlainINT32(data.nums)
-		if string(res) != string(data.expected) {
+		res, err := WritePlainINT32(data.nums)
+		if err != nil {
+			t.Errorf("WritePlainINT32 error, expect %v, get %v", data.expected, err)
+		} else if string(res) != string(data.expected) {
 			t.Errorf("WritePlainINT32 error, expect %v, get %v", data.expected, res)
 		}
 	}
@@ -149,8 +155,10 @@ func TestWritePlainINT64(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := WritePlainINT64(data.nums)
-		if string(res) != string(data.expected) {
+		res, err := WritePlainINT64(data.nums)
+		if err != nil {
+			t.Errorf("WritePlainINT64 error, expect %v, get %v", data.expected, err)
+		} else if string(res) != string(data.expected) {
 			t.Errorf("WritePlainINT64 error, expect %v, get %v", data.expected, res)
 		}
 	}
@@ -192,8 +200,10 @@ func TestWritePlainBYTE_ARRAY(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := WritePlainBYTE_ARRAY(data.nums)
-		if string(res) != string(data.expected) {
+		res, err := WritePlainBYTE_ARRAY(data.nums)
+		if err != nil {
+			t.Errorf("WritePlainBYTE_ARRAY error, expect <nil>, get %v", err)
+		} else if string(res) != string(data.expected) {
 			t.Errorf("WritePlainBYTE_ARRAY error, expect %v, get %v", data.expected, res)
 		}
 	}
@@ -209,8 +219,10 @@ func TestWritePlainFIXED_LEN_BYTE_ARRAY(t *testing.T) {
 	}
 
 	for _, data := range testData {
-		res := WritePlainFIXED_LEN_BYTE_ARRAY(data.nums)
-		if string(res) != string(data.expected) {
+		res, err := WritePlainFIXED_LEN_BYTE_ARRAY(data.nums)
+		if err != nil {
+			t.Errorf("WritePlainFIXED_LEN_BYTE_ARRAY error, expect <nil>, get %v", err)
+		} else if string(res) != string(data.expected) {
 			t.Errorf("WritePlainFIXED_LEN_BYTE_ARRAY error, expect %v, get %v", data.expected, res)
 		}
 	}

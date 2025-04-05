@@ -16,7 +16,7 @@ type Chunk struct {
 }
 
 // Convert several pages to one chunk
-func PagesToChunk(pages []*Page) *Chunk {
+func PagesToChunk(pages []*Page) (*Chunk, error) {
 	ln := len(pages)
 	var numValues int64 = 0
 	var totalUncompressedSize int64 = 0
@@ -60,8 +60,14 @@ func PagesToChunk(pages []*Page) *Chunk {
 	metaData.Statistics = parquet.NewStatistics()
 
 	if !omitStats && maxVal != nil && minVal != nil {
-		tmpBufMax := encoding.WritePlain([]interface{}{maxVal}, *pT)
-		tmpBufMin := encoding.WritePlain([]interface{}{minVal}, *pT)
+		tmpBufMax, err := encoding.WritePlain([]interface{}{maxVal}, *pT)
+		if err != nil {
+			return nil, err
+		}
+		tmpBufMin, err := encoding.WritePlain([]interface{}{minVal}, *pT)
+		if err != nil {
+			return nil, err
+		}
 		if *pT == parquet.Type_BYTE_ARRAY {
 			tmpBufMax = tmpBufMax[4:]
 			tmpBufMin = tmpBufMin[4:]
@@ -77,13 +83,13 @@ func PagesToChunk(pages []*Page) *Chunk {
 	}
 
 	chunk.ChunkHeader.MetaData = metaData
-	return chunk
+	return chunk, nil
 }
 
 // Convert several pages to one chunk with dict page first
-func PagesToDictChunk(pages []*Page) *Chunk {
+func PagesToDictChunk(pages []*Page) (*Chunk, error) {
 	if len(pages) < 2 {
-		return nil
+		return nil, nil
 	}
 	var numValues int64 = 0
 	var totalUncompressedSize int64 = 0
@@ -129,8 +135,14 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	metaData.Statistics = parquet.NewStatistics()
 
 	if !omitStats && maxVal != nil && minVal != nil {
-		tmpBufMax := encoding.WritePlain([]interface{}{maxVal}, *pT)
-		tmpBufMin := encoding.WritePlain([]interface{}{minVal}, *pT)
+		tmpBufMax, err := encoding.WritePlain([]interface{}{maxVal}, *pT)
+		if err != nil {
+			return nil, err
+		}
+		tmpBufMin, err := encoding.WritePlain([]interface{}{minVal}, *pT)
+		if err != nil {
+			return nil, err
+		}
 		if *pT == parquet.Type_BYTE_ARRAY {
 			tmpBufMax = tmpBufMax[4:]
 			tmpBufMin = tmpBufMin[4:]
@@ -146,7 +158,7 @@ func PagesToDictChunk(pages []*Page) *Chunk {
 	}
 
 	chunk.ChunkHeader.MetaData = metaData
-	return chunk
+	return chunk, nil
 }
 
 // Decode a dict chunk

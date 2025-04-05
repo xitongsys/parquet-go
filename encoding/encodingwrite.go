@@ -3,6 +3,7 @@ package encoding
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"math"
 	"math/bits"
 	"reflect"
@@ -31,10 +32,10 @@ func ToInt64(nums []interface{}) []int64 { // convert bool/int values to int64 v
 	return res
 }
 
-func WritePlain(src []interface{}, pt parquet.Type) []byte {
+func WritePlain(src []interface{}, pt parquet.Type) ([]byte, error) {
 	ln := len(src)
 	if ln <= 0 {
-		return []byte{}
+		return []byte{}, nil
 	}
 
 	if pt == parquet.Type_BOOLEAN {
@@ -44,7 +45,7 @@ func WritePlain(src []interface{}, pt parquet.Type) []byte {
 	} else if pt == parquet.Type_INT64 {
 		return WritePlainINT64(src)
 	} else if pt == parquet.Type_INT96 {
-		return WritePlainINT96(src)
+		return WritePlainINT96(src), nil
 	} else if pt == parquet.Type_FLOAT {
 		return WritePlainFLOAT(src)
 	} else if pt == parquet.Type_DOUBLE {
@@ -54,32 +55,40 @@ func WritePlain(src []interface{}, pt parquet.Type) []byte {
 	} else if pt == parquet.Type_FIXED_LEN_BYTE_ARRAY {
 		return WritePlainFIXED_LEN_BYTE_ARRAY(src)
 	} else {
-		return []byte{}
+		return []byte{}, nil
 	}
 }
 
-func WritePlainBOOLEAN(nums []interface{}) []byte {
+func WritePlainBOOLEAN(nums []interface{}) ([]byte, error) {
 	ln := len(nums)
 	byteNum := (ln + 7) / 8
 	res := make([]byte, byteNum)
 	for i := 0; i < ln; i++ {
-		if nums[i].(bool) {
+		tmp, ok := nums[i].(bool)
+		if !ok {
+			return nil, fmt.Errorf("[%v] is not a bool", nums[i])
+		}
+		if tmp {
 			res[i/8] = res[i/8] | (1 << uint32(i%8))
 		}
 	}
-	return res
+	return res, nil
 }
 
-func WritePlainINT32(nums []interface{}) []byte {
+func WritePlainINT32(nums []interface{}) ([]byte, error) {
 	bufWriter := new(bytes.Buffer)
-	BinaryWriteINT32(bufWriter, nums)
-	return bufWriter.Bytes()
+	if err := BinaryWriteINT32(bufWriter, nums); err != nil {
+		return nil, err
+	}
+	return bufWriter.Bytes(), nil
 }
 
-func WritePlainINT64(nums []interface{}) []byte {
+func WritePlainINT64(nums []interface{}) ([]byte, error) {
 	bufWriter := new(bytes.Buffer)
-	BinaryWriteINT64(bufWriter, nums)
-	return bufWriter.Bytes()
+	if err := BinaryWriteINT64(bufWriter, nums); err != nil {
+		return nil, err
+	}
+	return bufWriter.Bytes(), nil
 }
 
 func WritePlainINT96(nums []interface{}) []byte {
@@ -90,19 +99,23 @@ func WritePlainINT96(nums []interface{}) []byte {
 	return bufWriter.Bytes()
 }
 
-func WritePlainFLOAT(nums []interface{}) []byte {
+func WritePlainFLOAT(nums []interface{}) ([]byte, error) {
 	bufWriter := new(bytes.Buffer)
-	BinaryWriteFLOAT32(bufWriter, nums)
-	return bufWriter.Bytes()
+	if err := BinaryWriteFLOAT32(bufWriter, nums); err != nil {
+		return nil, err
+	}
+	return bufWriter.Bytes(), nil
 }
 
-func WritePlainDOUBLE(nums []interface{}) []byte {
+func WritePlainDOUBLE(nums []interface{}) ([]byte, error) {
 	bufWriter := new(bytes.Buffer)
-	BinaryWriteFLOAT64(bufWriter, nums)
-	return bufWriter.Bytes()
+	if err := BinaryWriteFLOAT64(bufWriter, nums); err != nil {
+		return nil, err
+	}
+	return bufWriter.Bytes(), nil
 }
 
-func WritePlainBYTE_ARRAY(arrays []interface{}) []byte {
+func WritePlainBYTE_ARRAY(arrays []interface{}) ([]byte, error) {
 	bufLen := 0
 	for i := 0; i < len(arrays); i++ {
 		bufLen += 4 + len(arrays[i].(string))
@@ -111,22 +124,29 @@ func WritePlainBYTE_ARRAY(arrays []interface{}) []byte {
 	buf := make([]byte, bufLen)
 	pos := 0
 	for i := 0; i < len(arrays); i++ {
-		value := arrays[i].(string)
+		value, ok := arrays[i].(string)
+		if !ok {
+			return nil, fmt.Errorf("[%v] is not a string", arrays[i])
+		}
 		binary.LittleEndian.PutUint32(buf[pos:], uint32(len(value)))
 		pos += 4
 		copy(buf[pos:pos+len(value)], value)
 		pos += len(value)
 	}
-	return buf
+	return buf, nil
 }
 
-func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []interface{}) []byte {
+func WritePlainFIXED_LEN_BYTE_ARRAY(arrays []interface{}) ([]byte, error) {
 	bufWriter := new(bytes.Buffer)
 	cnt := len(arrays)
 	for i := 0; i < int(cnt); i++ {
-		bufWriter.WriteString(arrays[i].(string))
+		tmp, ok := arrays[i].(string)
+		if !ok {
+			return nil, fmt.Errorf("[%v] is not a string", arrays[i])
+		}
+		bufWriter.WriteString(tmp)
 	}
-	return bufWriter.Bytes()
+	return bufWriter.Bytes(), nil
 }
 
 func WriteUnsignedVarInt(num uint64) []byte {
@@ -146,7 +166,7 @@ func WriteUnsignedVarInt(num uint64) []byte {
 	return res
 }
 
-func WriteRLE(vals []interface{}, bitWidth int32, pt parquet.Type) []byte {
+func WriteRLE(vals []interface{}, bitWidth int32, pt parquet.Type) ([]byte, error) {
 	ln := len(vals)
 	i := 0
 	res := make([]byte, 0)
@@ -160,7 +180,10 @@ func WriteRLE(vals []interface{}, bitWidth int32, pt parquet.Type) []byte {
 		byteNum := (bitWidth + 7) / 8
 		headerBuf := WriteUnsignedVarInt(uint64(header))
 
-		valBuf := WritePlain([]interface{}{vals[i]}, pt)
+		valBuf, err := WritePlain([]interface{}{vals[i]}, pt)
+		if err != nil {
+			return nil, err
+		}
 
 		rleBuf := make([]byte, int64(len(headerBuf))+int64(byteNum))
 		copy(rleBuf[0:], headerBuf)
@@ -168,16 +191,22 @@ func WriteRLE(vals []interface{}, bitWidth int32, pt parquet.Type) []byte {
 		res = append(res, rleBuf...)
 		i = j
 	}
-	return res
+	return res, nil
 }
 
-func WriteRLEBitPackedHybrid(vals []interface{}, bitWidths int32, pt parquet.Type) []byte {
-	rleBuf := WriteRLE(vals, bitWidths, pt)
+func WriteRLEBitPackedHybrid(vals []interface{}, bitWidths int32, pt parquet.Type) ([]byte, error) {
+	rleBuf, err := WriteRLE(vals, bitWidths, pt)
+	if err != nil {
+		return nil, err
+	}
 	res := make([]byte, 0)
-	lenBuf := WritePlain([]interface{}{int32(len(rleBuf))}, parquet.Type_INT32)
+	lenBuf, err := WritePlain([]interface{}{int32(len(rleBuf))}, parquet.Type_INT32)
+	if err != nil {
+		return nil, err
+	}
 	res = append(res, lenBuf...)
 	res = append(res, rleBuf...)
-	return res
+	return res, nil
 }
 
 func WriteRLEInt32(vals []int32, bitWidth int32) []byte {
@@ -204,13 +233,16 @@ func WriteRLEInt32(vals []int32, bitWidth int32) []byte {
 	return res
 }
 
-func WriteRLEBitPackedHybridInt32(vals []int32, bitWidths int32) []byte {
+func WriteRLEBitPackedHybridInt32(vals []int32, bitWidths int32) ([]byte, error) {
 	rleBuf := WriteRLEInt32(vals, bitWidths)
 	res := make([]byte, 0)
-	lenBuf := WritePlain([]interface{}{int32(len(rleBuf))}, parquet.Type_INT32)
+	lenBuf, err := WritePlain([]interface{}{int32(len(rleBuf))}, parquet.Type_INT32)
+	if err != nil {
+		return nil, err
+	}
 	res = append(res, lenBuf...)
 	res = append(res, rleBuf...)
-	return res
+	return res, nil
 }
 
 func WriteBitPacked(vals []interface{}, bitWidth int64, ifHeader bool) []byte {

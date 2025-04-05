@@ -69,7 +69,7 @@ func NewDataPage() *Page {
 }
 
 // Convert a table to data pages
-func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func TableToDataPages(table *Table, pageSize int32, compressType parquet.CompressionCodec) ([]*Page, int64, error) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
@@ -127,13 +127,16 @@ func TableToDataPages(table *Table, pageSize int32, compressType parquet.Compres
 		page.Path = table.Path
 		page.Info = table.Info
 
-		page.DataPageCompress(compressType)
+		_, err := page.DataPageCompress(compressType)
+		if err != nil {
+			return nil, 0, err
+		}
 
 		totSize += int64(len(page.RawData))
 		res = append(res, page)
 		i = j
 	}
-	return res, totSize
+	return res, totSize, nil
 }
 
 // Decode dict page
@@ -165,7 +168,7 @@ func (page *Page) Decode(dictPage *Page) {
 }
 
 // Encoding values
-func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
+func (page *Page) EncodingValues(valuesBuf []interface{}) ([]byte, error) {
 	encodingMethod := parquet.Encoding_PLAIN
 	if page.Info.Encoding != 0 {
 		encodingMethod = page.Info.Encoding
@@ -175,20 +178,20 @@ func (page *Page) EncodingValues(valuesBuf []interface{}) []byte {
 		return encoding.WriteRLEBitPackedHybrid(valuesBuf, bitWidth, *page.Schema.Type)
 
 	} else if encodingMethod == parquet.Encoding_DELTA_BINARY_PACKED {
-		return encoding.WriteDelta(valuesBuf)
+		return encoding.WriteDelta(valuesBuf), nil
 	} else if encodingMethod == parquet.Encoding_DELTA_BYTE_ARRAY {
-		return encoding.WriteDeltaByteArray(valuesBuf)
+		return encoding.WriteDeltaByteArray(valuesBuf), nil
 	} else if encodingMethod == parquet.Encoding_DELTA_LENGTH_BYTE_ARRAY {
-		return encoding.WriteDeltaLengthByteArray(valuesBuf)
+		return encoding.WriteDeltaLengthByteArray(valuesBuf), nil
 	} else if encodingMethod == parquet.Encoding_BYTE_STREAM_SPLIT {
-		return encoding.WriteByteStreamSplit(valuesBuf)
+		return encoding.WriteByteStreamSplit(valuesBuf), nil
 	} else {
 		return encoding.WritePlain(valuesBuf, *page.Schema.Type)
 	}
 }
 
 // Compress the data page to parquet file
-func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte {
+func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) ([]byte, error) {
 	ln := len(page.DataTable.DefinitionLevels)
 
 	// values////////////////////////////////////////////
@@ -210,22 +213,31 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 		valuesBuf = page.DataTable.Values
 	}
 	// valuesRawBuf := encoding.WritePlain(valuesBuf)
-	valuesRawBuf := page.EncodingValues(valuesBuf)
+	valuesRawBuf, err := page.EncodingValues(valuesBuf)
+	if err != nil {
+		return nil, err
+	}
 
 	// definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
 	if page.DataTable.MaxDefinitionLevel > 0 {
-		definitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
+		definitionLevelBuf, err = encoding.WriteRLEBitPackedHybridInt32(
 			page.DataTable.DefinitionLevels,
 			int32(bits.Len32(uint32(page.DataTable.MaxDefinitionLevel))))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// repetitionLevel/////////////////////////////////
 	var repetitionLevelBuf []byte
 	if page.DataTable.MaxRepetitionLevel > 0 {
-		repetitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
+		repetitionLevelBuf, err = encoding.WriteRLEBitPackedHybridInt32(
 			page.DataTable.RepetitionLevels,
 			int32(bits.Len32(uint32(page.DataTable.MaxRepetitionLevel))))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
@@ -249,7 +261,10 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		tmpBuf, err := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		if err != nil {
+			return nil, err
+		}
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -257,7 +272,10 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 		page.Header.DataPageHeader.Statistics.MaxValue = tmpBuf
 	}
 	if page.MinVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		tmpBuf, err := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		if err != nil {
+			return nil, err
+		}
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -274,11 +292,11 @@ func (page *Page) DataPageCompress(compressType parquet.CompressionCodec) []byte
 	res := append(pageHeaderBuf, dataEncodeBuf...)
 	page.RawData = res
 
-	return res
+	return res, nil
 }
 
 // Compress data page v2 to parquet file
-func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []byte {
+func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) ([]byte, error) {
 	ln := len(page.DataTable.DefinitionLevels)
 
 	// values////////////////////////////////////////////
@@ -289,7 +307,10 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 		}
 	}
 	// valuesRawBuf := encoding.WritePlain(valuesBuf)
-	valuesRawBuf := page.EncodingValues(valuesBuf)
+	valuesRawBuf, err := page.EncodingValues(valuesBuf)
+	if err != nil {
+		return nil, err
+	}
 
 	// definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
@@ -298,9 +319,12 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 		for i := 0; i < ln; i++ {
 			numInterfaces[i] = int64(page.DataTable.DefinitionLevels[i])
 		}
-		definitionLevelBuf = encoding.WriteRLE(numInterfaces,
+		definitionLevelBuf, err = encoding.WriteRLE(numInterfaces,
 			int32(bits.Len32(uint32(page.DataTable.MaxDefinitionLevel))),
 			parquet.Type_INT64)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// repetitionLevel/////////////////////////////////
@@ -314,9 +338,12 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 				r0Num++
 			}
 		}
-		repetitionLevelBuf = encoding.WriteRLE(numInterfaces,
+		repetitionLevelBuf, err = encoding.WriteRLE(numInterfaces,
 			int32(bits.Len32(uint32(page.DataTable.MaxRepetitionLevel))),
 			parquet.Type_INT64)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var dataEncodeBuf []byte = compress.Compress(valuesRawBuf, compressType)
@@ -339,7 +366,10 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 
 	page.Header.DataPageHeaderV2.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		tmpBuf, err := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		if err != nil {
+			return nil, err
+		}
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -347,7 +377,10 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 		page.Header.DataPageHeaderV2.Statistics.MaxValue = tmpBuf
 	}
 	if page.MinVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		tmpBuf, err := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		if err != nil {
+			return nil, err
+		}
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -368,7 +401,7 @@ func (page *Page) DataPageV2Compress(compressType parquet.CompressionCodec) []by
 	res = append(res, dataEncodeBuf...)
 	page.RawData = res
 
-	return res
+	return res, nil
 }
 
 // This is a test function
@@ -447,13 +480,19 @@ func (p *Page) GetRLDLFromRawData(schemaHandler *schema.SchemaHandler) (int64, i
 
 		tmpBuf := make([]byte, 0)
 		if rll > 0 {
-			tmpBuf = encoding.WritePlainINT32([]interface{}{int32(rll)})
+			tmpBuf, err = encoding.WritePlainINT32([]interface{}{int32(rll)})
+			if err != nil {
+				return 0, 0, err
+			}
 			tmpBuf = append(tmpBuf, repetitionLevelsBuf...)
 		}
 		buf = append(buf, tmpBuf...)
 
 		if dll > 0 {
-			tmpBuf = encoding.WritePlainINT32([]interface{}{int32(dll)})
+			tmpBuf, err = encoding.WritePlainINT32([]interface{}{int32(dll)})
+			if err != nil {
+				return 0, 0, err
+			}
 			tmpBuf = append(tmpBuf, definitionLevelsBuf...)
 		}
 		buf = append(buf, tmpBuf...)
@@ -752,13 +791,19 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 
 		tmpBuf := make([]byte, 0)
 		if rll > 0 {
-			tmpBuf = encoding.WritePlainINT32([]interface{}{int32(rll)})
+			tmpBuf, err = encoding.WritePlainINT32([]interface{}{int32(rll)})
+			if err != nil {
+				return nil, 0, 0, err
+			}
 			tmpBuf = append(tmpBuf, repetitionLevelsBuf...)
 		}
 		buf = append(buf, tmpBuf...)
 
 		if dll > 0 {
-			tmpBuf = encoding.WritePlainINT32([]interface{}{int32(dll)})
+			tmpBuf, err = encoding.WritePlainINT32([]interface{}{int32(dll)})
+			if err != nil {
+				return nil, 0, 0, err
+			}
 			tmpBuf = append(tmpBuf, definitionLevelsBuf...)
 		}
 		buf = append(buf, tmpBuf...)

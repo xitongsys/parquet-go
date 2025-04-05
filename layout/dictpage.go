@@ -25,7 +25,7 @@ func NewDictRec(pT parquet.Type) *DictRecType {
 	return res
 }
 
-func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parquet.CompressionCodec) (*Page, int64) {
+func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parquet.CompressionCodec) (*Page, int64, error) {
 	var totSize int64 = 0
 
 	page := NewDataPage()
@@ -41,14 +41,19 @@ func DictRecToDictPage(dictRec *DictRecType, pageSize int32, compressType parque
 	}
 	page.CompressType = compressType
 
-	page.DictPageCompress(compressType, dictRec.Type)
+	if _, err := page.DictPageCompress(compressType, dictRec.Type); err != nil {
+		return nil, 0, err
+	}
 	totSize += int64(len(page.RawData))
-	return page, totSize
+	return page, totSize, nil
 }
 
 // Compress the dict page to parquet file
-func (page *Page) DictPageCompress(compressType parquet.CompressionCodec, pT parquet.Type) []byte {
-	dataBuf := encoding.WritePlain(page.DataTable.Values, pT)
+func (page *Page) DictPageCompress(compressType parquet.CompressionCodec, pT parquet.Type) ([]byte, error) {
+	dataBuf, err := encoding.WritePlain(page.DataTable.Values, pT)
+	if err != nil {
+		return nil, err
+	}
 	var dataEncodeBuf []byte = compress.Compress(dataBuf, compressType)
 
 	// pageHeader/////////////////////////////////////
@@ -68,11 +73,11 @@ func (page *Page) DictPageCompress(compressType parquet.CompressionCodec, pT par
 	res = append(res, pageHeaderBuf...)
 	res = append(res, dataEncodeBuf...)
 	page.RawData = res
-	return res
+	return res, nil
 }
 
 // Convert a table to dict data pages
-func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize, bitWidth int32, compressType parquet.CompressionCodec) ([]*Page, int64) {
+func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize, bitWidth int32, compressType parquet.CompressionCodec) ([]*Page, int64, error) {
 	var totSize int64 = 0
 	totalLn := len(table.Values)
 	res := make([]*Page, 0)
@@ -143,35 +148,45 @@ func TableToDictDataPages(dictRec *DictRecType, table *Table, pageSize, bitWidth
 		page.Path = table.Path
 		page.Info = table.Info
 
-		page.DictDataPageCompress(compressType, bitWidth, values)
+		_, err := page.DictDataPageCompress(compressType, bitWidth, values)
+		if err != nil {
+			return nil, 0, err
+		}
 
 		totSize += int64(len(page.RawData))
 		res = append(res, page)
 		i = j
 	}
-	return res, totSize
+	return res, totSize, nil
 }
 
 // Compress the data page to parquet file
-func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bitWidth int32, values []int32) []byte {
+func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bitWidth int32, values []int32) ([]byte, error) {
 	// values////////////////////////////////////////////
 	valuesRawBuf := []byte{byte(bitWidth)}
 	valuesRawBuf = append(valuesRawBuf, encoding.WriteRLEInt32(values, bitWidth)...)
 
 	// definitionLevel//////////////////////////////////
 	var definitionLevelBuf []byte
+	var err error
 	if page.DataTable.MaxDefinitionLevel > 0 {
-		definitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
+		definitionLevelBuf, err = encoding.WriteRLEBitPackedHybridInt32(
 			page.DataTable.DefinitionLevels,
 			int32(bits.Len32(uint32(page.DataTable.MaxDefinitionLevel))))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// repetitionLevel/////////////////////////////////
 	var repetitionLevelBuf []byte
 	if page.DataTable.MaxRepetitionLevel > 0 {
-		repetitionLevelBuf = encoding.WriteRLEBitPackedHybridInt32(
+		repetitionLevelBuf, err = encoding.WriteRLEBitPackedHybridInt32(
 			page.DataTable.RepetitionLevels,
 			int32(bits.Len32(uint32(page.DataTable.MaxRepetitionLevel))))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// dataBuf = repetitionBuf + definitionBuf + valuesRawBuf
@@ -195,7 +210,10 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 
 	page.Header.DataPageHeader.Statistics = parquet.NewStatistics()
 	if page.MaxVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		tmpBuf, err := encoding.WritePlain([]interface{}{page.MaxVal}, *page.Schema.Type)
+		if err != nil {
+			return nil, err
+		}
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -203,7 +221,10 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 		page.Header.DataPageHeader.Statistics.MaxValue = tmpBuf
 	}
 	if page.MinVal != nil {
-		tmpBuf := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		tmpBuf, err := encoding.WritePlain([]interface{}{page.MinVal}, *page.Schema.Type)
+		if err != nil {
+			return nil, err
+		}
 		if *page.Schema.Type == parquet.Type_BYTE_ARRAY {
 			tmpBuf = tmpBuf[4:]
 		}
@@ -222,5 +243,5 @@ func (page *Page) DictDataPageCompress(compressType parquet.CompressionCodec, bi
 	res = append(res, dataEncodeBuf...)
 	page.RawData = res
 
-	return res
+	return res, nil
 }

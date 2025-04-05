@@ -283,21 +283,7 @@ func (pw *ParquetWriter) flushObjs() error {
 
 		wg.Add(1)
 		go func(b, e int, index int64) {
-			defer func() {
-				wg.Done()
-				if r := recover(); r != nil {
-					lock.Lock()
-					switch x := r.(type) {
-					case string:
-						errs[index] = errors.New(x)
-					case error:
-						errs[index] = x
-					default:
-						errs[index] = errors.New("unknown error")
-					}
-					lock.Unlock()
-				}
-			}()
+			defer wg.Done()
 
 			if e <= b {
 				return
@@ -318,12 +304,18 @@ func (pw *ParquetWriter) flushObjs() error {
 							if _, ok := pw.DictRecs[name]; !ok {
 								pw.DictRecs[name] = layout.NewDictRec(*table.Schema.Type)
 							}
-							pagesMapList[index][name], _ = layout.TableToDictDataPages(pw.DictRecs[name],
-								table, int32(pw.PageSize), 32, pw.CompressionType)
+							pagesMapList[index][name], _, err = layout.TableToDictDataPages(pw.DictRecs[name], table, int32(pw.PageSize), 32, pw.CompressionType)
+							if err != nil {
+								errs[index] = err
+							}
 						}()
 					} else {
-						pagesMapList[index][name], _ = layout.TableToDataPages(table, int32(pw.PageSize),
-							pw.CompressionType)
+						lock.Lock()
+						pagesMapList[index][name], _, err = layout.TableToDataPages(table, int32(pw.PageSize), pw.CompressionType)
+						if err != nil {
+							errs[index] = err
+						}
+						lock.Unlock()
 					}
 				}
 			} else {
@@ -374,11 +366,20 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 		chunkMap := make(map[string]*layout.Chunk)
 		for name, pages := range pw.PagesMapBuf {
 			if len(pages) > 0 && (pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY || pages[0].Info.Encoding == parquet.Encoding_RLE_DICTIONARY) {
-				dictPage, _ := layout.DictRecToDictPage(pw.DictRecs[name], int32(pw.PageSize), pw.CompressionType)
+				dictPage, _, err := layout.DictRecToDictPage(pw.DictRecs[name], int32(pw.PageSize), pw.CompressionType)
+				if err != nil {
+					return err
+				}
 				tmp := append([]*layout.Page{dictPage}, pages...)
-				chunkMap[name] = layout.PagesToDictChunk(tmp)
+				chunkMap[name], err = layout.PagesToDictChunk(tmp)
+				if err != nil {
+					return err
+				}
 			} else {
-				chunkMap[name] = layout.PagesToChunk(pages)
+				chunkMap[name], err = layout.PagesToChunk(pages)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
