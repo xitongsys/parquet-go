@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/hangxie/parquet-go-source/local"
-	"github.com/hangxie/parquet-go-source/s3"
 	"github.com/hangxie/parquet-go/reader"
 	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/source/local"
+	"github.com/hangxie/parquet-go/source/s3"
 	"github.com/hangxie/parquet-go/tool/parquet-tools/schematool"
 	"github.com/hangxie/parquet-go/tool/parquet-tools/sizetool"
 )

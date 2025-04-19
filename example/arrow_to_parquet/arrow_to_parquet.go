@@ -9,8 +9,8 @@ import (
 	"github.com/apache/arrow-go/v18/arrow/array"
 	"github.com/apache/arrow-go/v18/arrow/memory"
 
-	"github.com/hangxie/parquet-go-source/local"
 	"github.com/hangxie/parquet-go/reader"
+	"github.com/hangxie/parquet-go/source/local"
 	"github.com/hangxie/parquet-go/writer"
 )
 

@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/hangxie/parquet-go-source/local"
 	"github.com/hangxie/parquet-go/reader"
+	"github.com/hangxie/parquet-go/source/local"
 	"github.com/hangxie/parquet-go/types"
 	"github.com/hangxie/parquet-go/writer"
 )

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hangxie/parquet-go/writer"
 
-	"github.com/hangxie/parquet-go-source/gcs"
+	"github.com/hangxie/parquet-go/source/gcs"
 )
 
 func main() {

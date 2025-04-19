@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hangxie/parquet-go-source/local"
 	"github.com/hangxie/parquet-go/reader"
+	"github.com/hangxie/parquet-go/source/local"
 	"github.com/hangxie/parquet-go/writer"
 )
 

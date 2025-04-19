@@ -8,7 +8,7 @@ import (
 	"github.com/hangxie/parquet-go/parquet"
 	"github.com/hangxie/parquet-go/writer"
 
-	"github.com/hangxie/parquet-go-source/writerfile"
+	"github.com/hangxie/parquet-go/source/writerfile"
 )
 
 type Student struct {

@@ -10,11 +10,11 @@ import (
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hangxie/parquet-go-source/buffer"
-	"github.com/hangxie/parquet-go-source/writerfile"
 	"github.com/hangxie/parquet-go/parquet"
 	"github.com/hangxie/parquet-go/reader"
 	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/source/buffer"
+	"github.com/hangxie/parquet-go/source/writerfile"
 )
 
 // TestNullCountsFromColumnIndex tests that NullCounts is correctly set in the ColumnIndex.

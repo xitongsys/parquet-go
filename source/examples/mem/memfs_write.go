@@ -11,8 +11,8 @@ import (
 	"github.com/hangxie/parquet-go/reader"
 	"github.com/hangxie/parquet-go/writer"
 
-	"github.com/hangxie/parquet-go-source/local"
-	"github.com/hangxie/parquet-go-source/mem"
+	"github.com/hangxie/parquet-go/source/local"
+	"github.com/hangxie/parquet-go/source/mem"
 )
 
 type Student struct {

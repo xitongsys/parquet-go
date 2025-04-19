@@ -6,7 +6,7 @@ import (
 	"github.com/hangxie/parquet-go/reader"
 	"github.com/hangxie/parquet-go/writer"
 
-	"github.com/hangxie/parquet-go-source/hdfs"
+	"github.com/hangxie/parquet-go/source/hdfs"
 )
 
 type Student struct {
