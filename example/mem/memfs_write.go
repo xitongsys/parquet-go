@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -29,14 +28,14 @@ func main() {
 	// NOTE: closer function can be nil, no action will be
 	// run when the writer is closed.
 	fw, err := mem.NewMemFileWriter("flat.parquet.snappy", func(name string, r io.Reader) error {
-		dat, err := ioutil.ReadAll(r)
+		dat, err := io.ReadAll(r)
 		if err != nil {
 			log.Printf("error reading data: %v", err)
 			os.Exit(1)
 		}
 
 		// write file to disk
-		if err := ioutil.WriteFile(name, dat, 0o644); err != nil {
+		if err := os.WriteFile(name, dat, 0o644); err != nil {
 			log.Printf("error writing result file: %v", err)
 		}
 		return nil
@@ -72,8 +71,7 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	fw.Close()
-	// os.Exit(1)
+	_ = fw.Close()
 
 	///read
 	fr, err := local.NewLocalFileReader("flat.parquet.snappy")
@@ -96,7 +94,7 @@ func main() {
 		log.Println(stus)
 	}
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 
 	// NOTE: you can access the underlying MemFs using ParquetFile.GetMemFileFs()
 	// EXAMPLE: this will delete the file we created from the in-memory file system

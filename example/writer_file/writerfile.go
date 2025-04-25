@@ -53,6 +53,6 @@ func main() {
 		return
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 	log.Println(buf)
 }

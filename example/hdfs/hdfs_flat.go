@@ -48,7 +48,7 @@ func main() {
 		log.Println("WriteStop err", err)
 	}
 	log.Println("Write Finished")
-	fw.Close()
+	_ = fw.Close()
 
 	///read
 	fr, err := hdfs.NewHdfsFileReader([]string{"localhost:9000"}, "", "/flat.parquet")
@@ -70,5 +70,5 @@ func main() {
 		log.Println(stus)
 	}
 	pr.ReadStop()
-	fr.Close()
+	_ = fr.Close()
 }

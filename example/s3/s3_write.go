@@ -10,7 +10,7 @@ import (
 	"github.com/hangxie/parquet-go/source/s3"
 )
 
-type student struct {
+type Student struct {
 	Name   string  `parquet:"name=name, type=UTF8"`
 	Age    int32   `parquet:"name=age, type=INT32"`
 	ID     int64   `parquet:"name=id, type=INT64"`
@@ -19,7 +19,7 @@ type student struct {
 }
 
 // s3Example provides a sample write and read using the S3 Parquet File
-func s3Example() {
+func S3Example() {
 	ctx := context.Background()
 	bucket := "my-bucket"
 	key := "test/foobar.parquet"
@@ -32,14 +32,14 @@ func s3Example() {
 		return
 	}
 	// create new parquet file writer
-	pw, err := writer.NewParquetWriter(fw, new(student), 4)
+	pw, err := writer.NewParquetWriter(fw, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet writer", err)
 		return
 	}
 	// write 100 student records to the parquet file
 	for i := 0; i < num; i++ {
-		stu := student{
+		stu := Student{
 			Name:   "StudentName",
 			Age:    int32(20 + i%5),
 			ID:     int64(i),
@@ -70,7 +70,7 @@ func s3Example() {
 	}
 
 	// create new parquet file reader
-	pr, err := reader.NewParquetReader(fr, new(student), 4)
+	pr, err := reader.NewParquetReader(fr, new(Student), 4)
 	if err != nil {
 		log.Println("Can't create parquet reader", err)
 		return
@@ -80,10 +80,10 @@ func s3Example() {
 	num = int(pr.GetNumRows())
 	for i := 0; i < num/10; i++ {
 		if i%2 == 0 {
-			pr.SkipRows(10) // skip 10 rows
+			_ = pr.SkipRows(10) // skip 10 rows
 			continue
 		}
-		stus := make([]student, 10) // read 10 rows
+		stus := make([]Student, 10) // read 10 rows
 		if err = pr.Read(&stus); err != nil {
 			log.Println("Read error", err)
 		}

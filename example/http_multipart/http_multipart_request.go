@@ -29,7 +29,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// create sample request
 	body := &bytes.Buffer{}
@@ -38,7 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = io.Copy(part, file)
+	_, _ = io.Copy(part, file)
 	err = writer.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -52,7 +54,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer reqFile.Close()
+	defer func() {
+		_ = reqFile.Close()
+	}()
 
 	// create readers
 	fr := source.NewMultipartFileWrapper(fileHeader, reqFile)
