@@ -303,7 +303,7 @@ func NewSchemaElementFromTagMap(info *Tag) (*parquet.SchemaElement, error) {
 	if t, err := parquet.TypeFromString(info.Type); err == nil {
 		schema.Type = &t
 	} else {
-		return nil, fmt.Errorf("type " + info.Type + ": " + err.Error())
+		return nil, fmt.Errorf("field [%s] with type [%s]: %s", info.InName, info.Type, err.Error())
 	}
 
 	if ct, err := parquet.ConvertedTypeFromString(info.ConvertedType); err == nil {
