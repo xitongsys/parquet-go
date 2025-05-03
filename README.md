@@ -158,7 +158,7 @@ There are three repetition types in Parquet: REQUIRED, OPTIONAL, REPEATED.
 	Decimal5 int32 `parquet:"name=decimal5, type=INT32, logicaltype=DECIMAL, logicaltype.precision=10, logicaltype.scale=2"`
 
 	Map      map[string]int32 `parquet:"name=map, type=MAP, convertedtype=MAP, keytype=BYTE_ARRAY, keyconvertedtype=UTF8, valuetype=INT32"`
-	List     []string         `parquet:"name=list, type=MAP, convertedtype=LIST, valuetype=BYTE_ARRAY, valueconvertedtype=UTF8"`
+	List     []string         `parquet:"name=list, type=LIST, convertedtype=LIST, valuetype=BYTE_ARRAY, valueconvertedtype=UTF8"`
 	Repeated []int32          `parquet:"name=repeated, type=INT32, repetitiontype=REPEATED"`
 ```
 
