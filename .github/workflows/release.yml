@@ -1,0 +1,40 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+  github-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Generate change log
+        run: |
+          VERSION=$(git describe --tags --always)
+          PREV_VERSION=$(git describe --abbrev=0 --tags ${VERSION}^)
+          (
+              echo "Changes since [${PREV_VERSION}](https://github.com/hangxie/parquet-go/releases/tag/${PREV_VERSION}):"
+              echo
+              git log --pretty=format:"* %h %s" ${VERSION}...${PREV_VERSION}
+              echo
+          ) > CHANGELOG
+          echo ${VERSION} > VERSION
+      - name: Push to github
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo gh release create $(cat ./VERSION) \
+              --title $(cat ./VERSION) \
+              --notes-file ./CHANGELOG
+      - name: Update coverage badge
+        uses: ncruces/go-coverage-report@main
+        with:
+          report: true
+          chart: true
+          amend: true
