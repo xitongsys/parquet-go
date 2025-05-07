@@ -29,7 +29,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo gh release create $(cat ./VERSION) \
+          gh release create $(cat ./VERSION) \
               --title $(cat ./VERSION) \
               --notes-file ./CHANGELOG
       - name: Update coverage badge
