@@ -69,7 +69,7 @@ func (sh *SchemaHandler) GetTypes() []reflect.Type {
 						fields = append(fields, reflect.StructField{
 							Name: sh.Infos[ci].InName,
 							Type: elementTypes[ci],
-							Tag:  reflect.StructTag(`json:"` + sh.Infos[ci].InName + `"`),
+							Tag:  reflect.StructTag(`json:"` + sh.Infos[ci].ExName + `"`),
 						})
 					}
 
