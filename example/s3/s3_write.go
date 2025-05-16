@@ -4,10 +4,13 @@ import (
 	"context"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+
 	"github.com/hangxie/parquet-go/reader"
 	"github.com/hangxie/parquet-go/writer"
 
-	"github.com/hangxie/parquet-go/source/s3"
+	"github.com/hangxie/parquet-go/source/s3v2"
 )
 
 type Student struct {
@@ -26,7 +29,8 @@ func S3Example() {
 	num := 100
 
 	// create new S3 file writer
-	fw, err := s3.NewS3FileWriter(ctx, bucket, key, "bucket-owner-full-control", nil)
+	s3client := s3.NewFromConfig(aws.Config{})
+	fw, err := s3v2.NewS3FileWriterWithClient(ctx, s3client, bucket, key, nil)
 	if err != nil {
 		log.Println("Can't open file", err)
 		return
@@ -63,7 +67,7 @@ func S3Example() {
 
 	// read the written parquet file
 	// create new S3 file reader
-	fr, err := s3.NewS3FileReader(ctx, bucket, key)
+	fr, err := s3v2.NewS3FileReaderWithClient(ctx, s3client, bucket, key)
 	if err != nil {
 		log.Println("Can't open file")
 		return

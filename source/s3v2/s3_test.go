@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/golang/mock/gomock"
 
 	"github.com/hangxie/parquet-go/source/s3v2/mocks"
@@ -401,7 +400,7 @@ func TestOpenReadFileSizeError(t *testing.T) {
 	ctx := context.Background()
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().HeadObject(ctx, gomock.Any(), gomock.Any()).
-		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput, arg2 ...request.Option) (*s3.HeadObjectOutput, error) {
+		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput, arg2 ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
 			if *hoi.Bucket != bucket {
 				t.Errorf("expected bucket %q but got %q", bucket, *hoi.Bucket)
 			}
@@ -437,7 +436,7 @@ func TestOpenRead(t *testing.T) {
 	ctx := context.Background()
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().HeadObject(ctx, gomock.Any(), gomock.Any()).
-		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput, arg2 ...request.Option) (*s3.HeadObjectOutput, error) {
+		DoAndReturn(func(_ context.Context, hoi *s3.HeadObjectInput, arg2 ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
 			if *hoi.Bucket != bucket {
 				t.Errorf("expected bucket %q but got %q", bucket, *hoi.Bucket)
 			}
