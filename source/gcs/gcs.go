@@ -60,12 +60,18 @@ func NewGcsFileWriterWithClient(ctx context.Context, client *storage.Client, pro
 
 // NewGcsFileReader will create a new GCS file reader.
 func NewGcsFileReader(ctx context.Context, projectID, bucketName, name string) (*File, error) {
+	// according to https://github.com/googleapis/google-cloud-go/blob/main/storage/storage.go#L103, default generation is -1
+	return NewGcsFileReaderWithGeneration(ctx, projectID, bucketName, name, -1)
+}
+
+// NewGcsFileReaderWithGeneration will create a new GCS file reader for the specific generation.
+func NewGcsFileReaderWithGeneration(ctx context.Context, projectID, bucketName, name string, generation int64) (*File, error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storage client: %w", err)
 	}
 
-	r, err := NewGcsFileReaderWithClient(ctx, client, projectID, bucketName, name)
+	r, err := NewGcsFileReaderWithClientAndGeneration(ctx, client, projectID, bucketName, name, generation)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +82,15 @@ func NewGcsFileReader(ctx context.Context, projectID, bucketName, name string) (
 	return r, nil
 }
 
-// NewGcsFileReader will create a new GCS file reader with the passed client.
+// NewGcsFileReaderWithClient will create a new GCS file reader with the passed client.
 func NewGcsFileReaderWithClient(ctx context.Context, client *storage.Client, projectID, bucketName, name string) (*File, error) {
-	obj := client.Bucket(bucketName).Object(name)
+	// according to https://github.com/googleapis/google-cloud-go/blob/main/storage/storage.go#L103, default generation is -1
+	return NewGcsFileReaderWithClientAndGeneration(ctx, client, projectID, bucketName, name, -1)
+}
+
+// NewGcsFileReaderWithClientAndGeneration will create a new GCS file reader with the passed client for the specific generation.
+func NewGcsFileReaderWithClientAndGeneration(ctx context.Context, client *storage.Client, projectID, bucketName, name string, generation int64) (*File, error) {
+	obj := client.Bucket(bucketName).Object(name).Generation(generation)
 
 	reader, err := gcsobj.NewReader(ctx, obj)
 	if err != nil {
