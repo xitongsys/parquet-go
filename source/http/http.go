@@ -4,7 +4,7 @@ import (
 	"errors"
 	"mime/multipart"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type MultipartFileWrapper struct {
@@ -12,16 +12,16 @@ type MultipartFileWrapper struct {
 	F  multipart.File
 }
 
-func NewMultipartFileWrapper(fh *multipart.FileHeader, f multipart.File) source.ParquetFile {
+func NewMultipartFileWrapper(fh *multipart.FileHeader, f multipart.File) source.ParquetFileReader {
 	return &MultipartFileWrapper{FH: fh, F: f}
 }
 
-func (mfw *MultipartFileWrapper) Create(_ string) (source.ParquetFile, error) {
+func (mfw *MultipartFileWrapper) Create(_ string) (source.ParquetFileReader, error) {
 	return nil, errors.New("cannot create a new multipart file")
 }
 
 // this method is called multiple times on one file to open parallel readers
-func (mfw *MultipartFileWrapper) Open(_ string) (source.ParquetFile, error) {
+func (mfw *MultipartFileWrapper) Open(_ string) (source.ParquetFileReader, error) {
 	file, err := mfw.FH.Open()
 	if err != nil {
 		return nil, err

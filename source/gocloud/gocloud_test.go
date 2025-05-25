@@ -133,7 +133,7 @@ func TestWrite(t *testing.T) {
 	assert.Equal(t, testData, data)
 
 	// Opening an existing blob and writing to it replaces the contents
-	bf, err = NewBlobReader(ctx, b, key)
+	bf, err = NewBlobWriter(ctx, b, key)
 	assert.NoError(t, err)
 	testOverwrite := []byte("overwritten")
 	n, err = bf.Write(testOverwrite)

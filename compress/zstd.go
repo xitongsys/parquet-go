@@ -6,7 +6,7 @@ package compress
 import (
 	"github.com/klauspost/compress/zstd"
 
-	"github.com/hangxie/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/v2/parquet"
 )
 
 func init() {

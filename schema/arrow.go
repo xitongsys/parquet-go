@@ -5,8 +5,8 @@ import (
 
 	"github.com/apache/arrow-go/v18/arrow"
 
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/parquet"
 )
 
 // Schema metadata used to parse the native and converted types and

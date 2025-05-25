@@ -10,9 +10,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hangxie/parquet-go/reader"
+	"github.com/hangxie/parquet-go/v2/reader"
 
-	source "github.com/hangxie/parquet-go/source/http"
+	source "github.com/hangxie/parquet-go/v2/source/http"
 )
 
 type Student struct {

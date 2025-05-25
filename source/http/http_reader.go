@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type HttpReader struct {
@@ -34,7 +34,7 @@ func SetDefaultClient(client *http.Client) {
 	defaultClient = client
 }
 
-func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHeaders map[string]string) (source.ParquetFile, error) {
+func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHeaders map[string]string) (source.ParquetFileReader, error) {
 	var client *http.Client
 	if defaultClient != nil {
 		client = defaultClient
@@ -90,11 +90,11 @@ func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHea
 	}, nil
 }
 
-func (r *HttpReader) Create(_ string) (source.ParquetFile, error) {
+func (r *HttpReader) Create(_ string) (source.ParquetFileReader, error) {
 	return nil, fmt.Errorf("HttpReader does not support Create()")
 }
 
-func (r *HttpReader) Open(_ string) (source.ParquetFile, error) {
+func (r *HttpReader) Open(_ string) (source.ParquetFileReader, error) {
 	return NewHttpReader(
 		r.url,
 		r.dedicatedTransport,

@@ -10,11 +10,11 @@ import (
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/reader"
-	"github.com/hangxie/parquet-go/source"
-	"github.com/hangxie/parquet-go/source/buffer"
-	"github.com/hangxie/parquet-go/source/writerfile"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/reader"
+	"github.com/hangxie/parquet-go/v2/source"
+	"github.com/hangxie/parquet-go/v2/source/buffer"
+	"github.com/hangxie/parquet-go/v2/source/writerfile"
 )
 
 // TestNullCountsFromColumnIndex tests that NullCounts is correctly set in the ColumnIndex.
@@ -124,7 +124,7 @@ func TestAllNullCountsFromColumnIndex(t *testing.T) {
 	assert.Equal(t, []int64{6}, colIdx.GetNullCounts())
 }
 
-func readColumnIndex(pf source.ParquetFile, offset int64) (*parquet.ColumnIndex, error) {
+func readColumnIndex(pf source.ParquetFileReader, offset int64) (*parquet.ColumnIndex, error) {
 	colIdx := parquet.NewColumnIndex()
 	tpf := thrift.NewTCompactProtocolFactoryConf(nil)
 	triftReader := source.ConvertToThriftReader(pf, offset)
@@ -221,16 +221,16 @@ func TestDoubleWriteStop(t *testing.T) {
 
 var errWrite = errors.New("test error")
 
-type invalidFile struct {
-	source.ParquetFile
+type invalidFileWriter struct {
+	source.ParquetFileWriter
 }
 
-func (m *invalidFile) Write(data []byte) (n int, err error) {
+func (m *invalidFileWriter) Write(data []byte) (n int, err error) {
 	return 0, errWrite
 }
 
 func TestNewWriterWithInvaidFile(t *testing.T) {
-	pw, err := NewParquetWriter(&invalidFile{}, new(test), 1)
+	pw, err := NewParquetWriter(&invalidFileWriter{}, new(test), 1)
 	assert.Nil(t, pw)
 	assert.ErrorIs(t, err, errWrite)
 }

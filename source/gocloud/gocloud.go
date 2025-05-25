@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"gocloud.dev/blob"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type blobFile struct {
@@ -20,7 +20,7 @@ type blobFile struct {
 	offset int64
 }
 
-func NewBlobWriter(ctx context.Context, b *blob.Bucket, name string) (source.ParquetFile, error) {
+func NewBlobWriter(ctx context.Context, b *blob.Bucket, name string) (source.ParquetFileWriter, error) {
 	bf := &blobFile{
 		ctx:    ctx,
 		bucket: b,
@@ -29,7 +29,7 @@ func NewBlobWriter(ctx context.Context, b *blob.Bucket, name string) (source.Par
 	return bf.Create(name)
 }
 
-func NewBlobReader(ctx context.Context, b *blob.Bucket, name string) (source.ParquetFile, error) {
+func NewBlobReader(ctx context.Context, b *blob.Bucket, name string) (source.ParquetFileReader, error) {
 	bf := &blobFile{
 		ctx:    ctx,
 		bucket: b,
@@ -102,7 +102,7 @@ func (b *blobFile) Close() error {
 	return nil
 }
 
-func (b *blobFile) Create(name string) (source.ParquetFile, error) {
+func (b *blobFile) Create(name string) (source.ParquetFileWriter, error) {
 	if name == "" {
 		return nil, errors.New("Parquet File name cannot be empty")
 	}
@@ -123,7 +123,7 @@ func (b *blobFile) Create(name string) (source.ParquetFile, error) {
 	return bf, nil
 }
 
-func (b *blobFile) Open(name string) (source.ParquetFile, error) {
+func (b *blobFile) Open(name string) (source.ParquetFileReader, error) {
 	bf := &blobFile{
 		ctx:    b.ctx,
 		bucket: b.bucket,

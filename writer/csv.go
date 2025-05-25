@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/hangxie/parquet-go/layout"
-	"github.com/hangxie/parquet-go/marshal"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
-	"github.com/hangxie/parquet-go/source"
-	"github.com/hangxie/parquet-go/source/writerfile"
-	"github.com/hangxie/parquet-go/types"
+	"github.com/hangxie/parquet-go/v2/layout"
+	"github.com/hangxie/parquet-go/v2/marshal"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
+	"github.com/hangxie/parquet-go/v2/source"
+	"github.com/hangxie/parquet-go/v2/source/writerfile"
+	"github.com/hangxie/parquet-go/v2/types"
 )
 
 type CSVWriter struct {
@@ -23,7 +23,7 @@ func NewCSVWriterFromWriter(md []string, w io.Writer, np int64) (*CSVWriter, err
 }
 
 // Create CSV writer
-func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, error) {
+func NewCSVWriter(md []string, pfile source.ParquetFileWriter, np int64) (*CSVWriter, error) {
 	var err error
 	res := new(CSVWriter)
 	res.SchemaHandler, err = schema.NewSchemaHandlerFromMetadata(md)

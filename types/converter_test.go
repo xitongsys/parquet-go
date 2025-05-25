@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hangxie/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/v2/parquet"
 )
 
 func TestINT96(t *testing.T) {

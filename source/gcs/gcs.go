@@ -7,11 +7,11 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/bobg/gcsobj"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 // Compile time check that *File implement the source.ParquetFile interface.
-var _ source.ParquetFile = (*File)(nil)
+var _ source.ParquetFileReader = (*File)(nil)
 
 // File represents a File that can be read from or written to.
 type File struct {
@@ -112,7 +112,7 @@ func NewGcsFileReaderWithClientAndGeneration(ctx context.Context, client *storag
 // Open will create a new GCS file reader/writer and open the object named as
 // the passed named. If name is left empty the same object as currently opened
 // will be re-opened.
-func (g *File) Open(name string) (source.ParquetFile, error) {
+func (g *File) Open(name string) (source.ParquetFileReader, error) {
 	if name == "" {
 		name = g.FilePath
 	}
@@ -127,7 +127,7 @@ func (g *File) Open(name string) (source.ParquetFile, error) {
 // Create will create a new GCS file reader/writer and open the object named as
 // the passed named. If name is left empty the same object as currently opened
 // will be re-opened.
-func (g *File) Create(name string) (source.ParquetFile, error) {
+func (g *File) Create(name string) (source.ParquetFileWriter, error) {
 	if name == "" {
 		name = g.FilePath
 	}

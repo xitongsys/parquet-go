@@ -9,11 +9,11 @@ import (
 
 	"github.com/apache/thrift/lib/go/thrift"
 
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/compress"
-	"github.com/hangxie/parquet-go/encoding"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/compress"
+	"github.com/hangxie/parquet-go/v2/encoding"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
 )
 
 // Page is used to store the page data

@@ -3,7 +3,7 @@ package hdfs
 import (
 	"github.com/colinmarc/hdfs/v2"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type HdfsFile struct {
@@ -16,7 +16,7 @@ type HdfsFile struct {
 	FileWriter *hdfs.FileWriter
 }
 
-func NewHdfsFileWriter(hosts []string, user, name string) (source.ParquetFile, error) {
+func NewHdfsFileWriter(hosts []string, user, name string) (source.ParquetFileWriter, error) {
 	res := &HdfsFile{
 		Hosts:    hosts,
 		User:     user,
@@ -25,7 +25,7 @@ func NewHdfsFileWriter(hosts []string, user, name string) (source.ParquetFile, e
 	return res.Create(name)
 }
 
-func NewHdfsFileReader(hosts []string, user, name string) (source.ParquetFile, error) {
+func NewHdfsFileReader(hosts []string, user, name string) (source.ParquetFileReader, error) {
 	res := &HdfsFile{
 		Hosts:    hosts,
 		User:     user,
@@ -34,11 +34,11 @@ func NewHdfsFileReader(hosts []string, user, name string) (source.ParquetFile, e
 	return res.Open(name)
 }
 
-func (self *HdfsFile) Create(name string) (source.ParquetFile, error) {
+func (f *HdfsFile) Create(name string) (source.ParquetFileWriter, error) {
 	var err error
 	hf := new(HdfsFile)
-	hf.Hosts = self.Hosts
-	hf.User = self.User
+	hf.Hosts = f.Hosts
+	hf.User = f.User
 	hf.Client, err = hdfs.NewClient(hdfs.ClientOptions{
 		Addresses: hf.Hosts,
 		User:      hf.User,
@@ -51,15 +51,15 @@ func (self *HdfsFile) Create(name string) (source.ParquetFile, error) {
 	return hf, err
 }
 
-func (self *HdfsFile) Open(name string) (source.ParquetFile, error) {
+func (f *HdfsFile) Open(name string) (source.ParquetFileReader, error) {
 	var err error
 	if name == "" {
-		name = self.FilePath
+		name = f.FilePath
 	}
 
 	hf := new(HdfsFile)
-	hf.Hosts = self.Hosts
-	hf.User = self.User
+	hf.Hosts = f.Hosts
+	hf.User = f.User
 	hf.Client, err = hdfs.NewClient(hdfs.ClientOptions{
 		Addresses: hf.Hosts,
 		User:      hf.User,
@@ -72,15 +72,15 @@ func (self *HdfsFile) Open(name string) (source.ParquetFile, error) {
 	return hf, err
 }
 
-func (self *HdfsFile) Seek(offset int64, pos int) (int64, error) {
-	return self.FileReader.Seek(offset, pos)
+func (f *HdfsFile) Seek(offset int64, pos int) (int64, error) {
+	return f.FileReader.Seek(offset, pos)
 }
 
-func (self *HdfsFile) Read(b []byte) (cnt int, err error) {
+func (f *HdfsFile) Read(b []byte) (cnt int, err error) {
 	var n int
 	ln := len(b)
 	for cnt < ln {
-		n, err = self.FileReader.Read(b[cnt:])
+		n, err = f.FileReader.Read(b[cnt:])
 		cnt += n
 		if err != nil {
 			break
@@ -89,23 +89,23 @@ func (self *HdfsFile) Read(b []byte) (cnt int, err error) {
 	return cnt, err
 }
 
-func (self *HdfsFile) Write(b []byte) (n int, err error) {
-	return self.FileWriter.Write(b)
+func (f *HdfsFile) Write(b []byte) (n int, err error) {
+	return f.FileWriter.Write(b)
 }
 
-func (self *HdfsFile) Close() error {
-	if self.FileReader != nil {
-		if err := self.FileReader.Close(); err != nil {
+func (f *HdfsFile) Close() error {
+	if f.FileReader != nil {
+		if err := f.FileReader.Close(); err != nil {
 			return err
 		}
 	}
-	if self.FileWriter != nil {
-		if err := self.FileWriter.Close(); err != nil {
+	if f.FileWriter != nil {
+		if err := f.FileWriter.Close(); err != nil {
 			return err
 		}
 	}
-	if self.Client != nil {
-		if err := self.Client.Close(); err != nil {
+	if f.Client != nil {
+		if err := f.Client.Close(); err != nil {
 			return err
 		}
 	}

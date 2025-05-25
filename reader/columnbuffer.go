@@ -6,15 +6,15 @@ import (
 
 	"github.com/apache/thrift/lib/go/thrift"
 
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/layout"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/layout"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type ColumnBufferType struct {
-	PFile        source.ParquetFile
+	PFile        source.ParquetFileReader
 	ThriftReader *thrift.TBufferedTransport
 
 	Footer        *parquet.FileMetaData
@@ -32,7 +32,7 @@ type ColumnBufferType struct {
 	DataTableNumRows int64
 }
 
-func NewColumnBuffer(pFile source.ParquetFile, footer *parquet.FileMetaData, schemaHandler *schema.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
+func NewColumnBuffer(pFile source.ParquetFileReader, footer *parquet.FileMetaData, schemaHandler *schema.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
 	newPFile, err := pFile.Open("")
 	if err != nil {
 		return nil, err

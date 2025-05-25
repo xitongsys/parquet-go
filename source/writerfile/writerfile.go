@@ -3,22 +3,22 @@ package writerfile
 import (
 	"io"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type WriterFile struct {
 	Writer io.Writer
 }
 
-func NewWriterFile(writer io.Writer) source.ParquetFile {
+func NewWriterFile(writer io.Writer) source.ParquetFileWriter {
 	return &WriterFile{Writer: writer}
 }
 
-func (self *WriterFile) Create(name string) (source.ParquetFile, error) {
+func (self *WriterFile) Create(name string) (source.ParquetFileWriter, error) {
 	return self, nil
 }
 
-func (self *WriterFile) Open(name string) (source.ParquetFile, error) {
+func (self *WriterFile) Open(name string) (source.ParquetFileWriter, error) {
 	return self, nil
 }
 

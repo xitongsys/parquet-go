@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/hangxie/parquet-go/parquet"
+	"github.com/hangxie/parquet-go/v2/parquet"
 )
 
 func TestGzipCompression(t *testing.T) {

@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/writer"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/writer"
 
-	"github.com/hangxie/parquet-go/source/writerfile"
+	"github.com/hangxie/parquet-go/v2/source/writerfile"
 )
 
 type Student struct {

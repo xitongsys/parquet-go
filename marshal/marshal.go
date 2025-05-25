@@ -3,11 +3,11 @@ package marshal
 import (
 	"reflect"
 
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/layout"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
-	"github.com/hangxie/parquet-go/types"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/layout"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
+	"github.com/hangxie/parquet-go/v2/types"
 )
 
 type Node struct {

@@ -3,10 +3,10 @@ package layout
 import (
 	"sync"
 
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 // RowGroup stores the RowGroup in parquet file
@@ -41,7 +41,7 @@ func (rowGroup *RowGroup) RowGroupToTableMap() *map[string]*Table {
 }
 
 // Read one RowGroup from parquet file (Deprecated)
-func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, schemaHandler *schema.SchemaHandler, NP int64) (*RowGroup, error) {
+func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFileReader, schemaHandler *schema.SchemaHandler, NP int64) (*RowGroup, error) {
 	var err error
 	rowGroup := new(RowGroup)
 	rowGroup.RowGroupHeader = rowGroupHeader

@@ -1,6 +1,6 @@
 package s3v2
 
-//go:generate mockgen -destination=./mocks/mock_s3.go -package=mocks github.com/hangxie/parquet-go/source/s3v2 S3API
+//go:generate mockgen -destination=./mocks/mock_s3.go -package=mocks github.com/hangxie/parquet-go/v2/source/s3v2 S3API
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type S3API interface {
@@ -68,13 +68,7 @@ var (
 )
 
 // NewS3FileWriter creates an S3 FileWriter, to be used with NewParquetWriter
-func NewS3FileWriter(
-	ctx context.Context,
-	bucket string,
-	key string,
-	uploaderOptions []func(*manager.Uploader),
-	cfgs ...*aws.Config,
-) (source.ParquetFile, error) {
+func NewS3FileWriter(ctx context.Context, bucket, key string, uploaderOptions []func(*manager.Uploader), cfgs ...*aws.Config) (source.ParquetFileWriter, error) {
 	return NewS3FileWriterWithClient(
 		ctx,
 		s3.NewFromConfig(getConfig()),
@@ -86,14 +80,7 @@ func NewS3FileWriter(
 
 // NewS3FileWriterWithClient is the same as NewS3FileWriter but allows passing
 // your own S3 client.
-func NewS3FileWriterWithClient(
-	ctx context.Context,
-	s3Client S3API,
-	bucket string,
-	key string,
-	uploaderOptions []func(*manager.Uploader),
-	putObjectInputOptions ...func(*s3.PutObjectInput),
-) (source.ParquetFile, error) {
+func NewS3FileWriterWithClient(ctx context.Context, s3Client S3API, bucket, key string, uploaderOptions []func(*manager.Uploader), putObjectInputOptions ...func(*s3.PutObjectInput)) (source.ParquetFileWriter, error) {
 	file := &S3File{
 		ctx:                   ctx,
 		client:                s3Client,
@@ -108,7 +95,7 @@ func NewS3FileWriterWithClient(
 }
 
 // NewS3FileReader creates an S3 FileReader, to be used with NewParquetReader
-func NewS3FileReader(ctx context.Context, bucket, key string, cfgs ...*aws.Config) (source.ParquetFile, error) {
+func NewS3FileReader(ctx context.Context, bucket, key string, cfgs ...*aws.Config) (source.ParquetFileReader, error) {
 	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
 		Bucket: bucket,
 		Key:    key,
@@ -116,7 +103,7 @@ func NewS3FileReader(ctx context.Context, bucket, key string, cfgs ...*aws.Confi
 }
 
 // NewS3FileReaderVersioned creates an S3 FileReader for a versioned S3 object, to be used with NewParquetReader
-func NewS3FileReaderVersioned(ctx context.Context, bucket, key string, version *string, cfgs ...*aws.Config) (source.ParquetFile, error) {
+func NewS3FileReaderVersioned(ctx context.Context, bucket, key string, version *string, cfgs ...*aws.Config) (source.ParquetFileReader, error) {
 	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
 		Bucket:  bucket,
 		Key:     key,
@@ -126,7 +113,7 @@ func NewS3FileReaderVersioned(ctx context.Context, bucket, key string, version *
 
 // NewS3FileReaderWithClient is the same as NewS3FileReader but allows passing
 // your own S3 client
-func NewS3FileReaderWithClient(ctx context.Context, s3Client S3API, bucket, key string) (source.ParquetFile, error) {
+func NewS3FileReaderWithClient(ctx context.Context, s3Client S3API, bucket, key string) (source.ParquetFileReader, error) {
 	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
 		Bucket:   bucket,
 		Key:      key,
@@ -136,7 +123,7 @@ func NewS3FileReaderWithClient(ctx context.Context, s3Client S3API, bucket, key 
 
 // NewS3FileReaderWithClientVersioned is the same as NewS3FileReaderVersioned but allows passing
 // your own S3 client
-func NewS3FileReaderWithClientVersioned(ctx context.Context, s3Client S3API, bucket, key string, version *string) (source.ParquetFile, error) {
+func NewS3FileReaderWithClientVersioned(ctx context.Context, s3Client S3API, bucket, key string, version *string) (source.ParquetFileReader, error) {
 	return NewS3FileReaderWithParams(ctx, S3FileReaderParams{
 		Bucket:   bucket,
 		Key:      key,
@@ -293,7 +280,7 @@ func (s *S3File) Close() error {
 }
 
 // Open creates a new S3 File instance to perform concurrent reads
-func (s *S3File) Open(name string) (source.ParquetFile, error) {
+func (s *S3File) Open(name string) (source.ParquetFileReader, error) {
 	s.lock.RLock()
 	readOpened := s.readOpened
 	s.lock.RUnlock()
@@ -324,7 +311,7 @@ func (s *S3File) Open(name string) (source.ParquetFile, error) {
 }
 
 // Create creates a new S3 File instance to perform writes
-func (s *S3File) Create(key string) (source.ParquetFile, error) {
+func (s *S3File) Create(key string) (source.ParquetFileWriter, error) {
 	pf := &S3File{
 		ctx:                   s.ctx,
 		client:                s.client,
@@ -470,7 +457,7 @@ type S3FileReaderParams struct {
 
 // NewS3FileReaderWithParams creates an S3 FileReader for an object identified by and
 // configured using the S3FileReaderParams object.
-func NewS3FileReaderWithParams(ctx context.Context, params S3FileReaderParams) (source.ParquetFile, error) {
+func NewS3FileReaderWithParams(ctx context.Context, params S3FileReaderParams) (source.ParquetFileReader, error) {
 	s3Client := params.S3Client
 	if s3Client == nil {
 		s3Client = s3.NewFromConfig(getConfig())

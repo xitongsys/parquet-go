@@ -3,12 +3,12 @@ package reader
 import (
 	"fmt"
 
-	"github.com/hangxie/parquet-go/schema"
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/schema"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 // NewParquetColumnReader creates a parquet column reader
-func NewParquetColumnReader(pFile source.ParquetFile, np int64) (*ParquetReader, error) {
+func NewParquetColumnReader(pFile source.ParquetFileReader, np int64) (*ParquetReader, error) {
 	res := new(ParquetReader)
 	res.NP = np
 	res.PFile = pFile

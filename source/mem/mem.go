@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 // desclare unexported in-memory file-system
@@ -42,7 +42,7 @@ type MemFile struct {
 // to handle in-memory conversions and offloading. The results of
 // conversion can then be stored and read via HDFS, LocalFS, etc without
 // the need for loading the file back into memory directly
-func NewMemFileWriter(name string, f OnCloseFunc) (source.ParquetFile, error) {
+func NewMemFileWriter(name string, f OnCloseFunc) (source.ParquetFileWriter, error) {
 	if memFs == nil {
 		memFs = afero.NewMemMapFs()
 	}
@@ -53,7 +53,7 @@ func NewMemFileWriter(name string, f OnCloseFunc) (source.ParquetFile, error) {
 }
 
 // Create - create in-memory file
-func (fs *MemFile) Create(name string) (source.ParquetFile, error) {
+func (fs *MemFile) Create(name string) (source.ParquetFileWriter, error) {
 	file, err := memFs.Create(name)
 	if err != nil {
 		return fs, err
@@ -65,7 +65,7 @@ func (fs *MemFile) Create(name string) (source.ParquetFile, error) {
 }
 
 // Open - open file in-memory
-func (fs *MemFile) Open(name string) (source.ParquetFile, error) {
+func (fs *MemFile) Open(name string) (source.ParquetFileReader, error) {
 	var err error
 	if name == "" {
 		name = fs.FilePath

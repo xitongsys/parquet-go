@@ -5,12 +5,12 @@ import (
 
 	"github.com/apache/arrow-go/v18/arrow"
 
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/layout"
-	"github.com/hangxie/parquet-go/marshal"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/layout"
+	"github.com/hangxie/parquet-go/v2/marshal"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 const (
@@ -29,7 +29,7 @@ type ArrowWriter struct {
 // arrow schema, parquet file writer which contains the parquet file in
 // which we will write the record along with the number of parallel threads
 // which will write in the file.
-func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFile,
+func NewArrowWriter(arrowSchema *arrow.Schema, pfile source.ParquetFileWriter,
 	np int64,
 ) (*ArrowWriter, error) {
 	var err error

@@ -7,10 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/hangxie/parquet-go/reader"
-	"github.com/hangxie/parquet-go/writer"
+	"github.com/hangxie/parquet-go/v2/reader"
+	"github.com/hangxie/parquet-go/v2/writer"
 
-	"github.com/hangxie/parquet-go/source/s3v2"
+	"github.com/hangxie/parquet-go/v2/source/s3v2"
 )
 
 type Student struct {

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hangxie/parquet-go/writer"
+	"github.com/hangxie/parquet-go/v2/writer"
 
-	"github.com/hangxie/parquet-go/source/gcs"
+	"github.com/hangxie/parquet-go/v2/source/gcs"
 )
 
 func main() {

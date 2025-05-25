@@ -1,10 +1,10 @@
 package marshal
 
 import (
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/layout"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/layout"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
 )
 
 // Marshal function for CSV like data

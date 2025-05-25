@@ -10,13 +10,13 @@ import (
 
 	"github.com/apache/thrift/lib/go/thrift"
 
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/layout"
-	"github.com/hangxie/parquet-go/marshal"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
-	"github.com/hangxie/parquet-go/source"
-	"github.com/hangxie/parquet-go/source/writerfile"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/layout"
+	"github.com/hangxie/parquet-go/v2/marshal"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
+	"github.com/hangxie/parquet-go/v2/source"
+	"github.com/hangxie/parquet-go/v2/source/writerfile"
 )
 
 // ParquetWriter is a writer  parquet file
@@ -24,7 +24,7 @@ type ParquetWriter struct {
 	SchemaHandler *schema.SchemaHandler
 	NP            int64 // parallel number
 	Footer        *parquet.FileMetaData
-	PFile         source.ParquetFile
+	PFile         source.ParquetFileWriter
 
 	PageSize        int64
 	RowGroupSize    int64
@@ -56,7 +56,7 @@ func NewParquetWriterFromWriter(w io.Writer, obj interface{}, np int64) (*Parque
 }
 
 // Create a parquet handler. Obj is a object with tags or JSON schema string.
-func NewParquetWriter(pFile source.ParquetFile, obj interface{}, np int64) (*ParquetWriter, error) {
+func NewParquetWriter(pFile source.ParquetFileWriter, obj interface{}, np int64) (*ParquetWriter, error) {
 	var err error
 
 	res := new(ParquetWriter)

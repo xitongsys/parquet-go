@@ -3,7 +3,7 @@ package swiftsource
 import (
 	"github.com/ncw/swift"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type SwiftFile struct {
@@ -24,17 +24,17 @@ func newSwiftFile(containerName, filePath string, conn *swift.Connection) *Swift
 	}
 }
 
-func NewSwiftFileReader(container, filePath string, conn *swift.Connection) (source.ParquetFile, error) {
+func NewSwiftFileReader(container, filePath string, conn *swift.Connection) (source.ParquetFileReader, error) {
 	res := newSwiftFile(container, filePath, conn)
 	return res.Open(filePath)
 }
 
-func NewSwiftFileWriter(container, filePath string, conn *swift.Connection) (source.ParquetFile, error) {
+func NewSwiftFileWriter(container, filePath string, conn *swift.Connection) (source.ParquetFileWriter, error) {
 	res := newSwiftFile(container, filePath, conn)
 	return res.Create(filePath)
 }
 
-func (file *SwiftFile) Open(name string) (source.ParquetFile, error) {
+func (file *SwiftFile) Open(name string) (source.ParquetFileReader, error) {
 	if name == "" {
 		name = file.FilePath
 	}
@@ -54,7 +54,7 @@ func (file *SwiftFile) Open(name string) (source.ParquetFile, error) {
 	return res, nil
 }
 
-func (file *SwiftFile) Create(name string) (source.ParquetFile, error) {
+func (file *SwiftFile) Create(name string) (source.ParquetFileWriter, error) {
 	if name == "" {
 		name = file.FilePath
 	}

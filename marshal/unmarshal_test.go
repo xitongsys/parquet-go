@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/hangxie/parquet-go/schema"
+	"github.com/hangxie/parquet-go/v2/schema"
 )
 
 type Student struct {
@@ -50,7 +50,7 @@ func (s Student) String() string {
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
-	schemaHandler, _ := NewSchemaHandlerFromStruct(new(Student))
+	schemaHandler, _ := schema.NewSchemaHandlerFromStruct(new(Student))
 	fmt.Println("SchemaHandler Finished")
 
 	math01ID := int64(1)

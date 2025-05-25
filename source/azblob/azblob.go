@@ -10,7 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blockblob"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 // AzBlockBlob is ParquetFile for azblob
@@ -37,7 +37,7 @@ var (
 )
 
 // NewAzBlobFileWriter creates an Azure Blob FileWriter, to be used with NewParquetWriter
-func NewAzBlobFileWriter(ctx context.Context, URL string, credential azcore.TokenCredential, clientOptions blockblob.ClientOptions) (source.ParquetFile, error) {
+func NewAzBlobFileWriter(ctx context.Context, URL string, credential azcore.TokenCredential, clientOptions blockblob.ClientOptions) (source.ParquetFileWriter, error) {
 	var err error
 	var client *blockblob.Client
 	if credential == nil {
@@ -53,7 +53,7 @@ func NewAzBlobFileWriter(ctx context.Context, URL string, credential azcore.Toke
 }
 
 // NewAzBlobFileWriterWithSharedKey creates an Azure Blob FileWriter, to be used with NewParquetWriter
-func NewAzBlobFileWriterWithSharedKey(ctx context.Context, URL string, credential *blob.SharedKeyCredential, clientOptions blockblob.ClientOptions) (source.ParquetFile, error) {
+func NewAzBlobFileWriterWithSharedKey(ctx context.Context, URL string, credential *blob.SharedKeyCredential, clientOptions blockblob.ClientOptions) (source.ParquetFileWriter, error) {
 	var err error
 	var client *blockblob.Client
 	if credential == nil {
@@ -69,7 +69,7 @@ func NewAzBlobFileWriterWithSharedKey(ctx context.Context, URL string, credentia
 }
 
 // NewAzBlobFileWriterWithClient creates an Azure Blob FileWriter, to be used with NewParquetWriter
-func NewAzBlobFileWriterWithClient(ctx context.Context, URL string, client *blockblob.Client) (source.ParquetFile, error) {
+func NewAzBlobFileWriterWithClient(ctx context.Context, URL string, client *blockblob.Client) (source.ParquetFileWriter, error) {
 	if client == nil {
 		return nil, errors.New("client cannot be nil")
 	}
@@ -82,7 +82,7 @@ func NewAzBlobFileWriterWithClient(ctx context.Context, URL string, client *bloc
 }
 
 // NewAzBlobFileReader creates an Azure Blob FileReader, to be used with NewParquetReader
-func NewAzBlobFileReader(ctx context.Context, URL string, credential azcore.TokenCredential, clientOptions blockblob.ClientOptions) (source.ParquetFile, error) {
+func NewAzBlobFileReader(ctx context.Context, URL string, credential azcore.TokenCredential, clientOptions blockblob.ClientOptions) (source.ParquetFileReader, error) {
 	var err error
 	var client *blockblob.Client
 	if credential == nil {
@@ -98,7 +98,7 @@ func NewAzBlobFileReader(ctx context.Context, URL string, credential azcore.Toke
 }
 
 // NewAzBlobFileReaderWithSharedKey creates an Azure Blob FileReader, to be used with NewParquetReader
-func NewAzBlobFileReaderWithSharedKey(ctx context.Context, URL string, credential *blob.SharedKeyCredential, clientOptions blockblob.ClientOptions) (source.ParquetFile, error) {
+func NewAzBlobFileReaderWithSharedKey(ctx context.Context, URL string, credential *blob.SharedKeyCredential, clientOptions blockblob.ClientOptions) (source.ParquetFileReader, error) {
 	var err error
 	var client *blockblob.Client
 	if credential == nil {
@@ -114,7 +114,7 @@ func NewAzBlobFileReaderWithSharedKey(ctx context.Context, URL string, credentia
 }
 
 // NewAzBlobFileReaderWithClient creates an Azure Blob FileReader, to be used with NewParquetReader
-func NewAzBlobFileReaderWithClient(ctx context.Context, URL string, client *blockblob.Client) (source.ParquetFile, error) {
+func NewAzBlobFileReaderWithClient(ctx context.Context, URL string, client *blockblob.Client) (source.ParquetFileReader, error) {
 	if client == nil {
 		return nil, errors.New("client cannot be nil")
 	}
@@ -223,7 +223,7 @@ func (s *AzBlockBlob) Close() error {
 }
 
 // Open creates a new block blob to perform reads
-func (s *AzBlockBlob) Open(URL string) (source.ParquetFile, error) {
+func (s *AzBlockBlob) Open(URL string) (source.ParquetFileReader, error) {
 	var u *url.URL
 	if len(URL) == 0 && s.URL != nil {
 		// ColumnBuffer passes in an empty string for name
@@ -251,7 +251,7 @@ func (s *AzBlockBlob) Open(URL string) (source.ParquetFile, error) {
 }
 
 // Create a new blob url to perform writes
-func (s *AzBlockBlob) Create(URL string) (source.ParquetFile, error) {
+func (s *AzBlockBlob) Create(URL string) (source.ParquetFileWriter, error) {
 	var u *url.URL
 	if len(URL) == 0 && s.URL != nil {
 		// ColumnBuffer passes in an empty string for name

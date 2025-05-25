@@ -10,12 +10,12 @@ import (
 
 	"github.com/apache/thrift/lib/go/thrift"
 
-	"github.com/hangxie/parquet-go/common"
-	"github.com/hangxie/parquet-go/layout"
-	"github.com/hangxie/parquet-go/marshal"
-	"github.com/hangxie/parquet-go/parquet"
-	"github.com/hangxie/parquet-go/schema"
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/common"
+	"github.com/hangxie/parquet-go/v2/layout"
+	"github.com/hangxie/parquet-go/v2/marshal"
+	"github.com/hangxie/parquet-go/v2/parquet"
+	"github.com/hangxie/parquet-go/v2/schema"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 type ParquetReaderOptions struct {
@@ -26,7 +26,7 @@ type ParquetReader struct {
 	SchemaHandler *schema.SchemaHandler
 	NP            int64 // parallel number
 	Footer        *parquet.FileMetaData
-	PFile         source.ParquetFile
+	PFile         source.ParquetFileReader
 
 	ColumnBuffers map[string]*ColumnBufferType
 
@@ -39,7 +39,7 @@ type ParquetReader struct {
 }
 
 // Create a parquet reader: obj is a object with schema tags or a JSON schema string
-func NewParquetReader(pFile source.ParquetFile, obj interface{}, np int64, opts ...ParquetReaderOptions) (*ParquetReader, error) {
+func NewParquetReader(pFile source.ParquetFileReader, obj interface{}, np int64, opts ...ParquetReaderOptions) (*ParquetReader, error) {
 	var caseInsensitive bool
 	if len(opts) > 0 {
 		caseInsensitive = opts[0].CaseInsensitive

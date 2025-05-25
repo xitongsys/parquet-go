@@ -7,7 +7,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 // MinioFile is ParquetFile for MinIO S3 API
@@ -42,7 +42,7 @@ func NewS3FileWriterWithClient(
 	s3Client *minio.Client,
 	bucket string,
 	key string,
-) (source.ParquetFile, error) {
+) (source.ParquetFileReader, error) {
 	file := &MinioFile{
 		ctx:        ctx,
 		client:     s3Client,
@@ -55,7 +55,7 @@ func NewS3FileWriterWithClient(
 
 // NewS3FileReaderWithClient is the same as NewMinioFileReader but allows passing
 // your own S3 client
-func NewS3FileReaderWithClient(ctx context.Context, s3Client *minio.Client, bucket, key string) (source.ParquetFile, error) {
+func NewS3FileReaderWithClient(ctx context.Context, s3Client *minio.Client, bucket, key string) (source.ParquetFileReader, error) {
 	file := &MinioFile{
 		ctx:        ctx,
 		client:     s3Client,
@@ -138,7 +138,7 @@ func (s *MinioFile) Close() error {
 }
 
 // Open creates a new Minio File instance to perform concurrent reads
-func (s *MinioFile) Open(name string) (source.ParquetFile, error) {
+func (s *MinioFile) Open(name string) (source.ParquetFileReader, error) {
 	// new instance
 	pf := &MinioFile{
 		ctx:        s.ctx,
@@ -162,7 +162,7 @@ func (s *MinioFile) Open(name string) (source.ParquetFile, error) {
 }
 
 // Create creates a new Minio File instance to perform writes
-func (s *MinioFile) Create(key string) (source.ParquetFile, error) {
+func (s *MinioFile) Create(key string) (source.ParquetFileReader, error) {
 	pf := &MinioFile{
 		ctx:        s.ctx,
 		client:     s.client,

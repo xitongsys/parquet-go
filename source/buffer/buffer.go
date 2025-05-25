@@ -4,7 +4,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/hangxie/parquet-go/source"
+	"github.com/hangxie/parquet-go/v2/source"
 )
 
 // BufferFile allows reading parquet messages from a memory buffer.
@@ -45,11 +45,11 @@ func NewBufferFileFromBytesZeroAlloc(s []byte) *BufferFile {
 	return &BufferFile{buff: s}
 }
 
-func (bf BufferFile) Create(string) (source.ParquetFile, error) {
+func (bf BufferFile) Create(string) (source.ParquetFileWriter, error) {
 	return NewBufferFile(), nil
 }
 
-func (bf BufferFile) Open(string) (source.ParquetFile, error) {
+func (bf BufferFile) Open(string) (source.ParquetFileReader, error) {
 	return NewBufferFileFromBytes(bf.buff), nil
 }
 
