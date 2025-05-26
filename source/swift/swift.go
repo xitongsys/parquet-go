@@ -13,20 +13,20 @@ var (
 )
 
 type swiftFile struct {
-	Connection *swift.Connection
+	connection *swift.Connection
 
-	Container string
-	FilePath  string
+	container string
+	filePath  string
 
-	FileReader *swift.ObjectOpenFile
-	FileWriter *swift.ObjectCreateFile
+	fileReader *swift.ObjectOpenFile
+	fileWriter *swift.ObjectCreateFile
 }
 
 func newSwiftFile(containerName, filePath string, conn *swift.Connection) *swiftFile {
 	return &swiftFile{
-		Connection: conn,
-		Container:  containerName,
-		FilePath:   filePath,
+		connection: conn,
+		container:  containerName,
+		filePath:   filePath,
 	}
 }
 
@@ -42,19 +42,19 @@ func NewSwiftFileWriter(container, filePath string, conn *swift.Connection) (sou
 
 func (file *swiftFile) Open(name string) (source.ParquetFileReader, error) {
 	if name == "" {
-		name = file.FilePath
+		name = file.filePath
 	}
 
-	fr, _, err := file.Connection.ObjectOpen(file.Container, name, false, nil)
+	fr, _, err := file.connection.ObjectOpen(file.container, name, false, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	res := &swiftFile{
-		Connection: file.Connection,
-		Container:  file.Container,
-		FilePath:   name,
-		FileReader: fr,
+		connection: file.connection,
+		container:  file.container,
+		filePath:   name,
+		fileReader: fr,
 	}
 
 	return res, nil
@@ -62,44 +62,44 @@ func (file *swiftFile) Open(name string) (source.ParquetFileReader, error) {
 
 func (file *swiftFile) Create(name string) (source.ParquetFileWriter, error) {
 	if name == "" {
-		name = file.FilePath
+		name = file.filePath
 	}
 
-	fw, err := file.Connection.ObjectCreate(file.Container, name, false, "", "", nil)
+	fw, err := file.connection.ObjectCreate(file.container, name, false, "", "", nil)
 	if err != nil {
 		return nil, err
 	}
 
 	res := &swiftFile{
-		Connection: file.Connection,
-		Container:  file.Container,
-		FilePath:   name,
-		FileWriter: fw,
+		connection: file.connection,
+		container:  file.container,
+		filePath:   name,
+		fileWriter: fw,
 	}
 
 	return res, nil
 }
 
 func (file *swiftFile) Read(b []byte) (n int, err error) {
-	return file.FileReader.Read(b)
+	return file.fileReader.Read(b)
 }
 
 func (file *swiftFile) Seek(offset int64, whence int) (int64, error) {
-	return file.FileReader.Seek(offset, whence)
+	return file.fileReader.Seek(offset, whence)
 }
 
 func (file *swiftFile) Write(p []byte) (n int, err error) {
-	return file.FileWriter.Write(p)
+	return file.fileWriter.Write(p)
 }
 
 func (file *swiftFile) Close() error {
-	if file.FileWriter != nil {
-		if err := file.FileWriter.Close(); err != nil {
+	if file.fileWriter != nil {
+		if err := file.fileWriter.Close(); err != nil {
 			return err
 		}
 	}
-	if file.FileReader != nil {
-		if err := file.FileReader.Close(); err != nil {
+	if file.fileReader != nil {
+		if err := file.fileReader.Close(); err != nil {
 			return err
 		}
 	}

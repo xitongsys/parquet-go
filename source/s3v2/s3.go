@@ -57,8 +57,8 @@ type s3File struct {
 
 	lock       sync.RWMutex
 	err        error
-	BucketName string
-	Key        string
+	bucketName string
+	key        string
 	version    *string
 }
 
@@ -93,8 +93,8 @@ func NewS3FileWriterWithClient(ctx context.Context, s3Client S3API, bucket, key 
 		writeDone:             make(chan error),
 		uploaderOptions:       uploaderOptions,
 		putObjectInputOptions: putObjectInputOptions,
-		BucketName:            bucket,
-		Key:                   key,
+		bucketName:            bucket,
+		key:                   key,
 	}
 
 	return file.Create(key)
@@ -211,8 +211,8 @@ func (s *s3File) openSocket(numBytes int64) error {
 	}
 	getObjRange := s.getBytesRange(numBytes)
 	getObj := &s3.GetObjectInput{
-		Bucket:    aws.String(s.BucketName),
-		Key:       aws.String(s.Key),
+		Bucket:    aws.String(s.bucketName),
+		Key:       aws.String(s.key),
 		VersionId: s.version,
 	}
 	if len(getObjRange) > 0 {
@@ -298,15 +298,15 @@ func (s *s3File) Open(name string) (source.ParquetFileReader, error) {
 
 	// ColumBuffer passes in an empty string for name
 	if len(name) == 0 {
-		name = s.Key
+		name = s.key
 	}
 
 	// create a new instance
 	pf := &s3File{
 		ctx:            s.ctx,
 		client:         s.client,
-		BucketName:     s.BucketName,
-		Key:            name,
+		bucketName:     s.bucketName,
+		key:            name,
 		version:        s.version,
 		readOpened:     s.readOpened,
 		fileSize:       s.fileSize,
@@ -323,8 +323,8 @@ func (s *s3File) Create(key string) (source.ParquetFileWriter, error) {
 		client:                s.client,
 		uploaderOptions:       s.uploaderOptions,
 		putObjectInputOptions: s.putObjectInputOptions,
-		BucketName:            s.BucketName,
-		Key:                   key,
+		bucketName:            s.bucketName,
+		key:                   key,
 		writeDone:             make(chan error),
 	}
 	pf.openWrite()
@@ -344,8 +344,8 @@ func (s *s3File) openWrite() {
 	s.lock.Unlock()
 
 	uploadParams := &s3.PutObjectInput{
-		Bucket: aws.String(s.BucketName),
-		Key:    aws.String(s.Key),
+		Bucket: aws.String(s.bucketName),
+		Key:    aws.String(s.key),
 		Body:   s.pipeReader,
 	}
 
@@ -376,8 +376,8 @@ func (s *s3File) openWrite() {
 // tracks the file size
 func (s *s3File) openRead() error {
 	hoi := &s3.HeadObjectInput{
-		Bucket:    aws.String(s.BucketName),
-		Key:       aws.String(s.Key),
+		Bucket:    aws.String(s.bucketName),
+		Key:       aws.String(s.key),
 		VersionId: s.version,
 	}
 
@@ -477,8 +477,8 @@ func NewS3FileReaderWithParams(ctx context.Context, params S3FileReaderParams) (
 	file := &s3File{
 		ctx:            ctx,
 		client:         s3Client,
-		BucketName:     params.Bucket,
-		Key:            params.Key,
+		bucketName:     params.Bucket,
+		key:            params.Key,
 		version:        params.Version,
 		minRequestSize: minRequestSize,
 	}

@@ -1,46 +1,40 @@
 package http
 
 import (
-	"errors"
 	"mime/multipart"
 
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-type MultipartFileWrapper struct {
-	FH *multipart.FileHeader
-	F  multipart.File
+// Compile time check that *multipartFileWrapper implement the source.ParquetFileReader interface.
+var _ source.ParquetFileReader = (*multipartFileReader)(nil)
+
+type multipartFileReader struct {
+	fileHeader *multipart.FileHeader
+	file       multipart.File
 }
 
 func NewMultipartFileWrapper(fh *multipart.FileHeader, f multipart.File) source.ParquetFileReader {
-	return &MultipartFileWrapper{FH: fh, F: f}
-}
-
-func (mfw *MultipartFileWrapper) Create(_ string) (source.ParquetFileReader, error) {
-	return nil, errors.New("cannot create a new multipart file")
+	return &multipartFileReader{fileHeader: fh, file: f}
 }
 
 // this method is called multiple times on one file to open parallel readers
-func (mfw *MultipartFileWrapper) Open(_ string) (source.ParquetFileReader, error) {
-	file, err := mfw.FH.Open()
+func (mfw *multipartFileReader) Open(_ string) (source.ParquetFileReader, error) {
+	file, err := mfw.fileHeader.Open()
 	if err != nil {
 		return nil, err
 	}
-	return NewMultipartFileWrapper(mfw.FH, file), nil
+	return NewMultipartFileWrapper(mfw.fileHeader, file), nil
 }
 
-func (mfw *MultipartFileWrapper) Seek(offset int64, pos int) (int64, error) {
-	return mfw.F.Seek(offset, pos)
+func (mfw *multipartFileReader) Seek(offset int64, pos int) (int64, error) {
+	return mfw.file.Seek(offset, pos)
 }
 
-func (mfw *MultipartFileWrapper) Read(p []byte) (int, error) {
-	return mfw.F.Read(p)
+func (mfw *multipartFileReader) Read(p []byte) (int, error) {
+	return mfw.file.Read(p)
 }
 
-func (mfw *MultipartFileWrapper) Write(_ []byte) (int, error) {
-	return 0, errors.New("cannot write to request file")
-}
-
-func (mfw *MultipartFileWrapper) Close() error {
-	return mfw.F.Close()
+func (mfw *multipartFileReader) Close() error {
+	return mfw.file.Close()
 }

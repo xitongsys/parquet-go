@@ -189,8 +189,8 @@ func TestWrite(t *testing.T) {
 
 	s := &s3File{
 		ctx:        context.Background(),
-		BucketName: bucket,
-		Key:        key,
+		bucketName: bucket,
+		key:        key,
 		client:     mockClient,
 		writeDone:  make(chan error),
 	}
@@ -260,7 +260,7 @@ func TestOpen(t *testing.T) {
 		Return(&s3.HeadObjectOutput{ContentLength: &fileSize}, nil)
 	s := &s3File{
 		ctx:        ctx,
-		BucketName: bucket,
+		bucketName: bucket,
 		client:     mockClient,
 	}
 
@@ -274,8 +274,8 @@ func TestOpen(t *testing.T) {
 		t.Errorf("expected parquet file to be of type %T but got %T", s, pf)
 	}
 
-	if s3File.Key != key {
-		t.Errorf("expected file key to be %q but got %q", key, s3File.Key)
+	if s3File.key != key {
+		t.Errorf("expected file key to be %q but got %q", key, s3File.key)
 	}
 
 	if !s3File.readOpened {
@@ -303,7 +303,7 @@ func TestCreate(t *testing.T) {
 		Return(&s3.PutObjectOutput{}, nil)
 	s := &s3File{
 		ctx:        context.Background(),
-		BucketName: bucket,
+		bucketName: bucket,
 		client:     mockClient,
 	}
 
@@ -317,8 +317,8 @@ func TestCreate(t *testing.T) {
 		t.Errorf("expected parquet file to be of type %T but got %T", s, pf)
 	}
 
-	if s3File.Key != key {
-		t.Errorf("expected file key to be %q but got %q", key, s3File.Key)
+	if s3File.key != key {
+		t.Errorf("expected file key to be %q but got %q", key, s3File.key)
 	}
 
 	if !s3File.writeOpened {
@@ -355,8 +355,8 @@ func TestOpenWriteUploadFailuresPreventFurtherWrites(t *testing.T) {
 
 	s := &s3File{
 		ctx:        context.Background(),
-		BucketName: bucket,
-		Key:        key,
+		bucketName: bucket,
+		key:        key,
 		client:     mockClient,
 		writeDone:  make(chan error),
 	}
@@ -414,8 +414,8 @@ func TestOpenReadFileSizeError(t *testing.T) {
 
 	s := &s3File{
 		ctx:        ctx,
-		BucketName: bucket,
-		Key:        key,
+		bucketName: bucket,
+		key:        key,
 		client:     mockClient,
 	}
 
@@ -450,8 +450,8 @@ func TestOpenRead(t *testing.T) {
 
 	s := &s3File{
 		ctx:        ctx,
-		BucketName: bucket,
-		Key:        key,
+		bucketName: bucket,
+		key:        key,
 		client:     mockClient,
 	}
 

@@ -13,8 +13,8 @@ var (
 )
 
 type localFile struct {
-	FilePath string
-	File     *os.File
+	filePath string
+	file     *os.File
 }
 
 func NewLocalFileWriter(name string) (source.ParquetFileWriter, error) {
@@ -28,32 +28,32 @@ func NewLocalFileReader(name string) (source.ParquetFileReader, error) {
 func (f *localFile) Create(name string) (source.ParquetFileWriter, error) {
 	file, err := os.Create(name)
 	myFile := new(localFile)
-	myFile.FilePath = name
-	myFile.File = file
+	myFile.filePath = name
+	myFile.file = file
 	return myFile, err
 }
 
 func (f *localFile) Open(name string) (source.ParquetFileReader, error) {
 	var err error
 	if name == "" {
-		name = f.FilePath
+		name = f.filePath
 	}
 
 	myFile := new(localFile)
-	myFile.FilePath = name
-	myFile.File, err = os.Open(name)
+	myFile.filePath = name
+	myFile.file, err = os.Open(name)
 	return myFile, err
 }
 
 func (f *localFile) Seek(offset int64, pos int) (int64, error) {
-	return f.File.Seek(offset, pos)
+	return f.file.Seek(offset, pos)
 }
 
 func (f *localFile) Read(b []byte) (cnt int, err error) {
 	var n int
 	ln := len(b)
 	for cnt < ln {
-		n, err = f.File.Read(b[cnt:])
+		n, err = f.file.Read(b[cnt:])
 		cnt += n
 		if err != nil {
 			break
@@ -63,9 +63,9 @@ func (f *localFile) Read(b []byte) (cnt int, err error) {
 }
 
 func (f *localFile) Write(b []byte) (n int, err error) {
-	return f.File.Write(b)
+	return f.file.Write(b)
 }
 
 func (f *localFile) Close() error {
-	return f.File.Close()
+	return f.file.Close()
 }

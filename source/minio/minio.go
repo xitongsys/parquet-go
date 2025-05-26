@@ -32,8 +32,8 @@ type minioFile struct {
 	downloader *minio.Object
 
 	err        error
-	BucketName string
-	Key        string
+	bucketName string
+	key        string
 }
 
 var (
@@ -52,8 +52,8 @@ func NewS3FileWriterWithClient(
 	file := &minioFile{
 		ctx:        ctx,
 		client:     s3Client,
-		BucketName: bucket,
-		Key:        key,
+		bucketName: bucket,
+		key:        key,
 	}
 
 	return file.Create(key)
@@ -65,8 +65,8 @@ func NewS3FileReaderWithClient(ctx context.Context, s3Client *minio.Client, buck
 	file := &minioFile{
 		ctx:        ctx,
 		client:     s3Client,
-		BucketName: bucket,
-		Key:        key,
+		bucketName: bucket,
+		key:        key,
 	}
 
 	return file.Open(key)
@@ -149,12 +149,12 @@ func (s *minioFile) Open(name string) (source.ParquetFileReader, error) {
 	pf := &minioFile{
 		ctx:        s.ctx,
 		client:     s.client,
-		BucketName: s.BucketName,
-		Key:        name,
+		bucketName: s.bucketName,
+		key:        name,
 		offset:     0,
 	}
 	// init object info
-	downloader, err := s.client.GetObject(s.ctx, s.BucketName, s.Key, minio.GetObjectOptions{})
+	downloader, err := s.client.GetObject(s.ctx, s.bucketName, s.key, minio.GetObjectOptions{})
 	if err != nil {
 		return pf, err
 	}
@@ -172,11 +172,11 @@ func (s *minioFile) Create(key string) (source.ParquetFileWriter, error) {
 	pf := &minioFile{
 		ctx:        s.ctx,
 		client:     s.client,
-		BucketName: s.BucketName,
-		Key:        key,
+		bucketName: s.bucketName,
+		key:        key,
 	}
 	pr, pw := io.Pipe()
-	_, err := s.client.PutObject(s.ctx, s.BucketName, s.Key, pr, -1, minio.PutObjectOptions{})
+	_, err := s.client.PutObject(s.ctx, s.bucketName, s.key, pr, -1, minio.PutObjectOptions{})
 	if err != nil {
 		return pf, err
 	}
