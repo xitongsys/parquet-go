@@ -81,7 +81,7 @@ func TestOpen_NewAzBlobFileReader(t *testing.T) {
 
 func TestOpen_NewAzBlobFileReaderWithSharedKey(t *testing.T) {
 	for _, tc := range testCases {
-		_, err := NewAzBlobFileReaderWithSharedKey(context.Background(), tc.url, nil, blockblob.ClientOptions{
+		_, err := NewAzBlobFileReader(context.Background(), tc.url, nil, blockblob.ClientOptions{
 			ClientOptions: policy.ClientOptions{
 				Retry: policy.RetryOptions{
 					TryTimeout: 10 * time.Second,
