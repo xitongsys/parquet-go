@@ -15,7 +15,6 @@ require (
 	github.com/bobg/gcsobj v0.3.0
 	github.com/colinmarc/hdfs/v2 v2.4.0
 	github.com/goccy/go-reflect v1.2.0
-	github.com/golang/mock v1.6.0
 	github.com/klauspost/compress v1.18.0
 	github.com/minio/minio-go/v7 v7.0.91
 	github.com/ncw/swift v1.0.53

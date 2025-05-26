@@ -1,7 +1,5 @@
 package s3v2
 
-//go:generate mockgen -destination=./mocks/mock_s3.go -package=mocks github.com/hangxie/parquet-go/v2/source/s3v2 S3API
-
 import (
 	"context"
 	"errors"
