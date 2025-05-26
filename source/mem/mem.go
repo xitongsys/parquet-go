@@ -30,12 +30,14 @@ func GetMemFileFs() afero.Fs {
 // Close() will pass the filename string and data as io.reader
 type OnCloseFunc func(string, io.Reader) error
 
-// Compile time check that *MemFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
-var _ source.ParquetFileReader = (*MemFile)(nil)
-var _ source.ParquetFileWriter = (*MemFile)(nil)
+// Compile time check that *memFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var (
+	_ source.ParquetFileReader = (*memFile)(nil)
+	_ source.ParquetFileWriter = (*memFile)(nil)
+)
 
-// MemFile - ParquetFile type for in-memory file operations
-type MemFile struct {
+// memFile - ParquetFile type for in-memory file operations
+type memFile struct {
 	FilePath string
 	File     afero.File
 	OnClose  OnCloseFunc
@@ -51,13 +53,13 @@ func NewMemFileWriter(name string, f OnCloseFunc) (source.ParquetFileWriter, err
 		memFs = afero.NewMemMapFs()
 	}
 
-	var m MemFile
+	var m memFile
 	m.OnClose = f
 	return m.Create(name)
 }
 
 // Create - create in-memory file
-func (fs *MemFile) Create(name string) (source.ParquetFileWriter, error) {
+func (fs *memFile) Create(name string) (source.ParquetFileWriter, error) {
 	file, err := memFs.Create(name)
 	if err != nil {
 		return fs, err
@@ -69,7 +71,7 @@ func (fs *MemFile) Create(name string) (source.ParquetFileWriter, error) {
 }
 
 // Open - open file in-memory
-func (fs *MemFile) Open(name string) (source.ParquetFileReader, error) {
+func (fs *memFile) Open(name string) (source.ParquetFileReader, error) {
 	var err error
 	if name == "" {
 		name = fs.FilePath
@@ -81,12 +83,12 @@ func (fs *MemFile) Open(name string) (source.ParquetFileReader, error) {
 }
 
 // Seek - seek function
-func (fs *MemFile) Seek(offset int64, pos int) (int64, error) {
+func (fs *memFile) Seek(offset int64, pos int) (int64, error) {
 	return fs.File.Seek(offset, pos)
 }
 
 // Read - read file
-func (fs *MemFile) Read(b []byte) (cnt int, err error) {
+func (fs *memFile) Read(b []byte) (cnt int, err error) {
 	var n int
 	ln := len(b)
 	for cnt < ln {
@@ -100,12 +102,12 @@ func (fs *MemFile) Read(b []byte) (cnt int, err error) {
 }
 
 // Write - write file in-memory
-func (fs *MemFile) Write(b []byte) (n int, err error) {
+func (fs *memFile) Write(b []byte) (n int, err error) {
 	return fs.File.Write(b)
 }
 
 // Close - close file and execute OnCloseFunc
-func (fs *MemFile) Close() error {
+func (fs *memFile) Close() error {
 	if err := fs.File.Close(); err != nil {
 		return err
 	}

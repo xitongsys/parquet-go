@@ -7,12 +7,14 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// Compile time check that *BufferFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
-var _ source.ParquetFileReader = (*BufferFile)(nil)
-var _ source.ParquetFileWriter = (*BufferFile)(nil)
+// Compile time check that *bufferFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var (
+	_ source.ParquetFileReader = (*bufferFile)(nil)
+	_ source.ParquetFileWriter = (*bufferFile)(nil)
+)
 
-// BufferFile allows reading and writing parquet messages from a memory buffer.
-type BufferFile struct {
+// bufferFile allows reading and writing parquet messages from a memory buffer.
+type bufferFile struct {
 	buff []byte
 	loc  int
 }
@@ -21,44 +23,44 @@ type BufferFile struct {
 const DefaultCapacity = 512
 
 // NewBufferFile creates new in memory parquet buffer.
-func NewBufferFile() *BufferFile {
+func NewBufferFile() *bufferFile {
 	return NewBufferFileCapacity(DefaultCapacity)
 }
 
 // NewBufferFileFromBytes creates new in memory parquet buffer from the given bytes.
 // It allocates a new slice and copy the contents of s.
-func NewBufferFileFromBytes(s []byte) *BufferFile {
+func NewBufferFileFromBytes(s []byte) *bufferFile {
 	b := make([]byte, len(s))
 	copy(b, s)
-	return &BufferFile{buff: b}
+	return &bufferFile{buff: b}
 }
 
 // NewBufferFileFromBytes creates new in memory parquet buffer from the given bytes.
 // It uses the provided slice as its buffer.
-func NewBufferFileFromBytesNoAlloc(s []byte) *BufferFile {
-	return &BufferFile{buff: s}
+func NewBufferFileFromBytesNoAlloc(s []byte) *bufferFile {
+	return &bufferFile{buff: s}
 }
 
 // NewBufferFileCapacity starts the returned BufferFile with the given capacity
-func NewBufferFileCapacity(cap int) *BufferFile {
-	return &BufferFile{buff: make([]byte, 0, cap)}
+func NewBufferFileCapacity(cap int) *bufferFile {
+	return &bufferFile{buff: make([]byte, 0, cap)}
 }
 
 // NewBufferFileFromBytesZeroAlloc creates new in memory parquet buffer without memory allocation.
-func NewBufferFileFromBytesZeroAlloc(s []byte) *BufferFile {
-	return &BufferFile{buff: s}
+func NewBufferFileFromBytesZeroAlloc(s []byte) *bufferFile {
+	return &bufferFile{buff: s}
 }
 
-func (bf BufferFile) Create(string) (source.ParquetFileWriter, error) {
+func (bf bufferFile) Create(string) (source.ParquetFileWriter, error) {
 	return NewBufferFile(), nil
 }
 
-func (bf BufferFile) Open(string) (source.ParquetFileReader, error) {
+func (bf bufferFile) Open(string) (source.ParquetFileReader, error) {
 	return NewBufferFileFromBytes(bf.buff), nil
 }
 
 // Seek seeks in the underlying memory buffer.
-func (bf *BufferFile) Seek(offset int64, whence int) (int64, error) {
+func (bf *bufferFile) Seek(offset int64, whence int) (int64, error) {
 	newLoc := bf.loc
 	switch whence {
 	case io.SeekStart:
@@ -83,7 +85,7 @@ func (bf *BufferFile) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Read reads data form BufferFile into p.
-func (bf *BufferFile) Read(p []byte) (n int, err error) {
+func (bf *bufferFile) Read(p []byte) (n int, err error) {
 	n = copy(p, bf.buff[bf.loc:len(bf.buff)])
 	bf.loc += n
 
@@ -95,7 +97,7 @@ func (bf *BufferFile) Read(p []byte) (n int, err error) {
 }
 
 // Write writes data from p into BufferFile.
-func (bf *BufferFile) Write(p []byte) (n int, err error) {
+func (bf *bufferFile) Write(p []byte) (n int, err error) {
 	// Do we have space?
 	if available := cap(bf.buff) - bf.loc; available < len(p) {
 		// How much should we expand by?
@@ -122,10 +124,10 @@ func (bf *BufferFile) Write(p []byte) (n int, err error) {
 }
 
 // Close is a no-op for a memory buffer.
-func (bf BufferFile) Close() error {
+func (bf bufferFile) Close() error {
 	return nil
 }
 
-func (bf BufferFile) Bytes() []byte {
+func (bf bufferFile) Bytes() []byte {
 	return bf.buff
 }

@@ -6,11 +6,13 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// Compile time check that *HdfsFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
-var _ source.ParquetFileReader = (*HdfsFile)(nil)
-var _ source.ParquetFileWriter = (*HdfsFile)(nil)
+// Compile time check that *hdfsFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var (
+	_ source.ParquetFileReader = (*hdfsFile)(nil)
+	_ source.ParquetFileWriter = (*hdfsFile)(nil)
+)
 
-type HdfsFile struct {
+type hdfsFile struct {
 	Hosts []string
 	User  string
 
@@ -21,7 +23,7 @@ type HdfsFile struct {
 }
 
 func NewHdfsFileWriter(hosts []string, user, name string) (source.ParquetFileWriter, error) {
-	res := &HdfsFile{
+	res := &hdfsFile{
 		Hosts:    hosts,
 		User:     user,
 		FilePath: name,
@@ -30,7 +32,7 @@ func NewHdfsFileWriter(hosts []string, user, name string) (source.ParquetFileWri
 }
 
 func NewHdfsFileReader(hosts []string, user, name string) (source.ParquetFileReader, error) {
-	res := &HdfsFile{
+	res := &hdfsFile{
 		Hosts:    hosts,
 		User:     user,
 		FilePath: name,
@@ -38,9 +40,9 @@ func NewHdfsFileReader(hosts []string, user, name string) (source.ParquetFileRea
 	return res.Open(name)
 }
 
-func (f *HdfsFile) Create(name string) (source.ParquetFileWriter, error) {
+func (f *hdfsFile) Create(name string) (source.ParquetFileWriter, error) {
 	var err error
-	hf := new(HdfsFile)
+	hf := new(hdfsFile)
 	hf.Hosts = f.Hosts
 	hf.User = f.User
 	hf.Client, err = hdfs.NewClient(hdfs.ClientOptions{
@@ -55,13 +57,13 @@ func (f *HdfsFile) Create(name string) (source.ParquetFileWriter, error) {
 	return hf, err
 }
 
-func (f *HdfsFile) Open(name string) (source.ParquetFileReader, error) {
+func (f *hdfsFile) Open(name string) (source.ParquetFileReader, error) {
 	var err error
 	if name == "" {
 		name = f.FilePath
 	}
 
-	hf := new(HdfsFile)
+	hf := new(hdfsFile)
 	hf.Hosts = f.Hosts
 	hf.User = f.User
 	hf.Client, err = hdfs.NewClient(hdfs.ClientOptions{
@@ -76,11 +78,11 @@ func (f *HdfsFile) Open(name string) (source.ParquetFileReader, error) {
 	return hf, err
 }
 
-func (f *HdfsFile) Seek(offset int64, pos int) (int64, error) {
+func (f *hdfsFile) Seek(offset int64, pos int) (int64, error) {
 	return f.FileReader.Seek(offset, pos)
 }
 
-func (f *HdfsFile) Read(b []byte) (cnt int, err error) {
+func (f *hdfsFile) Read(b []byte) (cnt int, err error) {
 	var n int
 	ln := len(b)
 	for cnt < ln {
@@ -93,11 +95,11 @@ func (f *HdfsFile) Read(b []byte) (cnt int, err error) {
 	return cnt, err
 }
 
-func (f *HdfsFile) Write(b []byte) (n int, err error) {
+func (f *hdfsFile) Write(b []byte) (n int, err error) {
 	return f.FileWriter.Write(b)
 }
 
-func (f *HdfsFile) Close() error {
+func (f *hdfsFile) Close() error {
 	if f.FileReader != nil {
 		if err := f.FileReader.Close(); err != nil {
 			return err

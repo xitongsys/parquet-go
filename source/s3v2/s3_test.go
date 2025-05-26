@@ -38,7 +38,7 @@ func TestSeek(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := &S3File{
+			s := &s3File{
 				fileSize: tc.filesize,
 				offset:   tc.currentOffset,
 				whence:   tc.whence,
@@ -57,7 +57,7 @@ func TestSeek(t *testing.T) {
 
 func TestReadBeyondEOF(t *testing.T) {
 	// file is at the end already
-	s := &S3File{
+	s := &s3File{
 		fileSize: 10,
 		offset:   10,
 	}
@@ -82,7 +82,7 @@ func TestReadBodyLargerThanProvidedBuffer(t *testing.T) {
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObject(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.GetObjectOutput{Body: bufReadCloser}, nil)
-	s := &S3File{
+	s := &s3File{
 		client:   mockClient,
 		fileSize: 100,
 		offset:   10,
@@ -109,7 +109,7 @@ func TestReadDownloadError(t *testing.T) {
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObject(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.GetObjectOutput{Body: bufReadCloser}, errors.New(errMessage))
-	s := &S3File{
+	s := &s3File{
 		client:   mockClient,
 		fileSize: 100,
 		offset:   10,
@@ -136,7 +136,7 @@ func TestRead(t *testing.T) {
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().GetObject(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.GetObjectOutput{Body: bufReadCloser}, nil)
-	s := &S3File{
+	s := &s3File{
 		client:   mockClient,
 		fileSize: 100,
 		offset:   0,
@@ -160,7 +160,7 @@ func TestRead(t *testing.T) {
 func TestWriteWithPriorEncounteredError(t *testing.T) {
 	data := []byte("some data")
 	errMessage := "some write error"
-	s := &S3File{
+	s := &s3File{
 		writeOpened: true,
 		err:         errors.New(errMessage),
 	}
@@ -187,7 +187,7 @@ func TestWrite(t *testing.T) {
 	mockClient.EXPECT().PutObject(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.PutObjectOutput{}, nil)
 
-	s := &S3File{
+	s := &s3File{
 		ctx:        context.Background(),
 		BucketName: bucket,
 		Key:        key,
@@ -212,7 +212,7 @@ func TestWrite(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
-	s := &S3File{}
+	s := &s3File{}
 
 	// verify close without any initialization
 	err := s.Close()
@@ -258,7 +258,7 @@ func TestOpen(t *testing.T) {
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().HeadObject(ctx, gomock.Any()).
 		Return(&s3.HeadObjectOutput{ContentLength: &fileSize}, nil)
-	s := &S3File{
+	s := &s3File{
 		ctx:        ctx,
 		BucketName: bucket,
 		client:     mockClient,
@@ -269,7 +269,7 @@ func TestOpen(t *testing.T) {
 		t.Errorf("expected error to be nil but got %q", err.Error())
 	}
 
-	s3File, ok := pf.(*S3File)
+	s3File, ok := pf.(*s3File)
 	if !ok {
 		t.Errorf("expected parquet file to be of type %T but got %T", s, pf)
 	}
@@ -301,7 +301,7 @@ func TestCreate(t *testing.T) {
 	mockClient := mocks.NewMockS3API(ctrl)
 	mockClient.EXPECT().PutObject(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.PutObjectOutput{}, nil)
-	s := &S3File{
+	s := &s3File{
 		ctx:        context.Background(),
 		BucketName: bucket,
 		client:     mockClient,
@@ -312,7 +312,7 @@ func TestCreate(t *testing.T) {
 		t.Errorf("expected error to be nil but got %q", err.Error())
 	}
 
-	s3File, ok := pf.(*S3File)
+	s3File, ok := pf.(*s3File)
 	if !ok {
 		t.Errorf("expected parquet file to be of type %T but got %T", s, pf)
 	}
@@ -353,7 +353,7 @@ func TestOpenWriteUploadFailuresPreventFurtherWrites(t *testing.T) {
 	mockClient.EXPECT().PutObject(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&s3.PutObjectOutput{}, errors.New(errMessage))
 
-	s := &S3File{
+	s := &s3File{
 		ctx:        context.Background(),
 		BucketName: bucket,
 		Key:        key,
@@ -412,7 +412,7 @@ func TestOpenReadFileSizeError(t *testing.T) {
 			return nil, errors.New(errMessage)
 		})
 
-	s := &S3File{
+	s := &s3File{
 		ctx:        ctx,
 		BucketName: bucket,
 		Key:        key,
@@ -448,7 +448,7 @@ func TestOpenRead(t *testing.T) {
 			return &s3.HeadObjectOutput{ContentLength: &filesize}, nil
 		})
 
-	s := &S3File{
+	s := &s3File{
 		ctx:        ctx,
 		BucketName: bucket,
 		Key:        key,
@@ -494,7 +494,7 @@ func TestGetBytesRange(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := &S3File{
+			s := &s3File{
 				fileSize: tc.filesize,
 				offset:   tc.offset,
 				whence:   tc.whence,

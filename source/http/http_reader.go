@@ -11,10 +11,10 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// Compile time check that *HttpReader implement the source.ParquetFileReader interface.
-var _ source.ParquetFileReader = (*HttpReader)(nil)
+// Compile time check that *httpReader implement the source.ParquetFileReader interface.
+var _ source.ParquetFileReader = (*httpReader)(nil)
 
-type HttpReader struct {
+type httpReader struct {
 	url          string
 	size         int64
 	offset       int64
@@ -82,7 +82,7 @@ func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHea
 		return nil, fmt.Errorf("unable to parse data size from %s: %s", contentRangeHeader, contentRange[0])
 	}
 
-	return &HttpReader{
+	return &httpReader{
 		url:                uri,
 		size:               size,
 		offset:             0,
@@ -92,7 +92,7 @@ func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHea
 	}, nil
 }
 
-func (r *HttpReader) Open(_ string) (source.ParquetFileReader, error) {
+func (r *httpReader) Open(_ string) (source.ParquetFileReader, error) {
 	return NewHttpReader(
 		r.url,
 		r.dedicatedTransport,
@@ -101,7 +101,7 @@ func (r *HttpReader) Open(_ string) (source.ParquetFileReader, error) {
 	)
 }
 
-func (r *HttpReader) Seek(offset int64, pos int) (int64, error) {
+func (r *httpReader) Seek(offset int64, pos int) (int64, error) {
 	switch pos {
 	case io.SeekStart:
 		r.offset = offset
@@ -122,7 +122,7 @@ func (r *HttpReader) Seek(offset int64, pos int) (int64, error) {
 	return r.offset, nil
 }
 
-func (r *HttpReader) Read(b []byte) (int, error) {
+func (r *httpReader) Read(b []byte) (int, error) {
 	req, err := http.NewRequest(http.MethodGet, r.url, nil)
 	if err != nil {
 		return 0, err
@@ -153,6 +153,6 @@ func (r *HttpReader) Read(b []byte) (int, error) {
 	return bytesRead, err
 }
 
-func (r *HttpReader) Close() error {
+func (r *httpReader) Close() error {
 	return nil
 }

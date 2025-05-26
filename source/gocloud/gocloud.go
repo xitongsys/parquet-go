@@ -11,8 +11,10 @@ import (
 )
 
 // Compile time check that *blobFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
-var _ source.ParquetFileReader = (*blobFile)(nil)
-var _ source.ParquetFileWriter = (*blobFile)(nil)
+var (
+	_ source.ParquetFileReader = (*blobFile)(nil)
+	_ source.ParquetFileWriter = (*blobFile)(nil)
+)
 
 type blobFile struct {
 	ctx    context.Context

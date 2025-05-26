@@ -6,25 +6,25 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// Compile time check that *SwiftFile implement the source.ParquetFileWriter interface.
-var _ source.ParquetFileWriter = (*WriterFile)(nil)
+// Compile time check that *writerFile implement the source.ParquetFileWriter interface.
+var _ source.ParquetFileWriter = (*writerFile)(nil)
 
-type WriterFile struct {
+type writerFile struct {
 	Writer io.Writer
 }
 
 func NewWriterFile(writer io.Writer) source.ParquetFileWriter {
-	return &WriterFile{Writer: writer}
+	return &writerFile{Writer: writer}
 }
 
-func (f *WriterFile) Create(name string) (source.ParquetFileWriter, error) {
+func (f *writerFile) Create(name string) (source.ParquetFileWriter, error) {
 	return f, nil
 }
 
-func (f *WriterFile) Write(b []byte) (int, error) {
+func (f *writerFile) Write(b []byte) (int, error) {
 	return f.Writer.Write(b)
 }
 
-func (f *WriterFile) Close() error {
+func (f *writerFile) Close() error {
 	return nil
 }
