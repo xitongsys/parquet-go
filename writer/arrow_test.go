@@ -495,7 +495,7 @@ func TestE2ESequentialValid(t *testing.T) {
 	err = w.WriteStop()
 	assert.Nil(t, err)
 
-	parquetFile := buffer.NewBufferFileFromBytesNoAlloc(buf.Bytes())
+	parquetFile := buffer.NewBufferReaderFromBytesNoAlloc(buf.Bytes())
 
 	pr, err := reader.NewParquetReader(parquetFile, nil, 1)
 	assert.Nil(t, err)
@@ -551,7 +551,7 @@ func TestE2EConcurrentValid(t *testing.T) {
 	err = w.WriteStop()
 	assert.Nil(t, err)
 
-	parquetFile := buffer.NewBufferFileFromBytesNoAlloc(buf.Bytes())
+	parquetFile := buffer.NewBufferReaderFromBytesNoAlloc(buf.Bytes())
 
 	pr, err := reader.NewParquetReader(parquetFile, nil, 1)
 	assert.Nil(t, err)
@@ -607,7 +607,7 @@ func TestE2ENullabilityValid(t *testing.T) {
 	err = w.WriteStop()
 	assert.Nil(t, err)
 
-	parquetFile := buffer.NewBufferFileFromBytesNoAlloc(buf.Bytes())
+	parquetFile := buffer.NewBufferReaderFromBytesNoAlloc(buf.Bytes())
 
 	pr, err := reader.NewParquetReader(parquetFile, nil, 1)
 	assert.Nil(t, err)
