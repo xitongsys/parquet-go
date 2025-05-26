@@ -16,15 +16,15 @@ import (
 )
 
 type Student struct {
-	Name   string  `parquet:"name=name, type=UTF8"`
+	Name   string  `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8"`
 	Age    int32   `parquet:"name=age, type=INT32"`
 	Id     int64   `parquet:"name=id, type=INT64"`
 	Weight float32 `parquet:"name=weight, type=FLOAT"`
-	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
+	Sex    bool    `parquet:"name=sex, type=INT32, convertedtype=BOOLEAN"`
 }
 
 func main() {
-	path := "flat.parquet.snappy"
+	path := "flat.parquet"
 	file, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)

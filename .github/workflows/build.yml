@@ -21,6 +21,8 @@ jobs:
         run: make lint
       - name: Running tests
         run: make test
+      - name: Ensure examples can be built
+        run: make example
       - name: Checking uncommitted changes
         run: |
           git status -s > /tmp/git-status.log

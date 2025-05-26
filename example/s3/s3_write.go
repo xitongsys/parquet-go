@@ -21,8 +21,7 @@ type Student struct {
 	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
 }
 
-// s3Example provides a sample write and read using the S3 Parquet File
-func S3Example() {
+func main() {
 	ctx := context.Background()
 	bucket := "my-bucket"
 	key := "test/foobar.parquet"

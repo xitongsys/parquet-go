@@ -15,19 +15,19 @@ import (
 )
 
 type Student struct {
-	Name   string  `parquet:"name=name, type=UTF8, encoding=PLAIN_DICTIONARY"`
+	Name   string  `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
 	Age    int32   `parquet:"name=age, type=INT32"`
 	Id     int64   `parquet:"name=id, type=INT64"`
 	Weight float32 `parquet:"name=weight, type=FLOAT"`
 	Sex    bool    `parquet:"name=sex, type=BOOLEAN"`
-	Day    int32   `parquet:"name=day, type=DATE"`
+	Day    int32   `parquet:"name=day, type=INT32, convertedtype=DATE"`
 }
 
 func main() {
 	// create in-memory ParquetFile with Closer Function
 	// NOTE: closer function can be nil, no action will be
 	// run when the writer is closed.
-	fw, err := mem.NewMemFileWriter("flat.parquet.snappy", func(name string, r io.Reader) error {
+	fw, err := mem.NewMemFileWriter("flat.parquet", func(name string, r io.Reader) error {
 		dat, err := io.ReadAll(r)
 		if err != nil {
 			log.Printf("error reading data: %v", err)
@@ -74,7 +74,7 @@ func main() {
 	_ = fw.Close()
 
 	///read
-	fr, err := local.NewLocalFileReader("flat.parquet.snappy")
+	fr, err := local.NewLocalFileReader("flat.parquet")
 	if err != nil {
 		log.Println("Can't open file")
 		return
@@ -98,7 +98,7 @@ func main() {
 
 	// NOTE: you can access the underlying MemFs using ParquetFile.GetMemFileFs()
 	// EXAMPLE: this will delete the file we created from the in-memory file system
-	if err := mem.GetMemFileFs().Remove("flat.parquet.snappy"); err != nil {
+	if err := mem.GetMemFileFs().Remove("flat.parquet"); err != nil {
 		log.Printf("error removing file from memfs: %v", err)
 		os.Exit(1)
 	}

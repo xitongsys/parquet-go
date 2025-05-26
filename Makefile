@@ -78,6 +78,16 @@ test: deps tools  ## Run unit tests
 		cat go-test.output | $(GOBIN)/go-junit-report > junit.xml ; \
 		cat coverage.txt
 
+.PHONY: example
+example: deps  ## Run all examples
+	@echo "==> Compiling all examples"
+	@mkdir -p build/example
+	@set -euo pipefail; \
+	    for DIR in example/*; do \
+	        (go build -o build/example/ ./$${DIR}); \
+			echo "    ==> $${DIR}"; \
+	    done
+
 .PHONY: help
 help:  ## Print list of Makefile targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
