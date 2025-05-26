@@ -6,6 +6,10 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
+// Compile time check that *HdfsFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var _ source.ParquetFileReader = (*HdfsFile)(nil)
+var _ source.ParquetFileWriter = (*HdfsFile)(nil)
+
 type HdfsFile struct {
 	Hosts []string
 	User  string

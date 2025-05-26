@@ -10,6 +10,10 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
+// Compile time check that *MinioFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var _ source.ParquetFileReader = (*MinioFile)(nil)
+var _ source.ParquetFileWriter = (*MinioFile)(nil)
+
 // MinioFile is ParquetFile for MinIO S3 API
 type MinioFile struct {
 	ctx    context.Context
@@ -42,7 +46,7 @@ func NewS3FileWriterWithClient(
 	s3Client *minio.Client,
 	bucket string,
 	key string,
-) (source.ParquetFileReader, error) {
+) (source.ParquetFileWriter, error) {
 	file := &MinioFile{
 		ctx:        ctx,
 		client:     s3Client,
@@ -162,7 +166,7 @@ func (s *MinioFile) Open(name string) (source.ParquetFileReader, error) {
 }
 
 // Create creates a new Minio File instance to perform writes
-func (s *MinioFile) Create(key string) (source.ParquetFileReader, error) {
+func (s *MinioFile) Create(key string) (source.ParquetFileWriter, error) {
 	pf := &MinioFile{
 		ctx:        s.ctx,
 		client:     s.client,

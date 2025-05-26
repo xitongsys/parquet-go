@@ -7,7 +7,11 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// BufferFile allows reading parquet messages from a memory buffer.
+// Compile time check that *BufferFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var _ source.ParquetFileReader = (*BufferFile)(nil)
+var _ source.ParquetFileWriter = (*BufferFile)(nil)
+
+// BufferFile allows reading and writing parquet messages from a memory buffer.
 type BufferFile struct {
 	buff []byte
 	loc  int

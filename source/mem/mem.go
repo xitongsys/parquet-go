@@ -30,6 +30,10 @@ func GetMemFileFs() afero.Fs {
 // Close() will pass the filename string and data as io.reader
 type OnCloseFunc func(string, io.Reader) error
 
+// Compile time check that *MemFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var _ source.ParquetFileReader = (*MemFile)(nil)
+var _ source.ParquetFileWriter = (*MemFile)(nil)
+
 // MemFile - ParquetFile type for in-memory file operations
 type MemFile struct {
 	FilePath string

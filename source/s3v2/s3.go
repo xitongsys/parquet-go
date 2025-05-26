@@ -27,6 +27,10 @@ type S3API interface {
 	HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error)
 }
 
+// Compile time check that *S3File implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var _ source.ParquetFileReader = (*S3File)(nil)
+var _ source.ParquetFileWriter = (*S3File)(nil)
+
 // S3File is ParquetFile for AWS S3
 type S3File struct {
 	ctx    context.Context

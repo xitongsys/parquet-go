@@ -13,7 +13,11 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// AzBlockBlob is ParquetFile for azblob
+// Compile time check that *AzBlockBlob implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var _ source.ParquetFileReader = (*AzBlockBlob)(nil)
+var _ source.ParquetFileWriter = (*AzBlockBlob)(nil)
+
+// AzBlockBlob is ParquetFileReader and ParquetFileWriter for azblob
 type AzBlockBlob struct {
 	ctx             context.Context
 	URL             *url.URL
