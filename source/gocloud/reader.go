@@ -76,9 +76,6 @@ func (b *blobReader) Open(name string) (source.ParquetFileReader, error) {
 		},
 	}
 
-	if name == "" {
-		name = b.key
-	}
 	if e, err := bf.bucket.Exists(bf.ctx, name); !e || err != nil {
 		return nil, errors.Errorf("Requested blob does not exist. blob=%s", name)
 	}
@@ -91,4 +88,8 @@ func (b *blobReader) Open(name string) (source.ParquetFileReader, error) {
 
 	bf.size = attrs.Size
 	return bf, nil
+}
+
+func (b blobReader) Clone() (source.ParquetFileReader, error) {
+	return NewBlobReader(b.ctx, b.bucket, b.key)
 }

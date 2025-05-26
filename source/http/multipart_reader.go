@@ -18,13 +18,16 @@ func NewMultipartFileWrapper(fh *multipart.FileHeader, f multipart.File) source.
 	return &multipartFileReader{fileHeader: fh, file: f}
 }
 
-// this method is called multiple times on one file to open parallel readers
 func (mfw *multipartFileReader) Open(_ string) (source.ParquetFileReader, error) {
 	file, err := mfw.fileHeader.Open()
 	if err != nil {
 		return nil, err
 	}
 	return NewMultipartFileWrapper(mfw.fileHeader, file), nil
+}
+
+func (mfw multipartFileReader) Clone() (source.ParquetFileReader, error) {
+	return NewMultipartFileWrapper(mfw.fileHeader, mfw.file), nil
 }
 
 func (mfw *multipartFileReader) Seek(offset int64, pos int) (int64, error) {

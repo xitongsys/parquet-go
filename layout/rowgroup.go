@@ -74,7 +74,7 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFileRead
 				if columnChunks[i].FilePath != nil {
 					PFile, _ = PFile.Open(*columnChunks[i].FilePath)
 				} else {
-					PFile, _ = PFile.Open("")
+					PFile, _ = PFile.Clone()
 				}
 				thriftReader := source.ConvertToThriftReader(PFile, offset)
 				chunk, _ := ReadChunk(thriftReader, schemaHandler, columnChunks[i])

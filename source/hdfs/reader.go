@@ -41,6 +41,10 @@ func (f *hdfsReader) Open(name string) (source.ParquetFileReader, error) {
 	return f, err
 }
 
+func (f hdfsReader) Clone() (source.ParquetFileReader, error) {
+	return NewHdfsFileReader(f.hosts, f.user, f.filePath)
+}
+
 func (f *hdfsReader) Seek(offset int64, pos int) (int64, error) {
 	return f.fileReader.Seek(offset, pos)
 }

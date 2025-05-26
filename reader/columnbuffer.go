@@ -33,7 +33,7 @@ type ColumnBufferType struct {
 }
 
 func NewColumnBuffer(pFile source.ParquetFileReader, footer *parquet.FileMetaData, schemaHandler *schema.SchemaHandler, pathStr string) (*ColumnBufferType, error) {
-	newPFile, err := pFile.Open("")
+	newPFile, err := pFile.Clone()
 	if err != nil {
 		return nil, err
 	}

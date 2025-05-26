@@ -26,10 +26,6 @@ func NewSwiftFileReader(container, filePath string, conn *swift.Connection) (sou
 }
 
 func (file *swiftReader) Open(name string) (source.ParquetFileReader, error) {
-	if name == "" {
-		name = file.filePath
-	}
-
 	fr, _, err := file.connection.ObjectOpen(file.container, name, false, nil)
 	if err != nil {
 		return nil, err
@@ -45,6 +41,10 @@ func (file *swiftReader) Open(name string) (source.ParquetFileReader, error) {
 	}
 
 	return res, nil
+}
+
+func (file swiftReader) Clone() (source.ParquetFileReader, error) {
+	return NewSwiftFileReader(file.container, file.filePath, file.connection)
 }
 
 func (file *swiftReader) Read(b []byte) (n int, err error) {

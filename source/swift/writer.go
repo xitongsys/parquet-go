@@ -27,10 +27,6 @@ func NewSwiftFileWriter(container, filePath string, conn *swift.Connection) (sou
 }
 
 func (file *swiftWriter) Create(name string) (source.ParquetFileWriter, error) {
-	if name == "" {
-		name = file.filePath
-	}
-
 	fw, err := file.connection.ObjectCreate(file.container, name, false, "", "", nil)
 	if err != nil {
 		return nil, err

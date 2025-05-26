@@ -18,12 +18,7 @@ func NewLocalFileReader(name string) (source.ParquetFileReader, error) {
 }
 
 func (f *localReader) Open(name string) (source.ParquetFileReader, error) {
-	// TODO there are Open("") calls which should be done by a Dup() call
-	if name != "" {
-		f.filePath = name
-	}
-
-	file, err := os.Open(f.filePath)
+	file, err := os.Open(name)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +29,10 @@ func (f *localReader) Open(name string) (source.ParquetFileReader, error) {
 			file:     file,
 		},
 	}, nil
+}
+
+func (f localReader) Clone() (source.ParquetFileReader, error) {
+	return NewLocalFileReader(f.filePath)
 }
 
 func (f *localReader) Seek(offset int64, pos int) (int64, error) {

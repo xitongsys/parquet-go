@@ -165,3 +165,7 @@ func (s *azBlobReader) Open(URL string) (source.ParquetFileReader, error) {
 
 	return pf, nil
 }
+
+func (s azBlobReader) Clone() (source.ParquetFileReader, error) {
+	return NewAzBlobFileReaderWithClient(s.ctx, s.url.String(), s.blockBlobClient)
+}

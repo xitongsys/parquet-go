@@ -114,3 +114,7 @@ func (s *minioReader) Open(name string) (source.ParquetFileReader, error) {
 	s.fileSize = info.Size
 	return pf, nil
 }
+
+func (s minioReader) Clone() (source.ParquetFileReader, error) {
+	return NewS3FileReaderWithClient(s.ctx, s.client, s.bucketName, s.key)
+}

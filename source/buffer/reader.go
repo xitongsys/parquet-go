@@ -35,6 +35,10 @@ func (bf bufferReader) Open(string) (source.ParquetFileReader, error) {
 	return NewBufferReaderFromBytes(bf.buff), nil
 }
 
+func (bf bufferReader) Clone() (source.ParquetFileReader, error) {
+	return NewBufferReaderFromBytesNoAlloc(bf.buff), nil
+}
+
 // Seek seeks in the underlying memory buffer.
 func (bf *bufferReader) Seek(offset int64, whence int) (int64, error) {
 	newLoc := bf.loc

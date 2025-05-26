@@ -65,15 +65,17 @@ func NewGcsFileReaderWithClient(ctx context.Context, client *storage.Client, pro
 // passed named. If name is left empty the same object as currently opened
 // will be re-opened.
 func (g *gcsReader) Open(name string) (source.ParquetFileReader, error) {
-	if name == "" {
-		name = g.filePath
-	}
-
 	if g.gcsClient == nil {
 		return NewGcsFileReader(g.ctx, g.projectID, g.bucketName, name, -1)
 	}
 
 	return NewGcsFileReaderWithClient(g.ctx, g.gcsClient, g.projectID, g.bucketName, name, -1)
+}
+
+// Clone will make a copy of reader
+func (g gcsReader) Clone() (source.ParquetFileReader, error) {
+	// need to create a new reader as offset, etc. are hidden under reader
+	return NewGcsFileReaderWithClient(g.ctx, g.gcsClient, g.projectID, g.bucketName, g.filePath, g.generation)
 }
 
 // Seek implements io.Seeker.

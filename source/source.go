@@ -11,6 +11,7 @@ type ParquetFileReader interface {
 	io.Reader
 	io.Closer
 	Open(name string) (ParquetFileReader, error)
+	Clone() (ParquetFileReader, error)
 }
 
 type ParquetFileWriter interface {

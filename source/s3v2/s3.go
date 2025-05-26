@@ -314,6 +314,10 @@ func (s *s3File) Open(name string) (source.ParquetFileReader, error) {
 	return pf, nil
 }
 
+func (s *s3File) Clone() (source.ParquetFileReader, error) {
+	return NewS3FileReaderWithClient(s.ctx, s.client, s.bucketName, s.key)
+}
+
 // Create creates a new S3 File instance to perform writes
 func (s *s3File) Create(key string) (source.ParquetFileWriter, error) {
 	pf := &s3File{

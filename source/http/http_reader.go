@@ -101,6 +101,15 @@ func (r *httpReader) Open(_ string) (source.ParquetFileReader, error) {
 	)
 }
 
+func (r httpReader) Clone() (source.ParquetFileReader, error) {
+	return NewHttpReader(
+		r.url,
+		r.dedicatedTransport,
+		r.httpClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify,
+		r.extraHeaders,
+	)
+}
+
 func (r *httpReader) Seek(offset int64, pos int) (int64, error) {
 	switch pos {
 	case io.SeekStart:
