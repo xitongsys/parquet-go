@@ -18,9 +18,9 @@ var (
 
 // gcsFile represents a gcsFile that can be read from or written to.
 type gcsFile struct {
-	ProjectID  string
-	BucketName string
-	FilePath   string
+	projectID  string
+	bucketName string
+	filePath   string
 
 	gcsClient      *storage.Client
 	gcsReader      *gcsobj.Reader
@@ -101,9 +101,9 @@ func NewGcsFileReaderWithClientAndGeneration(ctx context.Context, client *storag
 	}
 
 	return &gcsFile{
-		ProjectID:      projectID,
-		BucketName:     bucketName,
-		FilePath:       name,
+		projectID:      projectID,
+		bucketName:     bucketName,
+		filePath:       name,
 		gcsClient:      client,
 		gcsReader:      reader,
 		object:         obj,
@@ -117,14 +117,14 @@ func NewGcsFileReaderWithClientAndGeneration(ctx context.Context, client *storag
 // will be re-opened.
 func (g *gcsFile) Open(name string) (source.ParquetFileReader, error) {
 	if name == "" {
-		name = g.FilePath
+		name = g.filePath
 	}
 
 	if g.gcsClient == nil {
-		return NewGcsFileReader(g.ctx, g.ProjectID, g.BucketName, name)
+		return NewGcsFileReader(g.ctx, g.projectID, g.bucketName, name)
 	}
 
-	return NewGcsFileReaderWithClient(g.ctx, g.gcsClient, g.ProjectID, g.BucketName, name)
+	return NewGcsFileReaderWithClient(g.ctx, g.gcsClient, g.projectID, g.bucketName, name)
 }
 
 // Create will create a new GCS file reader/writer and open the object named as
@@ -132,14 +132,14 @@ func (g *gcsFile) Open(name string) (source.ParquetFileReader, error) {
 // will be re-opened.
 func (g *gcsFile) Create(name string) (source.ParquetFileWriter, error) {
 	if name == "" {
-		name = g.FilePath
+		name = g.filePath
 	}
 
 	if g.gcsClient == nil {
-		return NewGcsFileWriter(g.ctx, g.ProjectID, g.BucketName, name)
+		return NewGcsFileWriter(g.ctx, g.projectID, g.bucketName, name)
 	}
 
-	return NewGcsFileWriterWithClient(g.ctx, g.gcsClient, g.ProjectID, g.BucketName, name)
+	return NewGcsFileWriterWithClient(g.ctx, g.gcsClient, g.projectID, g.bucketName, name)
 }
 
 // Seek implements io.Seeker.

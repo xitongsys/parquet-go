@@ -22,7 +22,7 @@ var (
 // azBlockBlob is ParquetFileReader and ParquetFileWriter for azblob
 type azBlockBlob struct {
 	ctx             context.Context
-	URL             *url.URL
+	url             *url.URL
 	blockBlobClient *blockblob.Client
 
 	// write-related fields
@@ -231,9 +231,9 @@ func (s *azBlockBlob) Close() error {
 // Open creates a new block blob to perform reads
 func (s *azBlockBlob) Open(URL string) (source.ParquetFileReader, error) {
 	var u *url.URL
-	if len(URL) == 0 && s.URL != nil {
+	if len(URL) == 0 && s.url != nil {
 		// ColumnBuffer passes in an empty string for name
-		u = s.URL
+		u = s.url
 	} else {
 		var err error
 		if u, err = url.Parse(URL); err != nil {
@@ -248,7 +248,7 @@ func (s *azBlockBlob) Open(URL string) (source.ParquetFileReader, error) {
 
 	pf := &azBlockBlob{
 		ctx:             s.ctx,
-		URL:             u,
+		url:             u,
 		blockBlobClient: s.blockBlobClient,
 		fileSize:        fileSize,
 	}
@@ -259,9 +259,9 @@ func (s *azBlockBlob) Open(URL string) (source.ParquetFileReader, error) {
 // Create a new blob url to perform writes
 func (s *azBlockBlob) Create(URL string) (source.ParquetFileWriter, error) {
 	var u *url.URL
-	if len(URL) == 0 && s.URL != nil {
+	if len(URL) == 0 && s.url != nil {
 		// ColumnBuffer passes in an empty string for name
-		u = s.URL
+		u = s.url
 	} else {
 		var err error
 		if u, err = url.Parse(URL); err != nil {
@@ -271,7 +271,7 @@ func (s *azBlockBlob) Create(URL string) (source.ParquetFileWriter, error) {
 
 	pf := &azBlockBlob{
 		ctx:             s.ctx,
-		URL:             u,
+		url:             u,
 		blockBlobClient: s.blockBlobClient,
 		writeDone:       make(chan error),
 	}

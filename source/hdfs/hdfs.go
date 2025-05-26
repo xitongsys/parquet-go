@@ -13,29 +13,29 @@ var (
 )
 
 type hdfsFile struct {
-	Hosts []string
-	User  string
+	hosts []string
+	user  string
 
-	Client     *hdfs.Client
-	FilePath   string
-	FileReader *hdfs.FileReader
-	FileWriter *hdfs.FileWriter
+	client     *hdfs.Client
+	filePath   string
+	fileReader *hdfs.FileReader
+	fileWriter *hdfs.FileWriter
 }
 
 func NewHdfsFileWriter(hosts []string, user, name string) (source.ParquetFileWriter, error) {
 	res := &hdfsFile{
-		Hosts:    hosts,
-		User:     user,
-		FilePath: name,
+		hosts:    hosts,
+		user:     user,
+		filePath: name,
 	}
 	return res.Create(name)
 }
 
 func NewHdfsFileReader(hosts []string, user, name string) (source.ParquetFileReader, error) {
 	res := &hdfsFile{
-		Hosts:    hosts,
-		User:     user,
-		FilePath: name,
+		hosts:    hosts,
+		user:     user,
+		filePath: name,
 	}
 	return res.Open(name)
 }
@@ -43,50 +43,50 @@ func NewHdfsFileReader(hosts []string, user, name string) (source.ParquetFileRea
 func (f *hdfsFile) Create(name string) (source.ParquetFileWriter, error) {
 	var err error
 	hf := new(hdfsFile)
-	hf.Hosts = f.Hosts
-	hf.User = f.User
-	hf.Client, err = hdfs.NewClient(hdfs.ClientOptions{
-		Addresses: hf.Hosts,
-		User:      hf.User,
+	hf.hosts = f.hosts
+	hf.user = f.user
+	hf.client, err = hdfs.NewClient(hdfs.ClientOptions{
+		Addresses: hf.hosts,
+		User:      hf.user,
 	})
-	hf.FilePath = name
+	hf.filePath = name
 	if err != nil {
 		return hf, err
 	}
-	hf.FileWriter, err = hf.Client.Create(name)
+	hf.fileWriter, err = hf.client.Create(name)
 	return hf, err
 }
 
 func (f *hdfsFile) Open(name string) (source.ParquetFileReader, error) {
 	var err error
 	if name == "" {
-		name = f.FilePath
+		name = f.filePath
 	}
 
 	hf := new(hdfsFile)
-	hf.Hosts = f.Hosts
-	hf.User = f.User
-	hf.Client, err = hdfs.NewClient(hdfs.ClientOptions{
-		Addresses: hf.Hosts,
-		User:      hf.User,
+	hf.hosts = f.hosts
+	hf.user = f.user
+	hf.client, err = hdfs.NewClient(hdfs.ClientOptions{
+		Addresses: hf.hosts,
+		User:      hf.user,
 	})
-	hf.FilePath = name
+	hf.filePath = name
 	if err != nil {
 		return hf, err
 	}
-	hf.FileReader, err = hf.Client.Open(name)
+	hf.fileReader, err = hf.client.Open(name)
 	return hf, err
 }
 
 func (f *hdfsFile) Seek(offset int64, pos int) (int64, error) {
-	return f.FileReader.Seek(offset, pos)
+	return f.fileReader.Seek(offset, pos)
 }
 
 func (f *hdfsFile) Read(b []byte) (cnt int, err error) {
 	var n int
 	ln := len(b)
 	for cnt < ln {
-		n, err = f.FileReader.Read(b[cnt:])
+		n, err = f.fileReader.Read(b[cnt:])
 		cnt += n
 		if err != nil {
 			break
@@ -96,22 +96,22 @@ func (f *hdfsFile) Read(b []byte) (cnt int, err error) {
 }
 
 func (f *hdfsFile) Write(b []byte) (n int, err error) {
-	return f.FileWriter.Write(b)
+	return f.fileWriter.Write(b)
 }
 
 func (f *hdfsFile) Close() error {
-	if f.FileReader != nil {
-		if err := f.FileReader.Close(); err != nil {
+	if f.fileReader != nil {
+		if err := f.fileReader.Close(); err != nil {
 			return err
 		}
 	}
-	if f.FileWriter != nil {
-		if err := f.FileWriter.Close(); err != nil {
+	if f.fileWriter != nil {
+		if err := f.fileWriter.Close(); err != nil {
 			return err
 		}
 	}
-	if f.Client != nil {
-		if err := f.Client.Close(); err != nil {
+	if f.client != nil {
+		if err := f.client.Close(); err != nil {
 			return err
 		}
 	}

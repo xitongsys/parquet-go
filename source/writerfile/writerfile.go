@@ -10,11 +10,11 @@ import (
 var _ source.ParquetFileWriter = (*writerFile)(nil)
 
 type writerFile struct {
-	Writer io.Writer
+	writer io.Writer
 }
 
 func NewWriterFile(writer io.Writer) source.ParquetFileWriter {
-	return &writerFile{Writer: writer}
+	return &writerFile{writer: writer}
 }
 
 func (f *writerFile) Create(name string) (source.ParquetFileWriter, error) {
@@ -22,7 +22,7 @@ func (f *writerFile) Create(name string) (source.ParquetFileWriter, error) {
 }
 
 func (f *writerFile) Write(b []byte) (int, error) {
-	return f.Writer.Write(b)
+	return f.writer.Write(b)
 }
 
 func (f *writerFile) Close() error {

@@ -38,9 +38,9 @@ var (
 
 // memFile - ParquetFile type for in-memory file operations
 type memFile struct {
-	FilePath string
-	File     afero.File
-	OnClose  OnCloseFunc
+	filePath string
+	file     afero.File
+	onClose  OnCloseFunc
 }
 
 // NewMemFileWriter - intiates and creates an instance of MemFiles
@@ -54,7 +54,7 @@ func NewMemFileWriter(name string, f OnCloseFunc) (source.ParquetFileWriter, err
 	}
 
 	var m memFile
-	m.OnClose = f
+	m.onClose = f
 	return m.Create(name)
 }
 
@@ -65,8 +65,8 @@ func (fs *memFile) Create(name string) (source.ParquetFileWriter, error) {
 		return fs, err
 	}
 
-	fs.File = file
-	fs.FilePath = name
+	fs.file = file
+	fs.filePath = name
 	return fs, nil
 }
 
@@ -74,17 +74,17 @@ func (fs *memFile) Create(name string) (source.ParquetFileWriter, error) {
 func (fs *memFile) Open(name string) (source.ParquetFileReader, error) {
 	var err error
 	if name == "" {
-		name = fs.FilePath
+		name = fs.filePath
 	}
 
-	fs.FilePath = name
-	fs.File, err = memFs.Open(name)
+	fs.filePath = name
+	fs.file, err = memFs.Open(name)
 	return fs, err
 }
 
 // Seek - seek function
 func (fs *memFile) Seek(offset int64, pos int) (int64, error) {
-	return fs.File.Seek(offset, pos)
+	return fs.file.Seek(offset, pos)
 }
 
 // Read - read file
@@ -92,7 +92,7 @@ func (fs *memFile) Read(b []byte) (cnt int, err error) {
 	var n int
 	ln := len(b)
 	for cnt < ln {
-		n, err = fs.File.Read(b[cnt:])
+		n, err = fs.file.Read(b[cnt:])
 		cnt += n
 		if err != nil {
 			break
@@ -103,17 +103,17 @@ func (fs *memFile) Read(b []byte) (cnt int, err error) {
 
 // Write - write file in-memory
 func (fs *memFile) Write(b []byte) (n int, err error) {
-	return fs.File.Write(b)
+	return fs.file.Write(b)
 }
 
 // Close - close file and execute OnCloseFunc
 func (fs *memFile) Close() error {
-	if err := fs.File.Close(); err != nil {
+	if err := fs.file.Close(); err != nil {
 		return err
 	}
-	if fs.OnClose != nil {
-		f, _ := fs.Open(fs.FilePath)
-		if err := fs.OnClose(filepath.Base(fs.FilePath), f); err != nil {
+	if fs.onClose != nil {
+		f, _ := fs.Open(fs.filePath)
+		if err := fs.onClose(filepath.Base(fs.filePath), f); err != nil {
 			return err
 		}
 	}
