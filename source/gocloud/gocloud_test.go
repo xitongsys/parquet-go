@@ -10,7 +10,7 @@ import (
 )
 
 func TestSeek(t *testing.T) {
-	bf := &blobFile{}
+	bf := &blobReader{}
 
 	// Out of range whence
 	_, err := bf.Seek(0, io.SeekEnd+1)
@@ -149,7 +149,7 @@ func TestWrite(t *testing.T) {
 	assert.Equal(t, testOverwrite, data)
 
 	// Don't write to things that don't exist
-	bf = &blobFile{}
+	bf = &blobWriter{}
 	n, err = bf.Write(testData)
 	assert.Error(t, err)
 	assert.Equal(t, 0, n)
