@@ -6,6 +6,10 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
+// Compile time check that *SwiftFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var _ source.ParquetFileReader = (*SwiftFile)(nil)
+var _ source.ParquetFileWriter = (*SwiftFile)(nil)
+
 type SwiftFile struct {
 	Connection *swift.Connection
 

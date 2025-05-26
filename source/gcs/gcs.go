@@ -10,8 +10,9 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// Compile time check that *File implement the source.ParquetFile interface.
+// Compile time check that *File implement the source.ParquetFileReader and source.ParquetFileWriter interface.
 var _ source.ParquetFileReader = (*File)(nil)
+var _ source.ParquetFileWriter = (*File)(nil)
 
 // File represents a File that can be read from or written to.
 type File struct {

@@ -2,7 +2,6 @@ package http
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +10,9 @@ import (
 
 	"github.com/hangxie/parquet-go/v2/source"
 )
+
+// Compile time check that *HttpReader implement the source.ParquetFileReader interface.
+var _ source.ParquetFileReader = (*HttpReader)(nil)
 
 type HttpReader struct {
 	url          string
@@ -90,10 +92,6 @@ func NewHttpReader(uri string, dedicatedTransport, ignoreTLSError bool, extraHea
 	}, nil
 }
 
-func (r *HttpReader) Create(_ string) (source.ParquetFileReader, error) {
-	return nil, fmt.Errorf("HttpReader does not support Create()")
-}
-
 func (r *HttpReader) Open(_ string) (source.ParquetFileReader, error) {
 	return NewHttpReader(
 		r.url,
@@ -153,10 +151,6 @@ func (r *HttpReader) Read(b []byte) (int, error) {
 		r.offset = r.size
 	}
 	return bytesRead, err
-}
-
-func (r *HttpReader) Write(_ []byte) (int, error) {
-	return 0, errors.New("HttpReader does not support Write()")
 }
 
 func (r *HttpReader) Close() error {

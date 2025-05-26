@@ -6,6 +6,10 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
+// Compile time check that *LocalFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var _ source.ParquetFileReader = (*LocalFile)(nil)
+var _ source.ParquetFileWriter = (*LocalFile)(nil)
+
 type LocalFile struct {
 	FilePath string
 	File     *os.File
