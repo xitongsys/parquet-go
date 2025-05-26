@@ -13,12 +13,14 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// Compile time check that *AzBlockBlob implement the source.ParquetFileReader and source.ParquetFileWriter interface.
-var _ source.ParquetFileReader = (*AzBlockBlob)(nil)
-var _ source.ParquetFileWriter = (*AzBlockBlob)(nil)
+// Compile time check that *azBlockBlob implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var (
+	_ source.ParquetFileReader = (*azBlockBlob)(nil)
+	_ source.ParquetFileWriter = (*azBlockBlob)(nil)
+)
 
-// AzBlockBlob is ParquetFileReader and ParquetFileWriter for azblob
-type AzBlockBlob struct {
+// azBlockBlob is ParquetFileReader and ParquetFileWriter for azblob
+type azBlockBlob struct {
 	ctx             context.Context
 	URL             *url.URL
 	blockBlobClient *blockblob.Client
@@ -77,7 +79,7 @@ func NewAzBlobFileWriterWithClient(ctx context.Context, URL string, client *bloc
 	if client == nil {
 		return nil, errors.New("client cannot be nil")
 	}
-	file := &AzBlockBlob{
+	file := &azBlockBlob{
 		ctx:             ctx,
 		blockBlobClient: client,
 	}
@@ -122,7 +124,7 @@ func NewAzBlobFileReaderWithClient(ctx context.Context, URL string, client *bloc
 	if client == nil {
 		return nil, errors.New("client cannot be nil")
 	}
-	file := &AzBlockBlob{
+	file := &azBlockBlob{
 		ctx:             ctx,
 		blockBlobClient: client,
 	}
@@ -131,7 +133,7 @@ func NewAzBlobFileReaderWithClient(ctx context.Context, URL string, client *bloc
 }
 
 // Seek tracks the offset for the next Read. Has no effect on Write.
-func (s *AzBlockBlob) Seek(offset int64, whence int) (int64, error) {
+func (s *azBlockBlob) Seek(offset int64, whence int) (int64, error) {
 	if whence < io.SeekStart || whence > io.SeekEnd {
 		return 0, errWhence
 	}
@@ -155,7 +157,7 @@ func (s *AzBlockBlob) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Read up to len(p) bytes into p and return the number of bytes read
-func (s *AzBlockBlob) Read(p []byte) (n int, err error) {
+func (s *azBlockBlob) Read(p []byte) (n int, err error) {
 	if s.blockBlobClient == nil {
 		return 0, errReadNotOpened
 	}
@@ -195,7 +197,7 @@ func (s *AzBlockBlob) Read(p []byte) (n int, err error) {
 }
 
 // Write len(p) bytes from p
-func (s *AzBlockBlob) Write(p []byte) (n int, err error) {
+func (s *azBlockBlob) Write(p []byte) (n int, err error) {
 	if s.blockBlobClient == nil {
 		return 0, errWriteNotOpened
 	}
@@ -211,7 +213,7 @@ func (s *AzBlockBlob) Write(p []byte) (n int, err error) {
 
 // Close signals write completion and cleans up any
 // open streams. Will block until pending uploads are complete.
-func (s *AzBlockBlob) Close() error {
+func (s *azBlockBlob) Close() error {
 	var err error
 
 	if s.pipeWriter != nil {
@@ -227,7 +229,7 @@ func (s *AzBlockBlob) Close() error {
 }
 
 // Open creates a new block blob to perform reads
-func (s *AzBlockBlob) Open(URL string) (source.ParquetFileReader, error) {
+func (s *azBlockBlob) Open(URL string) (source.ParquetFileReader, error) {
 	var u *url.URL
 	if len(URL) == 0 && s.URL != nil {
 		// ColumnBuffer passes in an empty string for name
@@ -240,11 +242,11 @@ func (s *AzBlockBlob) Open(URL string) (source.ParquetFileReader, error) {
 	}
 	props, err := s.blockBlobClient.GetProperties(s.ctx, nil)
 	if err != nil {
-		return &AzBlockBlob{}, err
+		return &azBlockBlob{}, err
 	}
 	fileSize := *props.ContentLength
 
-	pf := &AzBlockBlob{
+	pf := &azBlockBlob{
 		ctx:             s.ctx,
 		URL:             u,
 		blockBlobClient: s.blockBlobClient,
@@ -255,7 +257,7 @@ func (s *AzBlockBlob) Open(URL string) (source.ParquetFileReader, error) {
 }
 
 // Create a new blob url to perform writes
-func (s *AzBlockBlob) Create(URL string) (source.ParquetFileWriter, error) {
+func (s *azBlockBlob) Create(URL string) (source.ParquetFileWriter, error) {
 	var u *url.URL
 	if len(URL) == 0 && s.URL != nil {
 		// ColumnBuffer passes in an empty string for name
@@ -267,7 +269,7 @@ func (s *AzBlockBlob) Create(URL string) (source.ParquetFileWriter, error) {
 		}
 	}
 
-	pf := &AzBlockBlob{
+	pf := &azBlockBlob{
 		ctx:             s.ctx,
 		URL:             u,
 		blockBlobClient: s.blockBlobClient,

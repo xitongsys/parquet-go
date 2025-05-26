@@ -10,12 +10,14 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// Compile time check that *MinioFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
-var _ source.ParquetFileReader = (*MinioFile)(nil)
-var _ source.ParquetFileWriter = (*MinioFile)(nil)
+// Compile time check that *minioFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var (
+	_ source.ParquetFileReader = (*minioFile)(nil)
+	_ source.ParquetFileWriter = (*minioFile)(nil)
+)
 
-// MinioFile is ParquetFile for MinIO S3 API
-type MinioFile struct {
+// minioFile is ParquetFile for MinIO S3 API
+type minioFile struct {
 	ctx    context.Context
 	client *minio.Client
 	offset int64
@@ -47,7 +49,7 @@ func NewS3FileWriterWithClient(
 	bucket string,
 	key string,
 ) (source.ParquetFileWriter, error) {
-	file := &MinioFile{
+	file := &minioFile{
 		ctx:        ctx,
 		client:     s3Client,
 		BucketName: bucket,
@@ -60,7 +62,7 @@ func NewS3FileWriterWithClient(
 // NewS3FileReaderWithClient is the same as NewMinioFileReader but allows passing
 // your own S3 client
 func NewS3FileReaderWithClient(ctx context.Context, s3Client *minio.Client, bucket, key string) (source.ParquetFileReader, error) {
-	file := &MinioFile{
+	file := &minioFile{
 		ctx:        ctx,
 		client:     s3Client,
 		BucketName: bucket,
@@ -71,7 +73,7 @@ func NewS3FileReaderWithClient(ctx context.Context, s3Client *minio.Client, buck
 }
 
 // Seek tracks the offset for the next Read. Has no effect on Write.
-func (s *MinioFile) Seek(offset int64, whence int) (int64, error) {
+func (s *minioFile) Seek(offset int64, whence int) (int64, error) {
 	if whence < io.SeekStart || whence > io.SeekEnd {
 		return 0, errWhence
 	}
@@ -100,7 +102,7 @@ func (s *MinioFile) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Read up to len(p) bytes into p and return the number of bytes read
-func (s *MinioFile) Read(p []byte) (n int, err error) {
+func (s *minioFile) Read(p []byte) (n int, err error) {
 	if s.fileSize > 0 && s.offset >= s.fileSize {
 		return 0, io.EOF
 	}
@@ -115,7 +117,7 @@ func (s *MinioFile) Read(p []byte) (n int, err error) {
 }
 
 // Write len(p) bytes from p to the Minio data stream
-func (s *MinioFile) Write(p []byte) (n int, err error) {
+func (s *minioFile) Write(p []byte) (n int, err error) {
 	// prevent further writes upon error
 	bytesWritten, writeError := s.pipeWriter.Write(p)
 	if writeError != nil {
@@ -129,7 +131,7 @@ func (s *MinioFile) Write(p []byte) (n int, err error) {
 
 // Close signals write completion and cleans up any
 // open streams. Will block until pending uploads are complete.
-func (s *MinioFile) Close() error {
+func (s *minioFile) Close() error {
 	var err error
 
 	if s.pipeWriter != nil {
@@ -142,9 +144,9 @@ func (s *MinioFile) Close() error {
 }
 
 // Open creates a new Minio File instance to perform concurrent reads
-func (s *MinioFile) Open(name string) (source.ParquetFileReader, error) {
+func (s *minioFile) Open(name string) (source.ParquetFileReader, error) {
 	// new instance
-	pf := &MinioFile{
+	pf := &minioFile{
 		ctx:        s.ctx,
 		client:     s.client,
 		BucketName: s.BucketName,
@@ -166,8 +168,8 @@ func (s *MinioFile) Open(name string) (source.ParquetFileReader, error) {
 }
 
 // Create creates a new Minio File instance to perform writes
-func (s *MinioFile) Create(key string) (source.ParquetFileWriter, error) {
-	pf := &MinioFile{
+func (s *minioFile) Create(key string) (source.ParquetFileWriter, error) {
+	pf := &minioFile{
 		ctx:        s.ctx,
 		client:     s.client,
 		BucketName: s.BucketName,

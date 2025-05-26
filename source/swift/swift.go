@@ -6,11 +6,13 @@ import (
 	"github.com/hangxie/parquet-go/v2/source"
 )
 
-// Compile time check that *SwiftFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
-var _ source.ParquetFileReader = (*SwiftFile)(nil)
-var _ source.ParquetFileWriter = (*SwiftFile)(nil)
+// Compile time check that *swiftFile implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var (
+	_ source.ParquetFileReader = (*swiftFile)(nil)
+	_ source.ParquetFileWriter = (*swiftFile)(nil)
+)
 
-type SwiftFile struct {
+type swiftFile struct {
 	Connection *swift.Connection
 
 	Container string
@@ -20,8 +22,8 @@ type SwiftFile struct {
 	FileWriter *swift.ObjectCreateFile
 }
 
-func newSwiftFile(containerName, filePath string, conn *swift.Connection) *SwiftFile {
-	return &SwiftFile{
+func newSwiftFile(containerName, filePath string, conn *swift.Connection) *swiftFile {
+	return &swiftFile{
 		Connection: conn,
 		Container:  containerName,
 		FilePath:   filePath,
@@ -38,7 +40,7 @@ func NewSwiftFileWriter(container, filePath string, conn *swift.Connection) (sou
 	return res.Create(filePath)
 }
 
-func (file *SwiftFile) Open(name string) (source.ParquetFileReader, error) {
+func (file *swiftFile) Open(name string) (source.ParquetFileReader, error) {
 	if name == "" {
 		name = file.FilePath
 	}
@@ -48,7 +50,7 @@ func (file *SwiftFile) Open(name string) (source.ParquetFileReader, error) {
 		return nil, err
 	}
 
-	res := &SwiftFile{
+	res := &swiftFile{
 		Connection: file.Connection,
 		Container:  file.Container,
 		FilePath:   name,
@@ -58,7 +60,7 @@ func (file *SwiftFile) Open(name string) (source.ParquetFileReader, error) {
 	return res, nil
 }
 
-func (file *SwiftFile) Create(name string) (source.ParquetFileWriter, error) {
+func (file *swiftFile) Create(name string) (source.ParquetFileWriter, error) {
 	if name == "" {
 		name = file.FilePath
 	}
@@ -68,7 +70,7 @@ func (file *SwiftFile) Create(name string) (source.ParquetFileWriter, error) {
 		return nil, err
 	}
 
-	res := &SwiftFile{
+	res := &swiftFile{
 		Connection: file.Connection,
 		Container:  file.Container,
 		FilePath:   name,
@@ -78,19 +80,19 @@ func (file *SwiftFile) Create(name string) (source.ParquetFileWriter, error) {
 	return res, nil
 }
 
-func (file *SwiftFile) Read(b []byte) (n int, err error) {
+func (file *swiftFile) Read(b []byte) (n int, err error) {
 	return file.FileReader.Read(b)
 }
 
-func (file *SwiftFile) Seek(offset int64, whence int) (int64, error) {
+func (file *swiftFile) Seek(offset int64, whence int) (int64, error) {
 	return file.FileReader.Seek(offset, whence)
 }
 
-func (file *SwiftFile) Write(p []byte) (n int, err error) {
+func (file *swiftFile) Write(p []byte) (n int, err error) {
 	return file.FileWriter.Write(p)
 }
 
-func (file *SwiftFile) Close() error {
+func (file *swiftFile) Close() error {
 	if file.FileWriter != nil {
 		if err := file.FileWriter.Close(); err != nil {
 			return err

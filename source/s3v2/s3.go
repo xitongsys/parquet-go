@@ -27,12 +27,14 @@ type S3API interface {
 	HeadObject(ctx context.Context, params *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error)
 }
 
-// Compile time check that *S3File implement the source.ParquetFileReader and source.ParquetFileWriter interface.
-var _ source.ParquetFileReader = (*S3File)(nil)
-var _ source.ParquetFileWriter = (*S3File)(nil)
+// Compile time check that *s3File implement the source.ParquetFileReader and source.ParquetFileWriter interface.
+var (
+	_ source.ParquetFileReader = (*s3File)(nil)
+	_ source.ParquetFileWriter = (*s3File)(nil)
+)
 
-// S3File is ParquetFile for AWS S3
-type S3File struct {
+// s3File is ParquetFile for AWS S3
+type s3File struct {
 	ctx    context.Context
 	client S3API
 	offset int64
@@ -85,7 +87,7 @@ func NewS3FileWriter(ctx context.Context, bucket, key string, uploaderOptions []
 // NewS3FileWriterWithClient is the same as NewS3FileWriter but allows passing
 // your own S3 client.
 func NewS3FileWriterWithClient(ctx context.Context, s3Client S3API, bucket, key string, uploaderOptions []func(*manager.Uploader), putObjectInputOptions ...func(*s3.PutObjectInput)) (source.ParquetFileWriter, error) {
-	file := &S3File{
+	file := &s3File{
 		ctx:                   ctx,
 		client:                s3Client,
 		writeDone:             make(chan error),
@@ -137,7 +139,7 @@ func NewS3FileReaderWithClientVersioned(ctx context.Context, s3Client S3API, buc
 }
 
 // Seek tracks the offset for the next Read. Has no effect on Write.
-func (s *S3File) Seek(offset int64, whence int) (int64, error) {
+func (s *s3File) Seek(offset int64, whence int) (int64, error) {
 	if whence < io.SeekStart || whence > io.SeekEnd {
 		return 0, errWhence
 	}
@@ -170,7 +172,7 @@ func (s *S3File) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Read up to len(p) bytes into p and return the number of bytes read
-func (s *S3File) Read(p []byte) (n int, err error) {
+func (s *s3File) Read(p []byte) (n int, err error) {
 	if s.fileSize > 0 && s.offset >= s.fileSize {
 		return 0, io.EOF
 	}
@@ -203,7 +205,7 @@ func (s *S3File) Read(p []byte) (n int, err error) {
 
 // openSocket issues a new GetObject request to retrieve the next chunk of data from the
 // object.
-func (s *S3File) openSocket(numBytes int64) error {
+func (s *s3File) openSocket(numBytes int64) error {
 	if numBytes < s.minRequestSize {
 		numBytes = s.minRequestSize
 	}
@@ -225,7 +227,7 @@ func (s *S3File) openSocket(numBytes int64) error {
 	return nil
 }
 
-func (s *S3File) closeSocket() {
+func (s *s3File) closeSocket() {
 	if s.socket != nil {
 		_ = s.socket.Close()
 		s.socket = nil
@@ -233,7 +235,7 @@ func (s *S3File) closeSocket() {
 }
 
 // Write len(p) bytes from p to the S3 data stream
-func (s *S3File) Write(p []byte) (n int, err error) {
+func (s *s3File) Write(p []byte) (n int, err error) {
 	s.lock.RLock()
 	writeOpened := s.writeOpened
 	s.lock.RUnlock()
@@ -264,7 +266,7 @@ func (s *S3File) Write(p []byte) (n int, err error) {
 
 // Close signals write completion and cleans up any
 // open streams. Will block until pending uploads are complete.
-func (s *S3File) Close() error {
+func (s *s3File) Close() error {
 	var err error
 
 	s.closeSocket()
@@ -284,7 +286,7 @@ func (s *S3File) Close() error {
 }
 
 // Open creates a new S3 File instance to perform concurrent reads
-func (s *S3File) Open(name string) (source.ParquetFileReader, error) {
+func (s *s3File) Open(name string) (source.ParquetFileReader, error) {
 	s.lock.RLock()
 	readOpened := s.readOpened
 	s.lock.RUnlock()
@@ -300,7 +302,7 @@ func (s *S3File) Open(name string) (source.ParquetFileReader, error) {
 	}
 
 	// create a new instance
-	pf := &S3File{
+	pf := &s3File{
 		ctx:            s.ctx,
 		client:         s.client,
 		BucketName:     s.BucketName,
@@ -315,8 +317,8 @@ func (s *S3File) Open(name string) (source.ParquetFileReader, error) {
 }
 
 // Create creates a new S3 File instance to perform writes
-func (s *S3File) Create(key string) (source.ParquetFileWriter, error) {
-	pf := &S3File{
+func (s *s3File) Create(key string) (source.ParquetFileWriter, error) {
+	pf := &s3File{
 		ctx:                   s.ctx,
 		client:                s.client,
 		uploaderOptions:       s.uploaderOptions,
@@ -331,7 +333,7 @@ func (s *S3File) Create(key string) (source.ParquetFileWriter, error) {
 
 // openWrite creates an S3 uploader that consumes the Reader end of an io.Pipe.
 // Calling Close signals write completion.
-func (s *S3File) openWrite() {
+func (s *s3File) openWrite() {
 	pr, pw := io.Pipe()
 	uploader := manager.NewUploader(s.client, s.uploaderOptions...)
 	s.lock.Lock()
@@ -372,7 +374,7 @@ func (s *S3File) openWrite() {
 
 // openRead verifies the requested file is accessible and
 // tracks the file size
-func (s *S3File) openRead() error {
+func (s *s3File) openRead() error {
 	hoi := &s3.HeadObjectInput{
 		Bucket:    aws.String(s.BucketName),
 		Key:       aws.String(s.Key),
@@ -395,7 +397,7 @@ func (s *S3File) openRead() error {
 }
 
 // getBytesRange returns the range request header string
-func (s *S3File) getBytesRange(numBytes int64) string {
+func (s *s3File) getBytesRange(numBytes int64) string {
 	var (
 		byteRange string
 		begin     int64
@@ -472,7 +474,7 @@ func NewS3FileReaderWithParams(ctx context.Context, params S3FileReaderParams) (
 		minRequestSize = defaultMinRequestSize
 	}
 
-	file := &S3File{
+	file := &s3File{
 		ctx:            ctx,
 		client:         s3Client,
 		BucketName:     params.Bucket,
