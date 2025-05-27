@@ -66,7 +66,7 @@ func main() {
 
 	// read the written parquet file
 	// create new S3 file reader
-	fr, err := s3v2.NewS3FileReaderWithClient(ctx, s3client, bucket, key)
+	fr, err := s3v2.NewS3FileReaderWithClient(ctx, s3client, bucket, key, nil)
 	if err != nil {
 		log.Println("Can't open file")
 		return
