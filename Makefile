@@ -88,6 +88,11 @@ example: deps  ## Run all examples
 			echo "    ==> $${DIR}"; \
 	    done
 
+.PHONY: benchmark
+benchmark:  ## Run benchmark
+	@echo "==> Running benchmark"
+	@go test -bench ^Benchmark -run=^$$ -count 1 -benchtime 3x -benchmem ./...
+
 .PHONY: help
 help:  ## Print list of Makefile targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
