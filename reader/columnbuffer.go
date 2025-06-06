@@ -201,7 +201,18 @@ func (cbt *ColumnBufferType) SkipRows(num int64) int64 {
 	)
 
 	for cbt.DataTableNumRows < num && err == nil {
+		if cbt.DataTableNumRows >= 0 {
+			num -= cbt.DataTableNumRows + 1
+			index := cbt.SchemaHandler.MapIndex[cbt.PathStr]
+			cbt.DataTable = layout.NewEmptyTable()
+			cbt.DataTable.Schema = cbt.SchemaHandler.SchemaElements[index]
+			cbt.DataTable.Path = common.StrToPath(cbt.PathStr)
+			cbt.DataTableNumRows = -1
+		}
 		page, err = cbt.ReadPageForSkip()
+		if err != nil {
+			return 0
+		}
 	}
 
 	if num > cbt.DataTableNumRows {
