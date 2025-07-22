@@ -212,6 +212,12 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 		return src
 	}
 
+	fmt.Println("inside InterfaceToParquetType")
+	fmt.Printf("src: %v \n", src)
+	fmt.Printf("typeof: %s \n", reflect.TypeOf(src).String())
+	fmt.Printf("valueof: %s \n", reflect.ValueOf(src).String())
+	fmt.Printf("parquet type: %s \n", pT.String())
+
 	switch *pT {
 	case parquet.Type_BOOLEAN:
 		if _, ok := src.(bool); ok {
