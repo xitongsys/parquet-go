@@ -260,9 +260,24 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 		var newInfo *common.Tag
 
 		if item.GoType.Kind() == reflect.Struct {
+			// handle timestamps
+			if isTimeStruct(item.GoType) {
+				fmt.Println("HANDLING TIMESTAMP")
+				schema, err := common.NewSchemaElementFromTagMap(item.Info)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())
+				}
+				schemaElements = append(schemaElements, schema)
+				newInfo = common.NewTag()
+				common.DeepCopy(item.Info, newInfo)
+				infos = append(infos, newInfo)
+				continue
+			}
+
 			schema := parquet.NewSchemaElement()
 			schema.Name = item.Info.InName
 			schema.RepetitionType = &item.Info.RepetitionType
+
 			numField := int32(item.GoType.NumField())
 			schema.NumChildren = &numField
 			schemaElements = append(schemaElements, schema)
