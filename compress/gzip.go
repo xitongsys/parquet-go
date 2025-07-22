@@ -8,8 +8,8 @@ import (
 	"io"
 	"sync"
 
+	"github.com/hyperxpizza/parquet-go/parquet"
 	"github.com/klauspost/compress/gzip"
-	"github.com/xitongsys/parquet-go/parquet"
 )
 
 var gzipWriterPool sync.Pool

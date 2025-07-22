@@ -1,13 +1,13 @@
 package marshal
 
 import (
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
+	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/layout"
+	"github.com/hyperxpizza/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/schema"
 )
 
-//Marshal function for CSV like data
+// Marshal function for CSV like data
 func MarshalCSV(records []interface{}, schemaHandler *schema.SchemaHandler) (*map[string]*layout.Table, error) {
 	res := make(map[string]*layout.Table)
 	if ln := len(records); ln <= 0 {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/parquet"
 )
 
 // Schema metadata used to parse the native and converted types and

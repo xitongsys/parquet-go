@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/parquet"
 )
 
 type JSONSchemaItemType struct {

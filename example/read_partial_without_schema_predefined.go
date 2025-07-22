@@ -4,11 +4,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/xitongsys/parquet-go-source/local"
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/reader"
-	"github.com/xitongsys/parquet-go/writer"
+	"github.com/hyperxpizza/parquet-go-source/local"
+	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/reader"
+	"github.com/hyperxpizza/parquet-go/writer"
 )
 
 type Student struct {

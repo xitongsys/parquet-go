@@ -8,12 +8,12 @@ import (
 	"testing"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/hyperxpizza/parquet-go-source/buffer"
+	"github.com/hyperxpizza/parquet-go-source/writerfile"
+	"github.com/hyperxpizza/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/reader"
+	"github.com/hyperxpizza/parquet-go/source"
 	"github.com/stretchr/testify/assert"
-	"github.com/xitongsys/parquet-go-source/buffer"
-	"github.com/xitongsys/parquet-go-source/writerfile"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/reader"
-	"github.com/xitongsys/parquet-go/source"
 )
 
 // TestNullCountsFromColumnIndex tests that NullCounts is correctly set in the ColumnIndex.

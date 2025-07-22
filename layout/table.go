@@ -1,8 +1,8 @@
 package layout
 
 import (
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/parquet"
 )
 
 func NewTableFromTable(src *Table) *Table {
@@ -24,7 +24,7 @@ func NewEmptyTable() *Table {
 	return table
 }
 
-//Table is the core data structure used to store the values
+// Table is the core data structure used to store the values
 type Table struct {
 	//Repetition type of the values: REQUIRED/OPTIONAL/REPEATED
 	RepetitionType parquet.FieldRepetitionType
@@ -48,7 +48,7 @@ type Table struct {
 	Info *common.Tag
 }
 
-//Merge several tables to one table(the first table)
+// Merge several tables to one table(the first table)
 func (t *Table) Merge(tables ...*Table) {
 	ln := len(tables)
 	if ln <= 0 {

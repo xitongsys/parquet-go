@@ -4,10 +4,10 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/xitongsys/parquet-go-source/local"
-	"github.com/xitongsys/parquet-go/reader"
-	"github.com/xitongsys/parquet-go/types"
-	"github.com/xitongsys/parquet-go/writer"
+	"github.com/hyperxpizza/parquet-go-source/local"
+	"github.com/hyperxpizza/parquet-go/reader"
+	"github.com/hyperxpizza/parquet-go/types"
+	"github.com/hyperxpizza/parquet-go/writer"
 )
 
 type TypeList struct {

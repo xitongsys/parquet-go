@@ -4,11 +4,11 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/xitongsys/parquet-go/common"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/types"
+	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/layout"
+	"github.com/hyperxpizza/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/schema"
+	"github.com/hyperxpizza/parquet-go/types"
 )
 
 type Node struct {
@@ -18,8 +18,8 @@ type Node struct {
 	DL      int32
 }
 
-//Improve Performance///////////////////////////
-//NodeBuf
+// Improve Performance///////////////////////////
+// NodeBuf
 type NodeBufType struct {
 	Index int
 	Buf   []*Node
@@ -47,7 +47,7 @@ func (nbt *NodeBufType) Reset() {
 	nbt.Index = 0
 }
 
-////////for improve performance///////////////////////////////////
+// //////for improve performance///////////////////////////////////
 type Marshaler interface {
 	Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node) (newStack []*Node)
 }
@@ -223,7 +223,7 @@ func (p *ParquetMap) Marshal(node *Node, nodeBuf *NodeBufType, stack []*Node) []
 	return stack
 }
 
-//Convert the objects to table map. srcInterface is a slice of objects
+// Convert the objects to table map. srcInterface is a slice of objects
 func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
 	defer func() {
 		if r := recover(); r != nil {

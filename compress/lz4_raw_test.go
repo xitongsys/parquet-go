@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/parquet"
 )
 
 func TestLz4RawCompress(t *testing.T) {

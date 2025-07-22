@@ -6,8 +6,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/apache/thrift/lib/go/thrift"
 	"time"
+
+	"github.com/apache/thrift/lib/go/thrift"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // (needed to ensure safety because of naive import list construction.)
@@ -15,6 +17,7 @@ var _ = thrift.ZERO
 var _ = fmt.Printf
 var _ = context.Background
 var _ = time.Now
+var _ = timestamppb.Now()
 var _ = bytes.Equal
 
 func init() {

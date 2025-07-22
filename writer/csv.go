@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/xitongsys/parquet-go-source/writerfile"
-	"github.com/xitongsys/parquet-go/layout"
-	"github.com/xitongsys/parquet-go/marshal"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/schema"
-	"github.com/xitongsys/parquet-go/source"
-	"github.com/xitongsys/parquet-go/types"
+	"github.com/hyperxpizza/parquet-go-source/writerfile"
+	"github.com/hyperxpizza/parquet-go/layout"
+	"github.com/hyperxpizza/parquet-go/marshal"
+	"github.com/hyperxpizza/parquet-go/parquet"
+	"github.com/hyperxpizza/parquet-go/schema"
+	"github.com/hyperxpizza/parquet-go/source"
+	"github.com/hyperxpizza/parquet-go/types"
 )
 
 type CSVWriter struct {
@@ -22,7 +22,7 @@ func NewCSVWriterFromWriter(md []string, w io.Writer, np int64) (*CSVWriter, err
 	return NewCSVWriter(md, wf, np)
 }
 
-//Create CSV writer
+// Create CSV writer
 func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, error) {
 	var err error
 	res := new(CSVWriter)
@@ -46,7 +46,7 @@ func NewCSVWriter(md []string, pfile source.ParquetFile, np int64) (*CSVWriter, 
 	return res, err
 }
 
-//Write string values to parquet file
+// Write string values to parquet file
 func (w *CSVWriter) WriteString(recsi interface{}) error {
 	var err error
 	recs := recsi.([]*string)
