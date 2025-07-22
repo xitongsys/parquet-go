@@ -290,6 +290,22 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 			if tk == reflect.Ptr {
 				m = &ParquetPtr{}
 			} else if tk == reflect.Struct {
+
+				if isTimestamp(node.Val.Type()) {
+					table := res[node.PathMap.Path]
+					schemaIndex := schemaHandler.MapIndex[node.PathMap.Path]
+					schema := schemaHandler.SchemaElements[schemaIndex]
+					var v interface{}
+					if node.Val.IsValid() {
+						v = convertToUnixTimestamp(node.Val.Interface())
+					}
+					table.Values = append(table.Values, types.InterfaceToParquetType(v, schema.Type))
+					table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
+					table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
+					continue
+
+				}
+
 				m = &ParquetStruct{}
 			} else if tk == reflect.Slice {
 				m = &ParquetSlice{schemaHandler: schemaHandler}
