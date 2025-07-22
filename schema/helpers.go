@@ -13,5 +13,5 @@ var timestammpType = reflect.TypeOf(timestamppb.Timestamp{})
 var timestammpTypePtr = reflect.TypeOf(&timestamppb.Timestamp{})
 
 func isTimeStruct(t reflect.Type) bool {
-	return t == timeType || t == timestammpType || t == timeTypePtr || t == timeTypePtr
+	return t == timeType || t == timestammpType || t == timeTypePtr || t == timestammpTypePtr
 }
