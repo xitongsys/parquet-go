@@ -303,10 +303,9 @@ func Marshal(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (t
 					table.DefinitionLevels = append(table.DefinitionLevels, node.DL)
 					table.RepetitionLevels = append(table.RepetitionLevels, node.RL)
 
-				} else {
-					m = &ParquetStruct{}
+					continue
 				}
-
+				m = &ParquetStruct{}
 			} else if tk == reflect.Slice {
 				m = &ParquetSlice{schemaHandler: schemaHandler}
 			} else if tk == reflect.Map {
