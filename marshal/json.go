@@ -3,7 +3,6 @@ package marshal
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"reflect"
 	"strings"
 
@@ -16,18 +15,18 @@ import (
 
 // ss is []string
 func MarshalJSON(ss []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("unknown error")
-			}
-		}
-	}()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		switch x := r.(type) {
+	// 		case string:
+	// 			err = errors.New(x)
+	// 		case error:
+	// 			err = x
+	// 		default:
+	// 			err = errors.New("unknown error")
+	// 		}
+	// 	}
+	// }()
 
 	res := setupTableMap(schemaHandler, len(ss))
 	pathMap := schemaHandler.PathMap

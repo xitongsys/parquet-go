@@ -228,18 +228,18 @@ func NewItem() *Item {
 
 // Create schema handler from a object
 func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("error occurred")
-			}
-		}
-	}()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		switch x := r.(type) {
+	// 		case string:
+	// 			err = errors.New(x)
+	// 		case error:
+	// 			err = x
+	// 		default:
+	// 			err = errors.New("error occurred")
+	// 		}
+	// 	}
+	// }()
 
 	ot := reflect.TypeOf(obj).Elem()
 	item := NewItem()

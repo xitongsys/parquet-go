@@ -1,7 +1,6 @@
 package layout
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/hyperxpizza/parquet-go/common"
@@ -70,16 +69,16 @@ func ReadRowGroup(rowGroupHeader *parquet.RowGroup, PFile source.ParquetFile, sc
 		go func(index int64, bgn int64, end int64) {
 			defer func() {
 				wg.Done()
-				if r := recover(); r != nil {
-					switch x := r.(type) {
-					case string:
-						err = errors.New(x)
-					case error:
-						err = x
-					default:
-						err = errors.New("unknown error")
-					}
-				}
+				// if r := recover(); r != nil {
+				// 	switch x := r.(type) {
+				// 	case string:
+				// 		err = errors.New(x)
+				// 	case error:
+				// 		err = x
+				// 	default:
+				// 		err = errors.New("unknown error")
+				// 	}
+				// }
 			}()
 
 			for i := bgn; i < end; i++ {

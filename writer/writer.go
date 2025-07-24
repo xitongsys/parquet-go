@@ -289,16 +289,16 @@ func (pw *ParquetWriter) flushObjs() error {
 		go func(b, e int, index int64) {
 			defer func() {
 				wg.Done()
-				if r := recover(); r != nil {
-					switch x := r.(type) {
-					case string:
-						errs[index] = errors.New(x)
-					case error:
-						errs[index] = x
-					default:
-						errs[index] = errors.New("unknown error")
-					}
-				}
+				// if r := recover(); r != nil {
+				// 	switch x := r.(type) {
+				// 	case string:
+				// 		errs[index] = errors.New(x)
+				// 	case error:
+				// 		errs[index] = x
+				// 	default:
+				// 		errs[index] = errors.New("unknown error")
+				// 	}
+				// }
 			}()
 
 			if e <= b {
