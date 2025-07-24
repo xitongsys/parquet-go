@@ -1,7 +1,6 @@
 package marshal
 
 import (
-	"errors"
 	"fmt"
 	"unsafe"
 
@@ -27,18 +26,18 @@ import (
 //
 // It does not support map-type fields. It should support every other use-case of Marshal.
 func MarshalFast(srcInterface []interface{}, schemaHandler *schema.SchemaHandler) (tb *map[string]*layout.Table, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("unkown error")
-			}
-		}
-	}()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		switch x := r.(type) {
+	// 		case string:
+	// 			err = errors.New(x)
+	// 		case error:
+	// 			err = x
+	// 		default:
+	// 			err = errors.New("unkown error")
+	// 		}
+	// 	}
+	// }()
 
 	tableMap := setupTableMap(schemaHandler, len(srcInterface))
 	pathMap := schemaHandler.PathMap
