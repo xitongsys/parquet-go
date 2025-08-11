@@ -262,7 +262,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 		if item.GoType.Kind() == reflect.Struct {
 			// handle timestamps
 			if isTimeStruct(item.GoType) {
-				fmt.Println("HANDLING TIMESTAMP")
+				//fmt.Println("HANDLING TIMESTAMP")
 				schema, err := common.NewSchemaElementFromTagMap(item.Info)
 				if err != nil {
 					return nil, fmt.Errorf("failed to create schema from tag map: %s", err.Error())

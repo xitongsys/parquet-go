@@ -132,7 +132,7 @@ func main() {
 				os.Exit(1)
 			}
 
-			fmt.Println(string(jsonBs))
+			//fmt.Println(string(jsonBs))
 
 			totCnt += cnt
 		}
