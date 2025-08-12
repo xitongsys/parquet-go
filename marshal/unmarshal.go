@@ -227,7 +227,7 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 
 						value := reflect.ValueOf(val)
 						if value.Kind() == reflect.Int64 {
-							ts := time.UnixMicro(value.Int())
+							ts := time.UnixMilli(value.Int())
 
 							if helpers.IsTimestampPB(poType) {
 								tsPtr := timestamppb.New(ts)
