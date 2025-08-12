@@ -1,7 +1,6 @@
 package marshal
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -225,10 +224,8 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 
 				case reflect.Struct:
 					if helpers.IsTimeStruct(poType) {
-						fmt.Println("!!! timestamp")
-						value := reflect.ValueOf(val)
-						fmt.Println(value.String())
 
+						value := reflect.ValueOf(val)
 						if value.Kind() == reflect.Int64 {
 							ts := time.UnixMicro(value.Int())
 
