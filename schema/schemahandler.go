@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/helpers"
 	"github.com/hyperxpizza/parquet-go/parquet"
 )
 
@@ -261,7 +262,7 @@ func NewSchemaHandlerFromStruct(obj interface{}) (sh *SchemaHandler, err error) 
 
 		if item.GoType.Kind() == reflect.Struct {
 			// handle timestamps
-			if isTimeStruct(item.GoType) {
+			if helpers.IsTimeStruct(item.GoType) {
 				//fmt.Println("HANDLING TIMESTAMP")
 				schema, err := common.NewSchemaElementFromTagMap(item.Info)
 				if err != nil {

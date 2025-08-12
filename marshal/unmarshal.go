@@ -3,11 +3,15 @@ package marshal
 import (
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/helpers"
 	"github.com/hyperxpizza/parquet-go/layout"
 	"github.com/hyperxpizza/parquet-go/parquet"
 	"github.com/hyperxpizza/parquet-go/schema"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Record Map KeyValue pair
@@ -219,6 +223,33 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 					po = po.Elem()
 
 				case reflect.Struct:
+					if helpers.IsTimeStruct(poType) {
+
+						value := reflect.ValueOf(val)
+						if value.Kind() == reflect.Int64 {
+							ts := time.UnixMilli(value.Int())
+
+							if helpers.IsTimestampPB(poType) {
+								tsPtr := timestamppb.New(ts)
+								if po.Kind() == reflect.Ptr {
+									value = reflect.ValueOf(tsPtr)
+								} else {
+									value = reflect.ValueOf(*tsPtr)
+								}
+							} else {
+								if po.Kind() == reflect.Ptr {
+									value = reflect.ValueOf(&ts)
+								} else {
+									value = reflect.ValueOf(ts)
+								}
+							}
+
+							po.Set(value)
+
+							break OuterLoop
+						}
+					}
+
 					index++
 					if definitionLevels[index] > dl {
 						break OuterLoop
@@ -235,6 +266,30 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 
 				default:
 					value := reflect.ValueOf(val)
+
+					// handling enums
+					if value.Kind() == reflect.String && poType.Kind() == reflect.Int32 {
+
+						enumerType := reflect.TypeOf((*Enumer)(nil)).Elem()
+
+						if poType.Implements(enumerType) || reflect.PointerTo(poType).Implements(enumerType) {
+
+							enum := reflect.Zero(poType).Interface().(Enumer)
+							desc := enum.Descriptor()
+
+							// Look up the enum value by name
+							ev := desc.Values().ByName(protoreflect.Name(value.String()))
+							if ev == nil {
+								break OuterLoop
+							}
+
+							// Convert enum number to correct type
+							value = reflect.ValueOf(int32(ev.Number())).Convert(poType)
+							po.Set(value)
+							break OuterLoop
+						}
+					}
+
 					if po.Type() != value.Type() {
 						value = value.Convert(poType)
 					}
@@ -260,4 +315,8 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 	}
 
 	return nil
+}
+
+type Enumer interface {
+	Descriptor() protoreflect.EnumDescriptor
 }
