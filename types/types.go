@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/hyperxpizza/parquet-go/parquet"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionType) reflect.Type {
@@ -227,6 +228,7 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 		}
 
 	case parquet.Type_INT32:
+
 		if _, ok := src.(int32); ok {
 			return src
 		} else {
@@ -259,6 +261,12 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 	case parquet.Type_BYTE_ARRAY:
 		fallthrough
 	case parquet.Type_FIXED_LEN_BYTE_ARRAY:
+
+		str, ok := detectEnumAndReturnString(src)
+		if ok {
+			return str
+		}
+
 		if _, ok := src.(string); ok {
 			return src
 		} else {
@@ -268,6 +276,24 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 	default:
 		return src
 	}
+}
+
+func detectEnumAndReturnString(i any) (string, bool) {
+	type Enum interface {
+		String() string
+		Type() protoreflect.EnumType
+	}
+
+	if reflect.TypeOf(i).Kind() != reflect.Int32 {
+		return "", false
+	}
+
+	e, ok := i.(Enum)
+	if !ok {
+		return "", false
+	}
+
+	return e.String(), true
 }
 
 // order=LittleEndian or BigEndian; length is byte num
