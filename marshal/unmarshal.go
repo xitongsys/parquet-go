@@ -1,14 +1,18 @@
 package marshal
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/hyperxpizza/parquet-go/common"
+	"github.com/hyperxpizza/parquet-go/helpers"
 	"github.com/hyperxpizza/parquet-go/layout"
 	"github.com/hyperxpizza/parquet-go/parquet"
 	"github.com/hyperxpizza/parquet-go/schema"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Record Map KeyValue pair
@@ -220,8 +224,34 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 					po = po.Elem()
 
 				case reflect.Struct:
-					// fmt.Println("struct value:", reflect.ValueOf(val).String())
-					// fmt.Println("poType:", poType.String())
+					if helpers.IsTimeStruct(poType) {
+						fmt.Println("!!! timestamp")
+						value := reflect.ValueOf(val)
+						fmt.Println(value.String())
+
+						if value.Kind() == reflect.Int64 {
+							ts := time.UnixMicro(value.Int())
+
+							if helpers.IsTimestampPB(poType) {
+								tsPtr := timestamppb.New(ts)
+								if po.Kind() == reflect.Ptr {
+									value = reflect.ValueOf(tsPtr)
+								} else {
+									value = reflect.ValueOf(*tsPtr)
+								}
+							} else {
+								if po.Kind() == reflect.Ptr {
+									value = reflect.ValueOf(&ts)
+								} else {
+									value = reflect.ValueOf(ts)
+								}
+							}
+
+							po.Set(value)
+
+							break OuterLoop
+						}
+					}
 
 					index++
 					if definitionLevels[index] > dl {
@@ -239,8 +269,6 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 
 				default:
 					value := reflect.ValueOf(val)
-					// fmt.Println("default value:", reflect.ValueOf(val).String())
-					// fmt.Println("default poType:", poType.Kind().String())
 
 					// handling enums
 					if value.Kind() == reflect.String && poType.Kind() == reflect.Int32 {
