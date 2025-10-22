@@ -375,7 +375,10 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 		//pages -> chunk
 		chunkMap := make(map[string]*layout.Chunk)
 		for name, pages := range pw.PagesMapBuf {
-			if len(pages) > 0 && (pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY || pages[0].Info.Encoding == parquet.Encoding_RLE_DICTIONARY) {
+			if len(pages) == 0 {
+				continue
+			}
+			if pages[0].Info.Encoding == parquet.Encoding_PLAIN_DICTIONARY || pages[0].Info.Encoding == parquet.Encoding_RLE_DICTIONARY {
 				dictPage, _ := layout.DictRecToDictPage(pw.DictRecs[name], int32(pw.PageSize), pw.CompressionType)
 				tmp := append([]*layout.Page{dictPage}, pages...)
 				chunkMap[name] = layout.PagesToDictChunk(tmp)
