@@ -9,16 +9,13 @@ import (
 func BenchmarkWriteCSV(b *testing.B) {
 	b.ReportAllocs()
 	md := []string{
-		"name=First, type=UTF8, encoding=PLAIN",
-		"name=Middle, type=UTF8, encoding=PLAIN",
-		"name=Last, type=UTF8, encoding=PLAIN",
-		"name=BirthCity, type=UTF8, encoding=PLAIN",
+		"name=First, type=BYTE_ARRAY, encoding=PLAIN",
+		"name=Middle, type=BYTE_ARRAY, encoding=PLAIN",
+		"name=Last, type=BYTE_ARRAY, encoding=PLAIN",
+		"name=BirthCity, type=BYTE_ARRAY, encoding=PLAIN",
 	}
 	for i := 0; i < b.N; i++ {
-		fw, err := buffer.NewBufferFile(nil)
-		if err != nil {
-			b.Fatal(err)
-		}
+		fw := buffer.NewBufferFile()
 		pw, err := NewCSVWriter(md, fw, 2)
 		if err != nil {
 			b.Fatal(err)
@@ -40,16 +37,13 @@ func BenchmarkWriteCSV(b *testing.B) {
 func BenchmarkWriteCSVPlainDictionary(b *testing.B) {
 	b.ReportAllocs()
 	md := []string{
-		"name=First, type=UTF8, encoding=PLAIN_DICTIONARY",
-		"name=Middle, type=UTF8, encoding=PLAIN_DICTIONARY",
-		"name=Last, type=UTF8, encoding=PLAIN_DICTIONARY",
-		"name=BirthCity, type=UTF8, encoding=PLAIN_DICTIONARY",
+		"name=First, type=BYTE_ARRAY, encoding=PLAIN_DICTIONARY, convertedtype=UTF8",
+		"name=Middle, type=BYTE_ARRAY, encoding=PLAIN_DICTIONARY, convertedtype=UTF8",
+		"name=Last, type=BYTE_ARRAY, encoding=PLAIN_DICTIONARY, convertedtype=UTF8",
+		"name=BirthCity, type=BYTE_ARRAY, encoding=PLAIN_DICTIONARY, convertedtype=UTF8",
 	}
 	for i := 0; i < b.N; i++ {
-		fw, err := buffer.NewBufferFile(nil)
-		if err != nil {
-			b.Fatal(err)
-		}
+		fw := buffer.NewBufferFile()
 		pw, err := NewCSVWriter(md, fw, 2)
 		if err != nil {
 			b.Fatal(err)

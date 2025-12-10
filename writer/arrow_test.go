@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/apache/arrow/go/v12/arrow"
-	"github.com/apache/arrow/go/v12/arrow/array"
-	"github.com/apache/arrow/go/v12/arrow/memory"
+	"github.com/apache/arrow-go/v18/arrow"
+	"github.com/apache/arrow-go/v18/arrow/array"
+	"github.com/apache/arrow-go/v18/arrow/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/xitongsys/parquet-go-source/buffer"
 	"github.com/xitongsys/parquet-go-source/writerfile"
@@ -437,7 +437,7 @@ func testRecordWithNulls(mem memory.Allocator) arrow.Record {
 	return array.NewRecord(testNullableSchema, cols, -1)
 }
 
-// TestE2EValid tests the whole cycle of creating a parquet file from arrow
+// TestE2ESequentialValid tests the whole cycle of creating a parquet file from arrow
 // covering all the currently supported types by using sequential writer
 // running a single goroutine.
 func TestE2ESequentialValid(t *testing.T) {
@@ -460,8 +460,8 @@ func TestE2ESequentialValid(t *testing.T) {
 	err = w.WriteStop()
 	assert.Nil(t, err)
 
-	parquetFile, err := buffer.NewBufferFile(buf.Bytes())
-	assert.Nil(t, err)
+	parquetFile := buffer.NewBufferFile()
+	parquetFile.Write(buf.Bytes())
 
 	pr, err := reader.NewParquetReader(parquetFile, nil, 1)
 	assert.Nil(t, err)
@@ -517,9 +517,9 @@ func TestE2EConcurrentValid(t *testing.T) {
 	err = w.WriteStop()
 	assert.Nil(t, err)
 
-	parquetFile, err := buffer.NewBufferFile(buf.Bytes())
+	parquetFile := buffer.NewBufferFile()
+	_, err = parquetFile.Write(buf.Bytes())
 	assert.Nil(t, err)
-
 	pr, err := reader.NewParquetReader(parquetFile, nil, 1)
 	assert.Nil(t, err)
 
@@ -574,7 +574,8 @@ func TestE2ENullabilityValid(t *testing.T) {
 	err = w.WriteStop()
 	assert.Nil(t, err)
 
-	parquetFile, err := buffer.NewBufferFile(buf.Bytes())
+	parquetFile := buffer.NewBufferFile()
+	_, err = parquetFile.Write(buf.Bytes())
 	assert.Nil(t, err)
 
 	pr, err := reader.NewParquetReader(parquetFile, nil, 1)
@@ -589,13 +590,13 @@ func TestE2ENullabilityValid(t *testing.T) {
 		actualTable = append(actualTable, rowToSliceOfValues(row))
 	}
 	expectedTable := [][]interface{}{
-		{-1, nil, -21, nil, 1, nil, 21, nil, 1.1, nil, 1, nil, "A", nil, true,
+		{-1, nil, -21, nil, 1, nil, 21, nil, float32(1.1), nil, 1, nil, "A", nil, true,
 			nil, 1, nil, 1},
 
 		{nil, -11, nil, -31, nil, 11, nil, 31, nil, 10.1, nil, 1, nil, "a",
 			nil, 1, nil, 1, nil},
 
-		{-2, nil, -22, nil, 2, nil, 22, nil, 1.2, nil, 2, nil, "B", nil, false,
+		{-2, nil, -22, nil, 2, nil, 22, nil, float32(1.2), nil, 2, nil, "B", nil, false,
 			nil, 2, nil, 2},
 
 		{nil, -12, nil, -32, nil, 12, nil, 32, nil, 10.2, nil, 2, nil, "b",

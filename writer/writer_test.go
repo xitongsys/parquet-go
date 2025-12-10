@@ -46,7 +46,8 @@ func TestNullCountsFromColumnIndex(t *testing.T) {
 	}
 	assert.NoError(t, pw.WriteStop())
 
-	pf, err := buffer.NewBufferFile(buf.Bytes())
+	pf := buffer.NewBufferFile()
+	_, err = pf.Write(buf.Bytes())
 	assert.Nil(t, err)
 	defer func() {
 		assert.NoError(t, pf.Close())
@@ -100,7 +101,8 @@ func TestAllNullCountsFromColumnIndex(t *testing.T) {
 	}
 	assert.NoError(t, pw.WriteStop())
 
-	pf, err := buffer.NewBufferFile(buf.Bytes())
+	pf := buffer.NewBufferFile()
+	_, err = pf.Write(buf.Bytes())
 	assert.Nil(t, err)
 	defer func() {
 		assert.NoError(t, pf.Close())
@@ -162,7 +164,8 @@ func TestZeroRows(t *testing.T) {
 	assert.NoError(t, fw.Close())
 
 	// read
-	pf, err := buffer.NewBufferFile(buf.Bytes())
+	pf := buffer.NewBufferFile()
+	_, err = pf.Write(buf.Bytes())
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, pf.Close())
@@ -206,7 +209,8 @@ func TestDoubleWriteStop(t *testing.T) {
 	assert.NoError(t, fw.Close())
 
 	// read
-	pf, err := buffer.NewBufferFile(buf.Bytes())
+	pf := buffer.NewBufferFile()
+	_, err = pf.Write(buf.Bytes())
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, pf.Close())

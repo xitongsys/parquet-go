@@ -77,7 +77,7 @@ func ParquetTypeToGoReflectType(pT *parquet.Type, rT *parquet.FieldRepetitionTyp
 	}
 }
 
-//Scan a string to parquet value; length and scale just for decimal
+// Scan a string to parquet value; length and scale just for decimal
 func StrToParquetType(s string, pT *parquet.Type, cT *parquet.ConvertedType, length int, scale int) (interface{}, error) {
 	if cT == nil {
 		if *pT == parquet.Type_BOOLEAN {
@@ -264,7 +264,7 @@ func InterfaceToParquetType(src interface{}, pT *parquet.Type) interface{} {
 	}
 }
 
-//order=LittleEndian or BigEndian; length is byte num
+// order=LittleEndian or BigEndian; length is byte num
 func StrIntToBinary(num string, order string, length int, signed bool) string {
 	bigNum := new(big.Int)
 	bigNum.SetString(num, 10)
