@@ -100,11 +100,9 @@ func (p *ParquetMapStruct) Marshal(node *Node, nodeBuf *NodeBufType, stack []*No
 		return stack
 	}
 
-	missingKeys := make(map[string]bool)
+	missingKeys := make(map[string]*schema.PathMapType)
 	for k, typ := range node.PathMap.Children {
-		if len(typ.Children) == 0 {
-			missingKeys[k] = true
-		}
+		missingKeys[k] = typ
 	}
 	for j := len(keys) - 1; j >= 0; j-- {
 		key := keys[j]
@@ -115,7 +113,7 @@ func (p *ParquetMapStruct) Marshal(node *Node, nodeBuf *NodeBufType, stack []*No
 		if newNode.PathMap, ok = node.PathMap.Children[k]; !ok {
 			continue
 		}
-		missingKeys[k] = false
+		delete(missingKeys, k)
 		v := node.Val.MapIndex(key)
 		newNode.RL = node.RL
 		newNode.DL = node.DL
@@ -133,15 +131,18 @@ func (p *ParquetMapStruct) Marshal(node *Node, nodeBuf *NodeBufType, stack []*No
 	}
 
 	var null interface{}
-	for k, isMissing := range missingKeys {
-		if isMissing {
-			newNode := nodeBuf.GetNode()
-			newNode.PathMap = node.PathMap.Children[k]
+	var emptyMap map[string]interface{}
+	for k, typ := range missingKeys {
+		newNode := nodeBuf.GetNode()
+		newNode.PathMap = node.PathMap.Children[k]
+		if len(typ.Children) == 0 {
 			newNode.Val = reflect.ValueOf(null)
-			newNode.RL = node.RL
-			newNode.DL = node.DL
-			stack = append(stack, newNode)
+		} else {
+			newNode.Val = reflect.ValueOf(emptyMap)
 		}
+		newNode.RL = node.RL
+		newNode.DL = node.DL
+		stack = append(stack, newNode)
 	}
 	return stack
 }
@@ -365,3 +366,4 @@ func setupTableMap(schemaHandler *schema.SchemaHandler, numElements int) map[str
 	}
 	return tableMap
 }
+
