@@ -220,6 +220,9 @@ func (pw *ParquetWriter) WriteStop() error {
 	if _, err = pw.PFile.Write([]byte("PAR1")); err != nil {
 		return err
 	}
+	if err = pw.PFile.Close(); err != nil {
+		return err
+	}
 
 	return nil
 }
