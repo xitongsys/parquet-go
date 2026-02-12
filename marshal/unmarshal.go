@@ -229,8 +229,16 @@ func Unmarshal(tableMap *map[string]*layout.Table, bgn int, end int, dstInterfac
 					if prevType != poType || name != prevFieldName {
 						prevType = poType
 						prevFieldName = name
-						f, _ := prevType.FieldByName(name)
+						f, ok := prevType.FieldByName(name)
+						if !ok {
+							err = errors.New("field " + name + " not found in struct " + prevType.Name())
+							break OuterLoop
+						}
 						prevFieldIndex = f.Index
+					}
+					if len(prevFieldIndex) == 0 {
+						err = errors.New("invalid field index for field " + prevFieldName)
+						break OuterLoop
 					}
 					po = po.FieldByIndex(prevFieldIndex)
 
