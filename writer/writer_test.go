@@ -237,3 +237,104 @@ func TestNewWriterWithInvaidFile(t *testing.T) {
 	assert.Nil(t, pw)
 	assert.ErrorIs(t, err, testWriteErr)
 }
+
+func readOffsetIndex(pf source.ParquetFile, offset int64) (*parquet.OffsetIndex, error) {
+	offsetIdx := parquet.NewOffsetIndex()
+	tpf := thrift.NewTCompactProtocolFactoryConf(nil)
+	thriftReader := source.ConvertToThriftReader(pf, offset)
+	protocol := tpf.GetProtocol(thriftReader)
+	if err := offsetIdx.Read(context.Background(), protocol); err != nil {
+		return nil, err
+	}
+	return offsetIdx, nil
+}
+
+// readPageHeaderAt deserializes the PageHeader stored at data[offset:] and
+// returns it together with its serialized length.
+func readPageHeaderAt(data []byte, offset int64) (*parquet.PageHeader, int32, error) {
+	tb := thrift.NewTMemoryBuffer()
+	tb.Write(data[offset:])
+	protocol := thrift.NewTCompactProtocolFactoryConf(nil).GetProtocol(tb)
+	pageHeader := parquet.NewPageHeader()
+	if err := pageHeader.Read(context.Background(), protocol); err != nil {
+		return nil, 0, err
+	}
+	return pageHeader, int32(len(data[offset:]) - tb.Len()), nil
+}
+
+// TestOffsetIndexCompressedPageSizeIncludesHeader verifies that the
+// compressed_page_size recorded in each OffsetIndex PageLocation covers the
+// full page (page header + compressed payload), as required by the Parquet
+// spec (see PageIndex.md: "sum of compressed_page_size and offset should be
+// less than or equal to the offset of the next page"). Readers that trust the
+// page index (Athena engine 3, Spark 3.2+, BigQuery, ...) fail on files where
+// the header length is missing from the recorded size.
+func TestOffsetIndexCompressedPageSizeIncludesHeader(t *testing.T) {
+	type Entry struct {
+		Name string `parquet:"name=name, type=BYTE_ARRAY, convertedtype=UTF8"`
+		Tag  string `parquet:"name=tag, type=BYTE_ARRAY, convertedtype=UTF8, encoding=PLAIN_DICTIONARY"`
+		Qty  int64  `parquet:"name=qty, type=INT64"`
+	}
+
+	var buf bytes.Buffer
+	fw := writerfile.NewWriterFile(&buf)
+	pw, err := NewParquetWriter(fw, new(Entry), 1)
+	assert.NoError(t, err)
+	// force several pages per column chunk
+	pw.PageSize = 4 * 1024
+	for i := 0; i < 3000; i++ {
+		assert.NoError(t, pw.Write(Entry{
+			Name: fmt.Sprintf("entry-%06d-some-padding", i),
+			Tag:  fmt.Sprintf("tag-%d", i%7),
+			Qty:  int64(i),
+		}))
+	}
+	assert.NoError(t, pw.WriteStop())
+
+	data := buf.Bytes()
+	pf, err := buffer.NewBufferFile(data)
+	assert.NoError(t, err)
+	defer func() {
+		assert.NoError(t, pf.Close())
+	}()
+	pr, err := reader.NewParquetReader(pf, nil, 1)
+	assert.NoError(t, err)
+	assert.NoError(t, pr.ReadFooter())
+
+	multiPageSeen := false
+	for _, rg := range pr.Footer.RowGroups {
+		for _, col := range rg.GetColumns() {
+			assert.NotNil(t, col.OffsetIndexOffset)
+			offsetIdx, err := readOffsetIndex(pr.PFile, *col.OffsetIndexOffset)
+			assert.NoError(t, err)
+
+			if len(offsetIdx.PageLocations) > 1 {
+				multiPageSeen = true
+			}
+			chunkStart := col.MetaData.DataPageOffset
+			if col.MetaData.DictionaryPageOffset != nil {
+				chunkStart = *col.MetaData.DictionaryPageOffset
+			}
+			chunkEnd := chunkStart + col.MetaData.TotalCompressedSize
+
+			for i, loc := range offsetIdx.PageLocations {
+				pageHeader, headerLen, err := readPageHeaderAt(data, loc.Offset)
+				assert.NoError(t, err)
+				assert.Equal(t, headerLen+pageHeader.CompressedPageSize, loc.CompressedPageSize,
+					"column %v page %d: compressed_page_size must include the page header",
+					col.MetaData.PathInSchema, i)
+
+				// pages are written back to back: offset + size must reach the
+				// next page (or the end of the column chunk for the last page)
+				next := chunkEnd
+				if i+1 < len(offsetIdx.PageLocations) {
+					next = offsetIdx.PageLocations[i+1].Offset
+				}
+				assert.Equal(t, next, loc.Offset+int64(loc.CompressedPageSize),
+					"column %v page %d: page must end at the next page boundary",
+					col.MetaData.PathInSchema, i)
+			}
+		}
+	}
+	assert.True(t, multiPageSeen, "expected at least one multi-page column chunk")
+}

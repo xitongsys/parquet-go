@@ -473,7 +473,13 @@ func (pw *ParquetWriter) Flush(flag bool) error {
 					pageLocation := parquet.NewPageLocation()
 					pageLocation.Offset = pw.Offset
 					pageLocation.FirstRowIndex = firstRowIndex
-					pageLocation.CompressedPageSize = page.Header.CompressedPageSize
+					// The Parquet spec requires compressed_page_size to include the page
+					// header, i.e. the full byte range the page occupies in the file.
+					// page.Header.CompressedPageSize only covers the compressed payload,
+					// which makes readers that trust the page index (Athena engine 3,
+					// Spark 3.2+, BigQuery, ...) read a truncated page and fail with
+					// errors like "Corrupt snappy compressed data".
+					pageLocation.CompressedPageSize = int32(len(page.RawData))
 
 					offsetIndex.PageLocations = append(offsetIndex.PageLocations, pageLocation)
 
