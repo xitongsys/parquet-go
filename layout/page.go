@@ -751,7 +751,7 @@ func ReadPage(thriftReader *thrift.TBufferedTransport, schemaHandler *schema.Sch
 		}
 
 		codec := colMetaData.GetCodec()
-		if len(dataBuf) > 0 {
+		if len(dataBuf) > 0 && pageHeader.DataPageHeaderV2.GetIsCompressed() {
 			if dataBuf, err = compress.Uncompress(dataBuf, codec); err != nil {
 				return nil, 0, 0, err
 			}
