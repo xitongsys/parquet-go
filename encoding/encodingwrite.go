@@ -320,14 +320,16 @@ func WriteDeltaINT32(nums []interface{}) []byte {
 		bitWidths := make([]byte, numMiniBlocksInBlock)
 
 		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
-			var maxValue int32 = 0
+			// delta-minDelta wraps. The bit width is the width of that unsigned frame.
+			var maxValue uint32
 			for k := uint64(j) * numValuesInMiniBlock; k < uint64(j+1)*numValuesInMiniBlock; k++ {
 				blockBuf[k] = blockBuf[k].(int32) - minDelta
-				if blockBuf[k].(int32) > maxValue {
-					maxValue = blockBuf[k].(int32)
+				frame := uint32(blockBuf[k].(int32))
+				if frame > maxValue {
+					maxValue = frame
 				}
 			}
-			bitWidths[j] = byte(bits.Len32(uint32(maxValue)))
+			bitWidths[j] = byte(bits.Len32(maxValue))
 		}
 
 		var minDeltaZigZag uint64 = uint64((minDelta >> 31) ^ (minDelta << 1))
@@ -378,14 +380,16 @@ func WriteDeltaINT64(nums []interface{}) []byte {
 		bitWidths := make([]byte, numMiniBlocksInBlock)
 
 		for j := 0; uint64(j) < numMiniBlocksInBlock; j++ {
-			var maxValue int64 = 0
+			// delta-minDelta wraps. The bit width is the width of that unsigned frame.
+			var maxValue uint64
 			for k := uint64(j) * numValuesInMiniBlock; k < uint64(j+1)*numValuesInMiniBlock; k++ {
 				blockBuf[k] = blockBuf[k].(int64) - minDelta
-				if blockBuf[k].(int64) > maxValue {
-					maxValue = blockBuf[k].(int64)
+				frame := uint64(blockBuf[k].(int64))
+				if frame > maxValue {
+					maxValue = frame
 				}
 			}
-			bitWidths[j] = byte(bits.Len64(uint64(maxValue)))
+			bitWidths[j] = byte(bits.Len64(maxValue))
 		}
 
 		var minDeltaZigZag uint64 = uint64((minDelta >> 63) ^ (minDelta << 1))
